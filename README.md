@@ -44,7 +44,7 @@ python -m pytest programs/tests/test_detection_filter.py -q
 
 上述单测不启动仿真。完整驱动还需要独立的 `robot_competition-main/projects/car-python` 平台、浏览器及 Node.js；当前实验使用 Node.js 26.7.0。平台项目不包含在本仓库中。
 
-当前驱动、测试及历史清单仍有 `/Users/ken/...`、`/opt/homebrew/bin/node` 等本机绝对路径。`GUANGYANG_PLATFORM_ROOT` 只覆盖部分入口；迁移到另一台机器前需要配置/适配路径并恢复真实回放数据。本仓库尚不能宣称干净环境一条命令完成全部仿真复跑。根目录 `run.py`、`eval_inloop.py`、`mutate.py` 还依赖外部旧 wm_kit 中未随本仓库提供的 acceptance/planning/selection 模块，不作为默认安装检查。
+当前驱动、测试及历史清单仍有本机绝对路径。`GUANGYANG_PLATFORM_ROOT` 只覆盖部分入口；迁移到另一台机器前需要配置/适配路径并恢复真实回放数据。本仓库尚不能宣称干净环境一条命令完成全部仿真复跑。根目录 `run.py`、`eval_inloop.py`、`mutate.py` 还依赖外部旧 wm_kit 中未随本仓库提供的 acceptance/planning/selection 模块，不作为默认安装检查。
 
 ## 重新构建与运行的入口
 

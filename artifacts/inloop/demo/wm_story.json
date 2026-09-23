@@ -1,0 +1,489 @@
+{
+  "schema": "demo-wm-story/v1",
+  "scope": "Phase A only: offline original demo map-05 / attempt-030 evidence; no simulator or program execution",
+  "map": "map-05",
+  "index_convention": "zero-based raw.lines and full-native-record events/inputs; seconds from tick*20ms",
+  "program_identity": {
+    "version": "wm-demo-v1-20260923",
+    "raw_file_sha256": "58a24a2d4fb9bd6b564530eb74ef627a71c2084e731a815cf21f5cc9bb7c7928",
+    "executed_source_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+    "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+    "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3",
+    "other_opt2_r3_program": {
+      "path": "artifacts/inloop/opt-2/round-3/program.py",
+      "sha256": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6"
+    },
+    "explanation": "58a24a... is original demo file; ee01a6... is its trim-normalized executed source. 59d8f6... belongs to later opt2-r3 and has no claim to this demo outcome."
+  },
+  "balls": [
+    {
+      "ball_index": 1,
+      "track_id": "target_001",
+      "package_id": "guangyang-target-1",
+      "source": "new_observations",
+      "source_evidence": {
+        "ball_start_line": 1,
+        "ball_start_tick": 0,
+        "selection_line": 20,
+        "retained_all_WM_count_at_start": 0,
+        "prior_track_ids": [],
+        "selected_track_existed_before_ball_start": false,
+        "all_three_hits_after_ball_start": true
+      },
+      "first_seen": {
+        "line_index": 16,
+        "tick": 1718,
+        "seconds": 34.36,
+        "image": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000441-tick-1718.png",
+        "image_sha256": "8bc24481780c478e726861ddcc1be94caac7545415b7b7a524b994ec1fe71c9f"
+      },
+      "actual_wm_hits": [
+        {
+          "track_id": "target_001",
+          "hit": 1,
+          "wm_line": 19,
+          "observe_line": 16,
+          "tick": 1718,
+          "seconds": 34.36,
+          "raw": {
+            "category": "target",
+            "distanceCm": 55,
+            "bearingDeg": -2.62,
+            "confidence": 0.88
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -120.8,
+            55.2,
+            30.5
+          ],
+          "native_observe_input_index": 88,
+          "native_observe_seq": 442
+        },
+        {
+          "track_id": "target_001",
+          "hit": 2,
+          "wm_line": 102,
+          "observe_line": 99,
+          "tick": 1912,
+          "seconds": 38.24,
+          "raw": {
+            "category": "target",
+            "distanceCm": 49,
+            "bearingDeg": 1.65,
+            "confidence": 0.9
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -107.9,
+            75.6,
+            55.5
+          ],
+          "native_observe_input_index": 97,
+          "native_observe_seq": 493
+        },
+        {
+          "track_id": "target_001",
+          "hit": 3,
+          "wm_line": 309,
+          "observe_line": 306,
+          "tick": 2846,
+          "seconds": 56.92,
+          "raw": {
+            "category": "target",
+            "distanceCm": 51,
+            "bearingDeg": -2.62,
+            "confidence": 0.9
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -145.8,
+            55.2,
+            9.1
+          ],
+          "native_observe_input_index": 115,
+          "native_observe_seq": 701
+        }
+      ],
+      "all_pair_pose_gaps_cm": [
+        {
+          "hit_pair": [
+            1,
+            2
+          ],
+          "distance_cm": 24.136486902612805
+        },
+        {
+          "hit_pair": [
+            1,
+            3
+          ],
+          "distance_cm": 25.000000000000014
+        },
+        {
+          "hit_pair": [
+            2,
+            3
+          ],
+          "distance_cm": 43.041491609840854
+        }
+      ],
+      "confirmation": {
+        "memory_confirmed_line": 313,
+        "ball_confirmed_line": 314,
+        "tick": 2846,
+        "seconds": 56.92,
+        "last_sample_wm_distance_m": 0.5554425680419891
+      },
+      "memory_travel": {
+        "last_observe_line": 306,
+        "last_observe_tick": 2846,
+        "pure_memory_before_approach_cm": 895.7,
+        "pure_memory_ends_tick": 9319,
+        "pure_memory_vision_queries_between_boundaries": 0,
+        "last_observe_to_grab_odometer_cm": 902.5,
+        "last_observe_to_grab_observe_calls": 0,
+        "odometer_start": {
+          "tick": 2846,
+          "value_cm": 443.9,
+          "basis": "exact_tick",
+          "public_inputs": [
+            {
+              "input_index": 116,
+              "seq": 702,
+              "tick": 2846,
+              "distanceCm": 443.9
+            }
+          ]
+        },
+        "odometer_before_approach": {
+          "tick": 9319,
+          "value_cm": 1339.6,
+          "basis": "exact_tick",
+          "public_inputs": [
+            {
+              "input_index": 414,
+              "seq": 2365,
+              "tick": 9319,
+              "distanceCm": 1339.6
+            }
+          ]
+        },
+        "odometer_at_grab": {
+          "tick": 9413.0,
+          "value_cm": 1346.4,
+          "basis": "identical_cumulative_distance_brackets_no_interpolation",
+          "public_inputs": [
+            {
+              "input_index": 428,
+              "seq": 2405,
+              "tick": 9389,
+              "distanceCm": 1346.4
+            },
+            {
+              "input_index": 433,
+              "seq": 2424,
+              "tick": 9427,
+              "distanceCm": 1346.4
+            }
+          ]
+        },
+        "permitted_approach_vision_records": [
+          {
+            "input_index": 416,
+            "seq": 2368,
+            "tick": 9319,
+            "method": "approach_step"
+          },
+          {
+            "input_index": 418,
+            "seq": 2374,
+            "tick": 9324,
+            "method": "approach_step"
+          },
+          {
+            "input_index": 419,
+            "seq": 2375,
+            "tick": 9324,
+            "method": "approach"
+          }
+        ],
+        "logged_memory_metric_line": 427,
+        "logged_signed_forward_at_grab_cm": 877.7,
+        "approach_call_line": 423,
+        "logged_signed_forward_before_approach_cm": 871.7,
+        "approach_wm_distance_m": 0.219,
+        "approach_max_steps": 1,
+        "meaning": "Cumulative public odometer includes reversing. Signed business metric subtracts reversing; it is not total travel. Pure memory ends before allowed approach vision; no observe occurs until actual grab."
+      },
+      "grabbed": {
+        "event_index": 2,
+        "seq": 2416,
+        "type": "package_grabbed",
+        "package_id": "guangyang-target-1",
+        "tick": 9413.0,
+        "seconds": 188.26
+      },
+      "delivered": {
+        "event_index": 4,
+        "seq": 2861,
+        "type": "package_delivered",
+        "package_id": "guangyang-target-1",
+        "tick": 11297.0,
+        "seconds": 225.94
+      }
+    },
+    {
+      "ball_index": 2,
+      "track_id": "target_002",
+      "package_id": "guangyang-target-2",
+      "source": "new_observations",
+      "source_evidence": {
+        "ball_start_line": 448,
+        "ball_start_tick": 11375,
+        "selection_line": 605,
+        "retained_all_WM_count_at_start": 1,
+        "prior_track_ids": [
+          "target_001"
+        ],
+        "selected_track_existed_before_ball_start": false,
+        "all_three_hits_after_ball_start": true
+      },
+      "first_seen": {
+        "line_index": 601,
+        "tick": 16404,
+        "seconds": 328.08,
+        "image": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004149-tick-16404.png",
+        "image_sha256": "94389525553a7c5eee49e8ab549016425ecd1565eacef59c8ffdb40b2c94f999"
+      },
+      "actual_wm_hits": [
+        {
+          "track_id": "target_002",
+          "hit": 1,
+          "wm_line": 604,
+          "observe_line": 601,
+          "tick": 16404,
+          "seconds": 328.08,
+          "raw": {
+            "category": "target",
+            "distanceCm": 46,
+            "bearingDeg": -2.2,
+            "confidence": 0.92
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -86.5,
+            181.9,
+            -123.9
+          ],
+          "native_observe_input_index": 726,
+          "native_observe_seq": 4150
+        },
+        {
+          "track_id": "target_002",
+          "hit": 2,
+          "wm_line": 870,
+          "observe_line": 867,
+          "tick": 16666,
+          "seconds": 333.32,
+          "raw": {
+            "category": "target",
+            "distanceCm": 60,
+            "bearingDeg": -0.96,
+            "confidence": 0.94
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -90.7,
+            205,
+            -136
+          ],
+          "native_observe_input_index": 739,
+          "native_observe_seq": 4223
+        },
+        {
+          "track_id": "target_002",
+          "hit": 3,
+          "wm_line": 1009,
+          "observe_line": 1006,
+          "tick": 16869,
+          "seconds": 337.38,
+          "raw": {
+            "category": "target",
+            "distanceCm": 69,
+            "bearingDeg": 0.28,
+            "confidence": 0.92
+          },
+          "odometry_right_forward_cm_heading_deg": [
+            -106.3,
+            205,
+            -127.7
+          ],
+          "native_observe_input_index": 756,
+          "native_observe_seq": 4291
+        }
+      ],
+      "all_pair_pose_gaps_cm": [
+        {
+          "hit_pair": [
+            1,
+            2
+          ],
+          "distance_cm": 23.478713763747788
+        },
+        {
+          "hit_pair": [
+            1,
+            3
+          ],
+          "distance_cm": 30.424496709066524
+        },
+        {
+          "hit_pair": [
+            2,
+            3
+          ],
+          "distance_cm": 15.599999999999994
+        }
+      ],
+      "confirmation": {
+        "memory_confirmed_line": 1013,
+        "ball_confirmed_line": 1014,
+        "tick": 16869,
+        "seconds": 337.38,
+        "last_sample_wm_distance_m": 0.7998162350541951
+      },
+      "memory_travel": {
+        "last_observe_line": 1006,
+        "last_observe_tick": 16869,
+        "pure_memory_before_approach_cm": 483.3,
+        "pure_memory_ends_tick": 19881,
+        "pure_memory_vision_queries_between_boundaries": 0,
+        "last_observe_to_grab_odometer_cm": 483.3,
+        "last_observe_to_grab_observe_calls": 0,
+        "odometer_start": {
+          "tick": 16869,
+          "value_cm": 2651.6,
+          "basis": "exact_tick",
+          "public_inputs": [
+            {
+              "input_index": 757,
+              "seq": 4292,
+              "tick": 16869,
+              "distanceCm": 2651.6
+            }
+          ]
+        },
+        "odometer_before_approach": {
+          "tick": 19881,
+          "value_cm": 3134.9,
+          "basis": "exact_tick",
+          "public_inputs": [
+            {
+              "input_index": 856,
+              "seq": 5003,
+              "tick": 19881,
+              "distanceCm": 3134.9
+            }
+          ]
+        },
+        "odometer_at_grab": {
+          "tick": 19918.0,
+          "value_cm": 3134.9,
+          "basis": "identical_cumulative_distance_brackets_no_interpolation",
+          "public_inputs": [
+            {
+              "input_index": 863,
+              "seq": 5016,
+              "tick": 19894,
+              "distanceCm": 3134.9
+            },
+            {
+              "input_index": 867,
+              "seq": 5034,
+              "tick": 19932,
+              "distanceCm": 3134.9
+            }
+          ]
+        },
+        "permitted_approach_vision_records": [
+          {
+            "input_index": 858,
+            "seq": 5006,
+            "tick": 19881,
+            "method": "approach_step"
+          },
+          {
+            "input_index": 860,
+            "seq": 5013,
+            "tick": 19894,
+            "method": "approach_step"
+          },
+          {
+            "input_index": 861,
+            "seq": 5014,
+            "tick": 19894,
+            "method": "approach"
+          }
+        ],
+        "logged_memory_metric_line": 1041,
+        "logged_signed_forward_at_grab_cm": 476.7,
+        "approach_call_line": 1038,
+        "logged_signed_forward_before_approach_cm": 476.7,
+        "approach_wm_distance_m": 0.22,
+        "approach_max_steps": 1,
+        "meaning": "Cumulative public odometer includes reversing. Signed business metric subtracts reversing; it is not total travel. Pure memory ends before allowed approach vision; no observe occurs until actual grab."
+      },
+      "grabbed": {
+        "event_index": 5,
+        "seq": 5026,
+        "type": "package_grabbed",
+        "package_id": "guangyang-target-2",
+        "tick": 19918.0,
+        "seconds": 398.36
+      },
+      "delivered": {
+        "event_index": 7,
+        "seq": 5506,
+        "type": "package_delivered",
+        "package_id": "guangyang-target-2",
+        "tick": 21953.0,
+        "seconds": 439.06
+      }
+    }
+  ],
+  "checks_passed": true,
+  "source_files": [
+    {
+      "path": "artifacts/inloop/demo/map-05.json",
+      "sha256": "de32680f0669d15022856ac2859edb640304e2d80cd4852c7c5dfe69f2725a5c"
+    },
+    {
+      "path": "artifacts/inloop/demo/attempts/attempt-030.record.json",
+      "sha256": "2f73d90919d22b98ebced4ed0a38262efd749610d532a51c3877599038d6c806"
+    },
+    {
+      "path": "artifacts/inloop/demo/demo_report.json",
+      "sha256": "584390d86edaeb84da1a80c78075858dfbc786cdae5007bdf3e26a5b03fa622b"
+    },
+    {
+      "path": "artifacts/inloop/demo/demo_finalized.json",
+      "sha256": "05b0fb2e0947ca45ec4828df07e379b6f21882ee0f095abbadcf78aa0802374f"
+    },
+    {
+      "path": "artifacts/inloop/demo/program.py",
+      "sha256": "58a24a2d4fb9bd6b564530eb74ef627a71c2084e731a815cf21f5cc9bb7c7928"
+    },
+    {
+      "path": "artifacts/inloop/demo/executed_program.py",
+      "sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6"
+    },
+    {
+      "path": "artifacts/inloop/demo/identity.json",
+      "sha256": "0a7584c1c7362d1d749ee668f9e9b5e82ac6b77684c5f1fb0868994df6b881e2"
+    },
+    {
+      "path": "tools/demo_wm_story.py",
+      "sha256": "2a45b6238a0ce59cbdc6a4af0844fb8c56de19bf9dd57aaaef216b787d8f636f"
+    },
+    {
+      "path": "artifacts/inloop/demo/attempts/attempt-030.json",
+      "sha256": "de32680f0669d15022856ac2859edb640304e2d80cd4852c7c5dfe69f2725a5c"
+    }
+  ]
+}
