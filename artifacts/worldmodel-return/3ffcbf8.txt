@@ -1,0 +1,124 @@
+EXACT_IMPORT_BINDING={"world_model": "/private/tmp/wm-main-tests-vendor-20260924-3rtabf1r/implementations/3ffcbf8/world_model/__init__.py", "judge": "/private/tmp/wm-main-tests-vendor-20260924-3rtabf1r/implementations/3ffcbf8/judge/__init__.py"}
+.FFFF.....F....F............F................F...                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_put_in_basket_succeeds __________________________
+
+    def test_put_in_basket_succeeds():
+        before, after, tid, now = put_scene()
+        resp = judge(before, after, now, ctx=JudgeContext(target_id=tid))
+>       assert resp.success is True
+E       AssertionError: assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 3.85cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试...'}], 'staleness_s': 0.0, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+
+tests/test_judge.py:79: AssertionError
+____________ test_verdict_does_not_flip_with_detection_score[0.88] _____________
+
+conf = 0.88
+
+    @pytest.mark.parametrize("conf", [0.88, 0.70, 0.55])
+    def test_verdict_does_not_flip_with_detection_score(conf):
+        """物理事实不变，只改检测置信度，判定不能翻转。
+    
+        修复前：0.88 -> True，0.55 -> False（衰减中的幽灵轨迹反超新轨迹）。
+        """
+        before, after, tid, now = put_scene(new_conf=conf)
+        resp = judge(before, after, now, ctx=JudgeContext(target_id=tid))
+>       assert resp.success is True, f"conf={conf} 时判定翻转了"
+E       AssertionError: conf=0.88 时判定翻转了
+E       assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 3.85cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试...'}], 'staleness_s': 0.0, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+
+tests/test_judge.py:92: AssertionError
+_____________ test_verdict_does_not_flip_with_detection_score[0.7] _____________
+
+conf = 0.7
+
+    @pytest.mark.parametrize("conf", [0.88, 0.70, 0.55])
+    def test_verdict_does_not_flip_with_detection_score(conf):
+        """物理事实不变，只改检测置信度，判定不能翻转。
+    
+        修复前：0.88 -> True，0.55 -> False（衰减中的幽灵轨迹反超新轨迹）。
+        """
+        before, after, tid, now = put_scene(new_conf=conf)
+        resp = judge(before, after, now, ctx=JudgeContext(target_id=tid))
+>       assert resp.success is True, f"conf={conf} 时判定翻转了"
+E       AssertionError: conf=0.7 时判定翻转了
+E       assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 3.85cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试...'}], 'staleness_s': 0.0, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+
+tests/test_judge.py:92: AssertionError
+____________ test_verdict_does_not_flip_with_detection_score[0.55] _____________
+
+conf = 0.55
+
+    @pytest.mark.parametrize("conf", [0.88, 0.70, 0.55])
+    def test_verdict_does_not_flip_with_detection_score(conf):
+        """物理事实不变，只改检测置信度，判定不能翻转。
+    
+        修复前：0.88 -> True，0.55 -> False（衰减中的幽灵轨迹反超新轨迹）。
+        """
+        before, after, tid, now = put_scene(new_conf=conf)
+        resp = judge(before, after, now, ctx=JudgeContext(target_id=tid))
+>       assert resp.success is True, f"conf={conf} 时判定翻转了"
+E       AssertionError: conf=0.55 时判定翻转了
+E       assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 3.85cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试...'}], 'staleness_s': 0.0, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+
+tests/test_judge.py:92: AssertionError
+__________________________ test_fresh_evidence_passes __________________________
+
+    def test_fresh_evidence_passes():
+        before, after = _fresh_pair()
+>       assert judge(before, after, 100.5, ctx=JudgeContext(target_id="ball_900")).success is True
+E       AssertionError: assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 0.0cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试占...'}], 'staleness_s': 0.5, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+E        +    where JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 0.0cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试占...'}], 'staleness_s': 0.5, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}) = judge([TrackedObject(obj_id='ball_900', name='ball', aliases=[], x=0.3, z=1.0, radius_cm=3.3, size_source='default', size_tr...irmed'>, pose_uncertainty_cm=1.0, source='test', last_bbox=(0, 0, 10, 10), last_frame_id='f', last_frame_quality=None)], [TrackedObject(obj_id='ball_900', name='ball', aliases=[], x=-0.6, z=1.6, radius_cm=3.3, size_source='default', size_t...irmed'>, pose_uncertainty_cm=1.0, source='test', last_bbox=(0, 0, 10, 10), last_frame_id='f', last_frame_quality=None)], 100.5, ctx=JudgeContext(target_id='ball_900', container_id=None, gripper_pose=None, policy=None, calibration_trusted=False, frame_quality=None, coordinate_frame='world'))
+E        +      where JudgeContext(target_id='ball_900', container_id=None, gripper_pose=None, policy=None, calibration_trusted=False, frame_quality=None, coordinate_frame='world') = JudgeContext(target_id='ball_900')
+
+tests/test_judge.py:167: AssertionError
+______________________ test_grasp_survives_self_occlusion ______________________
+
+    def test_grasp_survives_self_occlusion():
+        """抓在手里最容易被夹爪自遮挡，硬卡 age<1s 会稳定误杀真成功。"""
+        after = [obj("ball", 0.21, 0.61, 0.9, last_seen=8.8)]
+        ev = build_grasp_evidence(after, "ball", True, 10.0, gripper_pose=(0.2, 0.6))
+>       assert ev["satisfied"] is True
+E       assert False is True
+
+tests/test_judge.py:206: AssertionError
+__________________________ test_policy_is_overridable __________________________
+
+    def test_policy_is_overridable():
+        """判定口径可配 —— 真机接入后阈值要按标定结果调。"""
+        before = [obj("ball", 0.3, 1.0, 0.9, last_seen=0.0),
+                  obj("basket", -0.6, 1.6, 0.92, 15.0, last_seen=0.0, oid="basket_901")]
+        after = [obj("ball", -0.6, 1.6, 0.4, last_seen=0.0),      # conf 低于默认下限
+                 obj("basket", -0.6, 1.6, 0.92, 15.0, last_seen=0.0, oid="basket_901")]
+        ctx = JudgeContext(target_id="ball_900",
+                           policy=EvidencePolicy(min_confidence=0.3))
+>       assert judge(before, after, 0.2, ctx=ctx).success is True
+E       AssertionError: assert False is True
+E        +  where False = JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 0.0cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试占...'}], 'staleness_s': 0.2, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}).success
+E        +    where JudgeResponse(success=False, detail='ball -> basket 判定不成立（距离 0.0cm / 阈值 11.7cm）：尺寸来自默认值或启发式估计，不可信，不得据其判定成功；相机标定不可信（测试占...'}], 'staleness_s': 0.2, 'warnings': ['尺寸来自默认值或启发式估计，不可信，不得据其判定成功', '相机标定不可信（测试占位或未标定），不得据其判定成功', '缺少帧质量证据，无法确认证据完整']}) = judge([TrackedObject(obj_id='ball_900', name='ball', aliases=[], x=0.3, z=1.0, radius_cm=3.3, size_source='default', size_tr...irmed'>, pose_uncertainty_cm=1.0, source='test', last_bbox=(0, 0, 10, 10), last_frame_id='f', last_frame_quality=None)], [TrackedObject(obj_id='ball_900', name='ball', aliases=[], x=-0.6, z=1.6, radius_cm=3.3, size_source='default', size_t...irmed'>, pose_uncertainty_cm=1.0, source='test', last_bbox=(0, 0, 10, 10), last_frame_id='f', last_frame_quality=None)], 0.2, ctx=JudgeContext(target_id='ball_900', container_id=None, gripper_pose=None, policy=EvidencePolicy(min_confidence=0.3, req...=True, grasp_reach_m=0.25, grasp_grace_s=1.5), calibration_trusted=False, frame_quality=None, coordinate_frame='world'))
+
+tests/test_judge.py:336: AssertionError
+_______________________ test_timestamp_uses_time_origin ________________________
+
+    def test_timestamp_uses_time_origin():
+        """内部时间是场景相对秒，直接当 Unix 纪元格式化会导出 1970 年。"""
+        wm = WorldModel(time_origin=1786417200.0)     # 2026-08-11T03:00:00Z
+        wm.update([det(x=0.1, z=1.2)], RobotPose(), now=9.0)
+>       assert wm.to_contract()[0]["timestamp"] == "2026-08-11T03:00:09Z"
+E       IndexError: list index out of range
+
+tests/test_world_model.py:169: IndexError
+=========================== short test summary info ============================
+FAILED tests/test_judge.py::test_put_in_basket_succeeds - AssertionError: ass...
+FAILED tests/test_judge.py::test_verdict_does_not_flip_with_detection_score[0.88]
+FAILED tests/test_judge.py::test_verdict_does_not_flip_with_detection_score[0.7]
+FAILED tests/test_judge.py::test_verdict_does_not_flip_with_detection_score[0.55]
+FAILED tests/test_judge.py::test_fresh_evidence_passes - AssertionError: asse...
+FAILED tests/test_judge.py::test_grasp_survives_self_occlusion - assert False...
+FAILED tests/test_judge.py::test_policy_is_overridable - AssertionError: asse...
+FAILED tests/test_world_model.py::test_timestamp_uses_time_origin - IndexErro...
+8 failed, 41 passed in 0.07s
