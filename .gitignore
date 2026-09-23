@@ -1,0 +1,56 @@
+# Operating-system and editor files
+.DS_Store
+._*
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.codex/
+
+# Credentials and machine-local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# Python / JavaScript caches and installed dependencies
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pylint.d/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+node_modules/
+*.egg-info/
+/build/
+/dist/
+/tmp/
+
+# Keep the local nested repository metadata out of the parent repository.
+# Its tracked source is vendored as ordinary files; its history is in a bundle.
+/vendor/wm_kit_opt2/.git/
+
+# Large native experiment evidence remains local, indexed by SHA256.
+# Reports, program snapshots, calibration and evaluation inputs stay in Git.
+/artifacts/**/*.png
+/artifacts/**/*.record.json
+/artifacts/**/*.samples.json
+/artifacts/**/*.partial.txt
+/artifacts/**/*.pid
+/artifacts/inloop_snapshot/
+/artifacts/**/attempts/*.json
+!/artifacts/**/attempts/*.vision.json
+!/artifacts/**/attempts/*.demo.json
+/artifacts/**/attempts/*.log
+
+# Small demo deliverables remain directly viewable on GitHub.
+!/artifacts/inloop/demo/attempts/*.demo/*.png

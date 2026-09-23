@@ -1,0 +1,142 @@
+{
+  "tests_passed": 9,
+  "raw_trials_modified": false,
+  "cases": [
+    {
+      "case": "successful all evidence pass",
+      "confirmed_and_grabbed": true,
+      "statuses": [
+        "pass",
+        "pass"
+      ],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": true,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": true
+      },
+      "passed": true
+    },
+    {
+      "case": "successful onRoad fail blocks overall",
+      "confirmed_and_grabbed": true,
+      "statuses": [
+        "pass",
+        "fail"
+      ],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": false,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    },
+    {
+      "case": "successful missing evidence blocks overall",
+      "confirmed_and_grabbed": true,
+      "statuses": [
+        "pass",
+        "unknown"
+      ],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": true,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    },
+    {
+      "case": "successful empty audit cannot pass",
+      "confirmed_and_grabbed": true,
+      "statuses": [],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": true,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    },
+    {
+      "case": "unsuccessful offRoad still blocks overall",
+      "confirmed_and_grabbed": false,
+      "statuses": [
+        "unknown",
+        "fail"
+      ],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": false,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": true
+      },
+      "passed": true
+    },
+    {
+      "case": "unsuccessful unreached phase remains unknown",
+      "confirmed_and_grabbed": false,
+      "statuses": [
+        "pass",
+        "unknown"
+      ],
+      "complete": true,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": true,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": true
+      },
+      "passed": true
+    },
+    {
+      "case": "incomplete batch never passes",
+      "confirmed_and_grabbed": false,
+      "statuses": [
+        "pass"
+      ],
+      "complete": false,
+      "gates": {
+        "fixed_rules_no_failures_all_runs": false,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    },
+    {
+      "case": "evaluate integration map-01 onRoad fail",
+      "gates": {
+        "complete_ten_layouts": true,
+        "program_errors_zero": false,
+        "stationary_repeat_observes_zero": true,
+        "observe_motion_guard_violations_zero": true,
+        "observe_budget_92": true,
+        "vision_budget_20mib": true,
+        "independent_confirmed_and_grabbed_at_least_80_percent": false,
+        "fixed_rules_no_failures_all_runs": false,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    },
+    {
+      "case": "evaluate integration map-01 onRoad unknown",
+      "gates": {
+        "complete_ten_layouts": true,
+        "program_errors_zero": false,
+        "stationary_repeat_observes_zero": true,
+        "observe_motion_guard_violations_zero": true,
+        "observe_budget_92": true,
+        "vision_budget_20mib": true,
+        "independent_confirmed_and_grabbed_at_least_80_percent": false,
+        "fixed_rules_no_failures_all_runs": true,
+        "fixed_rules_all_pass_for_confirmed_and_grabbed": false
+      },
+      "passed": true
+    }
+  ],
+  "round_1_unknown_audits_retained": 30,
+  "round_1_regression_gates": {
+    "complete_ten_layouts": true,
+    "program_errors_zero": false,
+    "stationary_repeat_observes_zero": true,
+    "observe_motion_guard_violations_zero": true,
+    "observe_budget_92": true,
+    "vision_budget_20mib": true,
+    "independent_confirmed_and_grabbed_at_least_80_percent": false,
+    "fixed_rules_no_failures_all_runs": true,
+    "fixed_rules_all_pass_for_confirmed_and_grabbed": true
+  }
+}

@@ -1,0 +1,55 @@
+[guangyang2] attempt 1: need ['map-01', 'map-02', 'map-03', 'map-04', 'map-05', 'map-06', 'map-08', 'map-09', 'map-10']
+   captured map-08: lines=126 runState=运行已结束
+[guangyang2] attempt 2: need ['map-01', 'map-02', 'map-03', 'map-04', 'map-05', 'map-06', 'map-09', 'map-10']
+   captured map-05: lines=0 runState=timeout
+[guangyang2] attempt 3: need ['map-01', 'map-02', 'map-03', 'map-04', 'map-06', 'map-09', 'map-10']
+   captured map-04: lines=79 runState=timeout
+[guangyang2] attempt 4: need ['map-01', 'map-02', 'map-03', 'map-06', 'map-09', 'map-10']
+   captured map-01: lines=40 runState=timeout
+[guangyang2] attempt 5: need ['map-02', 'map-03', 'map-06', 'map-09', 'map-10']
+   captured map-06: lines=79 runState=timeout
+[guangyang2] attempt 6: need ['map-02', 'map-03', 'map-09', 'map-10']
+   captured map-02: lines=39 runState=timeout
+[guangyang2] attempt 7: need ['map-03', 'map-09', 'map-10']
+[guangyang2] attempt 8: need ['map-03', 'map-09', 'map-10']
+[guangyang2] attempt 9: need ['map-03', 'map-09', 'map-10']
+   captured map-09: lines=68 runState=timeout
+[guangyang2] attempt 10: need ['map-03', 'map-10']
+[guangyang2] attempt 11: need ['map-03', 'map-10']
+[guangyang2] attempt 12: need ['map-03', 'map-10']
+[guangyang2] attempt 13: need ['map-03', 'map-10']
+[guangyang2] attempt 14: need ['map-03', 'map-10']
+[guangyang2] attempt 15: need ['map-03', 'map-10']
+[guangyang2] attempt 16: need ['map-03', 'map-10']
+[guangyang2] attempt 17: need ['map-03', 'map-10']
+   driver exit 1 map=None: 0 is wanted
+INLOOP 2026-09-16T17:13:02.101Z navigating workspace
+Error: Runtime.evaluate timeout after 120000 ms
+    at Timeout._onTimeout (/Users/ken/wm_bench/tools/inloop_driver.js:145:67)
+    at listOnTimeout (node:internal/timers:685:17)
+    at process.processTimers (node:internal/timers:618:7)
+
+[guangyang2] attempt 18: need ['map-03', 'map-10']
+[guangyang2] attempt 19: need ['map-03', 'map-10']
+[guangyang2] attempt 20: need ['map-03', 'map-10']
+[guangyang2] attempt 21: need ['map-03', 'map-10']
+   captured map-10: lines=77 runState=timeout
+[guangyang2] attempt 22: need ['map-03']
+[guangyang2] attempt 23: need ['map-03']
+[guangyang2] attempt 24: need ['map-03']
+[guangyang2] attempt 25: need ['map-03']
+[guangyang2] attempt 26: need ['map-03']
+[guangyang2] attempt 27: need ['map-03']
+[guangyang2] attempt 28: need ['map-03']
+[guangyang2] attempt 29: need ['map-03']
+[guangyang2] attempt 30: need ['map-03']
+Traceback (most recent call last):
+  File "/Users/ken/wm_bench/run.py", line 257, in <module>
+    main()
+  File "/Users/ken/wm_bench/run.py", line 240, in main
+    summary["localization"][mission] = eval_localization_stage(cover)
+  File "/Users/ken/wm_bench/run.py", line 104, in eval_localization_stage
+    metrics = ev.evaluate_localization(result, layout, mutation=mutation, heading_sign=heading_sign)
+  File "/Users/ken/wm_bench/eval_inloop.py", line 152, in evaluate_localization
+    true_pose=Pose(x, z, theta), odom_pose=Pose(x, z, theta), events=[line.get("tag", "")]))
+IndexError: list index out of range

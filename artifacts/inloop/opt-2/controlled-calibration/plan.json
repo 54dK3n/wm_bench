@@ -1,0 +1,493 @@
+{
+  "schema": "p3-native-controller-fixture-plan/v1",
+  "frozenAtUtc": "2026-09-23T15:42:26.063Z",
+  "distinction": "Native DeterministicSimulator + NavigationActionRunner measurement fixture, NOT task1/task2 layout performance or hardware measurement",
+  "source": {
+    "coreFile": "/Users/ken/Desktop/robot_competition-main/projects/car-python/competition-core.js",
+    "coreSha256": "54e004e8ff38188e5e08971a800722a779ef817a5471efd400bf22e52a42cd08",
+    "visionPixelCoreSha256": "7627c0429e338f481948bdcb6ab59af901ad6ed0cee8001ef38d51dfa063c614",
+    "runnerFile": "/Users/ken/Desktop/wm_bench/tools/p3_native_calibration.js",
+    "runnerSha256": "62b09bdfd0aca8d51d146294e7b1b1b8087825d5fbbdd8e215a7146735febfee",
+    "navigationDefinitionExport": "PUBLIC_NAVIGATION_DEFINITION",
+    "referencePublicConfigRecord": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/round-2/attempts/attempt-002.record.json",
+    "referenceRecordSha256": "dda4424089e4cb233428129249be1807ad5e0ccba8a9cb4fa9367db27ec2148d"
+  },
+  "simulation": {
+    "schemaVersion": "chenlong.simulation/v1",
+    "stepMs": 20,
+    "seed": 0,
+    "vehicle": {
+      "version": "chenlong.vehicle/v1",
+      "radius": 0.44,
+      "collisionSkin": 0.005,
+      "maxLinearSpeed": 2.5,
+      "maxAngularSpeed": 2.8
+    }
+  },
+  "rules": {
+    "unitsPerMeter": 8,
+    "navigationJunctionRadiusCm": 15.6,
+    "vehicleRadius": 0.44,
+    "speedingEnabled": false,
+    "wrongWayEnabled": false,
+    "redLightEnabled": false,
+    "prohibitedZonesEnabled": false,
+    "speedZones": [],
+    "trafficLights": [],
+    "prohibitedZones": []
+  },
+  "world": {
+    "bounds": {
+      "minX": -32,
+      "maxX": 32,
+      "minZ": -32,
+      "maxZ": 32
+    },
+    "colliders": []
+  },
+  "fixtures": {
+    "straight": {
+      "initialPose": {
+        "x": 0,
+        "z": 0,
+        "heading": 0
+      },
+      "roads": [
+        {
+          "id": "fixture-straight",
+          "width": 2,
+          "points": [
+            [
+              0,
+              24
+            ],
+            [
+              0,
+              -24
+            ]
+          ]
+        }
+      ]
+    },
+    "junction": {
+      "initialPose": {
+        "x": 0,
+        "z": 0,
+        "heading": 0
+      },
+      "roads": [
+        {
+          "id": "fixture-south",
+          "width": 2,
+          "points": [
+            [
+              0,
+              16
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "id": "fixture-north",
+          "width": 2,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              -16
+            ]
+          ]
+        },
+        {
+          "id": "fixture-east",
+          "width": 2,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              16,
+              0
+            ]
+          ]
+        }
+      ],
+      "selectedExit": "fixture-north"
+    }
+  },
+  "trials": [
+    {
+      "id": "straight100-repeat1",
+      "groupDeg": 0,
+      "repeat": 1,
+      "fixture": "straight",
+      "preparation": [],
+      "method": "follow_road",
+      "args": {
+        "maxCm": 100,
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "straight100-repeat2",
+      "groupDeg": 0,
+      "repeat": 2,
+      "fixture": "straight",
+      "preparation": [],
+      "method": "follow_road",
+      "args": {
+        "maxCm": 100,
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "straight100-repeat3",
+      "groupDeg": 0,
+      "repeat": 3,
+      "fixture": "straight",
+      "preparation": [],
+      "method": "follow_road",
+      "args": {
+        "maxCm": 100,
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn45-repeat1",
+      "groupDeg": 45,
+      "repeat": 1,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 45
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn45-repeat2",
+      "groupDeg": 45,
+      "repeat": 2,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 45
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn45-repeat3",
+      "groupDeg": 45,
+      "repeat": 3,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 45
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn90-repeat1",
+      "groupDeg": 90,
+      "repeat": 1,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 90
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn90-repeat2",
+      "groupDeg": 90,
+      "repeat": 2,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 90
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn90-repeat3",
+      "groupDeg": 90,
+      "repeat": 3,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 90
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn180-repeat1",
+      "groupDeg": 180,
+      "repeat": 1,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 180
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn180-repeat2",
+      "groupDeg": 180,
+      "repeat": 2,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 180
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "id": "turn180-repeat3",
+      "groupDeg": 180,
+      "repeat": 3,
+      "fixture": "junction",
+      "preparation": [
+        {
+          "kind": "turn_angle",
+          "direction": "right",
+          "angleDegrees": 180
+        }
+      ],
+      "method": "take_exit",
+      "args": {
+        "roadId": "fixture-north",
+        "speed": 30,
+        "obeySpeedLimit": true
+      }
+    }
+  ],
+  "navigationDefinition": {
+    "schemaVersion": "chenlong.navigation/v6",
+    "coordinateFrame": "initial-vehicle-pose",
+    "distanceUnit": "centimeter",
+    "angleUnit": "degree",
+    "roadTopology": {
+      "graphSchemaVersion": "chenlong.road-graph/v1",
+      "endpointSnapDigits": 6,
+      "junctionRadiusCm": 125,
+      "straightTurnLimitDeg": 30,
+      "backTurnLimitDeg": 150
+    },
+    "methods": {
+      "odometry": {
+        "fields": [
+          "forwardCm",
+          "rightCm",
+          "headingDeg",
+          "distanceCm",
+          "tick"
+        ]
+      },
+      "road_state": {
+        "fields": [
+          "onRoad",
+          "roadId",
+          "roadIds",
+          "lateralOffsetCm",
+          "headingErrorDeg",
+          "leftClearanceCm",
+          "rightClearanceCm",
+          "frontClearanceCm",
+          "atJunction",
+          "junctionId",
+          "exits",
+          "roadProgressCm",
+          "fromNodeId",
+          "toNodeId",
+          "atNode",
+          "nodeId",
+          "tick"
+        ]
+      },
+      "map_graph": {
+        "fields": [
+          "schemaVersion",
+          "nodes",
+          "edges"
+        ]
+      },
+      "mission": {
+        "fields": [
+          "schemaVersion",
+          "mapId",
+          "mapVersion",
+          "start",
+          "storage",
+          "checkpoints",
+          "return",
+          "objects"
+        ]
+      },
+      "task_state": {
+        "fields": [
+          "schemaVersion",
+          "completed",
+          "total",
+          "status",
+          "nextCheckpointId",
+          "targetDelivered",
+          "distractorCleared",
+          "avoidanceStatus",
+          "goalReached",
+          "tick"
+        ]
+      },
+      "release_preview": {
+        "fields": [
+          "schemaVersion",
+          "holding",
+          "releaseAccepted",
+          "releaseReason",
+          "wouldCompleteDelivery",
+          "roadClearanceCm",
+          "requiredRoadClearanceCm",
+          "tick"
+        ]
+      }
+    },
+    "objectAnchorDisclosure": "road-anchor"
+  },
+  "navigationControlDefinition": {
+    "schemaVersion": "chenlong.navigation-control/v8",
+    "navigationSchemaVersion": "chenlong.navigation/v6",
+    "distanceUnit": "centimeter",
+    "speedUnit": "percent",
+    "actionLimit": 300,
+    "controller": {
+      "lookaheadCm": 20,
+      "headingToleranceDeg": 1,
+      "exitEntryCm": 25,
+      "takeExitSpeed": 30,
+      "maxActionTicks": 5000,
+      "shortEdgeNodeArrival": true
+    },
+    "methods": {
+      "follow_road": {
+        "args": [
+          "maxCm",
+          "speed",
+          "obeySpeedLimit"
+        ],
+        "resultFields": [
+          "accepted",
+          "stoppedBy",
+          "roadId",
+          "distanceCm",
+          "elapsedTicks"
+        ]
+      },
+      "take_exit": {
+        "args": [
+          "roadId",
+          "speed",
+          "obeySpeedLimit"
+        ],
+        "resultFields": [
+          "accepted",
+          "stoppedBy",
+          "roadId",
+          "distanceCm",
+          "elapsedTicks"
+        ]
+      }
+    }
+  },
+  "fit": {
+    "method": "unweighted OLS elapsedTicks=a*measuredDistanceCm+b*abs(measuredPublicHeadingDelta); no intercept; k=b/a",
+    "codeSha256": "0c378597b5a20f217bf88b216a6298673f15967c0ce2c717834b78e26420812a",
+    "all12SamplesIncluded": true,
+    "residualLimit": 0.1,
+    "residualDefinition": "abs(predictedTicks-measuredTicks)/measuredTicks; each sample <=10%; no row removal or tuning after results"
+  },
+  "qualification": {
+    "speed": 30,
+    "obeySpeedLimit": true,
+    "straight": "one follow_road100, accepted/max_distance, public measured100cm",
+    "turn": "public selected exit requested45/90/180, accepted/entered_road; fit uses actual public heading delta",
+    "exactPublicTickBoundaries": true,
+    "allStepsOnRoad": true,
+    "failedMeasurementsRetained": true,
+    "noRetry": true
+  },
+  "repetitions": "Three independent simulator initializations per condition. Deterministic repetitions measure reproducibility, not independent physical layouts.",
+  "preparationPolicy": "Each fixture initialization and each native turn_angle alignment is logged; no preparation timing is counted as take_exit timing.",
+  "externalValidity": "Same core/vehicle/contracts as recorded competition; custom empty straight roads lack competition curves, speed-zone transitions, objects and complex entry paths. Historical118-row task diagnosis remains unchanged."
+}

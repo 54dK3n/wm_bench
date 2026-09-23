@@ -1,0 +1,103 @@
+.................FF...                                                   [100%]
+=================================== FAILURES ===================================
+_______________________ test_3_2_shortest_turn_20_cases ________________________
+
+record = <function record.<locals>._record at 0x108ba10d0>
+
+    def test_3_2_shortest_turn_20_cases(record):
+        failures = []
+        for current, target, expected in TURN_CASES:
+            result = turn_mod.normalize_turn_deg(current, target)
+            ok = abs(result - expected) <= 1e-9
+            if not ok:
+                failures.append(f"current={current} target={target}: 得到 {result}，期望 {expected}")
+            # 通用性质：落在 (-180, 180]，且与 target-current 同余
+            if not (-180.0 < result <= 180.0 + 1e-9):
+                failures.append(f"current={current} target={target}: 结果 {result} 不在 (-180, 180]")
+            if abs(((result - (target - current)) + 180.0) % 360.0 - 180.0) > 1e-9:
+                failures.append(f"current={current} target={target}: 结果 {result} 与 target-current 不同余")
+        record("3_2", {"cases": len(TURN_CASES), "failures": failures})
+>       assert not failures, f"3.2 最短转角失败 {len(failures)} 处（要求 20/20）：\n" + "\n".join(failures)
+E       AssertionError: 3.2 最短转角失败 26 处（要求 20/20）：
+E         current=10 target=350: 得到 340，期望 -20
+E         current=10 target=350: 结果 340 不在 (-180, 180]
+E         current=350 target=10: 得到 -340，期望 20
+E         current=350 target=10: 结果 -340 不在 (-180, 180]
+E         current=5 target=355: 得到 350，期望 -10
+E         current=5 target=355: 结果 350 不在 (-180, 180]
+E         current=359 target=1: 得到 -358，期望 2
+E         current=359 target=1: 结果 -358 不在 (-180, 180]
+E         current=170 target=-170: 得到 -340，期望 20
+E         current=170 target=-170: 结果 -340 不在 (-180, 180]
+E         current=-170 target=170: 得到 340，期望 -20
+E         current=-170 target=170: 结果 340 不在 (-180, 180]
+E         current=179 target=-179: 得到 -358，期望 2
+E         current=179 target=-179: 结果 -358 不在 (-180, 180]
+E         current=-175 target=175: 得到 350，期望 -10
+E         current=-175 target=175: 结果 350 不在 (-180, 180]
+E         current=90 target=-90: 得到 -180，期望 180
+E         current=90 target=-90: 结果 -180 不在 (-180, 180]
+E         current=0 target=-180: 得到 -180，期望 180
+E         current=0 target=-180: 结果 -180 不在 (-180, 180]
+E         current=200 target=20: 得到 -180，期望 180
+E         current=200 target=20: 结果 -180 不在 (-180, 180]
+E         current=725 target=5: 得到 -720，期望 0
+E         current=725 target=5: 结果 -720 不在 (-180, 180]
+E         current=30 target=300: 得到 270，期望 -90
+E         current=30 target=300: 结果 270 不在 (-180, 180]
+E       assert not ['current=10 target=350: 得到 340，期望 -20', 'current=10 target=350: 结果 340 不在 (-180, 180]', 'current=350 target=10: 得到 -3...10: 结果 -340 不在 (-180, 180]', 'current=5 target=355: 得到 350，期望 -10', 'current=5 target=355: 结果 350 不在 (-180, 180]', ...]
+
+tests/acceptance/offline/test_3_x.py:47: AssertionError
+________________ test_3_3_cost_optimal_beats_euclidean_nearest _________________
+
+record = <function record.<locals>._record at 0x108ba15e0>
+
+    def test_3_3_cost_optimal_beats_euclidean_nearest(record):
+        scenarios = _scenarios()
+        assert len(scenarios) == 10
+        correct, baseline_correct = 0, 0
+        rows = []
+        for scn in scenarios:
+            cands = [_cand(cid, cid, bearing, scn["nodes"]) for cid, bearing in scn["cands"]]
+            best = selector_mod.select_best_candidate(cands, current_heading_deg=scn["heading"], start_node="S", graph=scn["graph"], k=K_TURN)
+            chosen = best.candidate.candidate_id if best is not None else None
+            base = _euclid_baseline(scn)
+            correct += chosen == scn["expect"]
+            baseline_correct += base == scn["expect"]
+            rows.append({"id": scn["id"], "expect": scn["expect"], "chosen": chosen, "euclid_baseline": base,
+                         "chosen_cost": round(best.cost, 2) if best else None, "chosen_path_cm": best.path_distance_cm if best else None,
+                         "chosen_turn_deg": best.turn_deg if best else None})
+        record("3_3", {"selection_correct": correct, "euclid_baseline_correct": baseline_correct, "rows": rows})
+        wrong = [r for r in rows if r["chosen"] != r["expect"]]
+        assert baseline_correct <= 3, f"用例设计失效：欧氏基线正确率 {baseline_correct}/10 不够低，无法作为对照"
+>       assert correct >= 9, f"3.3 代价选择正确 {correct}/10（门限 ≥ 9；欧氏基线 {baseline_correct}/10）。错误用例：{wrong}"
+E       AssertionError: 3.3 代价选择正确 8/10（门限 ≥ 9；欧氏基线 0/10）。错误用例：[{'id': 'T3_cross_180', 'expect': 'A', 'chosen': 'B', 'euclid_baseline': 'B', 'chosen_cost': 335.0, 'chosen_path_cm': 250.0, 'chosen_turn_deg': -85}, {'id': 'T4_neg_heading', 'expect': 'A', 'chosen': 'B', 'euclid_baseline': 'B', 'chosen_cost': 570.0, 'chosen_path_cm': 400.0, 'chosen_turn_deg': 170}]
+E       assert 8 >= 9
+
+tests/acceptance/offline/test_3_x.py:135: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+PASSED tests/acceptance/offline/test_3_x.py::test_3_4_first_target_uses_graph_shortest_not_euclidean
+FAILED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+FAILED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+2 failed, 20 passed in 0.77s
+

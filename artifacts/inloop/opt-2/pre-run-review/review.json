@@ -1,0 +1,173 @@
+{
+  "program": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py",
+  "program_sha256": "203e7a8acfa041064f341b6103b1fda4f80cc64b304ca3ae628e34844d79ca0e",
+  "runtime_program_version_not_observed": true,
+  "actual_platform_transform_compile": true,
+  "await_in_generator_or_lambda": [],
+  "protected_function_AST_unchanged": {
+    "nav_odometry": true,
+    "nav_road_state": true,
+    "nav_mission": true,
+    "nav_map_graph": true,
+    "nav_task_state": true,
+    "nav_release_preview": true,
+    "motion_forward": true,
+    "motion_backward": true,
+    "motion_left_angle": true,
+    "motion_right_angle": true,
+    "motion_follow_road": true,
+    "motion_take_exit": true,
+    "motion_approach": true,
+    "motion_grab": true,
+    "motion_release": true,
+    "_observe_motion": true,
+    "query_observe": true,
+    "_record_hit": true,
+    "_confirmation_result": true,
+    "_try_enter_range_and_confirm": true,
+    "_update_wm": true,
+    "calibrate_reading": true,
+    "calibrated_detection": true,
+    "uncalibrate_reading": true,
+    "_approach_graph_navigation": true
+  },
+  "static_checks": {
+    "no_target_anchor_access": {
+      "status": "pass",
+      "evidence": [],
+      "reason": "AST target-anchor and unguarded mission-object coordinate scan; legal obstacle/distractor filters retained; runtime protected-target test is complementary"
+    },
+    "no_layout_coordinates": {
+      "status": "pass",
+      "evidence": {
+        "pair_violations": [],
+        "scanned_sources": [
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py",
+            "numeric_literals": 637
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/__init__.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/adapters.py",
+            "numeric_literals": 11
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/aliases.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/association.py",
+            "numeric_literals": 12
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/calibration.py",
+            "numeric_literals": 26
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/core.py",
+            "numeric_literals": 30
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/decay.py",
+            "numeric_literals": 27
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/providers/__init__.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/providers/base.py",
+            "numeric_literals": 36
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/providers/guangyang.py",
+            "numeric_literals": 105
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/providers/mock.py",
+            "numeric_literals": 11
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/raw.py",
+            "numeric_literals": 8
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/size_policy.py",
+            "numeric_literals": 13
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py::zip@707/world_model/types.py",
+            "numeric_literals": 20
+          }
+        ],
+        "truth_files": [
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-01.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-02.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-03.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-04.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-05.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-06.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-07.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-08.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-09.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-10.json"
+        ],
+        "scope": "AST signed coordinate pairs, including embedded package; computed/encoded obfuscation needs review"
+      },
+      "reason": null
+    }
+  },
+  "transformed_new_flow_with_real_WM": {
+    "passed": true,
+    "scope": "software doubles, not physical delivery evidence",
+    "two_distinct_selection_ids": [
+      "target_001",
+      "target_002"
+    ],
+    "real_WM_action_api_transitions": [
+      {
+        "event": "wm_action_removed",
+        "tick": 150,
+        "ball_index": 1,
+        "track_id": "target_001",
+        "target_source": "memory",
+        "removed": true,
+        "evidence": "verified_target_holding",
+        "old_position": [
+          0.0,
+          1.0
+        ],
+        "previous_confidence": 0.9,
+        "confidence": 0.0,
+        "state": "lost"
+      },
+      {
+        "event": "wm_action_removed",
+        "tick": 151,
+        "ball_index": 2,
+        "track_id": "target_002",
+        "target_source": "memory",
+        "removed": true,
+        "evidence": "verified_target_holding",
+        "old_position": [
+          0.0,
+          1.6
+        ],
+        "previous_confidence": 0.9,
+        "confidence": 0.0,
+        "state": "lost"
+      }
+    ],
+    "async_exclusion_filter_preserves_capped_ray": true
+  },
+  "confirmed_blocking_findings": [],
+  "limits": [
+    "Native task has not run; synthetic actions do not prove delivery or target identity.",
+    "P3 nominal k usage decision belongs to root; historical task residual failures remain.",
+    "Offline P3 oracle and final report reviewed separately by audit_batch."
+  ],
+  "all_pass": true
+}

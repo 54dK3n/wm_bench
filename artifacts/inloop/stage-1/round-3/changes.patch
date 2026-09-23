@@ -1,0 +1,333 @@
+--- round-2/program.py
++++ round-3/program.py
+@@ -10,7 +10,7 @@
+ 
+ import hashlib, heapq, json, sys, traceback
+ 
+-PROGRAM_VERSION = "wm-stage1-r2-20260923"
++PROGRAM_VERSION = "wm-stage1-r3-20260923"
+ try:
+     _main_module = sys.modules.get("__main__")
+     _student_source = getattr(_main_module, "__dict__", {}).get("student_source")
+@@ -1090,7 +1090,11 @@
+ 
+ """Runtime-only road geometry and viewpoint planning; embedded by the main program."""
+ 
+-VP_STATE = {"roads": {}, "intervals": {}, "explored": set(), "failed": set(), "nudged": set(), "canonical_hints": {}}
++VP_STATE = {"roads": {}, "intervals": {}, "explored": set(), "failed": set(), "nudged": set(), "canonical_hints": {}, "travel_attempts": set()}
++
++# Public API contract: competition-core.js controller.exitEntryCm (line 117),
++# take_exit landing construction (lines 3896-3910); not a scene-derived distance.
++VP_EXIT_ENTRY_CM = 25.0
+ 
+ 
+ def _vp_event(event, **fields):
+@@ -1136,7 +1140,7 @@
+     return (dx / length, dz / length) if length else None
+ 
+ 
+-def _vp_path(state, road_id, progress):
++def _vp_path(state, road_id, progress, enter_only=False):
+     current = edge_by_road.get(state.get("roadId"))
+     target = edge_by_road.get(road_id)
+     if current is None or target is None or state.get("roadProgressCm") is None:
+@@ -1149,7 +1153,7 @@
+         direction = 1 if progress >= start_s else -1
+         a, b = ((current["fromNodeId"], current["toNodeId"]) if direction > 0
+                 else (current["toNodeId"], current["fromNodeId"]))
+-        if (a, b, road_id) not in blocked_directions:
++        if progress == start_s or (a, b, road_id) not in blocked_directions:
+             plans.append({"cost_cm": abs(progress - start_s), "direct": True,
+                           "direction": direction, "route": []})
+     starts = [(current["toNodeId"], float(current["lengthCm"]) - start_s, 1)]
+@@ -1160,16 +1164,31 @@
+         ends.append((target["toNodeId"], float(target["lengthCm"]) - progress))
+     for node, initial_cm, direction in starts:
+         from_node = current["fromNodeId"] if direction > 0 else current["toNodeId"]
+-        if (from_node, node, current["roadId"]) in blocked_directions:
++        if initial_cm > 0 and (from_node, node, current["roadId"]) in blocked_directions:
+             continue
+         for end_node, final_cm in ends:
++            entry_cm = min(float(target["lengthCm"]), VP_EXIT_ENTRY_CM)
++            if enter_only:
++                # An unknown frontier at the endpoint is a gateway, not a demand
++                # to stop before the public take_exit landing position.
++                final_cost_cm = entry_cm
++            elif target["oneWay"] and final_cm < entry_cm:
++                continue
++            else:
++                final_cost_cm = entry_cm + abs(final_cm - entry_cm)
+             destination_node = target["toNodeId"] if end_node == target["fromNodeId"] else target["fromNodeId"]
+             if (end_node, destination_node, road_id) in blocked_directions:
+                 continue
++            if (not enter_only and final_cm < entry_cm
++                    and (destination_node, end_node, road_id) in blocked_directions):
++                continue
+             route = dijkstra(node, end_node)
+             if route is not None:
+-                plans.append({"cost_cm": initial_cm + route[1] + final_cm, "direct": False,
++                plans.append({"cost_cm": initial_cm + route[1] + final_cost_cm, "direct": False,
+                               "direction": direction, "entry_node": node,
++                              "target_entry_node": end_node,
++                              "landing_progress_cm": (entry_cm if end_node == target["fromNodeId"]
++                                                       else float(target["lengthCm"]) - entry_cm),
+                               "route": list(route[0]) + [road_id]})
+     return min(plans, key=lambda plan: plan["cost_cm"]) if plans else None
+ 
+@@ -1324,6 +1343,37 @@
+     return pose, state
+ 
+ 
++
++def _vp_block_current_direction(before_state, planned_direction=None):
++    """Block the actual attempted road direction, never infer it from half-road position."""
++    pose, state = _vp_remember()
++    road_id = state.get("roadId")
++    edge = edge_by_road.get(road_id)
++    if edge is None or not state.get("onRoad"):
++        return False
++    direction = None
++    if before_state.get("roadId") == road_id:
++        delta = float(state.get("roadProgressCm") or 0.0) - float(before_state.get("roadProgressCm") or 0.0)
++        if round(delta, 1) != 0:
++            direction = 1 if delta > 0 else -1
++    unit = _vp_canonical_unit(road_id, float(state.get("roadProgressCm") or 0.0))
++    if direction is None and unit is not None:
++        yaw = pose.yaw_rad - math.radians(float(state.get("headingErrorDeg") or 0.0))
++        direction = 1 if math.sin(yaw) * unit[0] + math.cos(yaw) * unit[1] >= 0 else -1
++    if direction is None and before_state.get("roadId") == road_id:
++        direction = planned_direction
++    if direction is None:
++        return False
++    from_node, to_node = ((edge["fromNodeId"], edge["toNodeId"]) if direction > 0
++                          else (edge["toNodeId"], edge["fromNodeId"]))
++    key = (from_node, to_node, road_id)
++    changed = key not in blocked_directions
++    blocked_directions.add(key)
++    _vp_event("viewpoint_direction_blocked", roadId=road_id, fromNodeId=from_node,
++              toNodeId=to_node, roadProgressCm=state.get("roadProgressCm"), changed=changed)
++    return changed
++
++
+ def _vp_enter(road_id):
+     before, state = _vp_prepare_node()
+     if not state.get("onRoad") or not any(item.get("roadId") == road_id for item in state.get("exits", [])):
+@@ -1338,35 +1388,61 @@
+         sign = 1 if state["nodeId"] == edge["fromNodeId"] else -1
+         yaw = after.yaw_rad - math.radians(float(now.get("headingErrorDeg") or 0.0))
+         VP_STATE.setdefault("canonical_hints", {})[road_id] = (sign * math.sin(yaw), sign * math.cos(yaw))
++    if result.get("stoppedBy") == "front_clearance":
++        _vp_block_current_direction(state)
+     _vp_event("viewpoint_take_exit", roadId=road_id, distanceCm=result.get("distanceCm"),
+               stoppedBy=result.get("stoppedBy"), actualRoadId=now.get("roadId"),
+               actualProgressCm=now.get("roadProgressCm"))
+     return bool(result.get("accepted") and now.get("onRoad") and moved > 0)
+ 
+ 
++def _vp_finish_travel(result):
++    VP_STATE["travel_attempts"] = set()
++    VP_STATE["travel_active"] = None
++    return result
++
++
+ def _vp_travel(candidate):
++    if VP_STATE.get("travel_active") != candidate["key"]:
++        VP_STATE["travel_attempts"] = set()
++        VP_STATE["travel_active"] = candidate["key"]
+     pose, state = _vp_remember()
+-    plan = _vp_path(state, candidate["roadId"], candidate["progressCm"])
++    plan = _vp_path(state, candidate["roadId"], candidate["progressCm"], candidate.get("enter_only", False))
+     reason = None
++    if plan is not None:
++        key = (candidate["key"], state.get("roadId"), round(float(state.get("roadProgressCm") or 0.0), 1),
++               plan["direction"], plan.get("entry_node"), tuple(plan["route"]), len(blocked_directions))
++        attempted = VP_STATE.setdefault("travel_attempts", set())
++        if key in attempted:
++            _vp_event("viewpoint_unreachable", key=candidate["key"], reason="repeated_travel_state")
++            return _vp_finish_travel("unreachable")
++        attempted.add(key)
+     if plan is None:
+         reason = "no_legal_road_path"
+     elif plan["direct"]:
+         delta = candidate["progressCm"] - float(state["roadProgressCm"])
+         if round(delta, 1) == 0:
+-            return "arrived"
++            return _vp_finish_travel("arrived")
+         if not _vp_face_progress(plan["direction"], state):
+             reason = "canonical_direction_unknown_or_road_changed"
+         else:
+             result = _vp_follow(abs(delta), SLOW_SPEED)
+             _, now = _vp_remember()
++            if result.get("stoppedBy") == "front_clearance" and _vp_block_current_direction(state, plan["direction"]):
++                return "replan"
+             if now.get("roadId") != candidate["roadId"]:
+                 if result.get("distanceCm", 0) > 0:
+                     return "replan"
+                 VP_STATE["failed"].add(candidate["key"])
+                 _vp_event("viewpoint_unreachable", key=candidate["key"], reason="road_changed_without_translation")
+-                return "unreachable"
++                return _vp_finish_travel("unreachable")
+             if round(float(now.get("roadProgressCm") or 0.0) - candidate["progressCm"], 1) == 0:
+-                return "arrived"
++                return _vp_finish_travel("arrived")
++            if (result.get("stoppedBy") == "max_distance"
++                    and round(float(now.get("roadProgressCm") or 0.0) - float(state["roadProgressCm"]), 1) != 0):
++                _vp_event("viewpoint_progress_replan", key=candidate["key"],
++                          actualProgressCm=now.get("roadProgressCm"), requestedProgressCm=candidate["progressCm"])
++                return "replan"
+             reason = "stopped_before_candidate:" + str(result.get("stoppedBy"))
+     else:
+         if not _vp_face_progress(plan["direction"], state):
+@@ -1377,19 +1453,22 @@
+                         else float(state["roadProgressCm"]))
+             if round(distance, 1) > 0:
+                 result = _vp_follow(distance, SLOW_SPEED)
++                if result.get("stoppedBy") == "front_clearance" and _vp_block_current_direction(state, plan["direction"]):
++                    return "replan"
+                 if result.get("stoppedBy") not in ("junction", "road_end", "max_distance"):
+                     reason = "transition_approach:" + str(result.get("stoppedBy"))
+             if reason is None:
+                 _, now = _vp_prepare_node()
+                 if now.get("nodeId") != plan["entry_node"]:
+                     reason = "different_transition_node"
+-                elif _vp_enter(plan["route"][0]):
+-                    return "replan"
+                 else:
++                    blocked_before = len(blocked_directions)
++                    if _vp_enter(plan["route"][0]) or len(blocked_directions) > blocked_before:
++                        return "replan"
+                     reason = "planned_exit_unavailable_or_blocked"
+     VP_STATE["failed"].add(candidate["key"])
+     _vp_event("viewpoint_unreachable", key=candidate["key"], reason=reason)
+-    return "unreachable"
++    return _vp_finish_travel("unreachable")
+ 
+ 
+ def _vp_explore_unit(goal, pose):
+@@ -1855,10 +1934,50 @@
+     return sorted(candidates, key=lambda point: (point["path_cm"], point["key"]))
+ 
+ 
++def _mag_node_bounds(target, points):
++    """Triangle-inequality lower bounds to the existing capture disk, in cm.
++
++    At a measured point p, h(p)=max(0, |p-target|-fine_radius). An endpoint
++    at road-arc distance d has h(node)>=h(p)-d. Propagating that inequality
++    through graph lengths gives bounds without inventing endpoint coordinates.
++    Directional blocks do not remove the geometric inequality of a real road.
++    """
++    bounds = {}
++    adjacency = {}
++    for road_id, edge in edge_by_road.items():
++        a, b, length = edge["fromNodeId"], edge["toNodeId"], float(edge["lengthCm"])
++        bounds.setdefault(a, 0.0)
++        bounds.setdefault(b, 0.0)
++        adjacency.setdefault(a, []).append((b, length))
++        adjacency.setdefault(b, []).append((a, length))
++    for point in points.values():
++        edge = edge_by_road[point["roadId"]]
++        center = point
++        if point.get("geometry") == "current_pose":
++            samples = VP_STATE["roads"].get(point["roadId"], [])
++            center = next((item for item in samples if round(item["s"] - point["progressCm"], 1) == 0), None)
++            if center is None:
++                continue
++        bound = max(0.0, (math.hypot(center["x"] - target.x, center["z"] - target.z)
++                          - APPROACH_FINE_DISTANCE_M) * 100.0)
++        for node, distance in ((edge["fromNodeId"], point["progressCm"]),
++                               (edge["toNodeId"], float(edge["lengthCm"]) - point["progressCm"])):
++            bounds[node] = max(bounds[node], bound - distance)
++    remaining = set(bounds)
++    while remaining:
++        node = max(remaining, key=lambda item: bounds[item])
++        remaining.remove(node)
++        for neighbor, length in adjacency[node]:
++            if neighbor in remaining:
++                bounds[neighbor] = max(bounds[neighbor], bounds[node] - length)
++    return bounds
++
++
+ def _mag_frontiers(pose, state, target, failed):
+     """Plan to measured boundaries of unknown intervals, including unseen graph edges."""
+     candidates = []
+     points = _vp_points(pose, state)
++    node_bounds = _mag_node_bounds(target, points)
+     for road_id, edge in edge_by_road.items():
+         if road_id in blocked_roads:
+             continue
+@@ -1891,15 +2010,21 @@
+                 frontier_key = (road_id, direction, round(end, 1))
+                 if frontier_key in failed:
+                     continue
+-                plan = _vp_path(state, road_id, progress)
++                key = road_id + "@" + str(round(progress, 1))
++                point = points.get(key)
++                enter_only = point is None and progress in (0.0, length)
++                plan = _vp_path(state, road_id, progress, enter_only)
+                 if plan is None:
+                     continue
+-                key = road_id + "@" + str(round(progress, 1))
+-                point = points.get(key)
+-                # Only a measured boundary can supply a geometric preference. Unknown
+-                # graph endpoints have no invented coordinates or tangent extrapolation.
++                # Unknown boundaries get graph-propagated distance bounds, not coordinates.
+                 distance = (math.hypot(point["x"] - target.x, point["z"] - target.z)
+-                            if point is not None else float("inf"))
++                            if point is not None else None)
++                evaluation_progress = (plan["landing_progress_cm"]
++                                       if enter_only and not plan["direct"] else progress)
++                remaining_bound = (max(0.0, (distance - APPROACH_FINE_DISTANCE_M) * 100.0)
++                                   if distance is not None else
++                                   max(0.0, node_bounds[edge["fromNodeId"]] - evaluation_progress,
++                                       node_bounds[edge["toNodeId"]] - (length - evaluation_progress)))
+                 unit = _vp_canonical_unit(road_id, progress)
+                 toward = 0.0
+                 if point is not None and unit is not None:
+@@ -1908,8 +2033,10 @@
+                 candidates.append({"key": key, "roadId": road_id, "progressCm": progress,
+                                    "endCm": end, "direction": direction, "frontier_key": frontier_key,
+                                    "plan": plan, "path_cm": plan["cost_cm"],
++                                   "enter_only": enter_only, "remaining_bound_cm": remaining_bound,
++                                   "score_cm": plan["cost_cm"] + remaining_bound,
+                                    "boundary_distance_m": distance, "toward": toward})
+-    return sorted(candidates, key=lambda point: (point["path_cm"], point["boundary_distance_m"],
++    return sorted(candidates, key=lambda point: (point["score_cm"], point["path_cm"],
+                                                 -point["toward"], point["key"], point["direction"]))
+ 
+ 
+@@ -1936,6 +2063,8 @@
+                     distanceCm=result.get("distanceCm"), stoppedBy=result.get("stoppedBy"))
+     if not after.get("onRoad"):
+         return "off_road"
++    if result.get("stoppedBy") == "front_clearance" and _vp_block_current_direction(state, direction):
++        return "replan"
+     if after.get("roadId") != road_id:
+         return "replan" if result.get("distanceCm", 0) > 0 else "unreachable"
+     if result.get("stoppedBy") in ("junction", "road_end"):
+@@ -1979,8 +2108,14 @@
+                             roadId=state.get("roadId"), onRoad=True)
+             return False
+         chosen = options[0]
++        plan = chosen.get("plan", {})
++        coverage = tuple((road_id, tuple((round(left, 1), round(right, 1)) for left, right
++                                         in VP_STATE["intervals"].get(road_id, [])))
++                         for road_id in sorted(VP_STATE["roads"]))
+         operation_key = (kind, chosen["key"], chosen.get("direction"), state.get("roadId"),
+-                         round(float(state.get("roadProgressCm") or 0.0), 1))
++                         round(float(state.get("roadProgressCm") or 0.0), 1),
++                         plan.get("direction"), plan.get("entry_node"), tuple(plan.get("route", [])),
++                         len(blocked_directions), coverage)
+         if operation_key in attempted:
+             if kind == "candidate":
+                 tried.add(chosen["key"])
+@@ -1992,7 +2127,9 @@
+         attempted.add(operation_key)
+         _approach_event("approach_graph_selected", kind=kind, key=chosen["key"],
+                         pathCm=chosen["path_cm"], wm_distance_m=chosen.get("wm_distance_m"),
+-                        direction=chosen.get("direction"), reason="shortest_legal_road_path")
++                        direction=chosen.get("direction"), remainingBoundCm=chosen.get("remaining_bound_cm"),
++                        scoreCm=chosen.get("score_cm"),
++                        reason="shortest_legal_road_path" if kind == "candidate" else "path_plus_capture_distance_bound")
+         result = _vp_travel(chosen) if kind == "candidate" else _mag_frontier_step(chosen, state)
+         actual_pose, actual_state = _vp_remember()
+         if not actual_state.get("onRoad") or result == "off_road":

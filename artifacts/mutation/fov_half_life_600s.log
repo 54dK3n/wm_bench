@@ -1,0 +1,143 @@
+.......F.FF..F........                                                   [100%]
+=================================== FAILURES ===================================
+_________________ test_2_5_grabbed_target_goes_stale_within_3s _________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x106c7c160>
+classify = <function make_track_classifier.<locals>.classify at 0x106c7c550>
+record = <function record.<locals>._record at 0x106c0f550>
+
+    def test_2_5_grabbed_target_goes_stale_within_3s(layouts_task2, wm_factory, classify, record):
+        """抓起目标后原位置一直在视野内却看不到，3 s 内该轨迹必须离开 CONFIRMED（STALE 或 LOST）。10/10。"""
+        passed = 0
+        details = []
+        for i, layout in enumerate(layouts_task2):
+            frames, _, meta = build_grab_scenario(layout, seed=500 + i, post_grab_hold_s=3.5)
+            log = harness.run_wm(frames, wm_factory())
+            track = _target_track_before(log, meta["t_grab"], meta["target"], classify)
+            after = log.at_or_after(meta["t_grab"] + 3.0)
+            later = after.by_id(track.obj_id)
+            state_after = later.state if later else LOST  # 不在快照中 = 已 LOST
+            ok = state_after in (STALE, LOST)
+            passed += ok
+            details.append({"map": layout.map_id, "obj_id": track.obj_id, "t_grab": meta["t_grab"], "t_check": after.t,
+                            "conf_before": round(track.confidence, 3), "state_after": state_after.value,
+                            "conf_after": round(later.confidence, 3) if later else None, "ok": ok})
+        record("2_5", {"passed": passed, "threshold": 10, "details": details})
+>       assert passed == 10, f"2.5 抓取后 3 s 内跌破 STALE 的局数 {passed}/10。明细：{[d for d in details if not d['ok']]}"
+E       AssertionError: 2.5 抓取后 3 s 内跌破 STALE 的局数 0/10。明细：[{'map': 'map-01', 'obj_id': 'target_006', 't_grab': 12.0, 't_check': 15.0, 'conf_before': 0.955, 'state_after': 'confirmed', 'conf_after': 0.941, 'ok': False}, {'map': 'map-02', 'obj_id': 'target_003', 't_grab': 12.5, 't_check': 15.5, 'conf_before': 0.959, 'state_after': 'confirmed', 'conf_after': 0.943, 'ok': False}, {'map': 'map-03', 'obj_id': 'target_001', 't_grab': 11.5, 't_check': 14.5, 'conf_before': 0.94, 'state_after': 'confirmed', 'conf_after': 0.958, 'ok': False}, {'map': 'map-04', 'obj_id': 'target_006', 't_grab': 14.0, 't_check': 17.0, 'conf_before': 0.943, 'state_after': 'confirmed', 'conf_after': 0.959, 'ok': False}, {'map': 'map-05', 'obj_id': 'target_006', 't_grab': 15.5, 't_check': 18.5, 'conf_before': 0.962, 'state_after': 'confirmed', 'conf_after': 0.958, 'ok': False}, {'map': 'map-06', 'obj_id': 'target_004', 't_grab': 6.5, 't_check': 9.5, 'conf_before': 0.951, 'state_after': 'confirmed', 'conf_after': 0.919, 'ok': False}, {'map': 'map-07', 'obj_id': 'target_004', 't_grab': 6.5, 't_check': 9.5, 'conf_before': 0.955, 'state_after': 'confirmed', 'conf_after': 0.92, 'ok': False}, {'map': 'map-08', 'obj_id': 'target_003', 't_grab': 13.5, 't_check': 16.5, 'conf_before': 0.946, 'state_after': 'confirmed', 'conf_after': 0.925, 'ok': False}, {'map': 'map-09', 'obj_id': 'target_008', 't_grab': 10.5, 't_check': 13.5, 'conf_before': 0.959, 'state_after': 'confirmed', 'conf_after': 0.942, 'ok': False}, {'map': 'map-10', 'obj_id': 'target_004', 't_grab': 12.5, 't_check': 15.5, 'conf_before': 0.895, 'state_after': 'confirmed', 'conf_after': 0.916, 'ok': False}]
+E       assert 0 == 10
+
+tests/acceptance/offline/test_2_x.py:214: AssertionError
+__________ test_2_5_lost_object_removed_from_snapshot_but_not_deleted __________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x106c7c160>
+classify = <function make_track_classifier.<locals>.classify at 0x106c7c550>
+
+    def test_2_5_lost_object_removed_from_snapshot_but_not_deleted(layouts_task2, wm_factory, classify):
+        """规格 4：跌破更低阈值转 LOST 并移出活跃快照，但不物理删除，get_object 仍可取回。"""
+        layout = layouts_task2[0]
+        frames, _, meta = build_grab_scenario(layout, seed=600, post_grab_hold_s=20.0)
+        log = harness.run_wm(frames, wm_factory())
+        track = _target_track_before(log, meta["t_grab"], meta["target"], classify)
+        wm = log.wm
+        snapshot_ids = {str(o.obj_id) for o in wm.snapshot()}
+        obj = wm.get_object(track.obj_id)
+        assert obj is not None, f"注视原位置 20 s 后 get_object({track.obj_id!r}) 返回 None，LOST 记录被物理删除"
+>       assert ObjectState(obj.state) == LOST, f"注视原位置 20 s 后状态仍为 {ObjectState(obj.state).value}，期望 LOST"
+E       AssertionError: 注视原位置 20 s 后状态仍为 confirmed，期望 LOST
+E       assert <ObjectState....: 'confirmed'> == <ObjectState.LOST: 'lost'>
+E         
+E         - lost
+E         + confirmed
+
+tests/acceptance/offline/test_2_x.py:252: AssertionError
+_____________ test_2_5_released_distractor_old_position_goes_stale _____________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x106c7c160>
+classify = <function make_track_classifier.<locals>.classify at 0x106c7c550>
+
+    def test_2_5_released_distractor_old_position_goes_stale(layouts_task2, wm_factory, classify):
+        """第二个天然世界变更：混淆物被移到 1.2 m 外后，旧位置轨迹 3 s 内离开 CONFIRMED，新位置出现轨迹。"""
+        failures = []
+        for i, layout in enumerate(layouts_task2[:5]):
+            frames, _, meta = build_release_scenario(layout, seed=700 + i)
+            log = harness.run_wm(frames, wm_factory())
+            obj = meta["object"]
+            before = log.before(meta["t_release"])
+            old = [tr for tr in before.tracks if tr.state == CONFIRMED and classify(tr) == "distractor" and tr.dist(obj.x, obj.z) <= 0.5]
+            if not old:
+                failures.append(f"{layout.map_id}: 释放前旧位置没有 CONFIRMED 轨迹")
+                continue
+            after = log.at_or_after(meta["t_release"] + 3.0)
+            old_after = after.by_id(old[0].obj_id)
+            nx, nz = meta["new_pos"]
+            new_tracks = [tr for tr in log.frames[-1].tracks if classify(tr) == "distractor" and tr.dist(nx, nz) <= 0.5 and tr.state in harness.ACTIVE_STATES]
+            if old_after is not None and old_after.state == CONFIRMED and old_after.dist(obj.x, obj.z) <= 0.5:
+                failures.append(f"{layout.map_id}: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf={old_after.confidence:.2f}）")
+            if not new_tracks:
+                failures.append(f"{layout.map_id}: 释放后新位置没有活跃轨迹")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: map-01: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.93）
+E         map-02: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）
+E         map-03: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）
+E         map-04: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）
+E         map-05: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）
+E       assert not ['map-01: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.93）', 'map-02: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）', 'map-03: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）', 'map-04: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）', 'map-05: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）']
+
+tests/acceptance/offline/test_2_x.py:277: AssertionError
+_____________ test_2_6_contract_excludes_lost_and_matches_snapshot _____________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x106c7c160>
+classify = <function make_track_classifier.<locals>.classify at 0x106c7c550>
+
+    def test_2_6_contract_excludes_lost_and_matches_snapshot(layouts_task2, wm_factory, classify):
+        """契约输出与活跃快照一一对应：不含 LOST 记录，每条记录坐标能在快照中找到。"""
+        layout = layouts_task2[1]
+        frames, _, meta = build_grab_scenario(layout, seed=810, post_grab_hold_s=20.0)
+        log = harness.run_wm(frames, wm_factory())
+        wm = log.wm
+        snapshot = wm.snapshot()
+        recs = to_scene_observations(snapshot)
+        assert len(recs) == len(snapshot)
+        for rec in recs:
+            # 契约允许对坐标做四舍五入，容差 1 mm
+            assert any(abs(float(rec["x"]) - float(o.x)) < 1e-3 and abs(float(rec["z"]) - float(o.z)) < 1e-3 for o in snapshot), \
+                f"契约记录坐标 {rec['x'], rec['z']} 不在快照中"
+        target = meta["target"]
+        lost_near_target = [r for r in recs if math.hypot(r["x"] - target.x, r["z"] - target.z) <= 0.3 and r["name"] and classify(
+            harness.TrackView(obj_id="", name=r["name"], aliases=tuple(r["aliases"]), x=r["x"], z=r["z"], state=CONFIRMED, confidence=r["confidence"])) == "target"]
+>       assert not lost_near_target, f"抓走 20 s 后契约里仍有目标物记录：{lost_near_target}"
+E       AssertionError: 抓走 20 s 后契约里仍有目标物记录：[{'name': 'target', 'aliases': [], 'x': -1.5713, 'z': 1.1169, 'radius_cm': 22.0, 'source': 'guangyang', 'timestamp': 12.5, 'confidence': 0.9343}]
+E       assert not [{'aliases': [], 'confidence': 0.9343, 'name': 'target', 'radius_cm': 22.0, ...}]
+
+tests/acceptance/offline/test_2_x.py:344: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+PASSED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+PASSED tests/acceptance/offline/test_3_x.py::test_3_4_first_target_uses_graph_shortest_not_euclidean
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+FAILED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+4 failed, 18 passed in 0.86s
+

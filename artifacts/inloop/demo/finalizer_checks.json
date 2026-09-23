@@ -1,0 +1,47 @@
+{
+  "schema": "wm-demo-finalizer-checks/v1",
+  "scope": "offline only; temporary synthetic contract fixtures are not trial results; no simulator invoked",
+  "command": "python3 tools/demo_finalize.py /Users/ken/Desktop/wm_bench/artifacts/inloop/demo --self-check",
+  "checks": {
+    "real_completed_failure_not_promoted": true,
+    "failure_row_has_exact_log_index_and_numbers": true,
+    "raw_and_trimmed_hashes_both_recorded": true,
+    "active_runner_cannot_replace_DEMO": true,
+    "active_source_cannot_be_reproduced": true,
+    "positive_plan_uses_existing_runner_cli": true,
+    "positive_plan_selects_only_successful_layout": true,
+    "positive_plan_uses_frozen_program": true,
+    "planning_never_creates_output_or_starts_simulator": true,
+    "existing_output_rejected": true,
+    "no_success_rejected": true,
+    "inconsistent_gate_boolean_and_detail_rejected": true,
+    "executed_identity_mutation_rejected": true,
+    "missing_runner_dependency_rejected": true,
+    "revoked_delivery_rejected": true,
+    "first_seen_comes_from_exact_uncapped_raw": true,
+    "WM_acceptance_retained_separately": true,
+    "missing_raw_visibility_does_not_fallback_to_WM": true,
+    "partial_report_cannot_claim_all_ten_failed": true,
+    "all_ten_failure_renders_STOP": true,
+    "all_frozen_files_unchanged": true,
+    "formal_DEMO_not_modified": true,
+    "does_not_require_git_repository": true
+  },
+  "all_checks_pass": true,
+  "source_trial_report": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-03.demo_eval.json",
+  "source_trial_report_sha256": "cbb97c232cff77d25ade367f578c01d49f457be061e2e2fd69ab22cc2d1dbb19",
+  "frozen_manifest_entries_verified": 15,
+  "frozen_raw_program_sha256": "58a24a2d4fb9bd6b564530eb74ef627a71c2084e731a815cf21f5cc9bb7c7928",
+  "executed_identity": {
+    "version": "wm-demo-v1-20260923",
+    "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+    "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+    "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3"
+  },
+  "workspace_has_git_directory": false,
+  "tool_sha256": {
+    "demo_finalize.py": "7d6c3b45c7bfec93e7be559bab53fb9bdc0f9b6b5a2cd0037600cfe93b2ab4d4",
+    "reproduce_demo.py": "5b5e93b4aad0d744c39da6e5951997622259df27381e9d0b72d960cda8cb2d5c",
+    "demo_timeline.py": "5747a92722ef2e446a3c36996e30867f8278390a4204532dacb005805e834bbe"
+  }
+}

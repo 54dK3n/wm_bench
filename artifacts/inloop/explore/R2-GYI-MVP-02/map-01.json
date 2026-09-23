@@ -1,0 +1,2853 @@
+{
+ "mission": "guangyang2",
+ "taskId": "R2-GYI-MVP-02",
+ "program": "/Users/ken/wm_bench/programs/explore_roads_light.py",
+ "startedAt": "2026-09-16T11:53:37.215Z",
+ "username": "wmbmu41laz22in",
+ "mapConfig": {
+  "/api/v1/map-config": {
+   "status": 200,
+   "body": {
+    "schemaVersion": "chenlong.guangyang-map-config/v1",
+    "authoritative": false,
+    "mapId": "guangyang-island",
+    "baseMapVersion": "2026.08-source-png-3d.3",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "revision": 0,
+    "updatedAt": null,
+    "digest": "9789a54e87d950db6040d27d6d30801637379b588946b8146f93708744c2a4b9",
+    "layout": {
+     "schemaVersion": "chenlong.guangyang-map-layout/v2",
+     "checkpoints": [
+      [
+       -2.4865,
+       4.4324
+      ],
+      [
+       7.1815,
+       -3.2587
+      ],
+      [
+       -2.4865,
+       -5.4826
+      ],
+      [
+       4.4324,
+       6.8726
+      ]
+     ],
+     "targets": [
+      [
+       10.0849,
+       1.251
+      ]
+     ],
+     "storage": [
+      -10.7336,
+      -8.0772
+     ],
+     "distractors": [
+      [
+       -2.471,
+       1.9305
+      ]
+     ],
+     "obstacles": [
+      [
+       -10.9498,
+       2.0849
+      ]
+     ]
+    }
+   }
+  },
+  "/api/v1/map-config/R2-GYI-MVP-02": {
+   "status": 200,
+   "body": {
+    "schemaVersion": "chenlong.guangyang-map-config/v1",
+    "authoritative": false,
+    "mapId": "guangyang-island",
+    "baseMapVersion": "2026.08-source-png-3d.3",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "revision": 0,
+    "updatedAt": null,
+    "digest": "75c4da04df3fc4acf1ed6dd189eca1c0ffe7c3ab941845ce8f048656acb388da",
+    "layout": {
+     "schemaVersion": "chenlong.guangyang-map-layout/v2",
+     "checkpoints": [
+      [
+       -2.4865,
+       -2.4556
+      ],
+      [
+       7.1815,
+       -3.2587
+      ],
+      [
+       6.471,
+       0.4479
+      ],
+      [
+       4.4324,
+       6.8726
+      ],
+      [
+       -2.4865,
+       -5.4826
+      ],
+      [
+       -2.4865,
+       4.4324
+      ]
+     ],
+     "targets": [
+      [
+       -9.8687,
+       -6.7181
+      ],
+      [
+       9.3127,
+       -3.2587
+      ]
+     ],
+     "storage": [
+      -10.7336,
+      -8.0772
+     ],
+     "distractors": [
+      [
+       -8.0772,
+       5.4826
+      ],
+      [
+       -2.4865,
+       -4.4015
+      ]
+     ],
+     "obstacles": [
+      [
+       -10.9498,
+       2.0849
+      ],
+      [
+       1.1274,
+       -0.7568
+      ]
+     ]
+    }
+   }
+  }
+ },
+ "assignedMap": "map-01",
+ "visionEvidenceDisabled": true,
+ "timedOut": true,
+ "wallSeconds": 2117.609,
+ "runState": "timeout",
+ "feedbackText": "timeout waiting for program end; last={\"state\":\"计时运行中\",\"outputLength\":37471,\"done\":false,\"feedbackHidden\":true,\"feedbackText\":\"Python 代码有问题\"}",
+ "lines": [
+  {
+   "step": 0,
+   "tag": "start",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -27.35
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 40,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.14
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -35.82
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -19.35
+    }
+   ],
+   "odometry": {
+    "forwardCm": 0,
+    "rightCm": 0,
+    "headingDeg": 0,
+    "distanceCm": 0,
+    "tick": 0
+   },
+   "control": null
+  },
+  {
+   "step": 1,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.9,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -35.73
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 64,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -13.4
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.36
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 19.6
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 68,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -1.79
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 10.63
+    }
+   ],
+   "odometry": {
+    "forwardCm": 0,
+    "rightCm": 0,
+    "headingDeg": 35,
+    "distanceCm": 0,
+    "tick": 13
+   },
+   "control": null
+  },
+  {
+   "step": 2,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -27.89
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.8
+    }
+   ],
+   "odometry": {
+    "forwardCm": 0,
+    "rightCm": 0,
+    "headingDeg": -35,
+    "distanceCm": 0,
+    "tick": 35
+   },
+   "control": null
+  },
+  {
+   "step": 3,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -27.35
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 40,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.14
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -35.82
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -19.35
+    }
+   ],
+   "odometry": {
+    "forwardCm": 0,
+    "rightCm": 0,
+    "headingDeg": 0,
+    "distanceCm": 0,
+    "tick": 48
+   },
+   "control": null
+  },
+  {
+   "step": 4,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 17,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 11.03
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -36.89
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 20,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -13.66
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -29.06
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 95,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -33.96
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 87,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 11.29
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": 0,
+    "headingDeg": 0,
+    "distanceCm": 27.4,
+    "tick": 159
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "parking-connector",
+    "distanceCm": 27.4,
+    "elapsedTicks": 111
+   }
+  },
+  {
+   "step": 5,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 81,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -20.69
+    },
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 14.31
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -30.92
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 72,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.58
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -25,
+    "headingDeg": 90.8,
+    "distanceCm": 52.4,
+    "tick": 322
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "north-east-main",
+    "distanceCm": 25,
+    "elapsedTicks": 163
+   }
+  },
+  {
+   "step": 6,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 6.04
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 51,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 15.97
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -25,
+    "headingDeg": 125.8,
+    "distanceCm": 52.4,
+    "tick": 335
+   },
+   "control": null
+  },
+  {
+   "step": 7,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.9,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -22.48
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 48,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 6.59
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 24.11
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 89,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 26.36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 22,
+     "confidence": 0.74,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 19.96
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -25,
+    "headingDeg": 55.8,
+    "distanceCm": 52.4,
+    "tick": 357
+   },
+   "control": null
+  },
+  {
+   "step": 8,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 81,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -20.69
+    },
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 14.31
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -30.92
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 81,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 18.12
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 72,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.58
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -25,
+    "headingDeg": 90.8,
+    "distanceCm": 52.4,
+    "tick": 370
+   },
+   "control": null
+  },
+  {
+   "step": 9,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "右",
+     "distanceCm": 52,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 25.81
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.87,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -20.45
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 52,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 34.9
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -23.53
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -28.53
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -5.22
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 86,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 9.16
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 61,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -13.27
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -85,
+    "headingDeg": 89.8,
+    "distanceCm": 112.4,
+    "tick": 614
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "max_distance",
+    "roadId": "north-east-main",
+    "distanceCm": 60,
+    "elapsedTicks": 244
+   }
+  },
+  {
+   "step": 10,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "右",
+     "distanceCm": 45,
+     "confidence": 0.9,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 28.64
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -31.53
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.58
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 86,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -6.18
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -15.97
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 50,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 9.69
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 37,
+     "confidence": 0.75,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -17.11
+    }
+   ],
+   "odometry": {
+    "forwardCm": 27.4,
+    "rightCm": -91.3,
+    "headingDeg": 89.9,
+    "distanceCm": 118.8,
+    "tick": 642
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "north-east-main",
+    "distanceCm": 6.4,
+    "elapsedTicks": 28
+   }
+  },
+  {
+   "step": 11,
+   "tag": "exit",
+   "observe": [],
+   "odometry": {
+    "forwardCm": 3.4,
+    "rightCm": -112.6,
+    "headingDeg": 155.8,
+    "distanceCm": 159.4,
+    "tick": 897
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "bailu-outer-arc",
+    "distanceCm": 40.6,
+    "elapsedTicks": 255
+   }
+  },
+  {
+   "step": 12,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -21.65
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -34.81
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -31.73
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 25,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -28.53
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 27,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 1.24
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 0.96
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 69,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -7.81
+    }
+   ],
+   "odometry": {
+    "forwardCm": 3.4,
+    "rightCm": -112.6,
+    "headingDeg": -169.2,
+    "distanceCm": 159.4,
+    "tick": 910
+   },
+   "control": null
+  },
+  {
+   "step": 13,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 26.91
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 47,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 22.36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 35.45
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 31,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 32.52
+    }
+   ],
+   "odometry": {
+    "forwardCm": 3.4,
+    "rightCm": -112.6,
+    "headingDeg": 120.8,
+    "distanceCm": 159.4,
+    "tick": 932
+   },
+   "control": null
+  },
+  {
+   "step": 14,
+   "tag": "look_center",
+   "observe": [],
+   "odometry": {
+    "forwardCm": 3.4,
+    "rightCm": -112.6,
+    "headingDeg": 155.8,
+    "distanceCm": 159.4,
+    "tick": 945
+   },
+   "control": null
+  },
+  {
+   "step": 15,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -36.8
+    }
+   ],
+   "odometry": {
+    "forwardCm": -22.4,
+    "rightCm": -161.6,
+    "headingDeg": 89.5,
+    "distanceCm": 219.4,
+    "tick": 1210
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "max_distance",
+    "roadId": "bailu-outer-arc",
+    "distanceCm": 60,
+    "elapsedTicks": 265
+   }
+  },
+  {
+   "step": 16,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.27
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 73,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 9.83
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 86,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 29.9
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 61,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 20.93
+    }
+   ],
+   "odometry": {
+    "forwardCm": 17.9,
+    "rightCm": -192.7,
+    "headingDeg": -2.9,
+    "distanceCm": 279.4,
+    "tick": 1485
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "max_distance",
+    "roadId": "bailu-outer-arc",
+    "distanceCm": 60,
+    "elapsedTicks": 275
+   }
+  },
+  {
+   "step": 17,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 89,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 17.99
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -5.91
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 76,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 6.72
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 42,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -21.41
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 34,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 23.99
+    }
+   ],
+   "odometry": {
+    "forwardCm": 41.1,
+    "rightCm": -185.6,
+    "headingDeg": -28.8,
+    "distanceCm": 304,
+    "tick": 1594
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "bailu-outer-arc",
+    "distanceCm": 24.6,
+    "elapsedTicks": 109
+   }
+  },
+  {
+   "step": 18,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.87,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.28
+    }
+   ],
+   "odometry": {
+    "forwardCm": 78.3,
+    "rightCm": -188.4,
+    "headingDeg": 26.6,
+    "distanceCm": 344.6,
+    "tick": 1836
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "east-north-outer",
+    "distanceCm": 40.6,
+    "elapsedTicks": 242
+   }
+  },
+  {
+   "step": 19,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.88,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.45
+    }
+   ],
+   "odometry": {
+    "forwardCm": 78.3,
+    "rightCm": -188.4,
+    "headingDeg": 61.6,
+    "distanceCm": 344.6,
+    "tick": 1849
+   },
+   "control": null
+  },
+  {
+   "step": 20,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.92,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -36.71
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -34.06
+    }
+   ],
+   "odometry": {
+    "forwardCm": 78.3,
+    "rightCm": -188.4,
+    "headingDeg": -8.4,
+    "distanceCm": 344.6,
+    "tick": 1871
+   },
+   "control": null
+  },
+  {
+   "step": 21,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.87,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.28
+    }
+   ],
+   "odometry": {
+    "forwardCm": 78.3,
+    "rightCm": -188.4,
+    "headingDeg": 26.6,
+    "distanceCm": 344.6,
+    "tick": 1884
+   },
+   "control": null
+  },
+  {
+   "step": 22,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 5.5
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 1.79
+    }
+   ],
+   "odometry": {
+    "forwardCm": 91.9,
+    "rightCm": -194.9,
+    "headingDeg": 28.8,
+    "distanceCm": 359.7,
+    "tick": 1949
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "east-north-outer",
+    "distanceCm": 15.1,
+    "elapsedTicks": 65
+   }
+  },
+  {
+   "step": 23,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 30,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 12.22
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 11.42
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 30.41
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 56,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -31.63
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 83,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 35.91
+    }
+   ],
+   "odometry": {
+    "forwardCm": 110.5,
+    "rightCm": -178.4,
+    "headingDeg": -86.6,
+    "distanceCm": 400.3,
+    "tick": 2207
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "oil-south",
+    "distanceCm": 40.6,
+    "elapsedTicks": 258
+   }
+  },
+  {
+   "step": 24,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 17.24
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 72,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 3.58
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 26.36
+    }
+   ],
+   "odometry": {
+    "forwardCm": 110.5,
+    "rightCm": -178.4,
+    "headingDeg": -51.6,
+    "distanceCm": 400.3,
+    "tick": 2220
+   },
+   "control": null
+  },
+  {
+   "step": 25,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "target",
+     "categoryLabel": "目标物",
+     "name": "红球",
+     "label": "红球",
+     "direction": "右",
+     "distanceCm": 44,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 31.73
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 27,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.58
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 71,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 13.27
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 13.13
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 87,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 11.03
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 92,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -9.29
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 36,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 22.24
+    }
+   ],
+   "odometry": {
+    "forwardCm": 110.5,
+    "rightCm": -178.4,
+    "headingDeg": -121.6,
+    "distanceCm": 400.3,
+    "tick": 2242
+   },
+   "control": null
+  },
+  {
+   "step": 26,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 30,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 12.22
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 30.41
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 83,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 35.91
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 45,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -32.42
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 11.42
+    }
+   ],
+   "odometry": {
+    "forwardCm": 110.5,
+    "rightCm": -178.4,
+    "headingDeg": -86.6,
+    "distanceCm": 400.3,
+    "tick": 2255
+   },
+   "control": null
+  },
+  {
+   "step": 27,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 17,
+     "confidence": 0.84,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 25.81
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 43,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 3.3
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 22,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -26.14
+    }
+   ],
+   "odometry": {
+    "forwardCm": 112.4,
+    "rightCm": -136.4,
+    "headingDeg": -89.4,
+    "distanceCm": 442.3,
+    "tick": 2426
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "oil-south",
+    "distanceCm": 42,
+    "elapsedTicks": 171
+   }
+  },
+  {
+   "step": 28,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 87,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -30.1
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.54
+    }
+   ],
+   "odometry": {
+    "forwardCm": 137.2,
+    "rightCm": -123.2,
+    "headingDeg": -8.5,
+    "distanceCm": 482.9,
+    "tick": 2688
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "east-inner-south",
+    "distanceCm": 40.6,
+    "elapsedTicks": 262
+   }
+  },
+  {
+   "step": 29,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.88,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -28.32
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -32.22
+    }
+   ],
+   "odometry": {
+    "forwardCm": 137.2,
+    "rightCm": -123.2,
+    "headingDeg": 26.5,
+    "distanceCm": 482.9,
+    "tick": 2701
+   },
+   "control": null
+  },
+  {
+   "step": 30,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.71
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 30.41
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 25.58
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 22,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 8.62
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 33,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 32.91
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 68,
+     "confidence": 0.76,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 33.87
+    }
+   ],
+   "odometry": {
+    "forwardCm": 137.2,
+    "rightCm": -123.2,
+    "headingDeg": -43.5,
+    "distanceCm": 482.9,
+    "tick": 2723
+   },
+   "control": null
+  },
+  {
+   "step": 31,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 87,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -30.1
+    }
+   ],
+   "odometry": {
+    "forwardCm": 137.2,
+    "rightCm": -123.2,
+    "headingDeg": -8.5,
+    "distanceCm": 482.9,
+    "tick": 2736
+   },
+   "control": null
+  },
+  {
+   "step": 32,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 49,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 27.13
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 87,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 17,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 22.01
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 76,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 0.69
+    }
+   ],
+   "odometry": {
+    "forwardCm": 172.3,
+    "rightCm": -98.8,
+    "headingDeg": -47.7,
+    "distanceCm": 526.5,
+    "tick": 2926
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "east-inner-south",
+    "distanceCm": 43.6,
+    "elapsedTicks": 190
+   }
+  },
+  {
+   "step": 33,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 19.47
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 68,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -17.11
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 66,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 7.13
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 23.41
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 80,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 4.95
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 63,
+     "confidence": 0.79,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -34.72
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 62,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -1.52
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.76,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.54
+    }
+   ],
+   "odometry": {
+    "forwardCm": 165.3,
+    "rightCm": -67.9,
+    "headingDeg": -133,
+    "distanceCm": 567.1,
+    "tick": 3184
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "lower-east",
+    "distanceCm": 40.6,
+    "elapsedTicks": 258
+   }
+  },
+  {
+   "step": 34,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.92,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -8.08
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 66,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 20.69
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 76,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 19.6
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 67,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 35.45
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 3.85
+    }
+   ],
+   "odometry": {
+    "forwardCm": 165.3,
+    "rightCm": -67.9,
+    "headingDeg": -98,
+    "distanceCm": 567.1,
+    "tick": 3197
+   },
+   "control": null
+  },
+  {
+   "step": 35,
+   "tag": "look_right",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -17.49
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 7.94
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 57,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -31.33
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -13.79
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.55
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 57,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -33.58
+    }
+   ],
+   "odometry": {
+    "forwardCm": 165.3,
+    "rightCm": -67.9,
+    "headingDeg": -168,
+    "distanceCm": 567.1,
+    "tick": 3219
+   },
+   "control": null
+  },
+  {
+   "step": 36,
+   "tag": "look_center",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 19.47
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 68,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -17.11
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 66,
+     "confidence": 0.85,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 7.13
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 23.41
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 51,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -34.15
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 80,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 4.95
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 62,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -1.52
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.76,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.54
+    }
+   ],
+   "odometry": {
+    "forwardCm": 165.3,
+    "rightCm": -67.9,
+    "headingDeg": -133,
+    "distanceCm": 567.1,
+    "tick": 3232
+   },
+   "control": null
+  },
+  {
+   "step": 37,
+   "tag": "follow",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 14,
+     "confidence": 0.87,
+     "near": true,
+     "stable": true,
+     "bearingDeg": 0
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -18.86
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -31.63
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 21,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -28.96
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 36.36
+    }
+   ],
+   "odometry": {
+    "forwardCm": 151.4,
+    "rightCm": -15.6,
+    "headingDeg": -90,
+    "distanceCm": 623.8,
+    "tick": 3477
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "junction",
+    "roadId": "lower-east",
+    "distanceCm": 56.7,
+    "elapsedTicks": 245
+   }
+  },
+  {
+   "step": 38,
+   "tag": "exit",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.9,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 3.03
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 40,
+     "confidence": 0.89,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -18.74
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.87,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -28.74
+    },
+    {
+     "category": "storage-zone",
+     "categoryLabel": "存放点",
+     "name": "存放点",
+     "label": "存放点",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -36.98
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 95,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -27.78
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.78,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 10.36
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 39,
+     "confidence": 0.76,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 32.42
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 54,
+     "confidence": 0.75,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -18.61
+    }
+   ],
+   "odometry": {
+    "forwardCm": 151.4,
+    "rightCm": 25,
+    "headingDeg": -90,
+    "distanceCm": 664.4,
+    "tick": 3695
+   },
+   "control": {
+    "accepted": true,
+    "stoppedBy": "entered_road",
+    "roadId": "lower-west",
+    "distanceCm": 40.6,
+    "elapsedTicks": 218
+   }
+  },
+  {
+   "step": 39,
+   "tag": "look_left",
+   "observe": [
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 38,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 21.29
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 9.16
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 100,
+     "confidence": 0.83,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -4.54
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -19.23
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 85,
+     "confidence": 0.8,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -21.05
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "右",
+     "distanceCm": 100,
+     "confidence": 0.77,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 32.22
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 15,
+     "confidence": 0.76,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -23.76
+    }
+   ],
+   "odometry": {
+    "forwardCm": 151.4,
+    "rightCm": 25,
+    "headingDeg": -55,
+    "distanceCm": 664.4,
+    "tick": 3708
+   },
+   "control": null
+  }
+ ],
+ "outputTail": "bel\": \"混淆物\", \"direction\": \"左\", \"distanceCm\": 40, \"confidence\": 0.89, \"near\": false, \"stable\": true, \"bearingDeg\": -18.74}, {\"category\": \"distractor\", \"categoryLabel\": \"混淆物\", \"name\": \"混淆物\", \"label\": \"混淆物\", \"direction\": \"左\", \"distanceCm\": 100, \"confidence\": 0.87, \"near\": false, \"stable\": true, \"bearingDeg\": -28.74}, {\"category\": \"storage-zone\", \"categoryLabel\": \"存放点\", \"name\": \"存放点\", \"label\": \"存放点\", \"direction\": \"左\", \"distanceCm\": 100, \"confidence\": 0.86, \"near\": false, \"stable\": true, \"bearingDeg\": -36.98}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"左\", \"distanceCm\": 95, \"confidence\": 0.83, \"near\": false, \"stable\": true, \"bearingDeg\": -27.78}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"右\", \"distanceCm\": 100, \"confidence\": 0.78, \"near\": false, \"stable\": true, \"bearingDeg\": 10.36}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"右\", \"distanceCm\": 39, \"confidence\": 0.76, \"near\": false, \"stable\": true, \"bearingDeg\": 32.42}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"左\", \"distanceCm\": 54, \"confidence\": 0.75, \"near\": false, \"stable\": true, \"bearingDeg\": -18.61}], \"odometry\": {\"forwardCm\": 151.4, \"rightCm\": 25, \"headingDeg\": -90, \"distanceCm\": 664.4, \"tick\": 3695}, \"control\": {\"accepted\": true, \"stoppedBy\": \"entered_road\", \"roadId\": \"lower-west\", \"distanceCm\": 40.6, \"elapsedTicks\": 218}}\nGY {\"step\": 39, \"tag\": \"look_left\", \"observe\": [{\"category\": \"distractor\", \"categoryLabel\": \"混淆物\", \"name\": \"混淆物\", \"label\": \"混淆物\", \"direction\": \"右\", \"distanceCm\": 38, \"confidence\": 0.86, \"near\": false, \"stable\": true, \"bearingDeg\": 21.29}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"右\", \"distanceCm\": 100, \"confidence\": 0.83, \"near\": false, \"stable\": true, \"bearingDeg\": 9.16}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"中间\", \"distanceCm\": 100, \"confidence\": 0.83, \"near\": false, \"stable\": true, \"bearingDeg\": -4.54}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"左\", \"distanceCm\": 100, \"confidence\": 0.8, \"near\": false, \"stable\": true, \"bearingDeg\": -19.23}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"左\", \"distanceCm\": 85, \"confidence\": 0.8, \"near\": false, \"stable\": true, \"bearingDeg\": -21.05}, {\"category\": \"distractor\", \"categoryLabel\": \"混淆物\", \"name\": \"混淆物\", \"label\": \"混淆物\", \"direction\": \"右\", \"distanceCm\": 100, \"confidence\": 0.77, \"near\": false, \"stable\": true, \"bearingDeg\": 32.22}, {\"category\": \"obstacle\", \"categoryLabel\": \"障碍物\", \"name\": \"障碍物\", \"label\": \"障碍物\", \"direction\": \"左\", \"distanceCm\": 15, \"confidence\": 0.76, \"near\": false, \"stable\": true, \"bearingDeg\": -23.76}], \"odometry\": {\"forwardCm\": 151.4, \"rightCm\": 25, \"headingDeg\": -55, \"distanceCm\": 664.4, \"tick\": 3708}, \"control\": null}\n",
+ "score": {
+  "total": "40.0",
+  "task": "0.0 / 40",
+  "rule": "25.0 / 25",
+  "auto": "15.0 / 15",
+  "efficiency": "0.0 / 20",
+  "mission": "0/13",
+  "runState": "计时运行中",
+  "collisions": "",
+  "violations": "",
+  "elapsed": ""
+ },
+ "record": null,
+ "sessionSummary": null,
+ "finishedAt": "2026-09-16T12:29:16.357Z"
+}

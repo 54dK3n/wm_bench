@@ -1,0 +1,2097 @@
+{
+  "schema": "wm-two-target-demo-report/v1",
+  "map": "map-05",
+  "raw_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-05.json",
+  "index_convention": "zero-based raw lines / record.events arrays",
+  "gates": {
+    "program_identity": true,
+    "no_target_anchor_access": true,
+    "no_layout_coordinates": true,
+    "run_finished": true,
+    "two_distinct_targets_grabbed_and_delivered": true,
+    "program_errors_zero": true,
+    "simulation_seconds_at_most_600": true,
+    "observe_at_most_92": true,
+    "vision_at_most_20mib": true,
+    "no_stationary_observe_or_guard_violation": true,
+    "on_road_entire_run": true,
+    "two_ball_timelines_complete": true,
+    "every_ball_fixed_rules_pass": true,
+    "full_raw_record_preserved": true,
+    "samples_preserved": true,
+    "native_png_evidence_complete": true,
+    "driver_keyframes_preserved": true
+  },
+  "gate_details": {
+    "program_identity": {
+      "status": "pass",
+      "evidence": {
+        "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py",
+        "exists": true,
+        "bytes": 171259,
+        "sha256": "58a24a2d4fb9bd6b564530eb74ef627a71c2084e731a815cf21f5cc9bb7c7928",
+        "program_versions": [
+          {
+            "event": "program_version",
+            "version": "wm-demo-v1-20260923",
+            "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+            "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+            "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3",
+            "log_conventions": {
+              "pose": "[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]",
+              "bearingDeg": "右为正（observe / WM 方位同号）"
+            }
+          }
+        ]
+      },
+      "reason": null
+    },
+    "no_target_anchor_access": {
+      "status": "pass",
+      "evidence": [],
+      "reason": "AST target-anchor and unguarded mission-object coordinate scan; legal obstacle/distractor filters retained; runtime protected-target test is complementary"
+    },
+    "no_layout_coordinates": {
+      "status": "pass",
+      "evidence": {
+        "pair_violations": [],
+        "scanned_sources": [
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py",
+            "numeric_literals": 480
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/__init__.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/adapters.py",
+            "numeric_literals": 11
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/aliases.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/association.py",
+            "numeric_literals": 12
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/calibration.py",
+            "numeric_literals": 26
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/core.py",
+            "numeric_literals": 28
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/decay.py",
+            "numeric_literals": 27
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/providers/__init__.py",
+            "numeric_literals": 0
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/providers/base.py",
+            "numeric_literals": 36
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/providers/guangyang.py",
+            "numeric_literals": 105
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/providers/mock.py",
+            "numeric_literals": 11
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/raw.py",
+            "numeric_literals": 8
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/size_policy.py",
+            "numeric_literals": 13
+          },
+          {
+            "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py::zip@677/world_model/types.py",
+            "numeric_literals": 20
+          }
+        ],
+        "truth_files": [
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-01.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-02.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-03.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-04.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-05.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-06.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-07.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-08.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-09.json",
+          "/Users/ken/Desktop/wm_bench/artifacts/truth/R2-GYI-MVP-02/map-10.json"
+        ],
+        "scope": "AST signed coordinate pairs, including embedded package; computed/encoded obfuscation needs review"
+      },
+      "reason": null
+    },
+    "run_finished": {
+      "status": "pass",
+      "evidence": {
+        "finished": true,
+        "timedOut": false
+      },
+      "reason": null
+    },
+    "two_distinct_targets_grabbed_and_delivered": {
+      "status": "pass",
+      "evidence": [
+        {
+          "event_index": 4,
+          "elapsedMs": 225940,
+          "packageId": "guangyang-target-1",
+          "deliveryId": "delivery-target-storage",
+          "objectRole": "target",
+          "destinationRole": "storage",
+          "seq": 2861,
+          "t": 225940,
+          "type": "package_delivered"
+        },
+        {
+          "event_index": 7,
+          "elapsedMs": 439060,
+          "packageId": "guangyang-target-2",
+          "deliveryId": "delivery-target-storage",
+          "objectRole": "target",
+          "destinationRole": "storage",
+          "seq": 5506,
+          "t": 439060,
+          "type": "package_delivered"
+        }
+      ],
+      "reason": null
+    },
+    "program_errors_zero": {
+      "status": "pass",
+      "evidence": [],
+      "reason": null
+    },
+    "simulation_seconds_at_most_600": {
+      "status": "pass",
+      "evidence": [
+        {
+          "value": 440.6
+        }
+      ],
+      "reason": null
+    },
+    "observe_at_most_92": {
+      "status": "pass",
+      "evidence": {
+        "count": 27,
+        "reported_counts": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27
+        ]
+      },
+      "reason": null
+    },
+    "vision_at_most_20mib": {
+      "status": "pass",
+      "evidence": [
+        {
+          "value": 7280389
+        }
+      ],
+      "reason": null
+    },
+    "no_stationary_observe_or_guard_violation": {
+      "status": "pass",
+      "evidence": {
+        "repeats": [],
+        "guard_violations": [],
+        "missing_motion": []
+      },
+      "reason": null
+    },
+    "on_road_entire_run": {
+      "status": "pass",
+      "evidence": {
+        "platform_off_road": {
+          "episodes": 0,
+          "durationMs": 0,
+          "maxSeverity": 0
+        },
+        "explicit_false": []
+      },
+      "reason": null
+    },
+    "two_ball_timelines_complete": {
+      "status": "pass",
+      "evidence": [
+        {
+          "ball_index": 1,
+          "track_id": "target_001",
+          "source": "new_observations",
+          "ending": {
+            "event": "ball_end",
+            "tick": 11375,
+            "ball_index": 1,
+            "track_id": "target_001",
+            "target_source": "new_observations",
+            "success": true,
+            "stage": "delivery",
+            "reason": null,
+            "delivered_count": 1
+          },
+          "distinct_package_ids": [
+            "guangyang-target-1"
+          ]
+        },
+        {
+          "ball_index": 2,
+          "track_id": "target_002",
+          "source": "new_observations",
+          "ending": {
+            "event": "ball_end",
+            "tick": 22031,
+            "ball_index": 2,
+            "track_id": "target_002",
+            "target_source": "new_observations",
+            "success": true,
+            "stage": "delivery",
+            "reason": null,
+            "delivered_count": 2
+          },
+          "distinct_package_ids": [
+            "guangyang-target-2"
+          ]
+        }
+      ],
+      "reason": null
+    },
+    "every_ball_fixed_rules_pass": {
+      "status": "pass",
+      "evidence": [
+        {
+          "ball_index": 1,
+          "not_pass": {}
+        },
+        {
+          "ball_index": 2,
+          "not_pass": {}
+        }
+      ],
+      "reason": null
+    },
+    "full_raw_record_preserved": {
+      "status": "pass",
+      "evidence": {
+        "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.record.json",
+        "exists": true,
+        "bytes": 13367573,
+        "sha256": "2f73d90919d22b98ebced4ed0a38262efd749610d532a51c3877599038d6c806",
+        "events_equal_raw": true
+      },
+      "reason": null
+    },
+    "samples_preserved": {
+      "status": "pass",
+      "evidence": {
+        "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-05.samples.json",
+        "exists": true,
+        "bytes": 3074194,
+        "sha256": "97aff66619366471a3dfe6dab41c214f3f2bd9ec92d8a9ad50c62abf79d052ca"
+      },
+      "reason": null
+    },
+    "native_png_evidence_complete": {
+      "status": "pass",
+      "evidence": {
+        "manifest": {
+          "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision.json",
+          "exists": true,
+          "bytes": 139081,
+          "sha256": "aa9d8eb20f75fcf4bda2756ae114c4fd91f1b2e58b42626ac20443724f7736e6"
+        },
+        "frame_checks": [
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000007-tick-0.png",
+            "exists": true,
+            "bytes": 229732,
+            "sha256": "75f0044d8f2f811b06b2e6e3ee5b8d922c9691146b07065e1898dfdebb2683d1",
+            "frameId": 7,
+            "tick": 0,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000046-tick-147.png",
+            "exists": true,
+            "bytes": 233568,
+            "sha256": "d9909760f2737f2476a9002f348b93ac4be564912a6c23e6e2d96dbaf8eb44c9",
+            "frameId": 8,
+            "tick": 147,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000180-tick-675.png",
+            "exists": true,
+            "bytes": 264101,
+            "sha256": "27b0c237664d467d441d4ad2c32c17c0a45722abc6f57c3b54c586c69b873e40",
+            "frameId": 9,
+            "tick": 675,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000290-tick-1132.png",
+            "exists": true,
+            "bytes": 216241,
+            "sha256": "4c67914c06e019765a5795fe2782ed8385c806ec485069c2563a8143d881931f",
+            "frameId": 10,
+            "tick": 1132,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000377-tick-1446.png",
+            "exists": true,
+            "bytes": 274066,
+            "sha256": "10898b34d08653cdadfc1c0fd56efeabd562dddbfad0911ee691df3f823163ec",
+            "frameId": 11,
+            "tick": 1446,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000441-tick-1718.png",
+            "exists": true,
+            "bytes": 281764,
+            "sha256": "8bc24481780c478e726861ddcc1be94caac7545415b7b7a524b994ec1fe71c9f",
+            "frameId": 12,
+            "tick": 1718,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000492-tick-1912.png",
+            "exists": true,
+            "bytes": 287514,
+            "sha256": "a30bfd54849f4a60a76b9f504f1210ab9373a2580a1dc9dbff7f082f10447cc7",
+            "frameId": 13,
+            "tick": 1912,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-000700-tick-2846.png",
+            "exists": true,
+            "bytes": 318441,
+            "sha256": "ca01ce7db6eee336dcbc9e30d29a3d9427c5a124c27339d7b044e77ba51db15b",
+            "frameId": 14,
+            "tick": 2846,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002367-tick-9319.png",
+            "exists": true,
+            "bytes": 224909,
+            "sha256": "5ab780d667ab94410ea926d19d6e0d2ad481e3db1ea17d0fba6561bf158bd8c5",
+            "frameId": 15,
+            "tick": 9319,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002373-tick-9324.png",
+            "exists": true,
+            "bytes": 224437,
+            "sha256": "4c570ed39aa47c57a2898b8249c97837068f4aa600841aaca8b727d463075632",
+            "frameId": 16,
+            "tick": 9324,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002848-tick-11284.png",
+            "exists": true,
+            "bytes": 229550,
+            "sha256": "059abf9ec5f1e328df2f987382dd1cfeb181099ebf5467a670d854f739094f2d",
+            "frameId": 17,
+            "tick": 11284,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002890-tick-11375.png",
+            "exists": true,
+            "bytes": 259688,
+            "sha256": "b8d0800e63f73af497265d15b3cf4826b4feb21c7cdf8e98340ded1b5133664c",
+            "frameId": 18,
+            "tick": 11375,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002954-tick-11648.png",
+            "exists": true,
+            "bytes": 197803,
+            "sha256": "faa0f4da6b67bec9d33879c24746b5b15202fee6c93350dac6e548dba5546fe9",
+            "frameId": 19,
+            "tick": 11648,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-002981-tick-11729.png",
+            "exists": true,
+            "bytes": 260154,
+            "sha256": "90ae9df6c0ceee354af796f507694e44f5d6c74ab540db7338d449c3eac86d61",
+            "frameId": 20,
+            "tick": 11729,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003108-tick-12253.png",
+            "exists": true,
+            "bytes": 242508,
+            "sha256": "ac539adf4d4e363369d0d7d6aaab730f5136d7ab38a17d0b915b9b920fcedc14",
+            "frameId": 21,
+            "tick": 12253,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003170-tick-12513.png",
+            "exists": true,
+            "bytes": 171112,
+            "sha256": "36469c4a385c02cd454ebb021d4155c537ff1793469ada607725e7a2fd626040",
+            "frameId": 22,
+            "tick": 12513,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003221-tick-12719.png",
+            "exists": true,
+            "bytes": 235841,
+            "sha256": "ccc43852018f2b646762f55b4bbb5666177b52d814228195fdfa7f6d8b29d533",
+            "frameId": 23,
+            "tick": 12719,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003356-tick-13250.png",
+            "exists": true,
+            "bytes": 264038,
+            "sha256": "69a058766b2f5cbb2799021aa8c8cb1db928b2838cab9326e2417aa52f586440",
+            "frameId": 24,
+            "tick": 13250,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003466-tick-13707.png",
+            "exists": true,
+            "bytes": 216178,
+            "sha256": "b9a511146c494c135e55e9fe6112e34b37ba5137167ac7c6f755c35ab3a9ecfd",
+            "frameId": 25,
+            "tick": 13707,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003553-tick-14021.png",
+            "exists": true,
+            "bytes": 274011,
+            "sha256": "1bdf3ab02c50fa7ab9d82b061da7010d170d1ae17037cbcbd87302be48c17011",
+            "frameId": 26,
+            "tick": 14021,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003617-tick-14293.png",
+            "exists": true,
+            "bytes": 284691,
+            "sha256": "fa366dc6aa526fd85bbd9e5cb64d3a03ff4d6efa097460e454fc0edcf49fc60c",
+            "frameId": 27,
+            "tick": 14293,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003680-tick-14542.png",
+            "exists": true,
+            "bytes": 210803,
+            "sha256": "3d9046adc4a425d8d87ce19357714f1ace0384b7917de52dbecfd975c146cfc9",
+            "frameId": 28,
+            "tick": 14542,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-003761-tick-14881.png",
+            "exists": true,
+            "bytes": 185995,
+            "sha256": "10e6699a5289beac34a8d3b70d1dfaa527766c69d78d066e86645d3c93877011",
+            "frameId": 29,
+            "tick": 14881,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004042-tick-16028.png",
+            "exists": true,
+            "bytes": 203564,
+            "sha256": "5c924e3c4e9ba9f39a6ff993479df778efcf47b32cb479a070f7e3d1985199b9",
+            "frameId": 30,
+            "tick": 16028,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004054-tick-16041.png",
+            "exists": true,
+            "bytes": 245396,
+            "sha256": "5d36d23aa94b63c2d541daaf7c54638529a51506c5c33f2d5fe9dd509a2db515",
+            "frameId": 31,
+            "tick": 16041,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004149-tick-16404.png",
+            "exists": true,
+            "bytes": 229047,
+            "sha256": "94389525553a7c5eee49e8ab549016425ecd1565eacef59c8ffdb40b2c94f999",
+            "frameId": 32,
+            "tick": 16404,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004222-tick-16666.png",
+            "exists": true,
+            "bytes": 198877,
+            "sha256": "bae18849213afb29cf3106ff20df8cff49359ba7e8f0b911359be5cbd4e8f9a5",
+            "frameId": 33,
+            "tick": 16666,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-004290-tick-16869.png",
+            "exists": true,
+            "bytes": 228428,
+            "sha256": "4acbdb94e33a5c3849238671caa23d41b2d85f3d868a6551d5455a321798af01",
+            "frameId": 34,
+            "tick": 16869,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-005005-tick-19881.png",
+            "exists": true,
+            "bytes": 194272,
+            "sha256": "ebc273be85f22a2887026de97b6570cdd8a5a0c261941edab2d4098ee29d3f59",
+            "frameId": 35,
+            "tick": 19881,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-005012-tick-19894.png",
+            "exists": true,
+            "bytes": 195793,
+            "sha256": "d6f41941ec33e161f82a91d59c4bccb4f5de1127c661bd3cf9899ff167a23f98",
+            "frameId": 36,
+            "tick": 19894,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision/evidence-005494-tick-21940.png",
+            "exists": true,
+            "bytes": 197867,
+            "sha256": "b9f70a1812a1727a576ac1f119cdb47daae20adcdd76c60cdb70a95fbf18b863",
+            "frameId": 37,
+            "tick": 21940,
+            "valid": true
+          }
+        ],
+        "validation": {
+          "exportedFrameCount": 31,
+          "exportedFrameBytes": 7280389,
+          "allNativeFramesExported": true,
+          "allNativeQueriesExported": true,
+          "allObserveFramesBound": true,
+          "nativeBytesWithinBudget": true,
+          "exportedBytesMatchNative": true,
+          "allNativeFramesHaveExactRenderTruth": true,
+          "renderTruthErrors": 0
+        },
+        "expected_count": 31,
+        "expected_bytes": 7280389
+      },
+      "reason": null
+    },
+    "driver_keyframes_preserved": {
+      "status": "pass",
+      "evidence": {
+        "manifest": {
+          "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo.json",
+          "exists": true,
+          "bytes": 12437,
+          "sha256": "bf0b7c171e0c4093dc0e416444d11c8a3e362a4baae51482d63a9d237a3b80c6"
+        },
+        "frames": [
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo/event-002416-package_grabbed-tick-9416.png",
+            "exists": true,
+            "bytes": 174018,
+            "sha256": "dbf37b9f70e19e130c432ea9114b3173edd07410ec19dd89854ac71b7559b377",
+            "event": {
+              "interactionType": "package_grab",
+              "accepted": true,
+              "reason": "grabbed",
+              "packageId": "guangyang-target-1",
+              "objectRole": "target",
+              "obstacleId": null,
+              "position": [
+                10.0849,
+                1.251
+              ],
+              "stackLevel": 0,
+              "stateRevision": 2,
+              "seq": 2416,
+              "t": 188260,
+              "type": "package_grabbed"
+            },
+            "tick": 9413,
+            "captureTick": 9416,
+            "sameTickAndRevision": false,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo/event-002861-package_delivered-tick-11300.png",
+            "exists": true,
+            "bytes": 173842,
+            "sha256": "f2a6bc263d42053f8959fbdc37dbaf8de795fe1edc20ad331880d54ea2210a8a",
+            "event": {
+              "elapsedMs": 225940,
+              "packageId": "guangyang-target-1",
+              "deliveryId": "delivery-target-storage",
+              "objectRole": "target",
+              "destinationRole": "storage",
+              "seq": 2861,
+              "t": 225940,
+              "type": "package_delivered"
+            },
+            "tick": 11297,
+            "captureTick": 11300,
+            "sameTickAndRevision": false,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo/event-005026-package_grabbed-tick-19919.png",
+            "exists": true,
+            "bytes": 173935,
+            "sha256": "ee5b2eec8a151b82ac38a990fcbb70d3a12fb6a4eb1de14c6b4aa1b8d8557d9d",
+            "event": {
+              "interactionType": "package_grab",
+              "accepted": true,
+              "reason": "grabbed",
+              "packageId": "guangyang-target-2",
+              "objectRole": "target",
+              "obstacleId": null,
+              "position": [
+                0.5097,
+                4.4324
+              ],
+              "stackLevel": 0,
+              "stateRevision": 4,
+              "seq": 5026,
+              "t": 398360,
+              "type": "package_grabbed"
+            },
+            "tick": 19918,
+            "captureTick": 19919,
+            "sameTickAndRevision": false,
+            "valid": true
+          },
+          {
+            "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo/event-005506-package_delivered-tick-21956.png",
+            "exists": true,
+            "bytes": 173842,
+            "sha256": "303dc1aaa573a5bda144c4475aea8488632ed61654d042ec4cc356eef907ef8b",
+            "event": {
+              "elapsedMs": 439060,
+              "packageId": "guangyang-target-2",
+              "deliveryId": "delivery-target-storage",
+              "objectRole": "target",
+              "destinationRole": "storage",
+              "seq": 5506,
+              "t": 439060,
+              "type": "package_delivered"
+            },
+            "tick": 21953,
+            "captureTick": 21956,
+            "sameTickAndRevision": false,
+            "valid": true
+          }
+        ],
+        "missing_events": [],
+        "screenshot_bytes": 695637,
+        "native_frame_bytes": 7280389,
+        "combined_image_bytes": 7976026,
+        "combined_images_within_20mib_information_only": true,
+        "budget_policy": "stage0: native platform cap only; combined image bytes are reported, not a demo gate"
+      },
+      "reason": null
+    }
+  },
+  "all_gates_pass": true,
+  "balls": [
+    {
+      "ball_index": 1,
+      "track_id": "target_001",
+      "source": "new_observations",
+      "source_verified": true,
+      "source_evidence": {
+        "prior_memory": [],
+        "new_hit_lines": [
+          19,
+          102,
+          309
+        ]
+      },
+      "first_seen_associated_with_track": {
+        "line_index": 19,
+        "observe_line_index": 16,
+        "track_id": "target_001",
+        "hit": 1,
+        "increment": 1,
+        "tick": 1718,
+        "odo": [
+          -120.8,
+          55.2,
+          30.5
+        ],
+        "readings": [
+          {
+            "distanceCm": 55,
+            "bearingDeg": -2.62,
+            "track_id": "target_001"
+          }
+        ]
+      },
+      "confirmed_time": {
+        "line_index": 313,
+        "tick": 2846
+      },
+      "first_seen_raw_corresponding_package": {
+        "status": "unknown",
+        "evidence": null,
+        "reason": "earliest raw visibility requires unambiguous exact render-truth package association; first WM hit is not a substitute"
+      },
+      "line_range": [
+        1,
+        448
+      ],
+      "start_tick": 0,
+      "timeline": [
+        {
+          "line_index": 1,
+          "event": "ball_start",
+          "tick": 0,
+          "ball_index": 1,
+          "track_id": null,
+          "target_source": "new_observations",
+          "retained_wm_targets": 0,
+          "delivered_count": 0,
+          "observe_count": 0,
+          "approach_calls": 0
+        },
+        {
+          "line_index": 20,
+          "event": "ball_selection",
+          "tick": 1718,
+          "ball_index": 1,
+          "track_id": "target_001",
+          "target_source": "new_observations",
+          "wm_position": [
+            -1.5494969570255135,
+            1.0797690673763842
+          ],
+          "wm_state": "tentative",
+          "wm_hit_count": 1
+        },
+        {
+          "line_index": 21,
+          "event": "last_observe",
+          "wm_distance_m": 0.629,
+          "camera_distanceCm": 55,
+          "target": [
+            -1.549,
+            1.08
+          ],
+          "pose": [
+            -1.208,
+            0.552,
+            30.5
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 23,
+          "event": "confirmation_sample",
+          "hits": 1,
+          "camera_distanceCm": 55,
+          "wm_distance_m": 0.6286178172284205,
+          "gap_to_previous_m": null,
+          "pose": [
+            -1.208,
+            0.552
+          ]
+        },
+        {
+          "line_index": 103,
+          "event": "last_observe",
+          "wm_distance_m": 0.569,
+          "camera_distanceCm": 49,
+          "target": [
+            -1.544,
+            1.085
+          ],
+          "pose": [
+            -1.079,
+            0.756,
+            55.5
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 105,
+          "event": "confirmation_sample",
+          "hits": 2,
+          "camera_distanceCm": 49,
+          "wm_distance_m": 0.5690935949353986,
+          "gap_to_previous_m": 0.241,
+          "pose": [
+            -1.079,
+            0.756
+          ]
+        },
+        {
+          "line_index": 310,
+          "event": "last_observe",
+          "wm_distance_m": 0.555,
+          "camera_distanceCm": 51,
+          "target": [
+            -1.554,
+            1.099
+          ],
+          "pose": [
+            -1.458,
+            0.552,
+            9.1
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 312,
+          "event": "confirmation_sample",
+          "hits": 3,
+          "camera_distanceCm": 51,
+          "wm_distance_m": 0.5554425680419891,
+          "gap_to_previous_m": 0.43,
+          "pose": [
+            -1.458,
+            0.552
+          ]
+        },
+        {
+          "line_index": 313,
+          "event": "memory_confirmed",
+          "hits": [
+            {
+              "track_id": "target_001",
+              "pose_x": -1.208,
+              "pose_z": 0.552,
+              "pose_heading_deg": 30.5,
+              "distanceCm": 55,
+              "world_x": -1.5494969570255135,
+              "world_z": 1.0797690673763842
+            },
+            {
+              "track_id": "target_001",
+              "pose_x": -1.079,
+              "pose_z": 0.7559999999999999,
+              "pose_heading_deg": 55.5,
+              "distanceCm": 49,
+              "world_x": -1.53783110442855,
+              "world_z": 1.0893606255914603
+            },
+            {
+              "track_id": "target_001",
+              "pose_x": -1.4580000000000002,
+              "pose_z": 0.552,
+              "pose_heading_deg": 9.1,
+              "distanceCm": 51,
+              "world_x": -1.5750962820230883,
+              "world_z": 1.1280465363346304
+            }
+          ],
+          "track_id": "target_001",
+          "confirmation_distanceCm": 51,
+          "last_sample_wm_distance_m": 0.5554425680419891
+        },
+        {
+          "line_index": 314,
+          "event": "ball_confirmed",
+          "tick": 2846,
+          "ball_index": 1,
+          "track_id": "target_001",
+          "target_source": "new_observations",
+          "accepted_hits": 3
+        },
+        {
+          "line_index": 423,
+          "event": "approach_call",
+          "count": 1,
+          "max_steps": 1,
+          "wm_distance_m": 0.219,
+          "forward_after_last_observe_cm": 871.7
+        },
+        {
+          "line_index": 425,
+          "event": "grab_step",
+          "step": 1,
+          "advanced_cm": 0,
+          "holding": null,
+          "tick": 9369,
+          "wm_distance_m": 0.21,
+          "onRoad": true,
+          "pose": [
+            -1.349,
+            1.146,
+            102.9
+          ]
+        },
+        {
+          "line_index": 426,
+          "event": "grab_step",
+          "step": 2,
+          "advanced_cm": 6,
+          "holding": "目标物",
+          "tick": 9427,
+          "wm_distance_m": 0.151,
+          "onRoad": true,
+          "pose": [
+            -1.407,
+            1.133,
+            102.9
+          ]
+        },
+        {
+          "line_index": 427,
+          "event": "memory_navigation_metric",
+          "passed": true,
+          "last_observe_distance_m": 0.555,
+          "last_observe_camera_distance_cm": 51,
+          "forward_after_last_observe_cm": 877.7,
+          "required_forward_cm": 30,
+          "approach_calls": 1,
+          "grab_attempts": 2,
+          "grab_advanced_cm": 6,
+          "observe_count": 8,
+          "onRoad": true
+        },
+        {
+          "line_index": 428,
+          "event": "ball_grabbed",
+          "tick": 9427,
+          "ball_index": 1,
+          "track_id": "target_001",
+          "target_source": "new_observations",
+          "holding": "目标物"
+        },
+        {
+          "line_index": 445,
+          "event": "ball_delivered",
+          "tick": 11318,
+          "ball_index": 1,
+          "track_id": "target_001",
+          "target_source": "new_observations",
+          "preview": {
+            "schemaVersion": "chenlong.release-preview/v1",
+            "holding": "target",
+            "releaseAccepted": true,
+            "releaseReason": "ready",
+            "wouldCompleteDelivery": true,
+            "roadClearanceCm": null,
+            "requiredRoadClearanceCm": null,
+            "tick": 11284
+          },
+          "holding_after": null,
+          "completed_before": 0,
+          "completed_after": 1,
+          "expected_release_position": [
+            0.9214457289980681,
+            -0.011772630842694046
+          ],
+          "position_source": "successful_release_pose_and_public_release_projection",
+          "storage_anchor": {
+            "id": "storage",
+            "roadId": "nw-bag",
+            "progressCm": 4.4
+          },
+          "exclusion_radius_m": 0.3,
+          "delivered_count": 1
+        },
+        {
+          "line_index": 447,
+          "event": "ball_end",
+          "tick": 11375,
+          "ball_index": 1,
+          "track_id": "target_001",
+          "target_source": "new_observations",
+          "success": true,
+          "stage": "delivery",
+          "reason": null,
+          "delivered_count": 1
+        }
+      ],
+      "platform_grabs": [
+        {
+          "event_index": 2,
+          "interactionType": "package_grab",
+          "accepted": true,
+          "reason": "grabbed",
+          "packageId": "guangyang-target-1",
+          "objectRole": "target",
+          "obstacleId": null,
+          "position": [
+            10.0849,
+            1.251
+          ],
+          "stackLevel": 0,
+          "stateRevision": 2,
+          "seq": 2416,
+          "t": 188260,
+          "type": "package_grabbed"
+        }
+      ],
+      "platform_deliveries": [
+        {
+          "event_index": 4,
+          "elapsedMs": 225940,
+          "packageId": "guangyang-target-1",
+          "deliveryId": "delivery-target-storage",
+          "objectRole": "target",
+          "destinationRole": "storage",
+          "seq": 2861,
+          "t": 225940,
+          "type": "package_delivered"
+        }
+      ],
+      "distinct_package_ids": [
+        "guangyang-target-1"
+      ],
+      "fixed_rule_audit": {
+        "confirmation_three_hits": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 313,
+              "value": 3
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_same_track": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 313,
+              "selected_id": "target_001",
+              "confirmation_id": "target_001",
+              "hit_ids": [
+                "target_001",
+                "target_001",
+                "target_001"
+              ]
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_window_40_90cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 313,
+              "hit_index": 0,
+              "value": 55
+            },
+            {
+              "line_index": 313,
+              "hit_index": 1,
+              "value": 49
+            },
+            {
+              "line_index": 313,
+              "hit_index": 2,
+              "value": 51
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_all_pair_gaps_15cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 313,
+              "pair": [
+                0,
+                1
+              ],
+              "value": 0.24136486902612803
+            },
+            {
+              "line_index": 313,
+              "pair": [
+                0,
+                2
+              ],
+              "value": 0.2500000000000002
+            },
+            {
+              "line_index": 313,
+              "pair": [
+                1,
+                2
+              ],
+              "value": 0.4304149160984086
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_last_distance_0_5m": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 313,
+              "value": 0.5554425680419891
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_three_distinct_hits": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 19,
+              "observe_line_index": 16,
+              "track_id": "target_001",
+              "hit": 1,
+              "increment": 1,
+              "tick": 1718,
+              "odo": [
+                -120.8,
+                55.2,
+                30.5
+              ],
+              "readings": [
+                {
+                  "distanceCm": 55,
+                  "bearingDeg": -2.62,
+                  "track_id": "target_001"
+                }
+              ]
+            },
+            {
+              "line_index": 102,
+              "observe_line_index": 99,
+              "track_id": "target_001",
+              "hit": 2,
+              "increment": 1,
+              "tick": 1912,
+              "odo": [
+                -107.9,
+                75.6,
+                55.5
+              ],
+              "readings": [
+                {
+                  "distanceCm": 49,
+                  "bearingDeg": 1.65,
+                  "track_id": "target_001"
+                }
+              ]
+            },
+            {
+              "line_index": 309,
+              "observe_line_index": 306,
+              "track_id": "target_001",
+              "hit": 3,
+              "increment": 1,
+              "tick": 2846,
+              "odo": [
+                -145.8,
+                55.2,
+                9.1
+              ],
+              "readings": [
+                {
+                  "distanceCm": 51,
+                  "bearingDeg": -2.62,
+                  "track_id": "target_001"
+                }
+              ]
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_window_40_90cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 19,
+              "value": 55
+            },
+            {
+              "line_index": 102,
+              "value": 49
+            },
+            {
+              "line_index": 309,
+              "value": 51
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_all_pair_gaps_15cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "pair": [
+                19,
+                102
+              ],
+              "value": 24.136486902612805
+            },
+            {
+              "pair": [
+                19,
+                309
+              ],
+              "value": 25.000000000000014
+            },
+            {
+              "pair": [
+                102,
+                309
+              ],
+              "value": 43.041491609840854
+            }
+          ],
+          "reason": null
+        },
+        "memory_drive_30cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 423,
+              "value": 871.7
+            }
+          ],
+          "reason": null
+        },
+        "approach_distance_0_25m": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 423,
+              "value": 0.219
+            }
+          ],
+          "reason": null
+        },
+        "approach_max_steps_one": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 423,
+              "value": 1
+            }
+          ],
+          "reason": null
+        },
+        "approach_at_most_three": {
+          "status": "pass",
+          "evidence": {
+            "count": 1,
+            "line_indices": [
+              423
+            ],
+            "before_confirmation": []
+          },
+          "reason": null
+        }
+      },
+      "fixed_rules_all_pass": true,
+      "failure_reasons": [],
+      "ending": {
+        "event": "ball_end",
+        "tick": 11375,
+        "ball_index": 1,
+        "track_id": "target_001",
+        "target_source": "new_observations",
+        "success": true,
+        "stage": "delivery",
+        "reason": null,
+        "delivered_count": 1
+      }
+    },
+    {
+      "ball_index": 2,
+      "track_id": "target_002",
+      "source": "new_observations",
+      "source_verified": true,
+      "source_evidence": {
+        "prior_memory": [],
+        "new_hit_lines": [
+          604,
+          870,
+          1009
+        ]
+      },
+      "first_seen_associated_with_track": {
+        "line_index": 604,
+        "observe_line_index": 601,
+        "track_id": "target_002",
+        "hit": 1,
+        "increment": 1,
+        "tick": 16404,
+        "odo": [
+          -86.5,
+          181.9,
+          -123.9
+        ],
+        "readings": [
+          {
+            "distanceCm": 46,
+            "bearingDeg": -2.2,
+            "track_id": "target_002"
+          }
+        ]
+      },
+      "confirmed_time": {
+        "line_index": 1013,
+        "tick": 16869
+      },
+      "first_seen_raw_corresponding_package": {
+        "status": "unknown",
+        "evidence": null,
+        "reason": "earliest raw visibility requires unambiguous exact render-truth package association; first WM hit is not a substitute"
+      },
+      "line_range": [
+        448,
+        1065
+      ],
+      "start_tick": 11375,
+      "timeline": [
+        {
+          "line_index": 448,
+          "event": "ball_start",
+          "tick": 11375,
+          "ball_index": 2,
+          "track_id": null,
+          "target_source": "new_observations",
+          "retained_wm_targets": 1,
+          "delivered_count": 1,
+          "observe_count": 9,
+          "approach_calls": 1
+        },
+        {
+          "line_index": 605,
+          "event": "ball_selection",
+          "tick": 16404,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "wm_position": [
+            -0.40940486157336653,
+            1.5352925034605298
+          ],
+          "wm_state": "tentative",
+          "wm_hit_count": 1
+        },
+        {
+          "line_index": 606,
+          "event": "last_observe",
+          "wm_distance_m": 0.537,
+          "camera_distanceCm": 46,
+          "target": [
+            -0.409,
+            1.535
+          ],
+          "pose": [
+            -0.865,
+            1.819,
+            -123.9
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 608,
+          "event": "confirmation_sample",
+          "hits": 1,
+          "camera_distanceCm": 46,
+          "wm_distance_m": 0.5367093009727676,
+          "gap_to_previous_m": null,
+          "pose": [
+            -0.865,
+            1.819
+          ]
+        },
+        {
+          "line_index": 871,
+          "event": "last_observe",
+          "wm_distance_m": 0.697,
+          "camera_distanceCm": 60,
+          "target": [
+            -0.419,
+            1.552
+          ],
+          "pose": [
+            -0.907,
+            2.05,
+            -136
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 873,
+          "event": "confirmation_sample",
+          "hits": 2,
+          "camera_distanceCm": 60,
+          "wm_distance_m": 0.6974822933936975,
+          "gap_to_previous_m": 0.235,
+          "pose": [
+            -0.907,
+            2.05
+          ]
+        },
+        {
+          "line_index": 1010,
+          "event": "last_observe",
+          "wm_distance_m": 0.8,
+          "camera_distanceCm": 69,
+          "target": [
+            -0.431,
+            1.56
+          ],
+          "pose": [
+            -1.063,
+            2.05,
+            -127.7
+          ],
+          "forward_after_last_observe_cm": 0
+        },
+        {
+          "line_index": 1012,
+          "event": "confirmation_sample",
+          "hits": 3,
+          "camera_distanceCm": 69,
+          "wm_distance_m": 0.7998162350541951,
+          "gap_to_previous_m": 0.156,
+          "pose": [
+            -1.063,
+            2.05
+          ]
+        },
+        {
+          "line_index": 1013,
+          "event": "memory_confirmed",
+          "hits": [
+            {
+              "track_id": "target_002",
+              "pose_x": -0.865,
+              "pose_z": 1.819,
+              "pose_heading_deg": -123.9,
+              "distanceCm": 46,
+              "world_x": -0.40940486157336653,
+              "world_z": 1.5352925034605298
+            },
+            {
+              "track_id": "target_002",
+              "pose_x": -0.907,
+              "pose_z": 2.05,
+              "pose_heading_deg": -136,
+              "distanceCm": 60,
+              "world_x": -0.4277542087672481,
+              "world_z": 1.5688621287573448
+            },
+            {
+              "track_id": "target_002",
+              "pose_x": -1.063,
+              "pose_z": 2.05,
+              "pose_heading_deg": -127.7,
+              "distanceCm": 69,
+              "world_x": -0.45535412932030417,
+              "world_z": 1.5759161501508654
+            }
+          ],
+          "track_id": "target_002",
+          "confirmation_distanceCm": 69,
+          "last_sample_wm_distance_m": 0.7998162350541951
+        },
+        {
+          "line_index": 1014,
+          "event": "ball_confirmed",
+          "tick": 16869,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "accepted_hits": 3
+        },
+        {
+          "line_index": 1038,
+          "event": "approach_call",
+          "count": 2,
+          "max_steps": 1,
+          "wm_distance_m": 0.22,
+          "forward_after_last_observe_cm": 476.7
+        },
+        {
+          "line_index": 1040,
+          "event": "grab_step",
+          "step": 1,
+          "advanced_cm": 0,
+          "holding": "目标物",
+          "tick": 19932,
+          "wm_distance_m": 0.22,
+          "onRoad": true,
+          "pose": [
+            -0.218,
+            1.505,
+            80.1
+          ]
+        },
+        {
+          "line_index": 1041,
+          "event": "memory_navigation_metric",
+          "passed": true,
+          "last_observe_distance_m": 0.8,
+          "last_observe_camera_distance_cm": 69,
+          "forward_after_last_observe_cm": 476.7,
+          "required_forward_cm": 30,
+          "approach_calls": 2,
+          "grab_attempts": 1,
+          "grab_advanced_cm": 0,
+          "observe_count": 26,
+          "onRoad": true
+        },
+        {
+          "line_index": 1042,
+          "event": "ball_grabbed",
+          "tick": 19932,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "holding": "目标物"
+        },
+        {
+          "line_index": 1061,
+          "event": "ball_delivered",
+          "tick": 21974,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "preview": {
+            "schemaVersion": "chenlong.release-preview/v1",
+            "holding": "target",
+            "releaseAccepted": true,
+            "releaseReason": "ready",
+            "wouldCompleteDelivery": true,
+            "roadClearanceCm": null,
+            "requiredRoadClearanceCm": null,
+            "tick": 21940
+          },
+          "holding_after": null,
+          "completed_before": 1,
+          "completed_after": 2,
+          "expected_release_position": [
+            0.9187180090742255,
+            -0.012695913098820247
+          ],
+          "position_source": "successful_release_pose_and_public_release_projection",
+          "storage_anchor": {
+            "id": "storage",
+            "roadId": "nw-bag",
+            "progressCm": 4.4
+          },
+          "exclusion_radius_m": 0.3,
+          "delivered_count": 2
+        },
+        {
+          "line_index": 1063,
+          "event": "ball_end",
+          "tick": 22031,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "success": true,
+          "stage": "delivery",
+          "reason": null,
+          "delivered_count": 2
+        },
+        {
+          "line_index": 1064,
+          "event": "flow_end",
+          "tick": 22031,
+          "ball_index": 2,
+          "track_id": "target_002",
+          "target_source": "new_observations",
+          "success": true,
+          "stage": "delivery",
+          "reason": null,
+          "one_target_released": true,
+          "delivered_count": 2,
+          "required_targets": 2,
+          "navigation_queries": 609,
+          "navigation_controls": 207,
+          "full_targetDelivered": true,
+          "holding": null
+        }
+      ],
+      "platform_grabs": [
+        {
+          "event_index": 5,
+          "interactionType": "package_grab",
+          "accepted": true,
+          "reason": "grabbed",
+          "packageId": "guangyang-target-2",
+          "objectRole": "target",
+          "obstacleId": null,
+          "position": [
+            0.5097,
+            4.4324
+          ],
+          "stackLevel": 0,
+          "stateRevision": 4,
+          "seq": 5026,
+          "t": 398360,
+          "type": "package_grabbed"
+        }
+      ],
+      "platform_deliveries": [
+        {
+          "event_index": 7,
+          "elapsedMs": 439060,
+          "packageId": "guangyang-target-2",
+          "deliveryId": "delivery-target-storage",
+          "objectRole": "target",
+          "destinationRole": "storage",
+          "seq": 5506,
+          "t": 439060,
+          "type": "package_delivered"
+        }
+      ],
+      "distinct_package_ids": [
+        "guangyang-target-2"
+      ],
+      "fixed_rule_audit": {
+        "confirmation_three_hits": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1013,
+              "value": 3
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_same_track": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1013,
+              "selected_id": "target_002",
+              "confirmation_id": "target_002",
+              "hit_ids": [
+                "target_002",
+                "target_002",
+                "target_002"
+              ]
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_window_40_90cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1013,
+              "hit_index": 0,
+              "value": 46
+            },
+            {
+              "line_index": 1013,
+              "hit_index": 1,
+              "value": 60
+            },
+            {
+              "line_index": 1013,
+              "hit_index": 2,
+              "value": 69
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_all_pair_gaps_15cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1013,
+              "pair": [
+                0,
+                1
+              ],
+              "value": 0.23478713763747783
+            },
+            {
+              "line_index": 1013,
+              "pair": [
+                0,
+                2
+              ],
+              "value": 0.3042449670906652
+            },
+            {
+              "line_index": 1013,
+              "pair": [
+                1,
+                2
+              ],
+              "value": 0.15599999999999992
+            }
+          ],
+          "reason": null
+        },
+        "confirmation_last_distance_0_5m": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1013,
+              "value": 0.7998162350541951
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_three_distinct_hits": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 604,
+              "observe_line_index": 601,
+              "track_id": "target_002",
+              "hit": 1,
+              "increment": 1,
+              "tick": 16404,
+              "odo": [
+                -86.5,
+                181.9,
+                -123.9
+              ],
+              "readings": [
+                {
+                  "distanceCm": 46,
+                  "bearingDeg": -2.2,
+                  "track_id": "target_002"
+                }
+              ]
+            },
+            {
+              "line_index": 870,
+              "observe_line_index": 867,
+              "track_id": "target_002",
+              "hit": 2,
+              "increment": 1,
+              "tick": 16666,
+              "odo": [
+                -90.7,
+                205,
+                -136
+              ],
+              "readings": [
+                {
+                  "distanceCm": 60,
+                  "bearingDeg": -0.96,
+                  "track_id": "target_002"
+                }
+              ]
+            },
+            {
+              "line_index": 1009,
+              "observe_line_index": 1006,
+              "track_id": "target_002",
+              "hit": 3,
+              "increment": 1,
+              "tick": 16869,
+              "odo": [
+                -106.3,
+                205,
+                -127.7
+              ],
+              "readings": [
+                {
+                  "distanceCm": 69,
+                  "bearingDeg": 0.28,
+                  "track_id": "target_002"
+                }
+              ]
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_window_40_90cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 604,
+              "value": 46
+            },
+            {
+              "line_index": 870,
+              "value": 60
+            },
+            {
+              "line_index": 1009,
+              "value": 69
+            }
+          ],
+          "reason": null
+        },
+        "actual_wm_all_pair_gaps_15cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "pair": [
+                604,
+                870
+              ],
+              "value": 23.478713763747788
+            },
+            {
+              "pair": [
+                604,
+                1009
+              ],
+              "value": 30.424496709066524
+            },
+            {
+              "pair": [
+                870,
+                1009
+              ],
+              "value": 15.599999999999994
+            }
+          ],
+          "reason": null
+        },
+        "memory_drive_30cm": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1038,
+              "value": 476.7
+            }
+          ],
+          "reason": null
+        },
+        "approach_distance_0_25m": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1038,
+              "value": 0.22
+            }
+          ],
+          "reason": null
+        },
+        "approach_max_steps_one": {
+          "status": "pass",
+          "evidence": [
+            {
+              "line_index": 1038,
+              "value": 1
+            }
+          ],
+          "reason": null
+        },
+        "approach_at_most_three": {
+          "status": "pass",
+          "evidence": {
+            "count": 1,
+            "line_indices": [
+              1038
+            ],
+            "before_confirmation": []
+          },
+          "reason": null
+        }
+      },
+      "fixed_rules_all_pass": true,
+      "failure_reasons": [],
+      "ending": {
+        "event": "ball_end",
+        "tick": 22031,
+        "ball_index": 2,
+        "track_id": "target_002",
+        "target_source": "new_observations",
+        "success": true,
+        "stage": "delivery",
+        "reason": null,
+        "delivered_count": 2
+      }
+    }
+  ],
+  "failure_reasons": [],
+  "flow_end": [
+    {
+      "line_index": 1064,
+      "event": "flow_end",
+      "tick": 22031,
+      "ball_index": 2,
+      "track_id": "target_002",
+      "target_source": "new_observations",
+      "success": true,
+      "stage": "delivery",
+      "reason": null,
+      "one_target_released": true,
+      "delivered_count": 2,
+      "required_targets": 2,
+      "navigation_queries": 609,
+      "navigation_controls": 207,
+      "full_targetDelivered": true,
+      "holding": null
+    }
+  ],
+  "budgets": {
+    "simulation_seconds": 440.6,
+    "observes": 27,
+    "vision_bytes": 7280389
+  },
+  "platform_grabs": [
+    {
+      "event_index": 2,
+      "interactionType": "package_grab",
+      "accepted": true,
+      "reason": "grabbed",
+      "packageId": "guangyang-target-1",
+      "objectRole": "target",
+      "obstacleId": null,
+      "position": [
+        10.0849,
+        1.251
+      ],
+      "stackLevel": 0,
+      "stateRevision": 2,
+      "seq": 2416,
+      "t": 188260,
+      "type": "package_grabbed"
+    },
+    {
+      "event_index": 5,
+      "interactionType": "package_grab",
+      "accepted": true,
+      "reason": "grabbed",
+      "packageId": "guangyang-target-2",
+      "objectRole": "target",
+      "obstacleId": null,
+      "position": [
+        0.5097,
+        4.4324
+      ],
+      "stackLevel": 0,
+      "stateRevision": 4,
+      "seq": 5026,
+      "t": 398360,
+      "type": "package_grabbed"
+    }
+  ],
+  "platform_deliveries": [
+    {
+      "event_index": 4,
+      "elapsedMs": 225940,
+      "packageId": "guangyang-target-1",
+      "deliveryId": "delivery-target-storage",
+      "objectRole": "target",
+      "destinationRole": "storage",
+      "seq": 2861,
+      "t": 225940,
+      "type": "package_delivered"
+    },
+    {
+      "event_index": 7,
+      "elapsedMs": 439060,
+      "packageId": "guangyang-target-2",
+      "deliveryId": "delivery-target-storage",
+      "objectRole": "target",
+      "destinationRole": "storage",
+      "seq": 5506,
+      "t": 439060,
+      "type": "package_delivered"
+    }
+  ],
+  "verified_final_delivered_package_ids": [
+    "guangyang-target-1",
+    "guangyang-target-2"
+  ],
+  "evidence_files": {
+    "raw": {
+      "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-05.json",
+      "exists": true,
+      "bytes": 232346,
+      "sha256": "de32680f0669d15022856ac2859edb640304e2d80cd4852c7c5dfe69f2725a5c"
+    },
+    "samples": {
+      "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-05.samples.json",
+      "exists": true,
+      "bytes": 3074194,
+      "sha256": "97aff66619366471a3dfe6dab41c214f3f2bd9ec92d8a9ad50c62abf79d052ca"
+    },
+    "full_record": {
+      "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.record.json",
+      "exists": true,
+      "bytes": 13367573,
+      "sha256": "2f73d90919d22b98ebced4ed0a38262efd749610d532a51c3877599038d6c806"
+    },
+    "vision_manifest": {
+      "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.vision.json",
+      "exists": true,
+      "bytes": 139081,
+      "sha256": "aa9d8eb20f75fcf4bda2756ae114c4fd91f1b2e58b42626ac20443724f7736e6"
+    },
+    "keyframes_manifest": {
+      "path": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.demo.json",
+      "exists": true,
+      "bytes": 12437,
+      "sha256": "bf0b7c171e0c4093dc0e416444d11c8a3e362a4baae51482d63a9d237a3b80c6"
+    }
+  },
+  "program_versions": [
+    {
+      "event": "program_version",
+      "version": "wm-demo-v1-20260923",
+      "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+      "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+      "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3",
+      "log_conventions": {
+        "pose": "[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]",
+        "bearingDeg": "右为正（observe / WM 方位同号）"
+      }
+    }
+  ]
+}

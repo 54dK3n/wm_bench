@@ -1,0 +1,3257 @@
+{
+  "schema": "p3-synthetic-acceptance/v1",
+  "simulation_executed": false,
+  "k_status": "synthetic algebra only; runtime measured k required",
+  "angles": [
+    {
+      "case": 1,
+      "current_deg": 350,
+      "target_deg": 10,
+      "expected": 20,
+      "actual": 20.0,
+      "group": "cross_zero"
+    },
+    {
+      "case": 2,
+      "current_deg": 10,
+      "target_deg": 350,
+      "expected": -20,
+      "actual": -20.0,
+      "group": "cross_zero"
+    },
+    {
+      "case": 3,
+      "current_deg": 355,
+      "target_deg": 5,
+      "expected": 10,
+      "actual": 10.0,
+      "group": "cross_zero"
+    },
+    {
+      "case": 4,
+      "current_deg": 5,
+      "target_deg": 355,
+      "expected": -10,
+      "actual": -10.0,
+      "group": "cross_zero"
+    },
+    {
+      "case": 5,
+      "current_deg": -5,
+      "target_deg": 5,
+      "expected": 10,
+      "actual": 10.0,
+      "group": "cross_zero"
+    },
+    {
+      "case": 6,
+      "current_deg": 170,
+      "target_deg": -170,
+      "expected": 20,
+      "actual": 20.0,
+      "group": "cross_180"
+    },
+    {
+      "case": 7,
+      "current_deg": -170,
+      "target_deg": 170,
+      "expected": -20,
+      "actual": -20.0,
+      "group": "cross_180"
+    },
+    {
+      "case": 8,
+      "current_deg": 179,
+      "target_deg": -179,
+      "expected": 2,
+      "actual": 2.0,
+      "group": "cross_180"
+    },
+    {
+      "case": 9,
+      "current_deg": -179,
+      "target_deg": 179,
+      "expected": -2,
+      "actual": -2.0,
+      "group": "cross_180"
+    },
+    {
+      "case": 10,
+      "current_deg": 175,
+      "target_deg": -175,
+      "expected": 10,
+      "actual": 10.0,
+      "group": "cross_180"
+    },
+    {
+      "case": 11,
+      "current_deg": 0,
+      "target_deg": 0,
+      "expected": 0,
+      "actual": 0.0,
+      "group": "other"
+    },
+    {
+      "case": 12,
+      "current_deg": 0,
+      "target_deg": 90,
+      "expected": 90,
+      "actual": 90.0,
+      "group": "other"
+    },
+    {
+      "case": 13,
+      "current_deg": 90,
+      "target_deg": 0,
+      "expected": -90,
+      "actual": -90.0,
+      "group": "other"
+    },
+    {
+      "case": 14,
+      "current_deg": 0,
+      "target_deg": -90,
+      "expected": -90,
+      "actual": -90.0,
+      "group": "other"
+    },
+    {
+      "case": 15,
+      "current_deg": -90,
+      "target_deg": 0,
+      "expected": 90,
+      "actual": 90.0,
+      "group": "other"
+    },
+    {
+      "case": 16,
+      "current_deg": 0,
+      "target_deg": 180,
+      "expected": 180,
+      "actual": 180.0,
+      "group": "other"
+    },
+    {
+      "case": 17,
+      "current_deg": 180,
+      "target_deg": 0,
+      "expected": 180,
+      "actual": 180.0,
+      "group": "other"
+    },
+    {
+      "case": 18,
+      "current_deg": 720,
+      "target_deg": -900,
+      "expected": 180,
+      "actual": 180.0,
+      "group": "other"
+    },
+    {
+      "case": 19,
+      "current_deg": 45,
+      "target_deg": 315,
+      "expected": -90,
+      "actual": -90.0,
+      "group": "other"
+    },
+    {
+      "case": 20,
+      "current_deg": 810,
+      "target_deg": 450,
+      "expected": 0,
+      "actual": 0.0,
+      "group": "other"
+    }
+  ],
+  "topology_cases": [
+    {
+      "name": "long_near_branch",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 300,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 200,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        310,
+        0,
+        310,
+        220,
+        -90,
+        265
+      ],
+      "hand_proof": "Near=300+10; Far=200+20+0.5*90.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 310.0,
+            "path_distance_cm": 310.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 300.0,
+                "distance_cm": 300.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 265.0,
+            "path_distance_cm": 220.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 265.0,
+        "selected_path_distance_cm": 220.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.14516129032258066
+    },
+    {
+      "name": "current_and_target_partials",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 400,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 200,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 15,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.15
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.25
+              }
+            ],
+            "near": [
+              {
+                "s": 25,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 35,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 35,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 45,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                25,
+                35
+              ]
+            ],
+            "far": [
+              [
+                35,
+                45
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        455,
+        0,
+        455,
+        265,
+        -90,
+        310
+      ],
+      "hand_proof": "Current remainder=25; Near=25+400+30; Far=25+200+40+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 455.0,
+            "path_distance_cm": 455.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 30.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                25.0,
+                35.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 15,
+                "to_progress_cm": 40.0,
+                "distance_cm": 25.0,
+                "direction": 1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 400.0,
+                "distance_cm": 400.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 30.0,
+                "distance_cm": 30.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 30.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  25.0,
+                  35.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 310.0,
+            "path_distance_cm": 265.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 40.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                35.0,
+                45.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 15,
+                "to_progress_cm": 40.0,
+                "distance_cm": 25.0,
+                "direction": 1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 40.00000000000001,
+                "distance_cm": 40.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 40.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  35.0,
+                  45.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 310.0,
+        "selected_path_distance_cm": 265.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.31868131868131866
+    },
+    {
+      "name": "oneway_target_requires_loop",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": true
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N1",
+              "lengthCm": 50,
+              "oneWay": true
+            },
+            {
+              "roadId": "return",
+              "fromNodeId": "N1",
+              "toNodeId": "N0",
+              "lengthCm": 400,
+              "oneWay": true
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 200,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        460,
+        0,
+        460,
+        220,
+        -90,
+        265
+      ],
+      "hand_proof": "N1 cannot enter near backwards:50+400+10; Far=200+20+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 460.0,
+            "path_distance_cm": 460.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 50.0,
+                "distance_cm": 50.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "return",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 400.0,
+                "distance_cm": 400.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 265.0,
+            "path_distance_cm": 220.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near",
+            "return"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 265.0,
+        "selected_path_distance_cm": 220.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.42391304347826086
+    },
+    {
+      "name": "oneway_current_partial",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": true
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 300,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 200,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 30,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.3
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.1
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        320,
+        0,
+        320,
+        230,
+        -90,
+        275
+      ],
+      "hand_proof": "Only forward current exit:10; Near=10+300+10; Far=10+200+20+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 320.0,
+            "path_distance_cm": 320.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 30,
+                "to_progress_cm": 40.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 300.0,
+                "distance_cm": 300.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 275.0,
+            "path_distance_cm": 230.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 30,
+                "to_progress_cm": 40.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 275.0,
+        "selected_path_distance_cm": 230.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.140625
+    },
+    {
+      "name": "weighted_multi_edge_alternative",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n-long",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 600,
+              "oneWay": false
+            },
+            {
+              "roadId": "nx",
+              "fromNodeId": "O",
+              "toNodeId": "X",
+              "lengthCm": 200,
+              "oneWay": false
+            },
+            {
+              "roadId": "xn",
+              "fromNodeId": "X",
+              "toNodeId": "N0",
+              "lengthCm": 130,
+              "oneWay": false
+            },
+            {
+              "roadId": "fy",
+              "fromNodeId": "O",
+              "toNodeId": "Y",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "yf",
+              "fromNodeId": "Y",
+              "toNodeId": "F0",
+              "lengthCm": 100,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        340,
+        0,
+        340,
+        220,
+        -90,
+        265
+      ],
+      "hand_proof": "Near=min(600,200+130)+10; Far=100+100+20+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 340.0,
+            "path_distance_cm": 340.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "nx",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "xn",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 130.0,
+                "distance_cm": 130.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 265.0,
+            "path_distance_cm": 220.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "fy",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 100.0,
+                "distance_cm": 100.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "yf",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 100.0,
+                "distance_cm": 100.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "far",
+            "fy",
+            "n-long",
+            "near",
+            "nx",
+            "xn",
+            "yf"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 265.0,
+        "selected_path_distance_cm": 220.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.22058823529411764
+    },
+    {
+      "name": "target_reverse_partial",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n-left",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 400,
+              "oneWay": false
+            },
+            {
+              "roadId": "n-right",
+              "fromNodeId": "O",
+              "toNodeId": "N1",
+              "lengthCm": 340,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 200,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 85,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 95,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                85,
+                95
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        350,
+        0,
+        350,
+        220,
+        -90,
+        265
+      ],
+      "hand_proof": "Near=min(400+90,340+10)=350; Far=200+20+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 350.0,
+            "path_distance_cm": 350.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 90.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                85.0,
+                95.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n-right",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 340.0,
+                "distance_cm": 340.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 100.0,
+                "to_progress_cm": 90.0,
+                "distance_cm": 10.0,
+                "direction": -1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 90.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  85.0,
+                  95.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 265.0,
+            "path_distance_cm": 220.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 200.0,
+                "distance_cm": 200.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n-left",
+            "n-right",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 265.0,
+        "selected_path_distance_cm": 220.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.24285714285714285
+    },
+    {
+      "name": "heading_favors_far",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": -2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 350,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 230,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 90,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": -2.05,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": -1.95,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        360,
+        -90,
+        405,
+        250,
+        0,
+        250
+      ],
+      "hand_proof": "Near=350+10+45; Far=230+20+0.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 405.0,
+            "path_distance_cm": 360.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 350.0,
+                "distance_cm": 350.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 250.0,
+            "path_distance_cm": 250.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 19.99999999999999,
+              "x": -2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.4999999999999989,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 230.0,
+                "distance_cm": 230.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 19.99999999999999,
+                "distance_cm": 19.99999999999999,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              -2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": 90.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 19.99999999999999,
+                "x": -2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.4999999999999989,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 250.0,
+        "selected_path_distance_cm": 250.0,
+        "selected_turn_deg": 0.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.38271604938271603
+    },
+    {
+      "name": "near_behind_far_forward",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": -1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 0,
+            "z": 2,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 110,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 220,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": -1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": -1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": -0.05,
+                "z": 2
+              },
+              {
+                "s": 25,
+                "x": 0.05,
+                "z": 2
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 2
+      },
+      "hand_expected": [
+        120,
+        180,
+        480,
+        240,
+        0,
+        240
+      ],
+      "hand_proof": "Near=110+10+2*180; Far=220+20.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 2,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 480.0,
+            "path_distance_cm": 120.0,
+            "turn_deg": 180.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": -1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 110.0,
+                "distance_cm": 110.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              -1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -180.0,
+            "turn_cost_cm": 360.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": -1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 240.0,
+            "path_distance_cm": 240.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.0,
+              "x": 0.0,
+              "z": 2.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 220.0,
+                "distance_cm": 220.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.0,
+                "distance_cm": 20.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              2
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.0,
+                "x": 0.0,
+                "z": 2.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 240.0,
+        "selected_path_distance_cm": 240.0,
+        "selected_turn_deg": 0.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.5
+    },
+    {
+      "name": "halfturn_tradeoff",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 1,
+            "z": 0,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 0,
+            "z": 2,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 120,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "O",
+              "toNodeId": "F0",
+              "lengthCm": 190,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 40,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 90,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.4
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.0
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": 0.95,
+                "z": 0
+              },
+              {
+                "s": 15,
+                "x": 1.05,
+                "z": 0
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": -0.05,
+                "z": 2
+              },
+              {
+                "s": 25,
+                "x": 0.05,
+                "z": 2
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 2
+      },
+      "hand_expected": [
+        130,
+        180,
+        490,
+        210,
+        -90,
+        390
+      ],
+      "hand_proof": "Near=120+10+2*180; Far=190+20+2*90.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 2,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 490.0,
+            "path_distance_cm": 130.0,
+            "turn_deg": 180.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 1.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 120.0,
+                "distance_cm": 120.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              1,
+              0
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 360.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 1.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 390.0,
+            "path_distance_cm": 210.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.0,
+              "x": 0.0,
+              "z": 2.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 190.0,
+                "distance_cm": 190.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.0,
+                "distance_cm": 20.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              2
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 180.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.0,
+                "x": 0.0,
+                "z": 2.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 390.0,
+        "selected_path_distance_cm": 210.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.20408163265306123
+    },
+    {
+      "name": "backward_start_partial_cheaper",
+      "inputs": {
+        "candidates": [
+          {
+            "obj_id": "near",
+            "x": 0,
+            "z": 1,
+            "confidence": 0.99
+          },
+          {
+            "obj_id": "far",
+            "x": 2,
+            "z": 0,
+            "confidence": 0.6
+          }
+        ],
+        "graph": {
+          "edges": [
+            {
+              "roadId": "current",
+              "fromNodeId": "S",
+              "toNodeId": "O",
+              "lengthCm": 40,
+              "oneWay": false
+            },
+            {
+              "roadId": "near",
+              "fromNodeId": "N0",
+              "toNodeId": "N1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "far",
+              "fromNodeId": "F0",
+              "toNodeId": "F1",
+              "lengthCm": 100,
+              "oneWay": false
+            },
+            {
+              "roadId": "n",
+              "fromNodeId": "O",
+              "toNodeId": "N0",
+              "lengthCm": 400,
+              "oneWay": false
+            },
+            {
+              "roadId": "f",
+              "fromNodeId": "S",
+              "toNodeId": "F0",
+              "lengthCm": 210,
+              "oneWay": false
+            }
+          ]
+        },
+        "road_state": {
+          "roadId": "current",
+          "roadProgressCm": 10,
+          "onRoad": true
+        },
+        "odometry": {
+          "rightCm": 0,
+          "forwardCm": 0,
+          "headingDeg": 0,
+          "tick": 0
+        },
+        "measured_geometry": {
+          "roads": {
+            "current": [
+              {
+                "s": 0,
+                "x": 0,
+                "z": -0.1
+              },
+              {
+                "s": 40,
+                "x": 0,
+                "z": 0.3
+              }
+            ],
+            "near": [
+              {
+                "s": 5,
+                "x": -0.05,
+                "z": 1
+              },
+              {
+                "s": 15,
+                "x": 0.05,
+                "z": 1
+              }
+            ],
+            "far": [
+              {
+                "s": 15,
+                "x": 1.95,
+                "z": 0
+              },
+              {
+                "s": 25,
+                "x": 2.05,
+                "z": 0
+              }
+            ]
+          },
+          "intervals": {
+            "current": [
+              [
+                0,
+                40
+              ]
+            ],
+            "near": [
+              [
+                5,
+                15
+              ]
+            ],
+            "far": [
+              [
+                15,
+                25
+              ]
+            ]
+          }
+        },
+        "k": 0.5
+      },
+      "hand_expected": [
+        440,
+        0,
+        440,
+        240,
+        -90,
+        285
+      ],
+      "hand_proof": "Near=30+400+10; Far uses backward partial10+210+20+45.",
+      "actual": {
+        "version": "public-road-initial-turn-v1",
+        "status": "selected",
+        "reason": null,
+        "selected_candidate_id": "far",
+        "k_cm_per_deg": 0.5,
+        "turn_definition": "current_heading_to_target_absolute_bearing_initial_shortest",
+        "projection_scope": "nearest_traversed_measured_geometry_only",
+        "optimality_scope": "scorable_public_model_candidates_only",
+        "candidates": [
+          {
+            "candidate_id": "near",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 440.0,
+            "path_distance_cm": 440.0,
+            "turn_deg": 0.0,
+            "projection": {
+              "roadId": "near",
+              "progress_cm": 10.0,
+              "x": 0.0,
+              "z": 1.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                5.0,
+                15.0
+              ],
+              "fraction": 0.5,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 10,
+                "to_progress_cm": 40.0,
+                "distance_cm": 30.0,
+                "direction": 1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "n",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 400.0,
+                "distance_cm": 400.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "near",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 10.0,
+                "distance_cm": 10.0,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              0,
+              1
+            ],
+            "euclidean_cm": 100.0,
+            "absolute_target_heading_deg": -0.0,
+            "turn_cost_cm": 0.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "near",
+                "progress_cm": 10.0,
+                "x": 0.0,
+                "z": 1.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  5.0,
+                  15.0
+                ],
+                "fraction": 0.5,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          },
+          {
+            "candidate_id": "far",
+            "status": "scored",
+            "reason": null,
+            "cost_cm": 285.0,
+            "path_distance_cm": 240.0,
+            "turn_deg": -90.0,
+            "projection": {
+              "roadId": "far",
+              "progress_cm": 20.00000000000001,
+              "x": 2.0,
+              "z": 0.0,
+              "lateral_distance_cm": 0.0,
+              "sample_progress_cm": [
+                15.0,
+                25.0
+              ],
+              "fraction": 0.500000000000001,
+              "supported": true,
+              "source": "orthogonal_projection_on_traversed_measured_segment"
+            },
+            "path": [
+              {
+                "roadId": "current",
+                "from_progress_cm": 10,
+                "to_progress_cm": 0.0,
+                "distance_cm": 10.0,
+                "direction": -1,
+                "kind": "current_partial"
+              },
+              {
+                "roadId": "f",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 210.0,
+                "distance_cm": 210.0,
+                "direction": 1,
+                "kind": "full_road"
+              },
+              {
+                "roadId": "far",
+                "from_progress_cm": 0.0,
+                "to_progress_cm": 20.00000000000001,
+                "distance_cm": 20.00000000000001,
+                "direction": 1,
+                "kind": "target_partial"
+              }
+            ],
+            "wm_position_m": [
+              2,
+              0
+            ],
+            "euclidean_cm": 200.0,
+            "absolute_target_heading_deg": -90.0,
+            "turn_cost_cm": 45.0,
+            "zero_range_turn_defined_as_zero": false,
+            "projection_options": [
+              {
+                "roadId": "far",
+                "progress_cm": 20.00000000000001,
+                "x": 2.0,
+                "z": 0.0,
+                "lateral_distance_cm": 0.0,
+                "sample_progress_cm": [
+                  15.0,
+                  25.0
+                ],
+                "fraction": 0.500000000000001,
+                "supported": true,
+                "source": "orthogonal_projection_on_traversed_measured_segment"
+              }
+            ],
+            "known_geometry_estimate_only": true
+          }
+        ],
+        "geometry_coverage": {
+          "incomplete_road_ids": [
+            "f",
+            "far",
+            "n",
+            "near"
+          ],
+          "invalid_point_road_ids": [],
+          "global_nearest_road_status": "unknown"
+        },
+        "complete_candidate_costs": true,
+        "selected_cost_cm": 285.0,
+        "selected_path_distance_cm": 240.0,
+        "selected_turn_deg": -90.0
+      },
+      "euclidean_nearest": "near",
+      "cost_reduction_fraction": 0.3522727272727273
+    }
+  ],
+  "sources": {
+    "programs/target_selection.py": "d13c310eecf35468ea718ffc222c4704fb79365cc2b96676ec50240e6f736db1",
+    "programs/tests/test_target_selection.py": "bc4b68cd8156b6545ae55c4634e71e07ad2cad01d938c948ccae2dba1e7cd046",
+    "/Users/ken/wm_kit/selection/selector.py": "27d43b155f9eb2bccfa8a573d9972ef42d47c05c5109edee586f3741bbe56029",
+    "/Users/ken/wm_kit/selection/turn.py": "275198ba5ae211ad43d38844a5a6af8ddd1caf09d7db976e7c28dfc38a26064b"
+  }
+}

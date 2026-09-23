@@ -1,0 +1,55 @@
+..................F...                                                   [100%]
+=================================== FAILURES ===================================
+________________ test_3_3_cost_optimal_beats_euclidean_nearest _________________
+
+record = <function record.<locals>._record at 0x1061d95e0>
+
+    def test_3_3_cost_optimal_beats_euclidean_nearest(record):
+        scenarios = _scenarios()
+        assert len(scenarios) == 10
+        correct, baseline_correct = 0, 0
+        rows = []
+        for scn in scenarios:
+            cands = [_cand(cid, cid, bearing, scn["nodes"]) for cid, bearing in scn["cands"]]
+            best = selector_mod.select_best_candidate(cands, current_heading_deg=scn["heading"], start_node="S", graph=scn["graph"], k=K_TURN)
+            chosen = best.candidate.candidate_id if best is not None else None
+            base = _euclid_baseline(scn)
+            correct += chosen == scn["expect"]
+            baseline_correct += base == scn["expect"]
+            rows.append({"id": scn["id"], "expect": scn["expect"], "chosen": chosen, "euclid_baseline": base,
+                         "chosen_cost": round(best.cost, 2) if best else None, "chosen_path_cm": best.path_distance_cm if best else None,
+                         "chosen_turn_deg": best.turn_deg if best else None})
+        record("3_3", {"selection_correct": correct, "euclid_baseline_correct": baseline_correct, "rows": rows})
+        wrong = [r for r in rows if r["chosen"] != r["expect"]]
+        assert baseline_correct <= 3, f"用例设计失效：欧氏基线正确率 {baseline_correct}/10 不够低，无法作为对照"
+>       assert correct >= 9, f"3.3 代价选择正确 {correct}/10（门限 ≥ 9；欧氏基线 {baseline_correct}/10）。错误用例：{wrong}"
+E       AssertionError: 3.3 代价选择正确 5/10（门限 ≥ 9；欧氏基线 0/10）。错误用例：[{'id': 'T1_u_turn_costly', 'expect': 'B', 'chosen': 'A', 'euclid_baseline': 'A', 'chosen_cost': 300.0, 'chosen_path_cm': 300.0, 'chosen_turn_deg': 170.0}, {'id': 'T2_heading_90', 'expect': 'B', 'chosen': 'A', 'euclid_baseline': 'A', 'chosen_cost': 250.0, 'chosen_path_cm': 250.0, 'chosen_turn_deg': -175.0}, {'id': 'T3_cross_180', 'expect': 'A', 'chosen': 'B', 'euclid_baseline': 'B', 'chosen_cost': 250.0, 'chosen_path_cm': 250.0, 'chosen_turn_deg': -85.0}, {'id': 'T4_neg_heading', 'expect': 'A', 'chosen': 'B', 'euclid_baseline': 'B', 'chosen_cost': 400.0, 'chosen_path_cm': 400.0, 'chosen_turn_deg': 170.0}, {'id': 'T5_tight_margin', 'expect': 'B', 'chosen': 'A', 'euclid_baseline': 'A', 'chosen_cost': 200.0, 'chosen_path_cm': 200.0, 'chosen_turn_deg': 180.0}]
+E       assert 5 >= 9
+
+tests/acceptance/offline/test_3_x.py:135: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+PASSED tests/acceptance/offline/test_3_x.py::test_3_4_first_target_uses_graph_shortest_not_euclidean
+FAILED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+1 failed, 21 passed in 0.74s
+

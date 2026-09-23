@@ -1,0 +1,110 @@
+...........FF.........                                                   [100%]
+=================================== FAILURES ===================================
+____________________ test_2_6_contract_fields_exactly_eight ____________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x1068c91f0>
+record = <function record.<locals>._record at 0x10681c0d0>
+
+    def test_2_6_contract_fields_exactly_eight(layouts_task2, wm_factory, record):
+        """to_scene_observations(snapshot) 输出：字段集合严格等于八项，类型与取值范围合法。"""
+        problems: List[str] = []
+        checked = 0
+        for frame, snapshot, _wm in _contract_checkpoints(layouts_task2[0], wm_factory()):
+            assert snapshot, f"前置条件：帧 {frame.index} 快照为空，无法验证契约"
+            recs = to_scene_observations(snapshot)
+            assert len(recs) == len(snapshot), f"to_scene_observations 记录数 {len(recs)} != 快照数 {len(snapshot)}"
+            problems += [f"帧{frame.index}: {p}" for p in harness.validate_contract_records(recs)]
+            checked += len(recs)
+        empty = to_scene_observations([])
+        if empty != []:
+            problems.append(f"空输入应输出 []，实际 {empty!r}")
+        record("2_6", {"checked_records": checked, "problems": problems})
+>       assert not problems, f"2.6 契约校验失败（共检查 {checked} 条）：\n" + "\n".join(problems[:20])
+E       AssertionError: 2.6 契约校验失败（共检查 18 条）：
+E         帧15: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧15: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧15: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧15: 记录[3] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30: 记录[3] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30: 记录[4] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[3] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[4] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[5] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[6] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[7] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59: 记录[8] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E       assert not ["帧15: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", "帧15: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", "帧15: 记录[2] 字段集合不等于契约八字...出 ['obj_id']，缺少 []", "帧30: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", "帧30: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", ...]
+
+tests/acceptance/offline/test_2_x.py:306: AssertionError
+_______________ test_2_6_wm_to_contract_outputs_confirmed_tracks _______________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x1068c91f0>
+record = <function record.<locals>._record at 0x1068c93a0>
+
+    def test_2_6_wm_to_contract_outputs_confirmed_tracks(layouts_task2, wm_factory, record):
+        """规格公开 API wm.to_contract() 也是契约出口：快照中存在 CONFIRMED 轨迹时它不得为空，且字段合法。"""
+        problems: List[str] = []
+        observed = []
+        for frame, snapshot, wm in _contract_checkpoints(layouts_task2[0], wm_factory()):
+            confirmed = [o for o in snapshot if ObjectState(o.state) == CONFIRMED]
+            if not confirmed:
+                continue
+            # 用最宽松的参数调用，排除阈值/时效/尺寸信任过滤的影响
+            wm_contract = wm.to_contract(min_confidence=0.0, max_staleness_s=1e9, now=frame.t, require_size_trusted=False)
+            observed.append({"frame": frame.index, "confirmed": len(confirmed), "contract": len(wm_contract)})
+            if not wm_contract:
+                problems.append(f"帧{frame.index}: 快照有 {len(confirmed)} 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表")
+            problems += [f"帧{frame.index} to_contract: {p}" for p in harness.validate_contract_records(wm_contract)]
+        record("2_6_to_contract", {"observed": observed, "problems": problems})
+        assert observed, "前置条件：整局没有出现 CONFIRMED 轨迹"
+>       assert not problems, "2.6 wm.to_contract 校验失败：\n" + "\n".join(problems[:20])
+E       AssertionError: 2.6 wm.to_contract 校验失败：
+E         帧15 to_contract: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧15 to_contract: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧15 to_contract: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30 to_contract: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30 to_contract: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30 to_contract: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧30 to_contract: 记录[3] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59 to_contract: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59 to_contract: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59 to_contract: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59 to_contract: 记录[3] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E         帧59 to_contract: 记录[4] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []
+E       assert not ["帧15 to_contract: 记录[0] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", "帧15 to_contract: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []",...0 to_contract: 记录[1] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", "帧30 to_contract: 记录[2] 字段集合不等于契约八字段：多出 ['obj_id']，缺少 []", ...]
+
+tests/acceptance/offline/test_2_x.py:325: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+PASSED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+PASSED tests/acceptance/offline/test_3_x.py::test_3_4_first_target_uses_graph_shortest_not_euclidean
+FAILED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+FAILED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+2 failed, 20 passed in 0.75s
+

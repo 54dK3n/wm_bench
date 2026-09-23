@@ -1,0 +1,491 @@
+{
+  "schema": "wm-filter-candidate-independent-review/v1",
+  "scope": "Read-only development evidence review; no held-out data read, no simulator, no source changes. Only review.json/review.md written.",
+  "provenance_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/filter-candidate-v1/constant_provenance.json",
+  "provenance_sha256": "9b245b638401f5ceca8e8427a5f6f4aa84cd3b325b87f9bd787aba38c5e48287",
+  "runtime_file": "/Users/ken/Desktop/wm_bench/programs/detection_filter.py",
+  "runtime_sha256": "fe953d2e4f63db981e5eea33ff95dbedf524ed8f9a965046c12b830479c43659",
+  "checks": {
+    "runtime_hash_matches_provenance": true,
+    "labels_hash_matches_provenance": true,
+    "frames_hash_matches_provenance": true,
+    "runtime_decisions_equal_independent_threshold_replay": true,
+    "baseline_rejects_none": true,
+    "each_rule_has_three_distinct_dev_contexts": true
+  },
+  "review_pass": true,
+  "rules": {
+    "target": {
+      "confidence_floor": 0.84,
+      "counts": {
+        "raw": 306,
+        "rejected_true": 0,
+        "rejected_false": 11,
+        "rejected_unknown": 17,
+        "kept_true": 121,
+        "kept_false": 22,
+        "kept_unknown": 135
+      },
+      "baseline_rejected": 0,
+      "baseline_precision": null,
+      "labeled_false_kill_rate": 0.0,
+      "labeled_filter_precision": 1.0,
+      "unknown_filtered_not_declared_false": true,
+      "precision_lower_bound_if_all_filtered_unknown_true": 0.39285714285714285,
+      "support_witnesses": [
+        {
+          "row_id": "run_f64cb1a2860d4d4c8fcdcd5a94a5b5f2:line-91:det-1",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/calib_runs_v6/attempt-02.json",
+          "raw_line_index": 91,
+          "tick": 8733,
+          "observation": {
+            "category": "target",
+            "distanceCm": 87,
+            "bearingDeg": 0.55,
+            "confidence": 0.81
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": 6.147998,
+            "z": -1.624125,
+            "heading": -3.0619
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-target-1",
+              "role": "target",
+              "world": [
+                10.0849,
+                1.251
+              ],
+              "truth_camera_bearing_deg": -53.351342650923705,
+              "bearing_error_deg": 53.90134265092371,
+              "truth_robot_distance_cm": 60.937392465583315,
+              "m5_robot_distance_cm": 95.41035879493153,
+              "distance_residual_cm": 34.47296632934821,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-target-2",
+              "role": "target",
+              "world": [
+                0.5097,
+                4.4324
+              ],
+              "truth_camera_bearing_deg": 49.792386081194714,
+              "bearing_error_deg": 49.242386081194724,
+              "truth_robot_distance_cm": 103.43468607383133,
+              "m5_robot_distance_cm": 95.41035879493153,
+              "distance_residual_cm": 8.024327278899804,
+              "matches": false
+            }
+          ],
+          "trace_frames": 62,
+          "trace_detections": 9,
+          "trace_duration_ticks": 8452,
+          "raw_and_trace_verified": true
+        },
+        {
+          "row_id": "run_28ab18f161034fddba214da23af8fe89:line-77:det-1",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/calib_runs_v6/attempt-08.json",
+          "raw_line_index": 77,
+          "tick": 5049,
+          "observation": {
+            "category": "target",
+            "distanceCm": 43,
+            "bearingDeg": -34.25,
+            "confidence": 0.83
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": -7.020437,
+            "z": -5.463599,
+            "heading": -2.0789
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-target-1",
+              "role": "target",
+              "world": [
+                -6.2857,
+                -5.4826
+              ],
+              "truth_camera_bearing_deg": -61.550756707276804,
+              "bearing_error_deg": 27.300756707276804,
+              "truth_robot_distance_cm": 9.18728313664124,
+              "m5_robot_distance_cm": 58.95076561601898,
+              "distance_residual_cm": 49.763482479377736,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-target-2",
+              "role": "target",
+              "world": [
+                10.0849,
+                1.251
+              ],
+              "truth_camera_bearing_deg": -7.863427486288248,
+              "bearing_error_deg": 26.38657251371174,
+              "truth_robot_distance_cm": 229.70034610824013,
+              "m5_robot_distance_cm": 58.95076561601898,
+              "distance_residual_cm": 170.74958049222116,
+              "matches": false
+            }
+          ],
+          "trace_frames": 71,
+          "trace_detections": 29,
+          "trace_duration_ticks": 6435,
+          "raw_and_trace_verified": true
+        },
+        {
+          "row_id": "run_9281705e20a34efda09d643cb6e405f0:line-87:det-2",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/v28r1_batch/map-09.json",
+          "raw_line_index": 87,
+          "tick": 4302,
+          "observation": {
+            "category": "target",
+            "distanceCm": 67,
+            "bearingDeg": -13.13,
+            "confidence": 0.81
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": 1.230402,
+            "z": 4.514807,
+            "heading": 1.3733
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-target-1",
+              "role": "target",
+              "world": [
+                -9.8687,
+                -6.7181
+              ],
+              "truth_camera_bearing_deg": 34.92072552797142,
+              "bearing_error_deg": 48.05072552797142,
+              "truth_robot_distance_cm": 197.39248057370256,
+              "m5_robot_distance_cm": 76.73887724198433,
+              "distance_residual_cm": 120.65360333171823,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-target-2",
+              "role": "target",
+              "world": [
+                0.5097,
+                4.4324
+              ],
+              "truth_camera_bearing_deg": -11.692248128910514,
+              "bearing_error_deg": 1.437751871089489,
+              "truth_robot_distance_cm": 9.067475241669053,
+              "m5_robot_distance_cm": 76.73887724198433,
+              "distance_residual_cm": 67.67140200031527,
+              "matches": false
+            }
+          ],
+          "trace_frames": 23,
+          "trace_detections": 27,
+          "trace_duration_ticks": 961,
+          "raw_and_trace_verified": true
+        }
+      ],
+      "pairwise_geometry_and_trace_checks": [
+        {
+          "indices": [
+            0,
+            1
+          ],
+          "camera_station_separation_cm": 171.4593797311685,
+          "heading_difference_deg": 56.321751261359935,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 96,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        },
+        {
+          "indices": [
+            0,
+            2
+          ],
+          "camera_station_separation_cm": 98.32125002371056,
+          "heading_difference_deg": 105.88175870357725,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 41,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        },
+        {
+          "indices": [
+            1,
+            2
+          ],
+          "camera_station_separation_cm": 161.84721310967416,
+          "heading_difference_deg": 162.2035099649372,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 60,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        }
+      ],
+      "at_least_three_distinct_observation_contexts": true,
+      "minimum_labeled_true_confidence": 0.84,
+      "boundary_true_count": 2,
+      "boundary_true_distinct_physical_positions": [
+        [
+          12.8185,
+          5.6371
+        ]
+      ],
+      "boundary_true_vehicle_poses": [
+        [
+          12.364034,
+          -4.389382,
+          2.6387
+        ],
+        [
+          12.907936,
+          -5.880121,
+          2.7426
+        ]
+      ],
+      "boundary_true_independence_note": "All boundary true examples for this colour match one physical ball position; their count is not an independent-scene count."
+    },
+    "distractor": {
+      "confidence_floor": 0.8,
+      "counts": {
+        "raw": 847,
+        "rejected_true": 0,
+        "rejected_false": 68,
+        "rejected_unknown": 29,
+        "kept_true": 111,
+        "kept_false": 423,
+        "kept_unknown": 216
+      },
+      "baseline_rejected": 0,
+      "baseline_precision": null,
+      "labeled_false_kill_rate": 0.0,
+      "labeled_filter_precision": 1.0,
+      "unknown_filtered_not_declared_false": true,
+      "precision_lower_bound_if_all_filtered_unknown_true": 0.7010309278350515,
+      "support_witnesses": [
+        {
+          "row_id": "run_20c2c35441f64d478f033e3c958206b2:line-17:det-1",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/calib_runs/try-1.json",
+          "raw_line_index": 17,
+          "tick": 1030,
+          "observation": {
+            "category": "distractor",
+            "distanceCm": 32,
+            "bearingDeg": -13.53,
+            "confidence": 0.77
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": -2.469161,
+            "z": -4.23472,
+            "heading": -1.0056
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-distractor-1",
+              "role": "distractor",
+              "world": [
+                -2.471,
+                1.9305
+              ],
+              "truth_camera_bearing_deg": 125.64946402922322,
+              "bearing_error_deg": 139.17946402922323,
+              "truth_robot_distance_cm": 77.06525342842686,
+              "m5_robot_distance_cm": 40.18353338269211,
+              "distance_residual_cm": 36.881720045734745,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-distractor-2",
+              "role": "distractor",
+              "world": [
+                9.0965,
+                -9.4301
+              ],
+              "truth_camera_bearing_deg": 8.479941859499732,
+              "bearing_error_deg": 22.009941859499747,
+              "truth_robot_distance_cm": 158.4872272610443,
+              "m5_robot_distance_cm": 40.18353338269211,
+              "distance_residual_cm": 118.30369387835219,
+              "matches": false
+            }
+          ],
+          "trace_frames": 25,
+          "trace_detections": 21,
+          "trace_duration_ticks": 2330,
+          "raw_and_trace_verified": true
+        },
+        {
+          "row_id": "run_28ab18f161034fddba214da23af8fe89:line-20:det-3",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/calib_runs_v6/attempt-08.json",
+          "raw_line_index": 20,
+          "tick": 1881,
+          "observation": {
+            "category": "distractor",
+            "distanceCm": 34,
+            "bearingDeg": 16.1,
+            "confidence": 0.79
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": 3.9151,
+            "z": -0.7568,
+            "heading": 1.5709
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-distractor-1",
+              "role": "distractor",
+              "world": [
+                9.0965,
+                -9.4301
+              ],
+              "truth_camera_bearing_deg": 122.90762466857855,
+              "bearing_error_deg": 106.80762466857854,
+              "truth_robot_distance_cm": 126.28900316461642,
+              "m5_robot_distance_cm": 42.651059634682845,
+              "distance_residual_cm": 83.63794352993358,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-distractor-2",
+              "role": "distractor",
+              "world": [
+                -2.4865,
+                -4.4015
+              ],
+              "truth_camera_bearing_deg": 31.403593853755577,
+              "bearing_error_deg": 15.303593853755586,
+              "truth_robot_distance_cm": 92.08040020309699,
+              "m5_robot_distance_cm": 42.651059634682845,
+              "distance_residual_cm": 49.42934056841414,
+              "matches": false
+            }
+          ],
+          "trace_frames": 75,
+          "trace_detections": 135,
+          "trace_duration_ticks": 7448,
+          "raw_and_trace_verified": true
+        },
+        {
+          "row_id": "run_bc689e0aee564eeb818f431bb850c5d2:line-56:det-1",
+          "source": "/Users/ken/Desktop/wm_bench/artifacts/inloop/calib_runs_v6/attempt-05.json",
+          "raw_line_index": 56,
+          "tick": 3773,
+          "observation": {
+            "category": "distractor",
+            "distanceCm": 58,
+            "bearingDeg": 25.24,
+            "confidence": 0.74
+          },
+          "label": "false",
+          "vehicle_pose": {
+            "x": -5.034499,
+            "z": 4.43659,
+            "heading": -1.5769
+          },
+          "same_color_geometry": [
+            {
+              "package_id": "guangyang-distractor-1",
+              "role": "distractor",
+              "world": [
+                9.0965,
+                -9.4301
+              ],
+              "truth_camera_bearing_deg": -45.69948185984184,
+              "bearing_error_deg": 70.93948185984183,
+              "truth_robot_distance_cm": 247.47797386020696,
+              "m5_robot_distance_cm": 71.64192703921219,
+              "distance_residual_cm": 175.83604682099477,
+              "matches": false
+            },
+            {
+              "package_id": "guangyang-distractor-2",
+              "role": "distractor",
+              "world": [
+                -10.6255,
+                -4.0927
+              ],
+              "truth_camera_bearing_deg": -125.56042728747492,
+              "bearing_error_deg": 150.80042728747492,
+              "truth_robot_distance_cm": 127.48043972881989,
+              "m5_robot_distance_cm": 71.64192703921219,
+              "distance_residual_cm": 55.8385126896077,
+              "matches": false
+            }
+          ],
+          "trace_frames": 81,
+          "trace_detections": 82,
+          "trace_duration_ticks": 7487,
+          "raw_and_trace_verified": true
+        }
+      ],
+      "pairwise_geometry_and_trace_checks": [
+        {
+          "indices": [
+            0,
+            1
+          ],
+          "camera_station_separation_cm": 90.87656123359812,
+          "heading_difference_deg": 147.62257591545662,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 66,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        },
+        {
+          "indices": [
+            0,
+            2
+          ],
+          "camera_station_separation_cm": 113.03523798628572,
+          "heading_difference_deg": 32.73307883582393,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 65,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        },
+        {
+          "indices": [
+            1,
+            2
+          ],
+          "camera_station_separation_cm": 129.34125281649617,
+          "heading_difference_deg": 179.64434524871945,
+          "full_trace_equivalent": false,
+          "trace_failure_count": 263,
+          "same_station_within_existing_3cm_2deg_tolerances": false
+        }
+      ],
+      "at_least_three_distinct_observation_contexts": true,
+      "minimum_labeled_true_confidence": 0.8,
+      "boundary_true_count": 3,
+      "boundary_true_distinct_physical_positions": [
+        [
+          -2.4865,
+          -4.4015
+        ]
+      ],
+      "boundary_true_vehicle_poses": [
+        [
+          -2.4865,
+          -7.6757,
+          2.6161
+        ],
+        [
+          -2.4865,
+          -7.6757,
+          2.6616
+        ],
+        [
+          -2.4865,
+          -7.6757,
+          3.1416
+        ]
+      ],
+      "boundary_true_independence_note": "All boundary true examples for this colour match one physical ball position; their count is not an independent-scene count."
+    }
+  },
+  "conclusion": "Each threshold has three different development observation contexts supporting rejected false detections. Complete normalized traces and physical station/heading differences were independently verified. Boundary true examples are concentrated at one ball position per colour; neither these examples nor unknown rows establish full-data or held-out safety."
+}

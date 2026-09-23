@@ -1,0 +1,23 @@
+{
+  "schema": "wm-filter-candidate-freeze/v1",
+  "frozen_at_utc": "2026-09-23T13:31:38.582537+00:00",
+  "status": "runtime_rule_frozen_pending_root_authorization_and_evaluator_freeze",
+  "filter_version": "confidence-floor-dev-v1",
+  "files": {
+    "/Users/ken/Desktop/wm_bench/programs/detection_filter.py": "fe953d2e4f63db981e5eea33ff95dbedf524ed8f9a965046c12b830479c43659"
+  },
+  "dev_provenance_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/filter-candidate-v1/constant_provenance.json",
+  "dev_provenance_sha256": "9b245b638401f5ceca8e8427a5f6f4aa84cd3b325b87f9bd787aba38c5e48287",
+  "test_data_read": false,
+  "simulator_started": false,
+  "rule": {
+    "target": "keep confidence >= 0.84; equality kept",
+    "distractor": "keep confidence >= 0.80; equality kept",
+    "uncertain": "missing/non-finite confidence retained",
+    "other_inputs": "no distance/bearing/odom/road/layout dependency"
+  },
+  "unit_test_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest programs.tests.test_detection_filter -v",
+  "unit_tests_passed": 6,
+  "runtime_entry": "detection_filter_update(observations, odometry=None, road_state=None, tick=None)",
+  "offline_entry": "DetectionFilter.update delegates to detection_filter_update"
+}

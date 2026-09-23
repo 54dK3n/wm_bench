@@ -1,0 +1,36 @@
+#18 WorldModel independent read-only audit (2026-09-23)
+
+Audited source: /Users/ken/wm_kit
+Branch: guangyang-static-confirmation
+Commit: ad237a143f0d35e100a28c15567d4b75bd56cccf
+No source/package edits were made during this audit.
+No AGENTS.md was found in the repository or the checked ancestor directories.
+
+Implementation
+- world_model/association.py: min_hit_pose_gap_m defaults to 0.0; static_equal_weight defaults to False.
+- world_model/providers/guangyang.py:75-94: only the Guangyang static association configuration enables the 0.15 m gap and equal-weight fusion.
+- world_model/core.py:80-87,162-171: each matched track is compared against ALL recorded accepted-hit robot poses. Distance strictly below the configured gap skips _fuse/on_hit, preserving hit_count and position mean; last_seen and last_updated are refreshed.
+- tests/test_guangyang_provider.py:187-218: committed regression cases cover a 5 cm repeat ignored by the static configuration, a subsequent 20 cm pose counted, the unchanged mean, fewer than three accepted positions remaining unconfirmed, and unchanged default repeated-pose behavior.
+
+Executed test commands (working directory /Users/ken/wm_kit)
+1. PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider tests/test_guangyang_provider.py tests/test_world_model.py tests/test_strict_safety.py
+   Result: 83 passed in 0.05s; exit 0.
+2. PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider
+   Result: 180 passed, 12 failed, 10 deselected. All 12 failures were PermissionError while acceptance result recording tried to write /Users/ken/wm_bench/artifacts/acceptance/baseline (outside writable roots), not algorithm assertions. The destination was corrected with the documented environment override for command 3.
+3. WM_ACCEPT_ARTIFACTS=/private/tmp/wm18-audit-acceptance PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider
+   Result: 192 passed, 10 deselected in 0.73s; exit 0.
+   IMPORTANT: This 192-test local workspace suite includes UNTRACKED tests/acceptance/harness.py, conftest.py, pytest.ini, selection/, planning/ and other local test material. It is not a claim that all 192 tests are reproducible from the wm_kit commit alone. In particular, harness.py:71 explicitly changes min_hit_pose_gap_m to 0.0 for continuous 2 Hz acceptance replays. These acceptance results do not independently validate the new 15 cm confirmation policy; the committed regression tests in command 1 do.
+4. Additional inline, nonpersisted WorldModel probes (PYTHONDONTWRITEBYTECODE=1 python3): robot x positions [0.0, 0.20, 0.01, 0.40] with detection x [1.0, 1.1, 1.2, 1.2], z=2, confidence=.9 and times 4.5*i produced hit counts [1,2,2,3] and means [1.0,1.05,1.05,1.1]. Thus returning near an older pose, not merely the immediately previous pose, is ignored. A separate [0.0,0.149999,0.15] robot-x sequence produced [1,1,2], verifying the strict <15 cm boundary. All assertions passed.
+
+Commit and embedded package verification
+Method: Read WM_KIT_COMMIT and the base64 ZIP from programs/world_model_target_delivery.py without executing the robot program. Decode the ZIP, compute hashlib.sha256, and compare every ZIP member byte-for-byte with both `git -C /Users/ken/wm_kit show COMMIT:MEMBER` and the current /Users/ken/wm_kit/MEMBER bytes.
+Result: All 14 embedded world_model files match BOTH the recorded commit and the source worktree.
+Embedded package SHA256: 651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3
+Program SHA256: bacae82a5c82fad0c3ef20003bfe59fb47363148af01b2081c6877c3c594d3c0
+programs/world_model_target_delivery.py and artifacts/inloop/v28_batch/program_v28.py are byte-identical.
+All ten map-01.json through map-10.json contain exactly the same commit, package SHA256 and program SHA256 in their program_version event (lines array). The .log files contain the driver log; program output is in the JSON lines array.
+
+Working tree and scope notes
+- `git diff HEAD -- world_model tests/test_guangyang_provider.py` was empty. The requested wm_kit source and regression test changes are already committed.
+- Many unrelated wm_kit files are untracked, including the acceptance harness noted above. They were not added or changed by this audit.
+- Existing commit ad237a1 is broader than the repeat-pose change: 9 files, 850 insertions, 14 deletions. Its commit message explicitly says it includes earlier uncommitted world_model work so the source commit matches the embedded package. Besides the Guangyang provider, it includes earlier global FOV/range defaults and LOST-object lookup behavior changes. Do not describe the entire commit as a minimal configuration-only patch. The newly introduced repeat-pose option itself is default-off and enabled only in the Guangyang static preset.

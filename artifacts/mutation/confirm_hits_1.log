@@ -1,0 +1,91 @@
+.FF...................                                                   [100%]
+=================================== FAILURES ===================================
+______________________ test_2_2_track_count_matches_truth ______________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x108b34160>
+classify = <function make_track_classifier.<locals>.classify at 0x108b34550>
+record = <function record.<locals>._record at 0x108b69dc0>
+
+    def test_2_2_track_count_matches_truth(layouts_task2, wm_factory, classify, record):
+        """巡游结束时各类别活跃轨迹数（CONFIRMED+STALE）应等于真值数；含 10% 漏检与单帧幽灵误检。"""
+        per_layout = []
+        correct = 0
+        for i, layout in enumerate(layouts_task2):
+            frames, _ = build_tour(layout, seed=100 + i)
+            log = harness.run_wm(frames, wm_factory())
+            counts = harness.count_active_by_class(log, classify)
+            expected = layout.counts()
+            ok = counts == expected
+            correct += ok
+            per_layout.append({"map": layout.map_id, "frames": len(frames), "duration_s": frames[-1].t,
+                               "expected": expected, "actual": counts, "ok": ok})
+        record("2_2", {"correct_layouts": correct, "threshold": 9, "details": per_layout})
+        detail = "\n".join(f"  {d['map']}: 期望 {d['expected']} 实际 {d['actual']}" for d in per_layout if not d["ok"])
+>       assert correct >= 9, f"2.2 轨迹数正确的布局 {correct}/10，门限 ≥ 9。不正确的布局：\n{detail}"
+E       AssertionError: 2.2 轨迹数正确的布局 3/10，门限 ≥ 9。不正确的布局：
+E           map-02: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'distractor': 2, 'target': 3, 'storage-zone': 1}
+E           map-03: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'target': 2, 'distractor': 3, 'storage-zone': 2}
+E           map-04: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'distractor': 2, 'obstacle': 3, 'target': 3, 'storage-zone': 4}
+E           map-05: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 4, 'target': 3, 'distractor': 2, 'storage-zone': 2}
+E           map-07: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'distractor': 2, 'target': 3, 'obstacle': 4, 'storage-zone': 2}
+E           map-08: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'target': 2, 'storage-zone': 2, 'distractor': 2}
+E           map-09: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'target': 2, 'distractor': 3, 'storage-zone': 1}
+E       assert 3 >= 9
+
+tests/acceptance/offline/test_2_x.py:74: AssertionError
+_______________ test_2_2_single_frame_detection_is_not_confirmed _______________
+
+wm_factory = <function wm_factory.<locals>.factory at 0x108b34160>
+classify = <function make_track_classifier.<locals>.classify at 0x108b34550>
+
+    def test_2_2_single_frame_detection_is_not_confirmed(wm_factory, classify):
+        """规格 5：新检测需连续命中若干次才能 CONFIRMED；单帧误检不得立即成为 CONFIRMED。
+        构造：一个真实物体持续可见 + 一个只出现 1 帧的幽灵。幽灵在其出现帧及后续任一帧都不得为 CONFIRMED。"""
+        from tests.acceptance.synth import ScriptedRobot, SyntheticWorld
+        layout = _pair_layout(3.0)          # 两个 target 相距 3 m：左边的是真实物体，右边的用作单帧幽灵
+        real, ghost = layout.objects
+        world = SyntheticWorld(layout, seed=77, sensor=SensorNoise(miss_rate=0.0, ghost_rate=0.0))
+        world.get(ghost.oid).present = False
+        robot = ScriptedRobot(world, seed=77)
+        robot.hold(2.0)
+        world.get(ghost.oid).present = True
+        robot.hold(0.5)                      # 幽灵恰好出现 1 帧
+        world.get(ghost.oid).present = False
+        robot.hold(3.0)
+        log = harness.run_wm(robot.frames, wm_factory())
+        ghost_confirmed = [(f.t, tr.obj_id) for f in log.frames for tr in f.tracks
+                           if tr.state == CONFIRMED and classify(tr) == "target" and tr.dist(ghost.x, ghost.z) <= 0.5]
+        real_confirmed = any(tr.state == CONFIRMED and tr.dist(real.x, real.z) <= 0.5 for tr in log.frames[-1].tracks)
+        assert real_confirmed, "前置条件：持续可见的真实物体在结束时应为 CONFIRMED"
+>       assert not ghost_confirmed, f"单帧幽灵被确认为 CONFIRMED：{ghost_confirmed[:3]}"
+E       AssertionError: 单帧幽灵被确认为 CONFIRMED：[(3.0, 'target_002'), (3.5, 'target_002')]
+E       assert not [(3.0, 'target_002'), (3.5, 'target_002')]
+
+tests/acceptance/offline/test_2_x.py:96: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+PASSED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+PASSED tests/acceptance/offline/test_3_x.py::test_3_4_first_target_uses_graph_shortest_not_euclidean
+FAILED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+FAILED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+2 failed, 20 passed in 0.81s
+

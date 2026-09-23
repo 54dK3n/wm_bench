@@ -1,0 +1,52 @@
+{
+  "schema": "opt2-offline-report-independent-code-review/v1",
+  "reviewed_at_utc": "2026-09-23T16:04:59.522661+00:00",
+  "simulation_executed": false,
+  "scope": "Pre-run code/formula/integrity review plus synthetic tests and existing 13 archived trials; no claim about future stage2 outcomes.",
+  "reviewed_source_sha256": {
+    "tools/p3_offline_choice.py": "eda833cac9ef0d607fe7d35b834851cc17d6a165c2947415271e576b7938dc2d",
+    "tools/opt2_report.py": "8d4f5616754763866547d0eb20ef947196eec496d2f22e210cfdc7d8bb8ae634",
+    "tools/opt2_evidence_audit.py": "e408946ef49ccadb940b0c0a556cb6b228b641e1d0255d8de56fd0c3b452dbcd",
+    "tools/tests/test_opt2_choice.py": "61cd6e1f5b450b398c508100058378dc881a07748b37e60ea779d7fb4fc3e157",
+    "tools/tests/test_opt2_reporting.py": "c10532b71c0c2a97c15c0dc55e8493c5b90496d8e2ccbb8882c2efa0615b6b28",
+    "tools/tests/test_opt2_evidence_audit.py": "2c61a8bac4d7c07006340256f551f860b5e3f1f59e6c7bee0072207bd153a1eb"
+  },
+  "blocking_findings_remaining": [],
+  "resolved_findings": [
+    {
+      "id": "P3-native-binding",
+      "finding": "First oracle revision accepted unbound road progress and unverified partial/altered public graph.",
+      "resolution": "Current oracle requires same-tick native road_state and odometry; complete map_graph edge dictionary from preceding native query; native road geometry for each public edge; public length agrees with true polyline at 8 world units/metre within existing 0.1cm rounding."
+    },
+    {
+      "id": "native-full-record",
+      "finding": "Inherited demo gates compared events and exported-manifest summaries without proving all native PNG/query/sample arrays.",
+      "resolution": "New independent audit_native_evidence checks complete record file hash/bytes/inventory, actual source vs loaded frozen program, all queries, exact samples, every native frame metadata and base64 PNG, every same-tick/revision renderTruth and all logged red/blue raw detections."
+    },
+    {
+      "id": "actual-grab-angle",
+      "finding": "Legacy angle was computed before approach/recovery; first new formula also used left-positive public heading against right-positive WM sight.",
+      "resolution": "Current actual_grab_sight_angle uses exact native same-tick startState pose and degrees(initialHeading-grabHeading); old pre-approach angle retained separately. Missing/inconsistent exact pose remains unknown."
+    },
+    {
+      "id": "source-attribution",
+      "finding": "Replacement two-ball gate initially omitted source_verified when relaxing depart/600s restrictions.",
+      "resolution": "Current complete_two_ball_attribution retains distinct track IDs, slots1/2, allowed memory/new_observations sources and verified source evidence, without demanding successful post-delivery departure."
+    }
+  ],
+  "review_conclusions": {
+    "truth_association": "At actual first ball-1 target_selection snapshot, chosen WM position must have exactly one target package within30cm; nearest alone is insufficient; unmatched/ambiguous choices cannot match.",
+    "oracle_distance": "Floyd-Warshall independent from runtime Dijkstra, nearest truth-road projection ties and legal current/target partial endpoints, same-road direct options, oneWay handling. Initial shortest turn only; no Euclidean substitute for route distance.",
+    "denominators": "Exactly two real target candidates are enumerated. Round first-choice rate uses all10 layouts; absent/unmatched/unknown selections are not matches. Independent two-ball trajectory grouping is also reported and includes both ball slots.",
+    "two_ball_events": "Physical success requires two distinct true packages each associated to confirmed WM and matching native accepted grab plus verified non-revoked delivery. Successful final delivery survives later departure failure.",
+    "fixed_rules": "Actual WM hit increments/distinct-position ranges and same selected track, confirmation/window/gaps/lastsample, memory>=30cm, approach<=25cm/maxsteps1/perballcalls<=3 remain assessed; native global error/observe/onRoad/image disciplines retained.",
+    "native_binding": "13 archived trials allpass;272 native PNGs;63689599 decoded/native bytes. No native flags are trusted in place of byte and inventory comparisons.",
+    "scope_limits": [
+      "No new simulation; no new outcome or latency claim.",
+      "P3 k is accepted from the separately frozen measured calibration and remains bounded by that calibration protocol validity.",
+      "WM generalization precision is reported only for E/G; other positions are descriptive.",
+      "Class-only holding does not prove package identity; independent actual native package events and true confirmation association supply the physical evidence.",
+      "This review records source hashes at review time; later frozen manifest is authoritative for executed round."
+    ]
+  }
+}

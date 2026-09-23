@@ -1,0 +1,64 @@
+{
+ "schemaVersion": "world-model-vision-budget/v1",
+ "limit_bytes": 20971520,
+ "measured": {
+  "observe": {
+   "samples": [
+    {
+     "calls": 5,
+     "frames": 5,
+     "bytes": 1155853,
+     "bytes_per_call": 231170.6
+    },
+    {
+     "calls": 10,
+     "frames": 10,
+     "bytes": 2163611,
+     "bytes_per_call": 216361.1
+    },
+    {
+     "calls": 20,
+     "frames": 20,
+     "bytes": 4554862,
+     "bytes_per_call": 227743.1
+    },
+    {
+     "calls": 40,
+     "frames": 40,
+     "bytes": 9082789,
+     "bytes_per_call": 227069.7
+    }
+   ],
+   "mean_bytes_per_call": 227069.7,
+   "note": "observe() 每次调用捕获 1 帧；bytes 为 PNG byteLength 合计。"
+  },
+  "approach": {
+   "calls": 3,
+   "max_steps_per_call": 1,
+   "frames": 18,
+   "bytes": 3893004,
+   "bytes_per_call": 1297668,
+   "frames_per_call": 6,
+   "note": "目标不存在时，maxSteps=1 的 approach 也进行了 6 次取帧/重试；每次取帧字节量与 observe 同源。"
+  }
+ },
+ "equivalent_calls": {
+  "observe": 92.36,
+  "approach_max_steps_1": 16.16
+ },
+ "current_planner": {
+  "status": "BLOCKED",
+  "reason": "planner 未能在证据模式下完整跑完一局；当前无法给出“跑完一局所需调用数”。已观测到证据模式下 20MiB 预算在 robot.approach 处被击穿，证据关闭后 planner 又因 front_clearance 失败。",
+  "evidence_enabled_failure": "preflight_failures/evidence_limit.json",
+  "evidence_disabled_failure": "preflight_failures/front_clearance.json"
+ },
+ "artifacts": {
+  "observe_probe_results": [
+   "/tmp/vision_probe_5.json",
+   "/tmp/vision_probe_10.json",
+   "/tmp/vision_probe_20.json",
+   "/tmp/vision_probe_40.json"
+  ],
+  "approach_probe_result": "/tmp/approach_probe.json"
+ }
+}

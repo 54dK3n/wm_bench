@@ -1,0 +1,19 @@
+{
+  "schema": "opt2-grasp-skip-implementation/v1",
+  "files": {
+    "programs/opt2_grasp_fragment.py": "7ff34c840ecf44f0e14b10c7a49e165c8256748017cb2107186246ce1c66fedd",
+    "programs/tests/test_opt2_grasp.py": "c0de3b7bb140af12efd0b87d0078ce223333734ac3c11b382d1976ebbc1a4782"
+  },
+  "tests": "38 passed; includes actual platform AsyncRobotTransformer for retained scan and skipped scan paths",
+  "simulation_runs_started": 0,
+  "runtime_truth_access": false,
+  "runtime_new_fitted_thresholds": false,
+  "original_first_grab_preserved": true,
+  "final_station_scan_preserved": true,
+  "runtime_changes": [
+    "After original empty grab, log WM components/radius, derived public corner radius, next predicted forward and four condition booleans.",
+    "Skip scan only with remaining original step and all public-geometry conditions; do not add queries, observe, approach, or alter movement/angle constants."
+  ],
+  "evidence": "GRASP_EFFICIENCY.md and grasp_efficiency.json",
+  "risk": "WM may overestimate radius and skip a useful true lateral scan. This is explicitly tested as a counterexample; no error-free guarantee or counterfactual success claim."
+}

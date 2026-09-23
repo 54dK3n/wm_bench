@@ -1,0 +1,228 @@
+{
+  "schema": "wm-opt1-round2-frozen-source-review/v1",
+  "reviewed_at_utc": "2026-09-23T14:39:31.344695+00:00",
+  "scope": "Read-only code/preflight records review after batch launch; no trial-result inspection, simulator call, test rerun, or program/tool edits. The only files added are this JSON and the direct R1-to-R2 diff.",
+  "all_checks_pass": true,
+  "checks": {
+    "all_22_manifest_hashes_match": true,
+    "round1_to_round2_outside_embed_only_version_and_declared_filter_sha": true,
+    "only_changed_top_level_function_is_detection_filter_update": true,
+    "only_changed_top_level_constant_names_are_versions_and_filter_hash": true,
+    "frozen_program_equals_current_source": true,
+    "program_raw_sha_matches_preflight": true,
+    "program_trimmed_sha_matches_identity": true,
+    "identity_matches_preflight": true,
+    "program_version_matches_identity_and_version_file": true,
+    "WM_commit_unchanged": true,
+    "WM_zip_exact_unchanged": true,
+    "confidence_floors_unchanged": true,
+    "embedded_filter_exact_source": true,
+    "embedded_filter_sha_matches_constant_manifest_test": true,
+    "all_existing_preflight_checks_pass": true,
+    "178_tests_recorded_passed": true,
+    "pylint_record_has_no_target_errors": true,
+    "coordinate_scan_matches_source_and_zero_pair_violations": true,
+    "target_anchor_variables_not_reintroduced": true,
+    "all_shared_manifest_tools_unchanged_from_round1": true,
+    "v2_test_evaluation_hash_matches_record": true,
+    "v2_test_runtime_and_evaluator_match_round2_manifest": true,
+    "v2_test_explicitly_contaminated_no_heldout_claim": true,
+    "v2_test_numeric_gates_recorded_pass": true
+  },
+  "identity": {
+    "version": "wm-opt1-r2-20260924",
+    "file_sha256": "25590162d87b90c4dcb6c1d9766d7e62a115bfc07f68c709c8a61fb75fd78e34",
+    "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+    "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3"
+  },
+  "raw_program_sha256": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc",
+  "filter_sha256": "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322",
+  "manifest_sha256": "b7cce96e71d6026e2f81179571ada4e39a3e92e2bbb3ed6a25492c97921d9ec6",
+  "manifest_files": {
+    "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/round-2/program.py": {
+      "expected": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc",
+      "actual": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/programs/world_model_opt1.py": {
+      "expected": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc",
+      "actual": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/run_opt_batch.py": {
+      "expected": "891c985e207562aeb6ad4ba81ff39c990cfcefeb9c098706019a28c173d777b7",
+      "actual": "891c985e207562aeb6ad4ba81ff39c990cfcefeb9c098706019a28c173d777b7",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/run_diagnostic_batch.py": {
+      "expected": "bf288a826ff7313d9f6a9808f21cb7bd44846ec0a710e13ec775c4fe42f6bb61",
+      "actual": "bf288a826ff7313d9f6a9808f21cb7bd44846ec0a710e13ec775c4fe42f6bb61",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/inloop_driver.js": {
+      "expected": "39df847b991c83660e0fd0e38741e6b3b53ca875f57069383c2b590adfaad8a1",
+      "actual": "39df847b991c83660e0fd0e38741e6b3b53ca875f57069383c2b590adfaad8a1",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/vision_truth_hook.js": {
+      "expected": "2679393d52e960c4e62f812135837c0b5a849051c959f15f6d1047b948fb57b9",
+      "actual": "2679393d52e960c4e62f812135837c0b5a849051c959f15f6d1047b948fb57b9",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/demo_keyframes_hook.js": {
+      "expected": "861f45654bb7219e206a7eb052e4ccdc2b9e69ef2f492d7017d1fa04355e2269",
+      "actual": "861f45654bb7219e206a7eb052e4ccdc2b9e69ef2f492d7017d1fa04355e2269",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/batch_report.py": {
+      "expected": "1156353fa7695a9ca976ebab536e055d431d694eb90e8f7b114841b6825c0ffa",
+      "actual": "1156353fa7695a9ca976ebab536e055d431d694eb90e8f7b114841b6825c0ffa",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/stage_report.py": {
+      "expected": "cf56f634a90aabbc8607d89427b87b60e87175eb32d0d355c62ad67a2863eb39",
+      "actual": "cf56f634a90aabbc8607d89427b87b60e87175eb32d0d355c62ad67a2863eb39",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/wm_hit_audit.py": {
+      "expected": "73288ca69a0f9245f03b8b6037186b920afd995319b92dd75a0335770c2809b7",
+      "actual": "73288ca69a0f9245f03b8b6037186b920afd995319b92dd75a0335770c2809b7",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/demo_timeline.py": {
+      "expected": "5747a92722ef2e446a3c36996e30867f8278390a4204532dacb005805e834bbe",
+      "actual": "5747a92722ef2e446a3c36996e30867f8278390a4204532dacb005805e834bbe",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/opt_report.py": {
+      "expected": "5492e2dc8511ea096d16b2f3b38a180bcbf6abba844411908f38bc87f0c2f624",
+      "actual": "5492e2dc8511ea096d16b2f3b38a180bcbf6abba844411908f38bc87f0c2f624",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/opt_preflight.py": {
+      "expected": "00b91a1ceb654a273bd32f09f2d8044f2c333f70bc0d3dd2cbd6d0e66a8c9054",
+      "actual": "00b91a1ceb654a273bd32f09f2d8044f2c333f70bc0d3dd2cbd6d0e66a8c9054",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/check_no_layout_constants.py": {
+      "expected": "c492937224a553c25984030eb292293018026804afa26cf8783ebf27043e267a",
+      "actual": "c492937224a553c25984030eb292293018026804afa26cf8783ebf27043e267a",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/programs/detection_filter.py": {
+      "expected": "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322",
+      "actual": "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/detection_evaluation.py": {
+      "expected": "5bf3b02aed2cdeeb5e6c91496f82a8619ed17dd2524aa9abc996bd19656392db",
+      "actual": "5bf3b02aed2cdeeb5e6c91496f82a8619ed17dd2524aa9abc996bd19656392db",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/test_detection_evaluation.py": {
+      "expected": "43352c69d9aa2de4875f3efb960d099cf1e7aa36f6cddfdaf87965a12ffe79bf",
+      "actual": "43352c69d9aa2de4875f3efb960d099cf1e7aa36f6cddfdaf87965a12ffe79bf",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/tests/test_opt_reporting.py": {
+      "expected": "fb66e91ee2398f4699405f4ebbf15ebef6a8ddd55980d8fbdbdd7c8c83fc57b3",
+      "actual": "fb66e91ee2398f4699405f4ebbf15ebef6a8ddd55980d8fbdbdd7c8c83fc57b3",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/programs/tests/test_opt1_planner.py": {
+      "expected": "06483b5bb90d5c8fdefa0046bbff7dc5d777b6ead3e901e37f3512274592234f",
+      "actual": "06483b5bb90d5c8fdefa0046bbff7dc5d777b6ead3e901e37f3512274592234f",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/embed_detection_filter.py": {
+      "expected": "54dbf6f9997472c245bfedaa1eef6d99a478aafbbc75bb8aecdfae270fbe868b",
+      "actual": "54dbf6f9997472c245bfedaa1eef6d99a478aafbbc75bb8aecdfae270fbe868b",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/tests/test_opt_runner_controls.py": {
+      "expected": "d94e3113f5f6c9d2f45083ff9f8dd12d595aa355952c754c7c4c85c09caf4d6e",
+      "actual": "d94e3113f5f6c9d2f45083ff9f8dd12d595aa355952c754c7c4c85c09caf4d6e",
+      "matches": true
+    },
+    "/Users/ken/Desktop/wm_bench/tools/tests/test_opt_filter_platform.py": {
+      "expected": "595ab46f674e686e90deffa1bd4c5ba67ee989e108f00ab7519a36d97d3f112a",
+      "actual": "595ab46f674e686e90deffa1bd4c5ba67ee989e108f00ab7519a36d97d3f112a",
+      "matches": true
+    }
+  },
+  "compared_round1_program": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/round-1/program.py",
+  "round1_program_sha256": "a6527ca62bcbd643ca0a16842409834269ac292815a947ea9af25ae6404a28cd",
+  "changed_functions": [
+    "detection_filter_update"
+  ],
+  "changed_assignments": [
+    "PROGRAM_VERSION",
+    "FILTER_VERSION",
+    "DETECTION_FILTER_SHA256"
+  ],
+  "shared_manifest_changes": {
+    "/Users/ken/Desktop/wm_bench/programs/world_model_opt1.py": {
+      "round1": "a6527ca62bcbd643ca0a16842409834269ac292815a947ea9af25ae6404a28cd",
+      "round2": "6cc3479d55051161f2c451226bda3a61a578c8fd9f84d020848c902c2c5d35cc"
+    },
+    "/Users/ken/Desktop/wm_bench/programs/detection_filter.py": {
+      "round1": "fe953d2e4f63db981e5eea33ff95dbedf524ed8f9a965046c12b830479c43659",
+      "round2": "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322"
+    }
+  },
+  "test_status": {
+    "numerically_passed": true,
+    "contaminated": true,
+    "heldout_generalization": false,
+    "evaluation_record": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/filter-test-v2/evaluation_record.json",
+    "red": {
+      "raw_total": 59,
+      "true_total": 40,
+      "false_total": 19,
+      "ambiguity_excluded": 0,
+      "unknown_excluded": 0,
+      "labeled_coverage": 1.0,
+      "evaluable_total": 59,
+      "wrong_class_total": 0,
+      "unknown_reasons": {},
+      "all_raw_filtered": 2,
+      "true_kept": 40,
+      "true_filtered": 0,
+      "false_kept": 17,
+      "false_filtered": 2,
+      "false_kill_rate": 0.0,
+      "filter_precision": 1.0,
+      "false_prevalence": 0.3220338983050847,
+      "residual_false_share_among_kept": 0.2982456140350877,
+      "false_survival_rate": 0.8947368421052632
+    },
+    "blue": {
+      "raw_total": 109,
+      "true_total": 11,
+      "false_total": 98,
+      "ambiguity_excluded": 0,
+      "unknown_excluded": 0,
+      "labeled_coverage": 1.0,
+      "evaluable_total": 109,
+      "wrong_class_total": 0,
+      "unknown_reasons": {},
+      "all_raw_filtered": 4,
+      "true_kept": 11,
+      "true_filtered": 0,
+      "false_kept": 94,
+      "false_filtered": 4,
+      "false_kill_rate": 0.0,
+      "filter_precision": 1.0,
+      "false_prevalence": 0.8990825688073395,
+      "residual_false_share_among_kept": 0.8952380952380953,
+      "false_survival_rate": 0.9591836734693877
+    }
+  },
+  "notes": [
+    "round-2/changes.patch is relative to frozen stage-1 R3, so it includes the already-tested opt1 R1 planner change; the direct R1-to-R2 diff added here contains only version/filter scope edits.",
+    "Outside the exact embedded filter, code is byte-identical after replacing PROGRAM_VERSION and DETECTION_FILTER_SHA256 assignment lines. Therefore M5/WM/confirmation/planner/approach/grab/delivery/motion guard are unchanged from opt1 R1.",
+    "v2 adds finite raw-distance eligibility 40 <= distance < 90 to the existing confidence floors; outside or invalid distance abstains, including capped 100cm. No new fitted range constant is introduced.",
+    "The filter is still called through a top-level detection_filter_update in counted_observe after complete raw logging; this call site is unchanged from the R1 platform bridge execution test.",
+    "No task outcome or held-out generalization conclusion is drawn from this review."
+  ]
+}

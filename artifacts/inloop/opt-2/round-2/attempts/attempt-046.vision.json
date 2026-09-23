@@ -1,0 +1,313 @@
+{
+ "schema": "wm-vision-evidence/v1",
+ "taskId": "R2-GYI-MVP-02",
+ "source": "native record.visionFrames and record.inputs; no additional camera queries",
+ "evidenceBudgetBytes": 20971520,
+ "frames": [
+  {
+   "schemaVersion": "chenlong.vision-evidence/v1",
+   "evidenceId": "vision-1",
+   "frameId": 7,
+   "tick": 0,
+   "stateRevision": 0,
+   "mimeType": "image/png",
+   "width": 640,
+   "height": 480,
+   "byteLength": 227810,
+   "sha256": "0a5210302d8baed834476e173bf0597a2248957dbb36c462ab2beb517725475f",
+   "cameraDefinitionHash": "88a9f8cc474d60a60e68fca46cb9e0d0bd5cffc86d1312fa481e8133d4b26600",
+   "detectorDefinitionHash": "f1f0ba40b9177bf93055579eaa0602e369a2bf8daaf522f98df3775df5a5dead",
+   "seq": 7,
+   "t": 0,
+   "image": "attempt-046.vision/evidence-000007-tick-0.png",
+   "exportedSha256": "0a5210302d8baed834476e173bf0597a2248957dbb36c462ab2beb517725475f"
+  }
+ ],
+ "queries": [
+  {
+   "seq": 8,
+   "t": 0,
+   "tick": 0,
+   "type": "vision_query",
+   "method": "observe",
+   "args": [
+    null,
+    0
+   ],
+   "result": [
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "中间",
+     "distanceCm": 65,
+     "confidence": 0.91,
+     "near": false,
+     "stable": true,
+     "bearingDeg": 0
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "中间",
+     "distanceCm": 40,
+     "confidence": 0.87,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -0.14
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.86,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -27.35
+    },
+    {
+     "category": "obstacle",
+     "categoryLabel": "障碍物",
+     "name": "障碍物",
+     "label": "障碍物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.82,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -35.82
+    },
+    {
+     "category": "distractor",
+     "categoryLabel": "混淆物",
+     "name": "混淆物",
+     "label": "混淆物",
+     "direction": "左",
+     "distanceCm": 100,
+     "confidence": 0.81,
+     "near": false,
+     "stable": true,
+     "bearingDeg": -19.35
+    }
+   ],
+   "frameId": 7,
+   "evidenceId": "vision-1"
+  }
+ ],
+ "exportErrors": [],
+ "runId": "run_f2116b5a4b194f3bbc15fa8ab9385c03",
+ "cameraDefinition": {
+  "id": "chenlong.virtual-camera",
+  "version": "v1",
+  "source": {
+   "width": 640,
+   "height": 480,
+   "pixelFormat": "rgba8-straight"
+  },
+  "model": {
+   "width": 640,
+   "height": 640,
+   "pixelFormat": "rgba8-opaque"
+  },
+  "verticalFovDegrees": 60,
+  "cameraForwardOffsetMeters": 0.43,
+  "mountPositionMeters": {
+   "x": 0,
+   "y": 0.54,
+   "z": -0.43
+  },
+  "mountPitchDegrees": -8,
+  "nearMeters": 0.04,
+  "farMeters": 30,
+  "letterbox": {
+   "fit": "contain",
+   "scale": 1,
+   "drawWidth": 640,
+   "drawHeight": 480,
+   "padX": 0,
+   "padY": 80,
+   "background": [
+    0,
+    0,
+    0,
+    255
+   ]
+  },
+  "compositing": {
+   "operator": "source-over",
+   "sourceAlpha": "straight-unorm8",
+   "destinationAlpha": 255,
+   "outputAlpha": 255,
+   "channelRounding": "Math.round"
+  },
+  "contrast": {
+   "factor": 1.12,
+   "pivot": 128,
+   "channels": [
+    "red",
+    "green",
+    "blue"
+   ],
+   "clamp": [
+    0,
+    255
+   ],
+   "rounding": "Math.round"
+  },
+  "sharpness": {
+   "algorithm": "rms-laplacian",
+   "sampleStep": 4,
+   "lumaWeights": [
+    0.299,
+    0.587,
+    0.114
+   ],
+   "decimalPlaces": 1
+  }
+ },
+ "cameraDefinitionHash": "88a9f8cc474d60a60e68fca46cb9e0d0bd5cffc86d1312fa481e8133d4b26600",
+ "detectorDefinitionHash": "f1f0ba40b9177bf93055579eaa0602e369a2bf8daaf522f98df3775df5a5dead",
+ "nativeFrameCount": 1,
+ "nativeFrameBytes": 227810,
+ "nativeQueryCount": 1,
+ "renderTruth": {
+  "schema": "wm-camera-render-truth/v1",
+  "frames": [
+   {
+    "captureSerial": 1,
+    "runId": "run_f2116b5a4b194f3bbc15fa8ab9385c03",
+    "captureTick": 0,
+    "captureStateRevision": 0,
+    "vehicle": {
+     "x": -2.4865,
+     "z": -7.6757,
+     "heading": 3.141592653589793
+    },
+    "camera": {
+     "matrixWorld": [
+      -1,
+      0,
+      -1.2246467991473532e-16,
+      0,
+      -1.7043789261815557e-17,
+      0.9902680687415704,
+      0.13917310096006544,
+      0,
+      1.2127286206821952e-16,
+      0.13917310096006544,
+      -0.9902680687415704,
+      0,
+      -2.4865,
+      0.645,
+      -7.2457,
+      1
+     ],
+     "world": [
+      -2.4865,
+      0.645,
+      -7.2457
+     ],
+     "forward": [
+      -1.2127286206821952e-16,
+      -0.13917310096006544,
+      0.9902680687415704
+     ],
+     "right": [
+      -1,
+      0,
+      -1.2246467991473532e-16
+     ]
+    },
+    "objectState": {
+     "holding": null,
+     "packages": [
+      {
+       "id": "guangyang-distractor-1",
+       "role": "distractor",
+       "x": -2.4865,
+       "z": -4.4015,
+       "stackLevel": 0
+      },
+      {
+       "id": "guangyang-distractor-2",
+       "role": "distractor",
+       "x": 6.7799,
+       "z": 4.6795,
+       "stackLevel": 0
+      },
+      {
+       "id": "guangyang-obstacle-1",
+       "role": "obstacle",
+       "x": 1.1274,
+       "z": -0.7568,
+       "stackLevel": 0
+      },
+      {
+       "id": "guangyang-obstacle-2",
+       "role": "obstacle",
+       "x": -10.9498,
+       "z": 2.0849,
+       "stackLevel": 0
+      },
+      {
+       "id": "guangyang-target-1",
+       "role": "target",
+       "x": 12.8185,
+       "z": 5.6371,
+       "stackLevel": 0
+      },
+      {
+       "id": "guangyang-target-2",
+       "role": "target",
+       "x": -6.749,
+       "z": -0.7568,
+       "stackLevel": 0
+      }
+     ]
+    },
+    "source": "synchronous renderer.render(scene, virtualCamera) entry after updateVirtualCameraPose",
+    "exactRenderState": true,
+    "frameId": 7,
+    "evidenceId": "vision-1",
+    "evidenceSeq": 7,
+    "evidenceTick": 0,
+    "evidenceStateRevision": 0,
+    "imageSha256": "0a5210302d8baed834476e173bf0597a2248957dbb36c462ab2beb517725475f",
+    "nativeByteLength": 227810,
+    "sameTickAndRevision": true
+   }
+  ],
+  "errors": [],
+  "renderCount": 1
+ },
+ "observeBindings": [
+  {
+   "querySeq": 8,
+   "queryTick": 0,
+   "frameId": 7,
+   "evidenceId": "vision-1",
+   "frameSeq": 7,
+   "frameTick": 0,
+   "image": "attempt-046.vision/evidence-000007-tick-0.png",
+   "bound": true
+  }
+ ],
+ "validation": {
+  "exportedFrameCount": 1,
+  "exportedFrameBytes": 227810,
+  "allNativeFramesExported": true,
+  "allNativeQueriesExported": true,
+  "allObserveFramesBound": true,
+  "nativeBytesWithinBudget": true,
+  "exportedBytesMatchNative": true,
+  "allNativeFramesHaveExactRenderTruth": true,
+  "renderTruthErrors": 0
+ },
+ "exportedAt": "2026-09-23T18:03:42.097Z"
+}

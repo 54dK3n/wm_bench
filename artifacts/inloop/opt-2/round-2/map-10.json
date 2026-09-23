@@ -1,0 +1,545 @@
+{
+ "mission": "guangyang2",
+ "taskId": "R2-GYI-MVP-02",
+ "program": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/program.py",
+ "startedAt": "2026-09-23T18:03:20.965Z",
+ "username": "wmbmueevq1avm",
+ "mapConfig": {
+  "/api/v1/map-config/R2-GYI-MVP-02": {
+   "status": 200,
+   "body": {
+    "schemaVersion": "chenlong.guangyang-map-config/v1",
+    "authoritative": false,
+    "mapId": "guangyang-island",
+    "baseMapVersion": "2026.08-source-png-3d.3",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "revision": 0,
+    "updatedAt": null,
+    "digest": "defd7a6f62af493c35d811dabbec4c8f539224586458ca28bde1998054f47a04",
+    "layout": {
+     "schemaVersion": "chenlong.guangyang-map-layout/v2",
+     "checkpoints": [
+      [
+       -11.5985,
+       -0.7568
+      ],
+      [
+       4.4324,
+       6.8726
+      ],
+      [
+       -2.4865,
+       4.4324
+      ],
+      [
+       7.1815,
+       -3.2587
+      ],
+      [
+       13.7297,
+       0.7568
+      ],
+      [
+       6.471,
+       0.4479
+      ]
+     ],
+     "targets": [
+      [
+       12.8185,
+       5.6371
+      ],
+      [
+       -6.749,
+       -0.7568
+      ]
+     ],
+     "storage": [
+      -10.7336,
+      -8.0772
+     ],
+     "distractors": [
+      [
+       -2.4865,
+       -4.4015
+      ],
+      [
+       6.7799,
+       4.6795
+      ]
+     ],
+     "obstacles": [
+      [
+       1.1274,
+       -0.7568
+      ],
+      [
+       -10.9498,
+       2.0849
+      ]
+     ]
+    }
+   }
+  }
+ },
+ "assignedMap": "map-10",
+ "visionTruthHook": {
+  "installed": true,
+  "schema": "wm-camera-render-truth/v1",
+  "source": "native camera render entry + native evidence return; driver-only truth"
+ },
+ "demoKeyframesHook": {
+  "installed": true,
+  "schema": "wm-demo-keyframes/v1",
+  "source": "first native main-view render after each target package's first successful grab/delivery; no extra render or observe"
+ },
+ "demoEvidenceFile": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/attempts/attempt-046.demo.json",
+ "visionEvidenceFile": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/attempts/attempt-046.vision.json",
+ "pythonFeedback": {
+  "at": "2026-09-23T18:03:40.591Z",
+  "wallSeconds": 6.275,
+  "message": "第 3761 行用了不存在的名称。小车请使用 robot.forward()、robot.right_angle() 等常用指令。"
+ },
+ "timedOut": false,
+ "stallReason": null,
+ "timeline": [
+  {
+   "wallSeconds": 4,
+   "tick": null,
+   "simElapsedMs": null,
+   "sessionStatus": null,
+   "sampleCount": null,
+   "eventCount": null,
+   "outputLength": 0,
+   "pose": {
+    "x": -2.4865,
+    "z": -7.6757,
+    "heading": 3.141592653589793
+   },
+   "holding": null,
+   "packages": [
+    {
+     "id": "guangyang-target-1",
+     "x": -9.8687,
+     "z": -6.7181
+    },
+    {
+     "id": "guangyang-distractor-1",
+     "x": -8.0772,
+     "z": 5.4826
+    }
+   ]
+  }
+ ],
+ "wallSeconds": 6.275,
+ "runState": "运行已结束",
+ "feedbackText": "第 3761 行用了不存在的名称。小车请使用 robot.forward()、robot.right_angle() 等常用指令。",
+ "lines": [
+  {
+   "event": "program_version",
+   "version": "wm-opt2-r2-20260924",
+   "file_sha256": "d423f74fc968b1921d9f9dba6e644ae416880ae3addf00500081d886e938b28f",
+   "wm_kit_commit": "326a5f8892b9da11996b5f3d3d0fc56341aca6e4",
+   "wm_embed_sha256": "61308c1c20270ec31d8ee5870ed2b01bf6920075e4820e5fc8c30bd2e626f1fb",
+   "turn_cost_k": 0.060290462706043484,
+   "turn_calibration_sha256": "be38032897487e85cf36d994b308cba0c4ed9dc6821485e16bd6982123f3a195",
+   "log_conventions": {
+    "pose": "[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]",
+    "bearingDeg": "右为正（observe / WM 方位同号）"
+   }
+  },
+  {
+   "event": "ball_start",
+   "tick": 0,
+   "ball_index": 1,
+   "track_id": null,
+   "target_source": "new_observations",
+   "retained_wm_targets": 0,
+   "delivered_count": 0,
+   "observe_count": 0,
+   "approach_calls": 0
+  },
+  {
+   "event": "observe",
+   "observe_count": 1,
+   "tick": 0,
+   "query": null,
+   "confidence": 0,
+   "requested_category": null,
+   "requested_confidence": 0.4,
+   "odo": [
+    0,
+    0,
+    0
+   ],
+   "translationSinceObserveCm": null,
+   "turnSinceObserveDeg": null,
+   "raw": [
+    {
+     "category": "distractor",
+     "distanceCm": 40,
+     "bearingDeg": -0.14,
+     "confidence": 0.87
+    },
+    {
+     "category": "distractor",
+     "distanceCm": 100,
+     "bearingDeg": -19.35,
+     "confidence": 0.81
+    }
+   ]
+  },
+  {
+   "event": "detection_filter",
+   "tick": 0,
+   "observe_count": 1,
+   "filter_sha256": "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322",
+   "kept_indices": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "rejected_indices": [],
+   "decisions": [
+    {
+     "index": 0,
+     "keep": true,
+     "reason": "class_not_filtered",
+     "category": "obstacle",
+     "confidence": 0.91,
+     "confidence_floor": null,
+     "distance_cm": 65,
+     "wm_window_eligible": true
+    },
+    {
+     "index": 1,
+     "keep": true,
+     "reason": "confidence_at_or_above_class_floor",
+     "category": "distractor",
+     "confidence": 0.87,
+     "confidence_floor": 0.8,
+     "distance_cm": 40,
+     "wm_window_eligible": true
+    },
+    {
+     "index": 2,
+     "keep": true,
+     "reason": "class_not_filtered",
+     "category": "obstacle",
+     "confidence": 0.86,
+     "confidence_floor": null,
+     "distance_cm": 100,
+     "wm_window_eligible": false
+    },
+    {
+     "index": 3,
+     "keep": true,
+     "reason": "class_not_filtered",
+     "category": "obstacle",
+     "confidence": 0.82,
+     "confidence_floor": null,
+     "distance_cm": 100,
+     "wm_window_eligible": false
+    },
+    {
+     "index": 4,
+     "keep": true,
+     "reason": "outside_wm_window_retained",
+     "category": "distractor",
+     "confidence": 0.81,
+     "confidence_floor": 0.8,
+     "distance_cm": 100,
+     "wm_window_eligible": false
+    }
+   ],
+   "filter_version": "confidence-floor-wm-window-v2"
+  },
+  {
+   "event": "target_observations",
+   "count": 0,
+   "seen": 0,
+   "items": [],
+   "outside_window": []
+  }
+ ],
+ "outputTail": "GY {\"event\": \"program_version\", \"version\": \"wm-opt2-r2-20260924\", \"file_sha256\": \"d423f74fc968b1921d9f9dba6e644ae416880ae3addf00500081d886e938b28f\", \"wm_kit_commit\": \"326a5f8892b9da11996b5f3d3d0fc56341aca6e4\", \"wm_embed_sha256\": \"61308c1c20270ec31d8ee5870ed2b01bf6920075e4820e5fc8c30bd2e626f1fb\", \"turn_cost_k\": 0.060290462706043484, \"turn_calibration_sha256\": \"be38032897487e85cf36d994b308cba0c4ed9dc6821485e16bd6982123f3a195\", \"log_conventions\": {\"pose\": \"[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]\", \"bearingDeg\": \"右为正（observe / WM 方位同号）\"}}\nGY {\"event\": \"ball_start\", \"tick\": 0, \"ball_index\": 1, \"track_id\": null, \"target_source\": \"new_observations\", \"retained_wm_targets\": 0, \"delivered_count\": 0, \"observe_count\": 0, \"approach_calls\": 0}\nGY {\"event\": \"observe\", \"observe_count\": 1, \"tick\": 0, \"query\": null, \"confidence\": 0.0, \"requested_category\": null, \"requested_confidence\": 0.4, \"odo\": [0.0, 0.0, 0.0], \"translationSinceObserveCm\": null, \"turnSinceObserveDeg\": null, \"raw\": [{\"category\": \"distractor\", \"distanceCm\": 40, \"bearingDeg\": -0.14, \"confidence\": 0.87}, {\"category\": \"distractor\", \"distanceCm\": 100, \"bearingDeg\": -19.35, \"confidence\": 0.81}]}\nGY {\"event\": \"detection_filter\", \"tick\": 0, \"observe_count\": 1, \"filter_sha256\": \"57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322\", \"kept_indices\": [0, 1, 2, 3, 4], \"rejected_indices\": [], \"decisions\": [{\"index\": 0, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.91, \"confidence_floor\": null, \"distance_cm\": 65, \"wm_window_eligible\": true}, {\"index\": 1, \"keep\": true, \"reason\": \"confidence_at_or_above_class_floor\", \"category\": \"distractor\", \"confidence\": 0.87, \"confidence_floor\": 0.8, \"distance_cm\": 40, \"wm_window_eligible\": true}, {\"index\": 2, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.86, \"confidence_floor\": null, \"distance_cm\": 100, \"wm_window_eligible\": false}, {\"index\": 3, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.82, \"confidence_floor\": null, \"distance_cm\": 100, \"wm_window_eligible\": false}, {\"index\": 4, \"keep\": true, \"reason\": \"outside_wm_window_retained\", \"category\": \"distractor\", \"confidence\": 0.81, \"confidence_floor\": 0.8, \"distance_cm\": 100, \"wm_window_eligible\": false}], \"filter_version\": \"confidence-floor-wm-window-v2\"}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 0, \"items\": [], \"outside_window\": []}\n",
+ "score": {
+  "total": "40.0",
+  "task": "0.0 / 40",
+  "rule": "25.0 / 25",
+  "auto": "15.0 / 15",
+  "efficiency": "0.0 / 20",
+  "mission": "0/13",
+  "runState": "运行已结束",
+  "collisions": "",
+  "violations": "",
+  "elapsed": ""
+ },
+ "record": {
+  "source": "latestCompetitionRecord",
+  "keys": [
+   "schemaVersion",
+   "runId",
+   "serverSessionId",
+   "challengeDigest",
+   "teamId",
+   "taskId",
+   "mapId",
+   "mapVersion",
+   "ruleVersion",
+   "runDefinition",
+   "taskDefinition",
+   "ruleDefinition",
+   "scoringDefinition",
+   "simulationDefinition",
+   "interactionDefinition",
+   "navigationDefinition",
+   "navigationControlDefinition",
+   "randomSeed",
+   "sourceCode",
+   "clientStartedAt",
+   "clientEndedAt",
+   "samples",
+   "inputs",
+   "visionFrames",
+   "events",
+   "simulationEndTick",
+   "result"
+  ],
+  "events": [
+   {
+    "taskId": "R2-GYI-MVP-02",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "seq": 1,
+    "t": 0,
+    "type": "run_started"
+   },
+   {
+    "message": "第 3761 行用了不存在的名称。小车请使用 robot.forward()、robot.right_angle() 等常用指令。",
+    "seq": 11,
+    "t": 0,
+    "type": "program_error"
+   },
+   {
+    "reason": "program_error",
+    "score": 40,
+    "seq": 14,
+    "t": 0,
+    "type": "run_finished"
+   }
+  ],
+  "sampleCount": 2,
+  "top": {
+   "schemaVersion": "chenlong.run-record/v4",
+   "runId": "run_f2116b5a4b194f3bbc15fa8ab9385c03",
+   "taskId": "R2-GYI-MVP-02",
+   "mapId": "guangyang-island",
+   "mapVersion": "2026.08-source-png-3d.3",
+   "result": {
+    "score": 40,
+    "taskScore": 0,
+    "ruleScore": 25,
+    "autonomousScore": 15,
+    "efficiencyScore": 0,
+    "ruleDeduction": 0,
+    "eventDeduction": 0,
+    "durationDeduction": 0,
+    "durationSeconds": 0,
+    "completedTasks": 0,
+    "totalTasks": 13,
+    "taskValid": true,
+    "taskFinished": false,
+    "violationMetrics": {
+     "off_road": {
+      "episodes": 0,
+      "durationMs": 0,
+      "maxSeverity": 0
+     }
+    },
+    "violations": [],
+    "reason": "program_error",
+    "simulationTick": 0
+   }
+  },
+  "vision": {
+   "frameCount": 1,
+   "frameBytes": 227810,
+   "frameBase64Bytes": 303748,
+   "queryCount": 1,
+   "inputCount": 8
+  }
+ },
+ "samplesFile": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/attempts/attempt-046.samples.json",
+ "sessionSummary": null,
+ "fullRecordFile": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/attempts/attempt-046.record.json",
+ "fullRecordExport": {
+  "runId": "run_f2116b5a4b194f3bbc15fa8ab9385c03",
+  "taskId": "R2-GYI-MVP-02",
+  "bytes": 603933,
+  "sha256": "8bd9d26bd9eb24927b90a2a0c7ea6fa18350d6f7ba272e2ec2a117eb97d1fffb",
+  "events": 3,
+  "inputs": 8,
+  "samples": 2,
+  "visionFrames": 1
+ },
+ "demoEvidence": {
+  "file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/attempts/attempt-046.demo.json",
+  "frames": 0,
+  "requiredEventScope": "first successful grab and first delivery for each target package; at most four PNGs",
+  "expectedEvents": 0,
+  "allSuccessEventsHaveScreenshots": true,
+  "nativeFrameBytes": 227810,
+  "screenshotBytes": 0,
+  "combinedImageBytes": 227810,
+  "budgetBytes": 20971520,
+  "budgetEnforcedOn": "native_vision_only",
+  "combinedImagesWithinBudget": true,
+  "allScreenshotBytesExported": true,
+  "hookErrors": [],
+  "exportErrors": []
+ },
+ "visionExport": {
+  "frames": 1,
+  "observeQueries": 1,
+  "nativeFrames": 1,
+  "nativeBytes": 227810,
+  "budgetBytes": 20971520,
+  "errors": [],
+  "validation": {
+   "exportedFrameCount": 1,
+   "exportedFrameBytes": 227810,
+   "allNativeFramesExported": true,
+   "allNativeQueriesExported": true,
+   "allObserveFramesBound": true,
+   "nativeBytesWithinBudget": true,
+   "exportedBytesMatchNative": true,
+   "allNativeFramesHaveExactRenderTruth": true,
+   "renderTruthErrors": 0
+  },
+  "finalRecordCountMatches": true,
+  "finalRecordBytesMatch": true
+ },
+ "finishedAt": "2026-09-23T18:03:42.124Z",
+ "hostIO": {
+  "schema": "wm-host-io/v1",
+  "clock": "host monotonic performance.now; no simulation clock changes",
+  "terminal": {
+   "writeCalls": 4,
+   "writtenBytes": 4972,
+   "writeMs": 0.8157510000055481,
+   "receivedSuffixBytes": 4972,
+   "fullFallbacks": 0,
+   "pageReadMs": 0,
+   "errors": [],
+   "finalVerification": {
+    "allPass": true,
+    "finalFullReadAvailable": true,
+    "beforeFinalSyncExact": true,
+    "finalFullReplacement": true,
+    "mismatchKind": null,
+    "bytes": 2486,
+    "sha256": "386f14645dbaf439a31723f876bf2a43988ccb1a3729cd15b33eb0e04b752771"
+   }
+  },
+  "manifests": {
+   "visionWrites": 2,
+   "visionSkippedUnchanged": 1,
+   "demoWrites": 3,
+   "demoSkippedUnchanged": 1,
+   "writtenBytes": 16122,
+   "writeMs": 1.4364999999997963
+  },
+  "evaluateTimeouts": [],
+  "finalNativeVerification": {
+   "allPass": true,
+   "frames": 1,
+   "queries": 1,
+   "pngBytes": 227810
+  },
+  "cdp": {
+   "Target.createTarget": {
+    "requests": 1,
+    "responses": 1,
+    "requestUtf8Bytes": 70,
+    "responseUtf8Bytes": 65,
+    "roundTripMs": 37.676041999999995,
+    "parseMs": 0.015667000000007647
+   },
+   "Target.attachToTarget": {
+    "requests": 1,
+    "responses": 1,
+    "requestUtf8Bytes": 113,
+    "responseUtf8Bytes": 66,
+    "roundTripMs": 12.33379100000002,
+    "parseMs": 0.010708999999962998
+   },
+   "Page.enable": {
+    "requests": 1,
+    "responses": 1,
+    "requestUtf8Bytes": 90,
+    "responseUtf8Bytes": 67,
+    "roundTripMs": 18.250249999999994,
+    "parseMs": 0.016999999999995907
+   },
+   "Runtime.enable": {
+    "requests": 1,
+    "responses": 1,
+    "requestUtf8Bytes": 93,
+    "responseUtf8Bytes": 67,
+    "roundTripMs": 3.3144169999999917,
+    "parseMs": 0.011874999999974989
+   },
+   "Page.navigate": {
+    "requests": 2,
+    "responses": 2,
+    "requestUtf8Bytes": 257,
+    "responseUtf8Bytes": 353,
+    "roundTripMs": 12.99495799999994,
+    "parseMs": 0.02450000000004593
+   },
+   "Runtime.evaluate": {
+    "requests": 23,
+    "responses": 23,
+    "requestUtf8Bytes": 281000,
+    "responseUtf8Bytes": 620900,
+    "roundTripMs": 12645.097499,
+    "parseMs": 1.1214570000034314
+   },
+   "terminal_status_delta": {
+    "requests": 3,
+    "responses": 3,
+    "requestUtf8Bytes": 10094,
+    "responseUtf8Bytes": 5012,
+    "roundTripMs": 2688.1057909999963,
+    "parseMs": 0.11541599999691243
+   },
+   "vision_incremental_read": {
+    "requests": 4,
+    "responses": 4,
+    "requestUtf8Bytes": 5192,
+    "responseUtf8Bytes": 314011,
+    "roundTripMs": 14.926250999998956,
+    "parseMs": 0.25429299999996147
+   },
+   "demo_incremental_read": {
+    "requests": 4,
+    "responses": 4,
+    "requestUtf8Bytes": 1604,
+    "responseUtf8Bytes": 1970,
+    "roundTripMs": 1922.7605820000008,
+    "parseMs": 0.06058300000222516
+   },
+   "terminal_final_full": {
+    "requests": 1,
+    "responses": 1,
+    "requestUtf8Bytes": 241,
+    "responseUtf8Bytes": 2877,
+    "roundTripMs": 0.6985840000015742,
+    "parseMs": 0.016666999999870313
+   }
+  },
+  "metricScope": "CDP JSON request/response UTF-8 payload bytes (not websocket headers); terminal and manifest file writes; PNG/full-record writes excluded from write totals"
+ }
+}

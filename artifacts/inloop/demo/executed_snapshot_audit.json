@@ -1,0 +1,92 @@
+{
+  "schema": "wm-executed-source-native-archive/v1",
+  "scope": "Offline exact sourceCode archival for completed runs only; no execution, simulation, source edit, test rerun or label change.",
+  "indices": "Zero-based raw.lines or native record.events arrays, not physical file lines.",
+  "export_tool": "/Users/ken/Desktop/wm_bench/artifacts/inloop/export_executed_snapshot.py",
+  "export_tool_sha256": "079b3e83a4df882adea4eca90b388be165cf962f30843ec871c57ae016eb609f",
+  "method": "JSON-decode full native record.sourceCode, UTF-8 encode exactly, write bytes without strip/normalization/newline insertion.",
+  "folder": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo",
+  "maps": [
+    "map-05"
+  ],
+  "identity_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/identity.json",
+  "identity_file_sha256": "0a7584c1c7362d1d749ee668f9e9b5e82ac6b77684c5f1fb0868994df6b881e2",
+  "identity": {
+    "version": "wm-demo-v1-20260923",
+    "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+    "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+    "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3"
+  },
+  "original_program_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/program.py",
+  "original_program_sha256": "58a24a2d4fb9bd6b564530eb74ef627a71c2084e731a815cf21f5cc9bb7c7928",
+  "original_program_utf8_bytes": 171259,
+  "original_program_leading_whitespace_characters": 0,
+  "original_program_trailing_whitespace_characters": 1,
+  "executed_program_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/executed_program.py",
+  "executed_program_sha256_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/executed_program.sha256",
+  "executed_program_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+  "executed_program_utf8_bytes": 171258,
+  "executed_program_ends_with_newline": false,
+  "all_requested_native_sources_byte_identical": true,
+  "all_checks_pass": true,
+  "runs": [
+    {
+      "map": "map-05",
+      "raw_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/map-05.json",
+      "raw_sha256": "de32680f0669d15022856ac2859edb640304e2d80cd4852c7c5dfe69f2725a5c",
+      "native_record_file": "/Users/ken/Desktop/wm_bench/artifacts/inloop/demo/attempts/attempt-030.record.json",
+      "native_record_sha256": "2f73d90919d22b98ebced4ed0a38262efd749610d532a51c3877599038d6c806",
+      "native_record_bytes": 13367573,
+      "run_id": "run_0ea4f1adfd3d4fb5938ef644ea1160d8",
+      "sourceCode_unicode_characters": 165081,
+      "sourceCode_utf8_bytes": 171258,
+      "sourceCode_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+      "source_identity": {
+        "version": "wm-demo-v1-20260923",
+        "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+        "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+        "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3"
+      },
+      "program_version_line_index": 0,
+      "program_version": {
+        "event": "program_version",
+        "version": "wm-demo-v1-20260923",
+        "file_sha256": "ee01a6161f0600422ec5bfdfaa7e8d7e832ff5a1802d4d247bbf6de7ab1947e6",
+        "wm_kit_commit": "ad237a143f0d35e100a28c15567d4b75bd56cccf",
+        "wm_embed_sha256": "651a89967b41aad583b70e5f5095c5fc35f6babc950d8ab878748cb69e9f66e3",
+        "log_conventions": {
+          "pose": "[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]",
+          "bearingDeg": "右为正（observe / WM 方位同号）"
+        }
+      },
+      "native_run_finished_event_indices": [
+        8
+      ],
+      "native_delivery_events": [
+        {
+          "event_index": 4,
+          "package_id": "guangyang-target-1",
+          "t_ms": 225940
+        },
+        {
+          "event_index": 7,
+          "package_id": "guangyang-target-2",
+          "t_ms": 439060
+        }
+      ],
+      "checks": {
+        "run_finished_in_native_record": true,
+        "raw_run_is_finished": true,
+        "native_file_sha_matches_recorded_export": true,
+        "native_file_bytes_match_recorded_export": true,
+        "native_run_id_matches_recorded_export": true,
+        "native_task_id_matches_raw_and_export": true,
+        "native_events_match_raw_event_copy": true,
+        "source_identity_matches_identity_json": true,
+        "one_program_version_log_matches_identity": true,
+        "native_source_exactly_equals_trimmed_original_only_as_comparison": true
+      }
+    }
+  ],
+  "reproduce": "python3 /Users/ken/Desktop/wm_bench/artifacts/inloop/export_executed_snapshot.py --folder /Users/ken/Desktop/wm_bench/artifacts/inloop/demo --maps map-05"
+}

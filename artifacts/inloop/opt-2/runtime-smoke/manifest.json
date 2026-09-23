@@ -1,0 +1,26 @@
+{
+  "schema": "opt2-runtime-smoke-manifest/v1",
+  "checks": {
+    "frozen_r2_NameError_reproduced": true,
+    "corrected_full_startup_and_scope_pass": true,
+    "tests_passed": 8
+  },
+  "dependencies": {
+    "/Users/ken/Desktop/wm_bench/tools/opt2_runtime_smoke.py": "47147d5b255b9a763ef8d4d588a4044a9040fee2e11dfa76f70bdfed7fe0f2d3",
+    "/Users/ken/Desktop/wm_bench/tools/tests/test_opt2_runtime_smoke.py": "bb04a030d1ea27b2ad462041da2e1dabbdd333761670648742f8555e1e61f9f9",
+    "/Users/ken/Desktop/wm_bench/tools/fixtures/opt2_runtime_public_prefix.json": "17b512eb65e66c729678d8c3236bcf68d3d71d515c12cd82a26bce5e7a6d2344",
+    "/Users/ken/Desktop/robot_competition-main/projects/car-python/python-worker.js": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4",
+    "/Users/ken/Desktop/wm_bench/artifacts/inloop/opt-2/round-2/program.py": "90191e8764de3b98cd4251341f582a60e4b097e98453273bf5b5ab2eefe0a029",
+    "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6"
+  },
+  "outputs": [
+    "frozen-r2.json",
+    "corrected-r3.json"
+  ],
+  "limitations": [
+    "No simulator, controller, renderer, detector or browser runs.",
+    "Native prefix checks API order/arguments/results only, not changed-program physical equivalence.",
+    "Memory scope uses static public replies and the real graph target-lost return; it does not test target capture or delivery.",
+    "CPython executes the worker Python semantics; Pyodide/JS transport scheduling is not exercised."
+  ]
+}

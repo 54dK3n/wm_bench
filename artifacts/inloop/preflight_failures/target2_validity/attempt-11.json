@@ -1,0 +1,241 @@
+{
+ "mission": "guangyang2",
+ "taskId": "R2-GYI-MVP-02",
+ "program": "programs/minimal_target2_flow.py",
+ "startedAt": "2026-09-20T14:08:42.497Z",
+ "username": "wmbmu9w6f8r1nz",
+ "mapConfig": {
+  "/api/v1/map-config": {
+   "status": 200,
+   "body": {
+    "schemaVersion": "chenlong.guangyang-map-config/v1",
+    "authoritative": false,
+    "mapId": "guangyang-island",
+    "baseMapVersion": "2026.08-source-png-3d.3",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "revision": 0,
+    "updatedAt": null,
+    "digest": "d8f501bf2df337f4c117f7ffa14fe13009a36341a7fcc6665641b5e2bb624483",
+    "layout": {
+     "schemaVersion": "chenlong.guangyang-map-layout/v2",
+     "checkpoints": [
+      [
+       13.7297,
+       0.7568
+      ],
+      [
+       7.1815,
+       -3.2587
+      ],
+      [
+       6.471,
+       0.4479
+      ],
+      [
+       -2.4865,
+       -5.4826
+      ]
+     ],
+     "targets": [
+      [
+       12.8185,
+       5.6371
+      ]
+     ],
+     "storage": [
+      -10.7336,
+      -8.0772
+     ],
+     "distractors": [
+      [
+       -8.0772,
+       5.4826
+      ]
+     ],
+     "obstacles": [
+      [
+       1.1274,
+       -0.7568
+      ]
+     ]
+    }
+   }
+  },
+  "/api/v1/map-config/R2-GYI-MVP-02": {
+   "status": 200,
+   "body": {
+    "schemaVersion": "chenlong.guangyang-map-config/v1",
+    "authoritative": false,
+    "mapId": "guangyang-island",
+    "baseMapVersion": "2026.08-source-png-3d.3",
+    "mapVersion": "2026.08-source-png-3d.3",
+    "revision": 0,
+    "updatedAt": null,
+    "digest": "defd7a6f62af493c35d811dabbec4c8f539224586458ca28bde1998054f47a04",
+    "layout": {
+     "schemaVersion": "chenlong.guangyang-map-layout/v2",
+     "checkpoints": [
+      [
+       -11.5985,
+       -0.7568
+      ],
+      [
+       4.4324,
+       6.8726
+      ],
+      [
+       -2.4865,
+       4.4324
+      ],
+      [
+       7.1815,
+       -3.2587
+      ],
+      [
+       13.7297,
+       0.7568
+      ],
+      [
+       6.471,
+       0.4479
+      ]
+     ],
+     "targets": [
+      [
+       12.8185,
+       5.6371
+      ],
+      [
+       -6.749,
+       -0.7568
+      ]
+     ],
+     "storage": [
+      -10.7336,
+      -8.0772
+     ],
+     "distractors": [
+      [
+       -2.4865,
+       -4.4015
+      ],
+      [
+       6.7799,
+       4.6795
+      ]
+     ],
+     "obstacles": [
+      [
+       1.1274,
+       -0.7568
+      ],
+      [
+       -10.9498,
+       2.0849
+      ]
+     ]
+    }
+   }
+  }
+ },
+ "visionEvidenceDisabled": true,
+ "timedOut": false,
+ "wallSeconds": 71.147,
+ "runState": "运行已结束",
+ "feedbackText": "Python 代码有问题",
+ "lines": [
+  {
+   "first_target": "target#1"
+  },
+  {
+   "event": "flow_end",
+   "targetDelivered": false,
+   "mission_completed": false
+  }
+ ],
+ "outputTail": "GY {\"first_target\": \"target#1\"}\nGY_STAGE target_try 1\nGY_STAGE target_scan_start\nGY_STAGE anchor_attempt middle-west\nGY_STAGE cross_road parking-connector\nGY_STAGE cross_road central-north\nGY_STAGE cross_road central-north\nGY_STAGE cross_road north-east-main\nGY_STAGE cross_road bailu-west-arc\nGY_STAGE cross_road bailu-to-middle\nGY_STAGE cross_road oil-west-arc\nGY_STAGE cross_road east-inner-south\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt middle-west\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt middle-west\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt middle-west\nGY_STAGE front_exhausted east-inner-south\nGY_TRACEBACK_TARGET_START\nTraceback (most recent call last):\n  File \"<学生代码>\", line 480, in __student_main__\n  File \"<学生代码>\", line 294, in scan_and_grab\n  File \"<学生代码>\", line 229, in go_to_anchor\nRuntimeError: 多次重规划后仍无法抵达任务锚点：front_clearance_retry_exhausted:east-inner-south\n\nGY_TRACEBACK_TARGET_END\nGY_STAGE target_try 0\nGY_STAGE target_scan_start\nGY_STAGE anchor_attempt east-outer-south\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt east-outer-south\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt east-outer-south\nGY_STAGE front_exhausted east-inner-south\nGY_STAGE anchor_attempt east-outer-south\nGY_STAGE front_exhausted east-inner-south\nGY_TRACEBACK_TARGET_START\nTraceback (most recent call last):\n  File \"<学生代码>\", line 480, in __student_main__\n  File \"<学生代码>\", line 294, in scan_and_grab\n  File \"<学生代码>\", line 229, in go_to_anchor\nRuntimeError: 多次重规划后仍无法抵达任务锚点：front_clearance_retry_exhausted:east-inner-south\n\nGY_TRACEBACK_TARGET_END\nGY {\"event\": \"flow_end\", \"targetDelivered\": false, \"mission_completed\": false}\nGY_DONE\n",
+ "score": {
+  "total": "40.0",
+  "task": "0.0 / 40",
+  "rule": "25.0 / 25",
+  "auto": "15.0 / 15",
+  "efficiency": "0.0 / 20",
+  "mission": "0/13",
+  "runState": "运行已结束",
+  "collisions": "",
+  "violations": "",
+  "elapsed": ""
+ },
+ "record": {
+  "keys": [
+   "schemaVersion",
+   "runId",
+   "serverSessionId",
+   "challengeDigest",
+   "teamId",
+   "taskId",
+   "mapId",
+   "mapVersion",
+   "ruleVersion",
+   "runDefinition",
+   "taskDefinition",
+   "ruleDefinition",
+   "scoringDefinition",
+   "simulationDefinition",
+   "interactionDefinition",
+   "navigationDefinition",
+   "navigationControlDefinition",
+   "randomSeed",
+   "sourceCode",
+   "clientStartedAt",
+   "clientEndedAt",
+   "samples",
+   "inputs",
+   "visionFrames",
+   "events",
+   "simulationEndTick",
+   "result"
+  ],
+  "top": {
+   "schemaVersion": "chenlong.run-record/v4",
+   "runId": "run_62b01099d4e64cc9837464b7a7b66a99",
+   "taskId": "R2-GYI-MVP-02",
+   "mapId": "guangyang-island",
+   "mapVersion": "2026.08-source-png-3d.3",
+   "result": {
+    "score": 40,
+    "taskScore": 0,
+    "ruleScore": 25,
+    "autonomousScore": 15,
+    "efficiencyScore": 0,
+    "ruleDeduction": 0,
+    "eventDeduction": 0,
+    "durationDeduction": 0,
+    "durationSeconds": 67.7,
+    "completedTasks": 0,
+    "totalTasks": 13,
+    "taskValid": true,
+    "taskFinished": false,
+    "violationMetrics": {
+     "off_road": {
+      "episodes": 0,
+      "durationMs": 0,
+      "maxSeverity": 0
+     }
+    },
+    "violations": [],
+    "reason": "program_finished",
+    "simulationTick": 3384
+   }
+  },
+  "vision": {
+   "frameCount": 0,
+   "frameBytes": 0,
+   "frameBase64Bytes": 0,
+   "queryCount": 0,
+   "inputCount": 213
+  }
+ },
+ "sessionSummary": null,
+ "finishedAt": "2026-09-20T14:10:10.232Z"
+}

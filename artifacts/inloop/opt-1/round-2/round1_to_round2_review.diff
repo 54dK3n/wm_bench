@@ -1,0 +1,64 @@
+--- /Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/round-1/program.py
++++ /Users/ken/Desktop/wm_bench/artifacts/inloop/opt-1/round-2/program.py
+@@ -10,7 +10,7 @@
+ 
+ import hashlib, heapq, json, sys, traceback
+ 
+-PROGRAM_VERSION = "wm-opt1-r1-20260923"
++PROGRAM_VERSION = "wm-opt1-r2-20260924"
+ try:
+     _main_module = sys.modules.get("__main__")
+     _student_source = getattr(_main_module, "__dict__", {}).get("student_source")
+@@ -21,7 +21,7 @@
+ except Exception:
+     PROGRAM_SHA256 = "unavailable"
+ # 内嵌 world_model 包对应的 wm_kit 提交（由 tools/embed_world_model.py 写入；program_version 行在包解压后打印）
+-DETECTION_FILTER_SHA256 = "fe953d2e4f63db981e5eea33ff95dbedf524ed8f9a965046c12b830479c43659"
++DETECTION_FILTER_SHA256 = "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322"
+ WM_KIT_COMMIT = "ad237a143f0d35e100a28c15567d4b75bd56cccf"
+ 
+ class MissionFailure(Exception):
+@@ -772,11 +772,14 @@
+ 
+ This module does not modify observations, query a robot, estimate range, alter
+ confirmation, or use coordinates, layouts, package identities, or truth labels.
+-Missing or non-finite confidence is retained as uncertain, not silently rejected.
++Confidence suppression is limited to the existing WM raw-distance window.
++Outside that window, or without a finite measurement, the rule abstains.
++This v2 scope change was proposed after v1 test feedback: that test is no
++longer held out, even though supporting evidence uses development data only.
+ """
+ import math
+ 
+-FILTER_VERSION = "confidence-floor-dev-v1"
++FILTER_VERSION = "confidence-floor-wm-window-v2"
+ CONFIDENCE_FLOORS = {"target": 0.84, "distractor": 0.80}
+ 
+ 
+@@ -794,7 +797,10 @@
+         floor = CONFIDENCE_FLOORS.get(category)
+         confidence = observation.get("confidence")
+         valid = type(confidence) in (int, float) and math.isfinite(confidence)
+-        reject = floor is not None and valid and confidence < floor
++        distance = observation.get("distanceCm")
++        valid_distance = type(distance) in (int, float) and math.isfinite(distance)
++        in_window = valid_distance and 40 <= distance < 90
++        reject = floor is not None and valid and in_window and confidence < floor
+         if reject:
+             rejected.append(index)
+             reason = "confidence_below_class_floor"
+@@ -802,10 +808,13 @@
+             kept.append(index)
+             reason = ("class_not_filtered" if floor is None else
+                       "unknown_confidence_retained" if not valid else
++                      "unknown_distance_retained" if not valid_distance else
++                      "outside_wm_window_retained" if not in_window else
+                       "confidence_at_or_above_class_floor")
+         diagnostics.append({"index": index, "keep": not reject, "reason": reason,
+                             "category": category, "confidence": confidence,
+-                            "confidence_floor": floor})
++                            "confidence_floor": floor, "distance_cm": distance,
++                            "wm_window_eligible": in_window})
+     return {"kept_indices": kept, "rejected_indices": rejected,
+             "decisions": diagnostics, "filter_version": FILTER_VERSION}
+ 

@@ -1,0 +1,1565 @@
+<!doctype html><meta charset="utf-8"><title>Task 2 vision diagnostics</title>
+<style>body{font:16px system-ui;max-width:1000px;margin:32px auto;background:#fafafa;color:#222}article{background:white;padding:20px;margin:24px 0;border:1px solid #ddd}img{max-width:100%;height:auto}pre{white-space:pre-wrap;font-size:13px}h2{font-size:20px}</style>
+<h1>赛题2：同帧视觉诊断</h1><p>保留原始 PNG。标记只依据约定的真值几何规则；遮挡、画面内容和分类原因需要看图确认。优先使用原生渲染时 camera matrixWorld 和对象快照；历史记录回退至帧前真值采样并标注时差。距离为相机平面中心距。</p>
+<article><h2>map-01 · observe 7 · tick 4015</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-002.vision/evidence-001062-tick-4015.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-002.vision/evidence-001062-tick-4015.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-9&quot;,
+  &quot;frame_id&quot;: 15,
+  &quot;query_seq&quot;: 1063,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 5.686078901376535,
+      &quot;camera_bearing_deg&quot;: -68.81601712587623,
+      &quot;camera_forward_cm&quot;: 2.0547437803384674,
+      &quot;camera_right_cm&quot;: -5.301841309379202
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 34,
+      &quot;confidence&quot;: 0.93,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -33.29
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 92,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -10.36
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 92,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 10.89
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 81,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -10.89
+    },
+    {
+      &quot;category&quot;: &quot;storage-zone&quot;,
+      &quot;categoryLabel&quot;: &quot;存放点&quot;,
+      &quot;name&quot;: &quot;存放点&quot;,
+      &quot;label&quot;: &quot;存放点&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 23,
+      &quot;confidence&quot;: 0.79,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -31.43
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 71,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 15.46
+    }
+  ]
+}</pre></article>
+<article><h2>map-02 · observe 4 · tick 1785</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-004.vision/evidence-000454-tick-1785.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-004.vision/evidence-000454-tick-1785.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-4&quot;,
+  &quot;frame_id&quot;: 10,
+  &quot;query_seq&quot;: 455,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        10.0849,
+        1.2613
+      ],
+      &quot;camera_range_cm&quot;: 70.82877273073909,
+      &quot;camera_bearing_deg&quot;: -7.367884463073949,
+      &quot;camera_forward_cm&quot;: 70.24395367350293,
+      &quot;camera_right_cm&quot;: -9.0830621960584
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        12.8185,
+        5.6371
+      ],
+      &quot;camera_range_cm&quot;: 120.9048493095902,
+      &quot;camera_bearing_deg&quot;: -32.73828915963338,
+      &quot;camera_forward_cm&quot;: 101.6990616015431,
+      &quot;camera_right_cm&quot;: -65.38565175893149
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 63,
+      &quot;confidence&quot;: 0.91,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -7.4
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 72,
+      &quot;confidence&quot;: 0.9,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 6.59
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.86,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 24.56
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.84,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -32.81
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 89,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 17.99
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 42,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -21.41
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 64,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 23.18
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 73,
+      &quot;confidence&quot;: 0.75,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 9.83
+    }
+  ]
+}</pre></article>
+<article><h2>map-02 · observe 5 · tick 1987</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-004.vision/evidence-000516-tick-1987.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-004.vision/evidence-000516-tick-1987.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-5&quot;,
+  &quot;frame_id&quot;: 11,
+  &quot;query_seq&quot;: 517,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        10.0849,
+        1.2613
+      ],
+      &quot;camera_range_cm&quot;: 90.38023517152835,
+      &quot;camera_bearing_deg&quot;: -0.022259090913171412,
+      &quot;camera_forward_cm&quot;: 90.38022835107806,
+      &quot;camera_right_cm&quot;: -0.03511221660527086
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        12.8185,
+        5.6371
+      ],
+      &quot;camera_range_cm&quot;: 138.40278179857245,
+      &quot;camera_bearing_deg&quot;: -22.2143119956328,
+      &quot;camera_forward_cm&quot;: 128.1299978776757,
+      &quot;camera_right_cm&quot;: -52.32622338225907
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 77,
+      &quot;confidence&quot;: 0.88,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 0
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 69,
+      &quot;confidence&quot;: 0.87,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -9.69
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 74,
+      &quot;confidence&quot;: 0.87,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 16.1
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.85,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -22.24
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 24.34
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 28,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 18.74
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 68,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 3.17
+    }
+  ]
+}</pre></article>
+<article><h2>map-07 · observe 16 · tick 3778</h2><p>应见未见：30–85cm，|方位|≤30°</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-000997-tick-3778.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-000997-tick-3778.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-16&quot;,
+  &quot;frame_id&quot;: 22,
+  &quot;query_seq&quot;: 998,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -6.2857,
+        -5.4826
+      ],
+      &quot;camera_range_cm&quot;: 123.14977199754097,
+      &quot;camera_bearing_deg&quot;: 96.36467622599977,
+      &quot;camera_forward_cm&quot;: -13.651920320774424,
+      &quot;camera_right_cm&quot;: 122.39073255194428
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 63.33284645036522,
+      &quot;camera_bearing_deg&quot;: -6.220391527693215,
+      &quot;camera_forward_cm&quot;: 62.959972044287696,
+      &quot;camera_right_cm&quot;: -6.86231445563748
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 19.11
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 66,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -26.8
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -6.04
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 67,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -35.45
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 60,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 16.99
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 21,
+      &quot;confidence&quot;: 0.76,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -22.71
+    }
+  ]
+}</pre></article>
+<article><h2>map-07 · observe 49 · tick 13133</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003567-tick-13133.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003567-tick-13133.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-49&quot;,
+  &quot;frame_id&quot;: 55,
+  &quot;query_seq&quot;: 3568,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -6.2857,
+        -5.4826
+      ],
+      &quot;camera_range_cm&quot;: 123.4451848948239,
+      &quot;camera_bearing_deg&quot;: 20.55840003468273,
+      &quot;camera_forward_cm&quot;: 115.58354692228296,
+      &quot;camera_right_cm&quot;: 43.34924860457989
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 114.9722327512911,
+      &quot;camera_bearing_deg&quot;: 98.59985258653613,
+      &quot;camera_forward_cm&quot;: -17.192119830487073,
+      &quot;camera_right_cm&quot;: 113.67957300918765
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 24.56
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 93,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -24.9
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 58,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -24.56
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 3.17
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 57,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -0.69
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 67,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 32.91
+    }
+  ]
+}</pre></article>
+<article><h2>map-07 · observe 50 · tick 13340</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003620-tick-13340.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003620-tick-13340.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-50&quot;,
+  &quot;frame_id&quot;: 56,
+  &quot;query_seq&quot;: 3621,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -6.2857,
+        -5.4826
+      ],
+      &quot;camera_range_cm&quot;: 120.70493057485321,
+      &quot;camera_bearing_deg&quot;: 48.20096639339087,
+      &quot;camera_forward_cm&quot;: 80.45223782170883,
+      &quot;camera_right_cm&quot;: 89.98398576724267
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 93.12347321101929,
+      &quot;camera_bearing_deg&quot;: 136.50350413180655,
+      &quot;camera_forward_cm&quot;: -67.55330106966517,
+      &quot;camera_right_cm&quot;: 64.09783754132897
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.9,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -35.91
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.89,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -4.4
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 85,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -31.93
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 1.65
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 91,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 1.1
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.79,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -34.99
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 93,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 31.22
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 27,
+      &quot;confidence&quot;: 0.75,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 21.53
+    }
+  ]
+}</pre></article>
+<article><h2>map-07 · observe 51 · tick 13418</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003665-tick-13418.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003665-tick-13418.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-51&quot;,
+  &quot;frame_id&quot;: 57,
+  &quot;query_seq&quot;: 3666,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -6.2857,
+        -5.4826
+      ],
+      &quot;camera_range_cm&quot;: 121.0327633303392,
+      &quot;camera_bearing_deg&quot;: 47.88162037195703,
+      &quot;camera_forward_cm&quot;: 81.17238970885093,
+      &quot;camera_right_cm&quot;: 89.77735209022559
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 97.94478685178608,
+      &quot;camera_bearing_deg&quot;: 133.8512930252279,
+      &quot;camera_forward_cm&quot;: -67.85507479787957,
+      &quot;camera_right_cm&quot;: 70.6319339648574
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -5.91
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 86,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 9.69
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 82,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -33.77
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 69,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 0.55
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.78,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -24.11
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 54,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 32.32
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 29,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 32.12
+    }
+  ]
+}</pre></article>
+<article><h2>map-07 · observe 52 · tick 13817</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003765-tick-13817.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-017.vision/evidence-003765-tick-13817.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-52&quot;,
+  &quot;frame_id&quot;: 58,
+  &quot;query_seq&quot;: 3766,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -6.2857,
+        -5.4826
+      ],
+      &quot;camera_range_cm&quot;: 148.13956074631673,
+      &quot;camera_bearing_deg&quot;: 33.42886633550138,
+      &quot;camera_forward_cm&quot;: 123.6328951625504,
+      &quot;camera_right_cm&quot;: 81.61027320036052
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 117.03026375889145,
+      &quot;camera_bearing_deg&quot;: 101.29208410149101,
+      &quot;camera_forward_cm&quot;: -22.91577343589725,
+      &quot;camera_right_cm&quot;: 114.76475923954324
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.92,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -21.17
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.85,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 33.49
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.84,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -14.31
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.84,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -0.41
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -23.53
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 32.52
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 33.1
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 22.36
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 19.23
+    }
+  ]
+}</pre></article>
+<article><h2>map-09 · observe 9 · tick 3453</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-000866-tick-3453.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-000866-tick-3453.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-9&quot;,
+  &quot;frame_id&quot;: 15,
+  &quot;query_seq&quot;: 867,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 282.7422682333083,
+      &quot;camera_bearing_deg&quot;: 43.31120426784889,
+      &quot;camera_forward_cm&quot;: 205.7341969911472,
+      &quot;camera_right_cm&quot;: 193.9500720137116
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 93.72980174454858,
+      &quot;camera_bearing_deg&quot;: 35.19189631513042,
+      &quot;camera_forward_cm&quot;: 76.59847018010542,
+      &quot;camera_right_cm&quot;: 54.01805347418475
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 64,
+      &quot;confidence&quot;: 0.9,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 35.27
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 26.03
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 35.54
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 27,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 0.55
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 35,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 33.2
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 31,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 14.82
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 36.62
+    }
+  ]
+}</pre></article>
+<article><h2>map-09 · observe 12 · tick 3680</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-000959-tick-3680.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-000959-tick-3680.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-12&quot;,
+  &quot;frame_id&quot;: 18,
+  &quot;query_seq&quot;: 960,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 277.67967812645776,
+      &quot;camera_bearing_deg&quot;: 8.199249421447362,
+      &quot;camera_forward_cm&quot;: 274.84126402231436,
+      &quot;camera_right_cm&quot;: 39.6015559672809
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 88.64942885673022,
+      &quot;camera_bearing_deg&quot;: -0.1722059150780697,
+      &quot;camera_forward_cm&quot;: 88.64902845450325,
+      &quot;camera_right_cm&quot;: -0.2664407948241909
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 37,
+      &quot;confidence&quot;: 0.88,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -33.49
+    },
+    {
+      &quot;category&quot;: &quot;cleanup-zone&quot;,
+      &quot;categoryLabel&quot;: &quot;清理点&quot;,
+      &quot;name&quot;: &quot;清理点&quot;,
+      &quot;label&quot;: &quot;清理点&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 95,
+      &quot;confidence&quot;: 0.86,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 0.69
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.86,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -9.83
+    },
+    {
+      &quot;category&quot;: &quot;storage-zone&quot;,
+      &quot;categoryLabel&quot;: &quot;存放点&quot;,
+      &quot;name&quot;: &quot;存放点&quot;,
+      &quot;label&quot;: &quot;存放点&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 36.09
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 18,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 5.36
+    }
+  ]
+}</pre></article>
+<article><h2>map-09 · observe 14 · tick 4267</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-001108-tick-4267.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-001108-tick-4267.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-14&quot;,
+  &quot;frame_id&quot;: 20,
+  &quot;query_seq&quot;: 1109,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 260.6360158949708,
+      &quot;camera_bearing_deg&quot;: -1.015946039214093,
+      &quot;camera_forward_cm&quot;: 260.5950437149706,
+      &quot;camera_right_cm&quot;: -4.621252297379064
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 70.25529682309579,
+      &quot;camera_bearing_deg&quot;: -2.4941564642705254,
+      &quot;camera_forward_cm&quot;: 70.18874152716641,
+      &quot;camera_right_cm&quot;: -3.057334547267887
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 60,
+      &quot;confidence&quot;: 0.94,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -2.62
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.89,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -36.54
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.87,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 6.86
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -16.99
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 70,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -11.29
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -4.68
+    },
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.8,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 16.23
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 56,
+      &quot;confidence&quot;: 0.76,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 34.99
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 19,
+      &quot;confidence&quot;: 0.73,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -28.1
+    }
+  ]
+}</pre></article>
+<article><h2>map-09 · observe 15 · tick 4489</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-001164-tick-4489.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-001164-tick-4489.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-15&quot;,
+  &quot;frame_id&quot;: 21,
+  &quot;query_seq&quot;: 1165,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 269.20826058831983,
+      &quot;camera_bearing_deg&quot;: -12.854339023155745,
+      &quot;camera_forward_cm&quot;: 262.4615786166002,
+      &quot;camera_right_cm&quot;: -59.891629791406466
+    },
+    {
+      &quot;id&quot;: &quot;guangyang-target-2&quot;,
+      &quot;world&quot;: [
+        0.5097,
+        4.4324
+      ],
+      &quot;camera_range_cm&quot;: 80.44138804522117,
+      &quot;camera_bearing_deg&quot;: -3.116122429017519,
+      &quot;camera_forward_cm&quot;: 80.3224485017195,
+      &quot;camera_right_cm&quot;: -4.372776844348203
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;distractor&quot;,
+      &quot;categoryLabel&quot;: &quot;混淆物&quot;,
+      &quot;name&quot;: &quot;混淆物&quot;,
+      &quot;label&quot;: &quot;混淆物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.91,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -11.16
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;中间&quot;,
+      &quot;distanceCm&quot;: 66,
+      &quot;confidence&quot;: 0.91,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -3.17
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 40,
+      &quot;confidence&quot;: 0.86,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 33.87
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.85,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -19.23
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 44,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -15.59
+    },
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 100,
+      &quot;confidence&quot;: 0.82,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -22.71
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 51,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -33.29
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 52,
+      &quot;confidence&quot;: 0.76,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -18.24
+    }
+  ]
+}</pre></article>
+<article><h2>map-09 · observe 16 · tick 10600</h2><p>伪红候选：检测方位±3°无真红球</p>
+<a href="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-002707-tick-10600.png"><img src="file:///Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/attempts/attempt-005.vision/evidence-002707-tick-10600.png" alt="Unmodified native camera frame"></a>
+<pre>{
+  &quot;evidence_id&quot;: &quot;vision-18&quot;,
+  &quot;frame_id&quot;: 24,
+  &quot;query_seq&quot;: 2708,
+  &quot;pose_match&quot;: &quot;exact_native_camera_render&quot;,
+  &quot;image_sha256_verified&quot;: true,
+  &quot;true_reds&quot;: [
+    {
+      &quot;id&quot;: &quot;guangyang-target-1&quot;,
+      &quot;world&quot;: [
+        -9.8687,
+        -6.7181
+      ],
+      &quot;camera_range_cm&quot;: 5.686078901376535,
+      &quot;camera_bearing_deg&quot;: -68.81601712587623,
+      &quot;camera_forward_cm&quot;: 2.0547437803384674,
+      &quot;camera_right_cm&quot;: -5.301841309379202
+    }
+  ],
+  &quot;raw&quot;: [
+    {
+      &quot;category&quot;: &quot;target&quot;,
+      &quot;categoryLabel&quot;: &quot;目标物&quot;,
+      &quot;name&quot;: &quot;红球&quot;,
+      &quot;label&quot;: &quot;红球&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 34,
+      &quot;confidence&quot;: 0.93,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -33.29
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 92,
+      &quot;confidence&quot;: 0.83,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -10.36
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 92,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 10.89
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 81,
+      &quot;confidence&quot;: 0.81,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -10.89
+    },
+    {
+      &quot;category&quot;: &quot;storage-zone&quot;,
+      &quot;categoryLabel&quot;: &quot;存放点&quot;,
+      &quot;name&quot;: &quot;存放点&quot;,
+      &quot;label&quot;: &quot;存放点&quot;,
+      &quot;direction&quot;: &quot;左&quot;,
+      &quot;distanceCm&quot;: 23,
+      &quot;confidence&quot;: 0.79,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: -31.43
+    },
+    {
+      &quot;category&quot;: &quot;obstacle&quot;,
+      &quot;categoryLabel&quot;: &quot;障碍物&quot;,
+      &quot;name&quot;: &quot;障碍物&quot;,
+      &quot;label&quot;: &quot;障碍物&quot;,
+      &quot;direction&quot;: &quot;右&quot;,
+      &quot;distanceCm&quot;: 71,
+      &quot;confidence&quot;: 0.77,
+      &quot;near&quot;: false,
+      &quot;stable&quot;: true,
+      &quot;bearingDeg&quot;: 15.46
+    }
+  ]
+}</pre></article>
+<h2>旧 map-04/05/08 tick 1929 的对应证据</h2>
+<pre>{
+  &quot;map&quot;: &quot;map-04&quot;,
+  &quot;reference_tick&quot;: 1929,
+  &quot;equivalent_geometry&quot;: false,
+  &quot;pose_gap_cm&quot;: 19.97204207213944,
+  &quot;heading_gap_deg&quot;: 1.9161782189684118,
+  &quot;interpretation&quot;: &quot;No equivalent native frame was observed in this batch; no old image can be reconstructed.&quot;
+}</pre>
+<pre>{
+  &quot;map&quot;: &quot;map-05&quot;,
+  &quot;reference_tick&quot;: 1929,
+  &quot;equivalent_geometry&quot;: false,
+  &quot;pose_gap_cm&quot;: 19.97204207213944,
+  &quot;heading_gap_deg&quot;: 1.9161782189684118,
+  &quot;interpretation&quot;: &quot;No equivalent native frame was observed in this batch; no old image can be reconstructed.&quot;
+}</pre>
+<pre>{
+  &quot;map&quot;: &quot;map-08&quot;,
+  &quot;reference_tick&quot;: 1929,
+  &quot;equivalent_geometry&quot;: false,
+  &quot;pose_gap_cm&quot;: 19.97204207213944,
+  &quot;heading_gap_deg&quot;: 1.8015866599422736,
+  &quot;interpretation&quot;: &quot;No equivalent native frame was observed in this batch; no old image can be reconstructed.&quot;
+}</pre>

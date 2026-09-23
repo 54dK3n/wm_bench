@@ -1,0 +1,11 @@
+--- batch_report.before.py
++++ tools/batch_report.py
+@@ -188,7 +188,7 @@
+ 
+ def main(folder):
+     folder = Path(folder)
+-    rows = [analyse(p) for p in sorted(folder.glob("map-*.json")) if not p.name.endswith((".samples.json", ".verify.json", ".calib.json"))]
++    rows = [analyse(p) for p in sorted(folder.glob("map-??.json"))]
+     (folder / "batch_report.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+     hdr = "| 布局 | 球 | 标定 | 确认 | WM 误差 cm | 抓取 | 前向/侧向 cm | mission | 结束方式 |"
+     print(hdr)

@@ -1,0 +1,1304 @@
+--- round-1/program.py
++++ round-2/program.py
+@@ -10,7 +10,7 @@
+ 
+ import hashlib, heapq, json, sys, traceback
+ 
+-PROGRAM_VERSION = "wm-stage1-r1-20260923"
++PROGRAM_VERSION = "wm-stage1-r2-20260923"
+ try:
+     _main_module = sys.modules.get("__main__")
+     _student_source = getattr(_main_module, "__dict__", {}).get("student_source")
+@@ -22,6 +22,120 @@
+     PROGRAM_SHA256 = "unavailable"
+ # 内嵌 world_model 包对应的 wm_kit 提交（由 tools/embed_world_model.py 写入；program_version 行在包解压后打印）
+ WM_KIT_COMMIT = "ad237a143f0d35e100a28c15567d4b75bd56cccf"
++
++class MissionFailure(Exception):
++    """明确记录的任务约束失败；不用于捕获编程异常。"""
++
++"""Cache read-only navigation snapshots until an action changes simulator state.
++
++Limits are public platform API limits (app.js), not scene-fitted thresholds.
++"""
++NAVIGATION_QUERY_LIMIT = 1000
++NAVIGATION_CONTROL_LIMIT = 300
++NAV_STATE = {"cache": {}, "queries": 0, "controls": 0}
++
++
++def _nav_reserve(kind, limit):
++    if NAV_STATE[kind] >= limit:
++        print("GY " + json.dumps({"event": "navigation_budget_exhausted", "kind": kind,
++                                  "used": NAV_STATE[kind], "limit": limit}, ensure_ascii=False))
++        raise MissionFailure("navigation_" + kind + "_budget_exhausted")
++    NAV_STATE[kind] += 1
++
++
++def _nav_invalidate():
++    NAV_STATE["cache"].clear()
++
++
++def nav_odometry():
++    if "odometry" not in NAV_STATE["cache"]:
++        _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++        NAV_STATE["cache"]["odometry"] = robot.odometry()
++    return dict(NAV_STATE["cache"]["odometry"] or {})
++
++
++def nav_road_state():
++    if "road_state" not in NAV_STATE["cache"]:
++        _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++        NAV_STATE["cache"]["road_state"] = robot.road_state()
++    return dict(NAV_STATE["cache"]["road_state"] or {})
++
++
++def nav_mission():
++    _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++    return robot.mission()
++
++
++def nav_map_graph():
++    _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++    return robot.map_graph()
++
++
++def nav_task_state():
++    if "task_state" not in NAV_STATE["cache"]:
++        _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++        NAV_STATE["cache"]["task_state"] = robot.task_state()
++    return dict(NAV_STATE["cache"]["task_state"] or {})
++
++
++def nav_release_preview():
++    if "release_preview" not in NAV_STATE["cache"]:
++        _nav_reserve("queries", NAVIGATION_QUERY_LIMIT)
++        NAV_STATE["cache"]["release_preview"] = robot.release_preview()
++    return dict(NAV_STATE["cache"]["release_preview"] or {})
++
++
++def motion_forward(distance_cm):
++    _nav_invalidate()
++    return robot.forward(distance_cm)
++
++
++def motion_backward(distance_cm):
++    _nav_invalidate()
++    return robot.backward(distance_cm)
++
++
++def motion_left_angle(angle_deg):
++    _nav_invalidate()
++    return robot.left_angle(angle_deg)
++
++
++def motion_right_angle(angle_deg):
++    _nav_invalidate()
++    return robot.right_angle(angle_deg)
++
++
++def motion_follow_road(max_cm, speed, obey_speed_limit):
++    _nav_reserve("controls", NAVIGATION_CONTROL_LIMIT)
++    _nav_invalidate()
++    return robot.follow_road(max_cm, speed, obey_speed_limit)
++
++
++def motion_take_exit(road_id, speed, obey_speed_limit):
++    _nav_reserve("controls", NAVIGATION_CONTROL_LIMIT)
++    _nav_invalidate()
++    return robot.take_exit(road_id, speed, obey_speed_limit)
++
++
++def motion_approach(target, distance_cm, max_steps):
++    _nav_invalidate()
++    return robot.approach(target, distance_cm, max_steps)
++
++
++def motion_grab():
++    _nav_invalidate()
++    return robot.grab()
++
++
++def motion_release():
++    _nav_invalidate()
++    return robot.release()
++
++
++def query_observe(category, confidence):
++    _nav_invalidate()
++    return robot.observe(category, confidence)
++
+ 
+ MAX_OBSERVES = 92
+ PATROL_OBSERVE_BUDGET = 60
+@@ -79,14 +193,14 @@
+     if not DELIVERY_LOG["on"]:
+         return
+     try:
+-        odo = robot.odometry() or {}
++        odo = nav_odometry() or {}
+         pose = [round(float(odo.get("rightCm", 0.0)) / 100.0, 3),
+                 round(float(odo.get("forwardCm", 0.0)) / 100.0, 3),
+                 round(float(odo.get("headingDeg", 0.0)), 1)]
+     except Exception:
+         pose = None
+     try:
+-        rs = robot.road_state() or {}
++        rs = nav_road_state() or {}
+         road = {"roadId": rs.get("roadId"), "roadProgressCm": rs.get("roadProgressCm"), "onRoad": rs.get("onRoad"),
+                 "atNode": rs.get("atNode"), "nodeId": rs.get("nodeId"), "frontClearanceCm": rs.get("frontClearanceCm")}
+     except Exception:
+@@ -99,7 +213,7 @@
+ 
+ 
+ def _dl_follow(stage, road_id, max_cm, speed):
+-    result = robot.follow_road(max_cm, speed, True)
++    result = motion_follow_road(max_cm, speed, True)
+     _delivery_event("delivery_follow_road", stage=stage, roadId=road_id, requestCm=max_cm,
+                     distanceCm=result.get("distanceCm"), stoppedBy=result.get("stoppedBy"),
+                     accepted=result.get("accepted"))
+@@ -107,7 +221,7 @@
+ 
+ 
+ def _dl_take_exit(stage, road_id, speed):
+-    result = robot.take_exit(road_id, speed, True)
++    result = motion_take_exit(road_id, speed, True)
+     _delivery_event("delivery_take_exit", stage=stage, roadId=road_id,
+                     distanceCm=result.get("distanceCm"), stoppedBy=result.get("stoppedBy"),
+                     accepted=result.get("accepted"))
+@@ -124,7 +238,7 @@
+ 
+ def _turn_around_and_block(road_id):
+     """front_clearance 重试耗尽后掉头，并把当前行驶方向加入 blocked_directions。"""
+-    state = robot.road_state()
++    state = nav_road_state()
+     edge = edge_by_road.get(road_id)
+     if edge is not None:
+         progress = float(state.get("roadProgressCm") or 0.0)
+@@ -133,14 +247,14 @@
+             blocked_directions.add((edge["fromNodeId"], edge["toNodeId"], road_id))
+         else:
+             blocked_directions.add((edge["toNodeId"], edge["fromNodeId"], road_id))
+-    robot.left_angle(180)
++    motion_left_angle(180)
+ 
+ CRUISE_SPEED = 100  # 由道路控制逐 tick 自动钳制到当前道路/限速区的安全上限。
+ SLOW_SPEED = 30
+ NODE_NUDGE_CM = 2
+ 
+-mission = robot.mission()
+-graph = robot.map_graph()
++mission = nav_mission()
++graph = nav_map_graph()
+ mission_objects = [item for item in mission.get("objects", []) if isinstance(item, dict)]
+ target_anchors = [item for item in mission_objects if item.get("role") == "target"]
+ distractor_anchors = [item for item in mission_objects if item.get("role") == "distractor"]
+@@ -181,7 +295,7 @@
+         return edge["toNodeId"]
+     if edge["toNodeId"] == node_id and not edge["oneWay"]:
+         return edge["fromNodeId"]
+-    raise RuntimeError("道路方向与图定义不兼容：" + road_id)
++    raise MissionFailure("道路方向与图定义不兼容：" + road_id)
+ 
+ 
+ def dijkstra(start_node, goal_node, extra_blocked=None):
+@@ -225,21 +339,21 @@
+ 
+ def align_to_current_road():
+     """视觉接近后重新依据 road_state 校正到道路方向。"""
+-    state = robot.road_state()
++    state = nav_road_state()
+     if not state["onRoad"]:
+-        raise RuntimeError("车辆已离开道路，停止规划")
++        raise MissionFailure("车辆已离开道路，停止规划")
+     error = state["headingErrorDeg"]
+     if error > 1:
+-        robot.left_angle(error)
++        motion_left_angle(error)
+     elif error < -1:
+-        robot.right_angle(-error)
++        motion_right_angle(-error)
+ 
+ 
+ def node_state():
+     """只依赖道路控制抵达真实拓扑节点，并处理边界的单次低速前探。"""
+     front_clearance_retries = 0
+     for _ in range(14):
+-        state = robot.road_state()
++        state = nav_road_state()
+         if state["atNode"]:
+             return state
+         align_to_current_road()
+@@ -254,36 +368,36 @@
+                 print("GY_STAGE front_turnaround", road_id)
+                 _turn_around_and_block(road_id)
+                 result = _dl_follow("node_state_turnaround", road_id, 500, speed_for(road_id))
+-                state = robot.road_state()
++                state = nav_road_state()
+                 if state["atNode"]:
+                     return state
+                 raise road_blocked(road_id, "front_clearance_turnaround")
+-            robot.backward(NODE_NUDGE_CM)
++            motion_backward(NODE_NUDGE_CM)
+             align_to_current_road()
+             continue
+         if result["stoppedBy"] not in ("max_distance", "junction", "road_end"):
+-            raise RuntimeError("抵达节点前被安全停止：" + result["stoppedBy"])
+-        state = robot.road_state()
++            raise MissionFailure("抵达节点前被安全停止：" + result["stoppedBy"])
++        state = nav_road_state()
+         if state["atNode"]:
+             return state
+         # follow_road 在节点判定边界停车时，只允许一次受审计的 2cm 前探。
+         if result["stoppedBy"] in ("junction", "road_end"):
+-            robot.forward(NODE_NUDGE_CM)
+-            state = robot.road_state()
++            motion_forward(NODE_NUDGE_CM)
++            state = nav_road_state()
+             _delivery_event("delivery_node_nudge", nudgeCm=NODE_NUDGE_CM, atNode=state.get("atNode"), nodeId=state.get("nodeId"))
+             if state["atNode"]:
+                 return state
+-    raise RuntimeError("无法从道路状态确认图节点")
++    raise MissionFailure("无法从道路状态确认图节点")
+ 
+ 
+ def enter_road(road_id):
+     state = node_state()
+     legal = {item["roadId"] for item in state["exits"]}
+     if road_id not in legal:
+-        raise RuntimeError("规划道路不在当前合法出口中：" + road_id)
++        raise MissionFailure("规划道路不在当前合法出口中：" + road_id)
+     result = _dl_take_exit("enter_road", road_id, CRUISE_SPEED)
+     if not result["accepted"]:
+-        raise RuntimeError("进入道路失败：" + result["stoppedBy"])
++        raise MissionFailure("进入道路失败：" + result["stoppedBy"])
+     return result
+ 
+ 
+@@ -299,8 +413,8 @@
+         if result["stoppedBy"] == "front_clearance":
+             _turn_around_and_block(road_id)
+             raise road_blocked(road_id, "front_clearance")
+-        raise RuntimeError("循路失败：" + result["stoppedBy"])
+-    raise RuntimeError("道路长度超过控制预算：" + road_id)
++        raise MissionFailure("循路失败：" + result["stoppedBy"])
++    raise MissionFailure("道路长度超过控制预算：" + road_id)
+ 
+ 
+ def go_to_node(goal_node, extra_blocked=None):
+@@ -316,7 +430,7 @@
+             return
+         plan = dijkstra(start_node, goal_node, extra_blocked)
+         if plan is None:
+-            raise RuntimeError("没有可达路线到节点：" + goal_node)
++            raise MissionFailure("没有可达路线到节点：" + goal_node)
+         if not plan[0]:
+             return
+         try:
+@@ -333,7 +447,7 @@
+                 raise
+             # 新识别的障碍只封闭该道路，再从当前真实状态重新规划。
+             continue
+-    raise RuntimeError("多次重规划后仍无法抵达节点")
++    raise MissionFailure("多次重规划后仍无法抵达节点")
+ 
+ 
+ def go_to_anchor(anchor):
+@@ -353,7 +467,7 @@
+             last_error = error
+             # 方向已由 _turn_around_and_block 记录，继续重试其它方向。
+             continue
+-    raise RuntimeError("多次重规划后仍无法抵达任务锚点：" + str(last_error))
++    raise MissionFailure("多次重规划后仍无法抵达任务锚点：" + str(last_error))
+ 
+ 
+ def _go_to_anchor_once(anchor):
+@@ -382,7 +496,7 @@
+         if choice is None or candidate < choice:
+             choice = candidate
+     if choice is None:
+-        raise RuntimeError("没有可安全到达任务道路的路线：" + road_id)
++        raise MissionFailure("没有可安全到达任务道路的路线：" + road_id)
+ 
+     # 即使最短路在计算时包含多条边，也逐边复核 road_state 的实际节点和
+     # 合法出口，避免在复合路口沿用已经过时的整串出口计划。
+@@ -396,14 +510,14 @@
+     # 反馈的 canonical progress，而不是把控制器的“行驶里程”当作锚点距离。
+     # 这样道路从任一端进入时都能正确靠近同一 public road anchor。
+     for _ in range(12):
+-        state = robot.road_state()
++        state = nav_road_state()
+         if state["roadId"] != road_id or state["roadProgressCm"] is None:
+-            raise RuntimeError("进入任务道路后无法读取进度：" + road_id)
++            raise MissionFailure("进入任务道路后无法读取进度：" + road_id)
+         remaining = abs(anchor["progressCm"] - state["roadProgressCm"])
+         if remaining <= 8:
+             return
+         result = _dl_follow("anchor_progress", road_id, max(10, min(500, remaining)), speed_for(road_id))
+-        after = robot.road_state()
++        after = nav_road_state()
+         after_remaining = abs(anchor["progressCm"] - (after["roadProgressCm"] or 0))
+         if after_remaining + 2 < remaining:
+             continue
+@@ -412,8 +526,8 @@
+             return
+         if result["stoppedBy"] in ("junction", "road_end") and after_remaining <= 20:
+             return
+-        raise RuntimeError("道路锚点距离没有收敛：" + result["stoppedBy"])
+-    raise RuntimeError("抵达任务锚点的控制次数异常")
++        raise MissionFailure("道路锚点距离没有收敛：" + result["stoppedBy"])
++    raise MissionFailure("抵达任务锚点的控制次数异常")
+ 
+ 
+ 
+@@ -424,12 +538,12 @@
+     不能把它误判为未知障碍而硬闯。这里仅反向面对同一条道路，使用
+     follow_road 到最近拓扑节点，不使用世界坐标或预写行驶距离。
+     """
+-    state = robot.road_state()
++    state = nav_road_state()
+     if state["frontClearanceCm"] is not None:
+-        robot.left_angle(180)
++        motion_left_angle(180)
+     result = _dl_follow("leave_released_package", state["roadId"], 500, speed_for(state["roadId"]))
+     if result["stoppedBy"] not in ("max_distance", "junction", "road_end"):
+-        raise RuntimeError("投放后无法安全离开包裹：" + result["stoppedBy"])
++        raise MissionFailure("投放后无法安全离开包裹：" + result["stoppedBy"])
+     return node_state()
+ 
+ 
+@@ -441,24 +555,24 @@
+     # 夹爪释放投影为 1.1 个内部单位，即 13.75cm；80/140cm 是
+     # 同一公开道路上的保守备选采样距离。
+     for distance_cm in (110, 80, 140):
+-        robot.left_angle(180)
++        motion_left_angle(180)
+         moved = _dl_follow("release_sample", None, distance_cm, CRUISE_SPEED)
+-        robot.left_angle(180)
++        motion_left_angle(180)
+         if moved["accepted"]:
+             # 摄像头只作为可解释的现场确认，不用它的成败代替确定性投放预览。
+             if _observe_motion()[0]:
+                 counted_observe("存放点", 0.45)
+             else:
+                 _delivery_event("delivery_observe_not_needed", reason="no_new_observation_motion")
+-            preview = robot.release_preview()
++            preview = nav_release_preview()
+             if preview["holding"] == "target" and preview["releaseAccepted"] and preview["wouldCompleteDelivery"]:
+-                robot.release()
++                motion_release()
+                 leave_released_package()
+                 return True
+         # 回到任务道路锚点后再尝试下一个局部投放位置。
+-        robot.left_angle(180)
++        motion_left_angle(180)
+         _dl_follow("release_return", None, max(10, moved["distanceCm"]), CRUISE_SPEED)
+-        robot.left_angle(180)
++        motion_left_angle(180)
+     return False
+ 
+ 
+@@ -473,41 +587,41 @@
+     for direction in ("left", "right"):
+         align_to_current_road()
+         if direction == "left":
+-            robot.left_angle(90)
++            motion_left_angle(90)
+         else:
+-            robot.right_angle(90)
++            motion_right_angle(90)
+         moved = 0
+         for _ in range(24):
+-            preview = robot.release_preview()
++            preview = nav_release_preview()
+             if preview["holding"] == "distractor" and preview["releaseAccepted"] and preview["wouldCompleteDelivery"]:
+-                robot.release()
++                motion_release()
+                 return
+-            state = robot.road_state()
++            state = nav_road_state()
+             if not state["onRoad"]:
+                 break
+             # 留出车身安全余量；不让车辆本身驶出道路。
+             side_clearance = state["leftClearanceCm"] if direction == "left" else state["rightClearanceCm"]
+             if side_clearance is None or side_clearance <= 6:
+                 break
+-            robot.forward(NODE_NUDGE_CM)
++            motion_forward(NODE_NUDGE_CM)
+             moved += NODE_NUDGE_CM
+         if moved:
+-            robot.backward(moved)
++            motion_backward(moved)
+         if direction == "left":
+-            robot.right_angle(90)
++            motion_right_angle(90)
+         else:
+-            robot.left_angle(90)
+-    raise RuntimeError("没有找到通过安全预览的混淆物释放姿态")
++            motion_left_angle(90)
++    raise MissionFailure("没有找到通过安全预览的混淆物释放姿态")
+ 
+ 
+ def pass_checkpoint(anchor):
+-    expected = robot.task_state()["nextCheckpointId"]
++    expected = nav_task_state()["nextCheckpointId"]
+     if expected != anchor["id"]:
+-        raise RuntimeError("检查点顺序与任务状态不一致")
++        raise MissionFailure("检查点顺序与任务状态不一致")
+     go_to_anchor(anchor)
+     # 目标刚好在道路端点时，take_exit 的进入距离已穿过；其他情况再短循路。
+-    if robot.task_state()["nextCheckpointId"] == expected:
+-        state = robot.road_state()
++    if nav_task_state()["nextCheckpointId"] == expected:
++        state = nav_road_state()
+         edge = edge_by_road[anchor["roadId"]]
+         anchor_node = None
+         if anchor["progressCm"] <= 20:
+@@ -519,13 +633,13 @@
+         # 即使当前 roadId 已经等于检查点道路，也要通过 take_exit 做一次
+         # 受审计的掉头穿越；follow_road 在节点边界会正确返回 0cm。
+         if state["atNode"] and state["nodeId"] == anchor_node:
+-            entered = robot.take_exit(anchor["roadId"], CRUISE_SPEED, True)
++            entered = motion_take_exit(anchor["roadId"], CRUISE_SPEED, True)
+             if not entered["accepted"]:
+-                raise RuntimeError("无法穿过检查点道路：" + entered["stoppedBy"])
++                raise MissionFailure("无法穿过检查点道路：" + entered["stoppedBy"])
+         else:
+-            robot.follow_road(20, speed_for(state["roadId"]), True)
+-    if robot.task_state()["nextCheckpointId"] == expected:
+-        raise RuntimeError("未穿过当前检查点：" + expected)
++            motion_follow_road(20, speed_for(state["roadId"]), True)
++    if nav_task_state()["nextCheckpointId"] == expected:
++        raise MissionFailure("未穿过当前检查点：" + expected)
+ 
+ 
+ # 1. 先选择并暴露 first_target；3.4 验收只读取第一次打印。
+@@ -609,12 +723,9 @@
+ }
+ 
+ 
+-class MissionFailure(Exception):
+-    """明确记录的任务约束失败；不用于捕获编程异常。"""
+-
+ 
+ def _observe_motion(odo=None):
+-    odo = odo if odo is not None else robot.odometry()
++    odo = odo if odo is not None else nav_odometry()
+     last = STATE.get("last_observe_pose")
+     current = [float(odo.get("rightCm", 0.0)), float(odo.get("forwardCm", 0.0)),
+                float(odo.get("headingDeg", 0.0))]
+@@ -633,7 +744,7 @@
+             "max_observes": MAX_OBSERVES,
+         }, ensure_ascii=False))
+         raise MissionFailure("observe_budget_exhausted")
+-    odo = robot.odometry() or {}
++    odo = nav_odometry() or {}
+     ready, observed_pose, moved, turned = _observe_motion(odo)
+     if not ready:
+         print("GY " + json.dumps({"event": "observe_motion_violation", "tick": odo.get("tick"),
+@@ -642,7 +753,7 @@
+                                   "requiredTurnDeg": OBS_MIN_TURN_DEG}, ensure_ascii=False))
+         raise MissionFailure("observe_motion_violation")
+     # 单次公开视觉查询取全部类别、全部置信度；日志之后才按调用目的筛选。
+-    result = robot.observe(None, 0.0)
++    result = query_observe(None, 0.0)
+     STATE["observe_count"] += 1
+     STATE["last_observe_pose"] = observed_pose
+     raw = []
+@@ -674,7 +785,7 @@
+ 
+ 
+ def _pose_log(pose):
+-    """日志位姿 [x_m, z_m, headingDeg]。headingDeg 与 robot.odometry()["headingDeg"] 同号（左转为正），
++    """日志位姿 [x_m, z_m, headingDeg]。headingDeg 与 nav_odometry()["headingDeg"] 同号（左转为正），
+     接近阶段与送货阶段统一用它；WorldModel 内部 yaw_rad（右转为正）不再直接打印。"""
+     return [round(pose.x, 3), round(pose.z, 3), round(-math.degrees(pose.yaw_rad), 1)]
+ 
+@@ -764,7 +875,7 @@
+         new_tracks = [obj for obj in wm.get_scene() if obj.obj_id not in previous_ids]
+         for detection_index, obj in zip(assignments.unmatched_detections, new_tracks):
+             STATE["frame_track_ids"][id(source_items[detection_index])] = obj.obj_id
+-        print("GY " + json.dumps({"event": "wm_associations", "tick": robot.odometry().get("tick"),
++        print("GY " + json.dumps({"event": "wm_associations", "tick": nav_odometry().get("tick"),
+                                   "items": [{"distanceCm": item.get("distanceCm"),
+                                              "bearingDeg": item.get("bearingDeg"),
+                                              "track_id": STATE["frame_track_ids"].get(id(item))}
+@@ -865,7 +976,7 @@
+ 
+ 
+ def _ensure_confirmation_on_road(stage):
+-    state = robot.road_state()
++    state = nav_road_state()
+     if not state.get("onRoad"):
+         return _confirm_fail("confirmation_off_road",
+                              stage=stage,
+@@ -899,7 +1010,7 @@
+ 
+ def _turn_to_wm_target_in_place(max_turns=10, tol_deg=8.0):
+     """原地转向让 WorldModel 目标进入视野；不改变车辆位置。"""
+-    pose = odometry_to_pose(robot.odometry())
++    pose = odometry_to_pose(nav_odometry())
+     start_bearing = _wm_bearing_deg(pose)
+     turns = []
+     ok = False
+@@ -907,7 +1018,7 @@
+         target = _wm_target()
+         if target is None:
+             break
+-        pose = odometry_to_pose(robot.odometry())
++        pose = odometry_to_pose(nav_odometry())
+         bearing = _wm_bearing_deg(pose)
+         if bearing is None:
+             break
+@@ -916,12 +1027,12 @@
+             break
+         turn = min(abs(bearing), 40.0)
+         if bearing > 0:
+-            robot.right_angle(turn)
++            motion_right_angle(turn)
+             turns.append(round(-turn, 1))
+         else:
+-            robot.left_angle(turn)
++            motion_left_angle(turn)
+             turns.append(round(turn, 1))
+-    pose = odometry_to_pose(robot.odometry())
++    pose = odometry_to_pose(nav_odometry())
+     bearing = _wm_bearing_deg(pose)
+     if not ok:
+         ok = bearing is not None and abs(bearing) <= max(12.0, tol_deg)
+@@ -979,7 +1090,7 @@
+ 
+ """Runtime-only road geometry and viewpoint planning; embedded by the main program."""
+ 
+-VP_STATE = {"roads": {}, "intervals": {}, "explored": set(), "failed": set(), "nudged": set()}
++VP_STATE = {"roads": {}, "intervals": {}, "explored": set(), "failed": set(), "nudged": set(), "canonical_hints": {}}
+ 
+ 
+ def _vp_event(event, **fields):
+@@ -987,9 +1098,9 @@
+ 
+ 
+ def _vp_remember():
+-    odo = robot.odometry() or {}
++    odo = nav_odometry() or {}
+     pose = odometry_to_pose(odo)
+-    state = robot.road_state() or {}
++    state = nav_road_state() or {}
+     road_id, progress = state.get("roadId"), state.get("roadProgressCm")
+     if state.get("onRoad") and road_id in edge_by_road and progress is not None:
+         yaw = pose.yaw_rad - math.radians(float(state.get("headingErrorDeg") or 0.0))
+@@ -1018,7 +1129,7 @@
+              if b["s"] > a["s"] and any(start <= a["s"] and end >= b["s"]
+                                         for start, end in VP_STATE["intervals"].get(road_id, []))]
+     if not pairs:
+-        return None
++        return VP_STATE.get("canonical_hints", {}).get(road_id)
+     a, b = min(pairs, key=lambda pair: abs(progress - (pair[0]["s"] + pair[1]["s"]) / 2))
+     dx, dz = b["x"] - a["x"], b["z"] - a["z"]
+     length = math.hypot(dx, dz)
+@@ -1063,8 +1174,8 @@
+     return min(plans, key=lambda plan: plan["cost_cm"]) if plans else None
+ 
+ 
+-def _vp_candidates(goal, final_sample, tried):
+-    pose, state = _vp_remember()
++def _vp_points(pose, state):
++    """Measured road samples and five-centimetre interpolation, without task filters."""
+     points = {}
+     grid = float(VIEW_GRID_CM)
+     for road_id, samples in VP_STATE["roads"].items():
+@@ -1091,6 +1202,12 @@
+         key = state["roadId"] + "@" + str(round(float(state["roadProgressCm"]), 1))
+         points[key] = {"key": key, "roadId": state["roadId"], "progressCm": float(state["roadProgressCm"]),
+                        "x": pose.x, "z": pose.z, "geometry": "current_pose"}
++    return points
++
++
++def _vp_candidates(goal, final_sample, tried):
++    pose, state = _vp_remember()
++    points = _vp_points(pose, state)
+     candidates = []
+     for key, point in points.items():
+         reason = None
+@@ -1134,22 +1251,22 @@
+     _vp_remember()
+     while round(remaining, 1) > 0:
+         _, road_before = _vp_remember()
+-        before = robot.odometry() or {}
++        before = nav_odometry() or {}
+         if remaining < APPROACH_FOLLOW_STEP_CM:
+             # The public drive API permits small final grid corrections; follow_road does not.
+-            state = robot.road_state() or {}
++            state = nav_road_state() or {}
+             if not state.get("onRoad"):
+                 return {"accepted": False, "distanceCm": total, "stoppedBy": "off_road"}
+             align_to_current_road()
+-            robot.forward(round(remaining, 1))
+-            after = robot.odometry() or {}
++            motion_forward(round(remaining, 1))
++            after = nav_odometry() or {}
+             moved = max(0.0, float(after.get("distanceCm") or 0.0) - float(before.get("distanceCm") or 0.0))
+             _, state = _vp_remember()
+             result = {"accepted": bool(state.get("onRoad")), "distanceCm": moved,
+                       "stoppedBy": "max_distance" if state.get("onRoad") else "off_road"}
+         else:
+             requested = min(remaining, float(APPROACH_FOLLOW_STEP_CM))
+-            result = robot.follow_road(requested, speed, True)
++            result = motion_follow_road(requested, speed, True)
+             _vp_remember()
+             moved = float(result.get("distanceCm") or 0.0)
+         _, road_after = _vp_remember()
+@@ -1186,7 +1303,7 @@
+     ahead = math.sin(yaw) * unit[0] + math.cos(yaw) * unit[1]
+     align_to_current_road()
+     if (ahead >= 0) != (direction > 0):
+-        robot.left_angle(180)
++        motion_left_angle(180)
+     _, now = _vp_remember()
+     return bool(now.get("onRoad") and now.get("roadId") == road_id)
+ 
+@@ -1200,7 +1317,7 @@
+         VP_STATE["nudged"].add(key)
+         front = state.get("frontClearanceCm")
+         if front is None or float(front) >= NODE_NUDGE_CM:
+-            robot.forward(NODE_NUDGE_CM)
++            motion_forward(NODE_NUDGE_CM)
+             pose, state = _vp_remember()
+             _vp_event("viewpoint_node_nudge", distanceCm=NODE_NUDGE_CM,
+                       atNode=state.get("atNode"), nodeId=state.get("nodeId"))
+@@ -1211,9 +1328,16 @@
+     before, state = _vp_prepare_node()
+     if not state.get("onRoad") or not any(item.get("roadId") == road_id for item in state.get("exits", [])):
+         return False
+-    result = robot.take_exit(road_id, SLOW_SPEED, True)
++    result = motion_take_exit(road_id, SLOW_SPEED, True)
+     after, now = _vp_remember()
+     moved = math.hypot(after.x - before.x, after.z - before.z)
++    edge = edge_by_road.get(road_id)
++    if (edge is not None and now.get("roadId") == road_id and now.get("onRoad")
++            and state.get("nodeId") in (edge["fromNodeId"], edge["toNodeId"]) and moved > 0):
++        # The entry endpoint fixes canonical direction; this is a local tangent, not a road extrapolation.
++        sign = 1 if state["nodeId"] == edge["fromNodeId"] else -1
++        yaw = after.yaw_rad - math.radians(float(now.get("headingErrorDeg") or 0.0))
++        VP_STATE.setdefault("canonical_hints", {})[road_id] = (sign * math.sin(yaw), sign * math.cos(yaw))
+     _vp_event("viewpoint_take_exit", roadId=road_id, distanceCm=result.get("distanceCm"),
+               stoppedBy=result.get("stoppedBy"), actualRoadId=now.get("roadId"),
+               actualProgressCm=now.get("roadProgressCm"))
+@@ -1335,7 +1459,7 @@
+         live_yaw = live_pose.yaw_rad - math.radians(float(live_state.get("headingErrorDeg") or 0.0))
+         align_to_current_road()
+         if math.cos(live_yaw - planned_yaw) < 0:
+-            robot.left_angle(180)
++            motion_left_angle(180)
+         _, aligned = _vp_remember()
+         if aligned.get("roadId") != road_id or not aligned.get("onRoad"):
+             return False
+@@ -1368,7 +1492,7 @@
+         return previous
+     item = min(visible, key=lambda value: float(value["distanceCm"]))
+     if float(item["distanceCm"]) < 100.0:
+-        det = calibrated_detection(item, pose, float(robot.odometry().get("tick", 0)) * 0.02)
++        det = calibrated_detection(item, pose, float(nav_odometry().get("tick", 0)) * 0.02)
+         return {"x": det.x, "z": det.z, "source": "uncapped_planning_only"}
+     yaw = pose.yaw_rad + math.radians(float(item.get("bearingDeg") or 0.0))
+     return {"ray_x": pose.x, "ray_z": pose.z, "ux": math.sin(yaw), "uz": math.cos(yaw),
+@@ -1384,9 +1508,9 @@
+     # The motion API accepts angles >= 1 degree. This is an API limit, not a fit.
+     if abs(bearing) >= 1.0:
+         if bearing > 0:
+-            robot.right_angle(abs(bearing))
++            motion_right_angle(abs(bearing))
+         else:
+-            robot.left_angle(abs(bearing))
++            motion_left_angle(abs(bearing))
+     pose, state = _vp_remember()
+     ux, uz = _vp_goal_unit(goal, pose)
+     final_bearing = _wrap_deg(math.degrees(math.atan2(ux, uz) - pose.yaw_rad))
+@@ -1441,7 +1565,7 @@
+     if goal is None:
+         return None
+     tried, failures = set(), []
+-    timestamp = float(robot.odometry().get("tick", 0)) * 0.02
++    timestamp = float(nav_odometry().get("tick", 0)) * 0.02
+     first = _nearest_candidate(observations, pose, timestamp)
+     if first is not None:
+         _record_candidate_sample(pose, first)
+@@ -1473,7 +1597,7 @@
+         if reason is None:
+             observations = counted_observe(None, 0.4, targets_only=True)
+             pose, _ = _vp_remember()
+-            timestamp = float(robot.odometry().get("tick", 0)) * 0.02
++            timestamp = float(nav_odometry().get("tick", 0)) * 0.02
+             _update_wm(observations, pose, timestamp, memory_phase=True)
+             goal = _planning_goal(pose, observations, goal)
+             candidate = _nearest_candidate(observations, pose, timestamp)
+@@ -1501,7 +1625,7 @@
+             raise MissionFailure("patrol_off_road")
+         if _observe_motion()[0]:
+             observations = counted_observe(None, 0.4, targets_only=True)
+-            timestamp = float(robot.odometry().get("tick", 0)) * 0.02
++            timestamp = float(nav_odometry().get("tick", 0)) * 0.02
+             _update_wm(observations, pose, timestamp, memory_phase=True)
+             target = _try_enter_range_and_confirm(pose, observations)
+             if target is not None:
+@@ -1513,7 +1637,7 @@
+         choices = [item for item in exits if item["roadId"] not in visited] or exits
+         if not choices:
+             align_to_current_road()
+-            robot.left_angle(180)
++            motion_left_angle(180)
+             _vp_follow(150, 30)
+             _vp_prepare_node()
+             continue
+@@ -1530,7 +1654,7 @@
+                 raise MissionFailure("patrol_off_road")
+             if _observe_motion()[0]:
+                 observations = counted_observe(None, 0.4, targets_only=True)
+-                timestamp = float(robot.odometry().get("tick", 0)) * 0.02
++                timestamp = float(nav_odometry().get("tick", 0)) * 0.02
+                 _update_wm(observations, pose, timestamp, memory_phase=True)
+                 target = _try_enter_range_and_confirm(pose, observations)
+                 if target is not None:
+@@ -1550,7 +1674,7 @@
+ 
+ 
+ def _approach_on_road(stage):
+-    state = robot.road_state()
++    state = nav_road_state()
+     if not state.get("onRoad"):
+         _approach_event("approach_on_road_violation", stage=stage,
+                         roadId=state.get("roadId"), onRoad=False,
+@@ -1561,9 +1685,9 @@
+ 
+ def _turn_toward_bearing(bearing):
+     if bearing > 8.0:
+-        robot.right_angle(min(abs(bearing), 30.0))
++        motion_right_angle(min(abs(bearing), 30.0))
+     elif bearing < -8.0:
+-        robot.left_angle(min(abs(bearing), 30.0))
++        motion_left_angle(min(abs(bearing), 30.0))
+ 
+ 
+ 
+@@ -1573,7 +1697,7 @@
+     state = _approach_on_road("before_memory_follow")
+     if state is None:
+         return None
+-    pose = odometry_to_pose(robot.odometry())
++    pose = odometry_to_pose(nav_odometry())
+     target = _wm_target()
+     if target is None or target.state == ObjectState.LOST:
+         _approach_event("approach_failed", reason="target_lost_before_memory_follow")
+@@ -1582,11 +1706,11 @@
+     if bearing is None:
+         return None
+     if abs(bearing) > 90.0:
+-        robot.left_angle(180.0)
++        motion_left_angle(180.0)
+         state = _approach_on_road("after_memory_turn_around")
+         if state is None:
+             return None
+-    result = robot.follow_road(float(step_cm), SLOW_SPEED, True)
++    result = motion_follow_road(float(step_cm), SLOW_SPEED, True)
+     state = _approach_on_road("after_memory_follow")
+     if state is None:
+         return None
+@@ -1595,7 +1719,7 @@
+     stopped = str(result.get("stoppedBy") or "")
+     blocked = stopped in ("front_clearance", "collision", "safety_limit")
+     if blocked:
+-        pose = odometry_to_pose(robot.odometry())
++        pose = odometry_to_pose(nav_odometry())
+         near_m = _wm_distance_m(pose)
+         if near_m is not None and near_m <= APPROACH_BLOCKED_ARRIVAL_MAX_M:
+             _approach_event("approach_blocked_near_target", stoppedBy=stopped,
+@@ -1714,189 +1838,196 @@
+     return chosen, error
+ 
+ 
++"""Road-graph approach using runtime geometry only; embedded by the main program."""
++
++
++def _mag_candidates(pose, state, target, tried):
++    candidates = []
++    for point in _vp_points(pose, state).values():
++        if point["key"] in tried:
++            continue
++        distance = math.hypot(point["x"] - target.x, point["z"] - target.z)
++        if distance > APPROACH_FINE_DISTANCE_M:
++            continue
++        plan = _vp_path(state, point["roadId"], point["progressCm"])
++        if plan is not None:
++            candidates.append(dict(point, plan=plan, path_cm=plan["cost_cm"], wm_distance_m=distance))
++    return sorted(candidates, key=lambda point: (point["path_cm"], point["key"]))
++
++
++def _mag_frontiers(pose, state, target, failed):
++    """Plan to measured boundaries of unknown intervals, including unseen graph edges."""
++    candidates = []
++    points = _vp_points(pose, state)
++    for road_id, edge in edge_by_road.items():
++        if road_id in blocked_roads:
++            continue
++        length = float(edge["lengthCm"])
++        covered = list(VP_STATE["intervals"].get(road_id, []))
++        covered.extend((item["s"], item["s"]) for item in VP_STATE["roads"].get(road_id, []))
++        merged = []
++        for left, right in sorted(covered):
++            left, right = max(0.0, float(left)), min(length, float(right))
++            if merged and left <= merged[-1][1]:
++                merged[-1] = (merged[-1][0], max(merged[-1][1], right))
++            else:
++                merged.append((left, right))
++        cursor = 0.0
++        gaps = []
++        for left, right in merged:
++            if round(left - cursor, 1) > 0:
++                gaps.append((cursor, left))
++            cursor = max(cursor, right)
++        if round(length - cursor, 1) > 0:
++            gaps.append((cursor, length))
++        for left, right in gaps:
++            for progress, end, direction in ((left, right, 1), (right, left, -1)):
++                if edge["oneWay"] and direction < 0:
++                    continue
++                from_node, to_node = ((edge["fromNodeId"], edge["toNodeId"]) if direction > 0
++                                      else (edge["toNodeId"], edge["fromNodeId"]))
++                if (from_node, to_node, road_id) in blocked_directions:
++                    continue
++                frontier_key = (road_id, direction, round(end, 1))
++                if frontier_key in failed:
++                    continue
++                plan = _vp_path(state, road_id, progress)
++                if plan is None:
++                    continue
++                key = road_id + "@" + str(round(progress, 1))
++                point = points.get(key)
++                # Only a measured boundary can supply a geometric preference. Unknown
++                # graph endpoints have no invented coordinates or tangent extrapolation.
++                distance = (math.hypot(point["x"] - target.x, point["z"] - target.z)
++                            if point is not None else float("inf"))
++                unit = _vp_canonical_unit(road_id, progress)
++                toward = 0.0
++                if point is not None and unit is not None:
++                    toward = direction * (unit[0] * (target.x - point["x"])
++                                          + unit[1] * (target.z - point["z"]))
++                candidates.append({"key": key, "roadId": road_id, "progressCm": progress,
++                                   "endCm": end, "direction": direction, "frontier_key": frontier_key,
++                                   "plan": plan, "path_cm": plan["cost_cm"],
++                                   "boundary_distance_m": distance, "toward": toward})
++    return sorted(candidates, key=lambda point: (point["path_cm"], point["boundary_distance_m"],
++                                                -point["toward"], point["key"], point["direction"]))
++
++
++def _mag_frontier_step(frontier, state):
++    """Extend one selected unknown interval without reacting to target bearing."""
++    road_id = frontier["roadId"]
++    if (state.get("roadId") != road_id
++            or round(float(state["roadProgressCm"]) - frontier["progressCm"], 1) != 0):
++        return _vp_travel(frontier)
++    direction = frontier["direction"]
++    if not _vp_face_progress(direction, state):
++        _approach_event("approach_frontier_failed", roadId=road_id,
++                        reason="canonical_direction_unknown_or_road_changed")
++        return "unreachable"
++    _, aligned = _vp_remember()
++    before = float(aligned.get("roadProgressCm") or 0.0)
++    remaining = direction * (frontier["endCm"] - before)
++    if round(remaining, 1) <= 0:
++        return "replan"
++    result = _vp_follow(min(float(APPROACH_FOLLOW_STEP_CM), remaining), SLOW_SPEED)
++    _, after = _vp_remember()
++    _approach_event("approach_frontier_step", roadId=road_id, direction=direction,
++                    beforeProgressCm=before, afterProgressCm=after.get("roadProgressCm"),
++                    distanceCm=result.get("distanceCm"), stoppedBy=result.get("stoppedBy"))
++    if not after.get("onRoad"):
++        return "off_road"
++    if after.get("roadId") != road_id:
++        return "replan" if result.get("distanceCm", 0) > 0 else "unreachable"
++    if result.get("stoppedBy") in ("junction", "road_end"):
++        # Even a positive 7cm junction stop needs an exit decision. Do not reverse
++        # toward the local Euclidean minimum or repeatedly nudge the same endpoint.
++        _vp_prepare_node()
++        return "unreachable"
++    moved = direction * (float(after.get("roadProgressCm") or 0.0) - before)
++    if moved <= 0 or not result.get("accepted", True):
++        return "unreachable"
++    if result.get("stoppedBy") != "max_distance":
++        return "unreachable"
++    return "replan"
++
++
++def _approach_graph_navigation(target):
++    """Reach an actual on-road pose within the existing fine-approach distance."""
++    tried, failed_frontiers, attempted = set(), set(), set()
++    track_id = target.obj_id
++    while True:
++        pose, state = _vp_remember()
++        live_target = _wm_target()
++        if live_target is None or live_target.obj_id != track_id or live_target.state == ObjectState.LOST:
++            _approach_event("approach_failed", reason="memory_graph_target_lost_or_changed", track_id=track_id)
++            return False
++        target = live_target
++        if not state.get("onRoad") or state.get("roadId") not in edge_by_road:
++            _approach_event("approach_failed", reason="memory_graph_off_road", roadId=state.get("roadId"))
++            return False
++        distance = math.hypot(target.x - pose.x, target.z - pose.z)
++        if distance <= APPROACH_FINE_DISTANCE_M:
++            _approach_event("approach_memory_stop", reason="graph_fine_phase", track_id=track_id,
++                            wm_distance_m=round(distance, 3), roadId=state.get("roadId"), onRoad=True)
++            return True
++        candidates = _mag_candidates(pose, state, target, tried)
++        kind = "candidate" if candidates else "frontier"
++        options = candidates or _mag_frontiers(pose, state, target, failed_frontiers)
++        if not options:
++            _approach_event("approach_min_distance_failed", reason="memory_graph_exhausted",
++                            current_wm_distance_m=round(distance, 3), required_m=APPROACH_FINE_DISTANCE_M,
++                            roadId=state.get("roadId"), onRoad=True)
++            return False
++        chosen = options[0]
++        operation_key = (kind, chosen["key"], chosen.get("direction"), state.get("roadId"),
++                         round(float(state.get("roadProgressCm") or 0.0), 1))
++        if operation_key in attempted:
++            if kind == "candidate":
++                tried.add(chosen["key"])
++            else:
++                failed_frontiers.add(chosen["frontier_key"])
++            _approach_event("approach_graph_rejected", kind=kind, key=chosen["key"],
++                            reason="repeated_road_state_without_new_route_progress")
++            continue
++        attempted.add(operation_key)
++        _approach_event("approach_graph_selected", kind=kind, key=chosen["key"],
++                        pathCm=chosen["path_cm"], wm_distance_m=chosen.get("wm_distance_m"),
++                        direction=chosen.get("direction"), reason="shortest_legal_road_path")
++        result = _vp_travel(chosen) if kind == "candidate" else _mag_frontier_step(chosen, state)
++        actual_pose, actual_state = _vp_remember()
++        if not actual_state.get("onRoad") or result == "off_road":
++            _approach_event("approach_failed", reason="memory_graph_off_road_after_move")
++            return False
++        if kind == "candidate" and result != "replan":
++            tried.add(chosen["key"])
++            actual_distance = math.hypot(target.x - actual_pose.x, target.z - actual_pose.z)
++            if actual_distance > APPROACH_FINE_DISTANCE_M:
++                _approach_event("approach_graph_rejected", kind=kind, key=chosen["key"],
++                                reason="actual_pose_outside_fine_range" if result == "arrived" else result,
++                                wm_distance_m=round(actual_distance, 3))
++        elif kind == "frontier" and result == "unreachable":
++            failed_frontiers.add(chosen["frontier_key"])
++
++
+ def approach_target_with_world_model(target):
+-    """确认后沿道路小步接近；路口用 take_exit，禁止直线追目标离路。"""
+-    state = _approach_on_road("start")
+-    if state is None:
++    """Navigate the road graph from memory, then retain the existing fine/grab rules."""
++    start_distance = float(nav_odometry().get("distanceCm") or 0.0)
++    reached = _approach_graph_navigation(target)
++    end_distance = float(nav_odometry().get("distanceCm") or 0.0)
++    memory_cm = max(0.0, end_distance - start_distance)
++    STATE["forward_after_last_observe_cm"] += memory_cm
++    _approach_event("approach_graph_memory_distance", movedCm=memory_cm,
++                    forward_after_last_observe_cm=STATE["forward_after_last_observe_cm"], reached=reached)
++    if not reached:
+         return False
+-    pose = odometry_to_pose(robot.odometry())
+-    target = _wm_target() or target
+-    if target is None or target.state == ObjectState.LOST:
+-        _approach_event("approach_failed", reason="target_lost_at_start")
++    pose = odometry_to_pose(nav_odometry())
++    state = _approach_on_road("after_memory_graph")
++    target = _wm_target()
++    if state is None or target is None:
+         return False
+     distance_m = math.hypot(target.x - pose.x, target.z - pose.z)
+     best_distance_m = distance_m
+-    previous_distance_m = distance_m
+-    increasing_steps = 0
+-    stop_reason = "max_memory_steps"
+-
+-    for _ in range(APPROACH_MAX_MEMORY_STEPS):
+-        if distance_m <= APPROACH_FINE_DISTANCE_M:
+-            stop_reason = "fine_phase"
+-            break
+-        step_cm = APPROACH_FOLLOW_STEP_CM
+-        move = _approach_memory_move(step_cm)
+-        if move is None:
+-            return False
+-        moved_cm = move["moved_cm"]
+-        state = move["state"]
+-        pose = odometry_to_pose(robot.odometry())
+-        target = _wm_target() or target
+-        if target is None or target.state == ObjectState.LOST:
+-            _approach_event("approach_failed", reason="target_lost_after_memory_follow")
+-            return False
+-        distance_m = math.hypot(target.x - pose.x, target.z - pose.z)
+-        target_bearing = _wm_bearing_deg(pose) or 0.0
+-        print("GY " + json.dumps({
+-            "event": "approach_step",
+-            "wm_distance_m": round(distance_m, 3),
+-            "wm_bearing_deg": round(target_bearing, 1),
+-            "step_requestCm": step_cm,
+-            "follow_distanceCm": round(moved_cm, 1),
+-            "stoppedBy": move["result"].get("stoppedBy"),
+-            "pose": _pose_log(pose),
+-            "onRoad": state.get("onRoad"),
+-            "frontClearanceCm": state.get("frontClearanceCm"),
+-            "roadId": state.get("roadId"),
+-            "atNode": state.get("atNode"),
+-            "atJunction": state.get("atJunction"),
+-            "nodeId": state.get("nodeId"),
+-            "roadProgressCm": state.get("roadProgressCm"),
+-            "roadIds": state.get("roadIds"),
+-            "last_observe_distance_m": round(STATE["last_observe_distance_m"] or 0.0, 3),
+-            "last_observe_camera_distance_cm": STATE["last_observe_camera_distance_cm"],
+-            "forward_after_last_observe_cm": round(STATE["forward_after_last_observe_cm"], 1),
+-        }, ensure_ascii=False))
+-
+-        if move.get("blocked"):
+-            best_distance_m = min(best_distance_m, distance_m)
+-            stop_reason = "blocked_near_target"
+-            break
+-        if distance_m <= APPROACH_FINE_DISTANCE_M:
+-            best_distance_m = distance_m
+-            stop_reason = "fine_phase"
+-            break
+-
+-        if moved_cm < 5.0 and moved_cm < step_cm - 0.5:
+-            front = state.get("frontClearanceCm")
+-            if front is not None and front <= APPROACH_JUNCTION_FRONT_MIN_CM:
+-                _approach_event("approach_min_distance_failed",
+-                                reason="front_clearance_at_endpoint",
+-                                min_wm_distance_m=round(min(best_distance_m, distance_m), 3),
+-                                current_wm_distance_m=round(distance_m, 3),
+-                                roadId=state.get("roadId"),
+-                                frontClearanceCm=front,
+-                                required_m=APPROACH_DISTANCE_M,
+-                                onRoad=state.get("onRoad"))
+-                return False
+-            # 平台在部分路口边界会先返回 0cm，atNode=false 且 exits=[]；
+-            # 旧规划器用一个 2cm 探步进入节点范围。这里只用于让 take_exit 可用。
+-            _approach_event("approach_endpoint_nudge",
+-                            roadId=state.get("roadId"),
+-                            roadProgressCm=state.get("roadProgressCm"),
+-                            atNode=state.get("atNode"),
+-                            atJunction=state.get("atJunction"),
+-                            nudgeCm=APPROACH_NODE_NUDGE_CM)
+-            odo_before = float((robot.odometry() or {}).get("distanceCm") or 0.0)
+-            robot.forward(APPROACH_NODE_NUDGE_CM)
+-            odo_after = float((robot.odometry() or {}).get("distanceCm") or 0.0)
+-            nudged_cm = odo_after - odo_before if odo_after >= odo_before else APPROACH_NODE_NUDGE_CM
+-            STATE["forward_after_last_observe_cm"] += nudged_cm
+-            state = _approach_on_road("after_endpoint_nudge")
+-            if state is None:
+-                return False
+-            _approach_event("approach_endpoint_nudge_result", odometry_deltaCm=round(nudged_cm, 1),
+-                            atNode=state.get("atNode"), atJunction=state.get("atJunction"),
+-                            nodeId=state.get("nodeId"), exits=len(state.get("exits") or []))
+-            pose = odometry_to_pose(robot.odometry())
+-            target_bearing = _wm_bearing_deg(pose) or 0.0
+-            chosen, turn_error = _approach_choose_exit(state, target_bearing)
+-            if chosen is None or turn_error > 90.0:
+-                _approach_event("approach_min_distance_failed",
+-                                reason=("no_exit" if chosen is None else "all_exits_turn_away"),
+-                                min_wm_distance_m=round(min(best_distance_m, distance_m), 3),
+-                                current_wm_distance_m=round(distance_m, 3),
+-                                roadId=state.get("roadId"),
+-                                chosenExitTurnErrorDeg=round(turn_error, 1),
+-                                required_m=APPROACH_DISTANCE_M,
+-                                onRoad=state.get("onRoad"))
+-                return False
+-            try:
+-                exit_result = robot.take_exit(chosen["roadId"], SLOW_SPEED, True)
+-            except Exception as error:
+-                _approach_event("approach_failed", reason="take_exit_exception",
+-                                error=str(error), roadId=chosen.get("roadId"))
+-                return False
+-            if not exit_result.get("accepted", True):
+-                _approach_event("approach_failed", reason="take_exit_rejected",
+-                                roadId=chosen.get("roadId"),
+-                                stoppedBy=exit_result.get("stoppedBy"))
+-                return False
+-            state = _approach_on_road("after_take_exit")
+-            if state is None:
+-                return False
+-            exit_cm = float(exit_result.get("distanceCm") or 0.0)
+-            STATE["forward_after_last_observe_cm"] += exit_cm
+-            pose = odometry_to_pose(robot.odometry())
+-            target = _wm_target() or target
+-            if target is None or target.state == ObjectState.LOST:
+-                _approach_event("approach_failed", reason="target_lost_after_take_exit")
+-                return False
+-            distance_m = math.hypot(target.x - pose.x, target.z - pose.z)
+-            _approach_event("approach_exit_move", roadId=state.get("roadId"),
+-                            exit_distanceCm=round(exit_cm, 1), stoppedBy=exit_result.get("stoppedBy"),
+-                            wm_distance_m=round(distance_m, 3),
+-                            wm_bearing_deg=round(_wm_bearing_deg(pose) or 0.0, 1),
+-                            pose=_pose_log(pose),
+-                            forward_after_last_observe_cm=round(STATE["forward_after_last_observe_cm"], 1))
+-            best_distance_m = min(best_distance_m, distance_m)
+-            previous_distance_m = distance_m
+-            increasing_steps = 0
+-            continue
+-
+-        if distance_m < best_distance_m:
+-            best_distance_m = distance_m
+-        if distance_m > previous_distance_m + APPROACH_IMPROVE_M:
+-            increasing_steps += 1
+-        else:
+-            increasing_steps = 0
+-        previous_distance_m = distance_m
+-        if increasing_steps >= 2:
+-            stop_reason = "passed_nearest_point"
+-            break
+-
+-    pose = odometry_to_pose(robot.odometry())
+-    target = _wm_target() or target
+-    if target is None or target.state == ObjectState.LOST:
+-        _approach_event("approach_failed", reason="target_lost_after_memory_nav")
+-        return False
+-    distance_m = math.hypot(target.x - pose.x, target.z - pose.z)
+-    state = _approach_on_road("after_memory_nav")
+-    if state is None:
+-        return False
+-    print("GY " + json.dumps({
+-        "event": "approach_memory_stop",
+-        "reason": stop_reason,
+-        "wm_distance_m": round(distance_m, 3),
+-        "min_wm_distance_m": round(min(best_distance_m, distance_m), 3),
+-        "wm_bearing_deg": round(_wm_bearing_deg(pose) or 0.0, 1),
+-        "pose": _pose_log(pose),
+-        "roadId": state.get("roadId"),
+-        "onRoad": state.get("onRoad"),
+-        "frontClearanceCm": state.get("frontClearanceCm"),
+-        "forward_after_last_observe_cm": round(STATE["forward_after_last_observe_cm"], 1),
+-        "last_observe_distance_m": round(STATE["last_observe_distance_m"] or 0.0, 3),
+-    }, ensure_ascii=False))
+-
+-    if distance_m > APPROACH_FINE_DISTANCE_M:
+-        _approach_event("approach_min_distance_failed",
+-                        reason="memory_nav_stopped_above_threshold",
+-                        min_wm_distance_m=round(best_distance_m, 3),
+-                        current_wm_distance_m=round(distance_m, 3),
+-                        roadId=state.get("roadId"),
+-                        required_m=APPROACH_FINE_DISTANCE_M,
+-                        onRoad=state.get("onRoad"))
+-        return False
++    stop_reason = "graph_fine_phase"
+ 
+     # 原地转向记忆中的目标方向，然后才允许 approach(max_steps=1)+grab。
+     # v24：若是因"越过最近点"停下且 WM 目标已在车后方，不掉头——视觉测距偏短意味着
+@@ -1910,7 +2041,7 @@
+         return False
+     if _approach_on_road("after_target_turn") is None:
+         return False
+-    pose = odometry_to_pose(robot.odometry())
++    pose = odometry_to_pose(nav_odometry())
+     target = _wm_target() or target
+     if target is None or target.state == ObjectState.LOST:
+         _approach_event("approach_failed", reason="target_lost_before_approach")
+@@ -1923,7 +2054,7 @@
+     fine_inc = 0
+     fine_reason = "max_fine_steps"
+     fine_steps = []
+-    state = robot.road_state()
++    state = nav_road_state()
+     for _ in range(APPROACH_FINE_MAX_STEPS):
+         if abs(distance_m - GRAB_STANDOFF_M) <= 0.005:
+             fine_reason = "at_grab_standoff"
+@@ -1931,21 +2062,21 @@
+         bearing = _wm_bearing_deg(pose) or 0.0
+         if abs(bearing) > APPROACH_FINE_REAIM_DEG:
+             _turn_toward_bearing(bearing)
+-        odo_before = float((robot.odometry() or {}).get("distanceCm") or 0.0)
++        odo_before = float((nav_odometry() or {}).get("distanceCm") or 0.0)
+         step_cm = min(APPROACH_FINE_STEP_CM, abs(distance_m - GRAB_STANDOFF_M) * 100.0)
+         if step_cm < 0.5:
+             fine_reason = "at_grab_standoff"
+             break
+         backing = distance_m < GRAB_STANDOFF_M
+         if backing:
+-            robot.backward(round(step_cm, 1))
++            motion_backward(round(step_cm, 1))
+         else:
+-            robot.forward(round(step_cm, 1))
+-        odo_after = float((robot.odometry() or {}).get("distanceCm") or 0.0)
++            motion_forward(round(step_cm, 1))
++        odo_after = float((nav_odometry() or {}).get("distanceCm") or 0.0)
+         moved = odo_after - odo_before if odo_after >= odo_before else 0.0
+         STATE["forward_after_last_observe_cm"] += -moved if backing else moved
+-        state = robot.road_state()
+-        pose = odometry_to_pose(robot.odometry())
++        state = nav_road_state()
++        pose = odometry_to_pose(nav_odometry())
+         distance_m = _wm_distance_m(pose)
+         if distance_m is None:
+             _approach_event("approach_failed", reason="target_lost_during_fine_drive")
+@@ -1978,7 +2109,7 @@
+         pass
+     elif abs(_wm_bearing_deg(pose) or 0.0) > GRAB_AIM_TOL_DEG:
+         _turn_to_wm_target_in_place(tol_deg=GRAB_AIM_TOL_DEG)
+-        pose = odometry_to_pose(robot.odometry())
++        pose = odometry_to_pose(nav_odometry())
+         distance_m = _wm_distance_m(pose) or distance_m
+ 
+     if distance_m > APPROACH_DISTANCE_M:
+@@ -2024,13 +2155,13 @@
+                     wm_distance_m=round(distance_m, 3),
+                     forward_after_last_observe_cm=round(STATE["forward_after_last_observe_cm"], 1))
+     try:
+-        approach_ok = bool(robot.approach("目标物", 85, 1))
++        approach_ok = bool(motion_approach("目标物", 85, 1))
+     except Exception as error:
+         _approach_event("approach_failed", reason="approach_exception", error=str(error))
+         return False
+     if _approach_on_road("after_approach") is None:
+         return False
+-    pose = odometry_to_pose(robot.odometry())
++    pose = odometry_to_pose(nav_odometry())
+     _approach_event("approach_result", approach_call=STATE["approach_calls"], reached=approach_ok,
+                     wm_distance_m=round(_wm_distance_m(pose) or 0.0, 3),
+                     wm_bearing_deg=round(_wm_bearing_deg(pose) or 0.0, 1),
+@@ -2041,11 +2172,11 @@
+     advanced_cm = 0.0
+     max_grabs = int(GRAB_MAX_ADVANCE_CM // GRAB_STEP_CM) + 1
+     for grab_no in range(1, max_grabs + 1):
+-        robot.grab()
++        motion_grab()
+         holding = robot.holding()
+-        odo = robot.odometry() or {}
++        odo = nav_odometry() or {}
+         pose = odometry_to_pose(odo)
+-        state = robot.road_state()
++        state = nav_road_state()
+         wm_d = _wm_distance_m(pose)
+         _approach_event("grab_step", step=grab_no, advanced_cm=round(advanced_cm, 1), holding=holding,
+                         tick=odo.get("tick"), wm_distance_m=round(wm_d, 3) if wm_d is not None else None,
+@@ -2073,12 +2204,12 @@
+         if grab_no == max_grabs:
+             break
+         odo_before = float(odo.get("distanceCm") or 0.0)
+-        robot.forward(GRAB_STEP_CM)
+-        odo_after = float((robot.odometry() or {}).get("distanceCm") or 0.0)
++        motion_forward(GRAB_STEP_CM)
++        odo_after = float((nav_odometry() or {}).get("distanceCm") or 0.0)
+         moved = odo_after - odo_before if odo_after >= odo_before else 0.0
+         advanced_cm += moved
+         STATE["forward_after_last_observe_cm"] += moved
+-        state = robot.road_state()
++        state = nav_road_state()
+         if not state.get("onRoad"):
+             _approach_event("grab_loop_failed", reason="off_road", step=grab_no, advanced_cm=round(advanced_cm, 1),
+                             lateralOffsetCm=state.get("lateralOffsetCm"))
+@@ -2092,10 +2223,12 @@
+ 
+ 
+ def _finish_flow(success, stage, reason=None):
+-    state = robot.task_state()
++    state = (nav_task_state() if NAV_STATE["queries"] < NAVIGATION_QUERY_LIMIT
++             else NAV_STATE["cache"].get("task_state", {}))
+     print("GY " + json.dumps({
+         "event": "flow_end", "success": bool(success), "stage": stage, "reason": reason,
+         "one_target_released": bool(success),
++        "navigation_queries": NAV_STATE["queries"], "navigation_controls": NAV_STATE["controls"],
+         "full_targetDelivered": bool(state.get("targetDelivered")), "holding": robot.holding(),
+     }, ensure_ascii=False))
+     print("GY_DONE")

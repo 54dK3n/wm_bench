@@ -1,0 +1,261 @@
+FF..F..F.FF.F.F......                                                    [100%]
+=================================== FAILURES ===================================
+______________________ test_2_0_provider_frame_convention ______________________
+
+    def test_2_0_provider_frame_convention():
+        """平台约定：bearing 右为正，headingDeg 左转为正，起点帧 z 前 x 右。
+        由此推导的期望值与实现无关；换算符号错了，2.1 在环误差必然超标。"""
+        cases = [
+            # (odometry, observation, 期望 x, 期望 z)
+            (_odom(0, 0, 0), _obs("target", 0.0, 100), 0.0, 1.0),
+            (_odom(0, 0, 0), _obs("target", 30.0, 200), 2 * math.sin(math.radians(30)), 2 * math.cos(math.radians(30))),
+            (_odom(100, 50, 0), _obs("target", 0.0, 100), 0.5, 2.0),
+            (_odom(0, 0, 90), _obs("target", 0.0, 100), -1.0, 0.0),     # 左转 90° 后正前方 = 起点帧 -x
+            (_odom(0, 0, -90), _obs("target", 0.0, 100), 1.0, 0.0),     # 右转 90° 后正前方 = 起点帧 +x
+            (_odom(0, 0, 180), _obs("target", 0.0, 100), 0.0, -1.0),
+            (_odom(0, 0, 90), _obs("target", -90.0, 100), 0.0, 1.0),    # 左转 90° 后再看右侧 90° = 起点帧 +z
+        ]
+        failures = []
+        for odom, obs, ex, ez in cases:
+            pose = odometry_to_pose(odom)
+            det = observation_to_detection(obs, pose, timestamp=0.0)
+            if abs(det.x - ex) > 0.03 or abs(det.z - ez) > 0.03:
+                failures.append(f"odom={odom} obs(bearing={obs['bearingDeg']}, d={obs['distanceCm']}) -> ({det.x:.3f},{det.z:.3f}) 期望 ({ex:.3f},{ez:.3f})")
+>       assert not failures, "provider 坐标换算与平台约定不一致：\n" + "\n".join(failures)
+E       AssertionError: provider 坐标换算与平台约定不一致：
+E         odom={'forwardCm': 0, 'rightCm': 0, 'headingDeg': 90, 'distanceCm': 0, 'tick': 0} obs(bearing=0.0, d=100) -> (1.000,0.000) 期望 (-1.000,0.000)
+E         odom={'forwardCm': 0, 'rightCm': 0, 'headingDeg': -90, 'distanceCm': 0, 'tick': 0} obs(bearing=0.0, d=100) -> (-1.000,0.000) 期望 (1.000,0.000)
+E       assert not ["odom={'forwardCm': 0, 'rightCm': 0, 'headingDeg': 90, 'distanceCm': 0, 'tick': 0} obs(bearing=0.0, d=100) -> (1.000,...ightCm': 0, 'headingDeg': -90, 'distanceCm': 0, 'tick': 0} obs(bearing=0.0, d=100) -> (-1.000,0.000) 期望 (1.000,0.000)"]
+
+tests/acceptance/offline/test_2_x.py:54: AssertionError
+______________________ test_2_2_track_count_matches_truth ______________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+record = <function record.<locals>._record at 0x10a7a6f70>
+
+    def test_2_2_track_count_matches_truth(layouts_task2, wm_factory, classify, record):
+        """巡游结束时各类别活跃轨迹数（CONFIRMED+STALE）应等于真值数；含 10% 漏检与单帧幽灵误检。"""
+        per_layout = []
+        correct = 0
+        for i, layout in enumerate(layouts_task2):
+            frames, _ = build_tour(layout, seed=100 + i)
+            log = harness.run_wm(frames, wm_factory())
+            counts = harness.count_active_by_class(log, classify)
+            expected = layout.counts()
+            ok = counts == expected
+            correct += ok
+            per_layout.append({"map": layout.map_id, "frames": len(frames), "duration_s": frames[-1].t,
+                               "expected": expected, "actual": counts, "ok": ok})
+        record("2_2", {"correct_layouts": correct, "threshold": 9, "details": per_layout})
+        detail = "\n".join(f"  {d['map']}: 期望 {d['expected']} 实际 {d['actual']}" for d in per_layout if not d["ok"])
+>       assert correct >= 9, f"2.2 轨迹数正确的布局 {correct}/10，门限 ≥ 9。不正确的布局：\n{detail}"
+E       AssertionError: 2.2 轨迹数正确的布局 6/10，门限 ≥ 9。不正确的布局：
+E           map-03: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'target': 1, 'distractor': 2, 'storage-zone': 1}
+E           map-04: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'distractor': 1, 'obstacle': 2, 'target': 2, 'storage-zone': 1}
+E           map-05: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'obstacle': 2, 'target': 3, 'distractor': 2, 'storage-zone': 1}
+E           map-07: 期望 {'target': 2, 'distractor': 2, 'obstacle': 2, 'storage-zone': 1} 实际 {'distractor': 1, 'target': 2, 'obstacle': 2, 'storage-zone': 1}
+E       assert 6 >= 9
+
+tests/acceptance/offline/test_2_x.py:74: AssertionError
+___________________________ test_2_4_no_false_merge ____________________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+record = <function record.<locals>._record at 0x10a7a69d0>
+
+    def test_2_4_no_false_merge(layouts_task2, wm_factory, classify, record):
+        """同一 obj_id 在不同帧落到两个不同真值物体的匹配半径内记为错并；10 局合计 = 0。"""
+        total = 0
+        details = []
+        for i, layout in enumerate(layouts_task2):
+            frames, _ = build_tour(layout, seed=300 + i)
+            merges, offenders, _ = _merges_for(frames, layout, wm_factory, classify)
+            total += merges
+            details.append({"map": layout.map_id, "merges": merges, "offenders": offenders,
+                            "min_same_class_gap_m": round(layout.min_same_class_gap(), 3)})
+        record("2_4", {"total_merges": total, "threshold": 0, "details": details})
+>       assert total == 0, f"2.4 错并合计 {total}，门限 = 0。明细：{[d for d in details if d['merges']]}"
+E       AssertionError: 2.4 错并合计 6，门限 = 0。明细：[{'map': 'map-03', 'merges': 1, 'offenders': {'target_002': ['target#0', 'target#1']}, 'min_same_class_gap_m': 1.461}, {'map': 'map-04', 'merges': 1, 'offenders': {'distractor_001': ['distractor#0', 'distractor#1']}, 'min_same_class_gap_m': 1.578}, {'map': 'map-05', 'merges': 1, 'offenders': {'obstacle_001': ['obstacle#0', 'obstacle#1']}, 'min_same_class_gap_m': 1.261}, {'map': 'map-07', 'merges': 1, 'offenders': {'distractor_002': ['distractor#0', 'distractor#1']}, 'min_same_class_gap_m': 1.503}, {'map': 'map-10', 'merges': 2, 'offenders': {'obstacle_002': ['obstacle#0', 'obstacle#1'], 'obstacle_006': ['obstacle#0', 'obstacle#1']}, 'min_same_class_gap_m': 1.551}]
+E       assert 6 == 0
+
+tests/acceptance/offline/test_2_x.py:143: AssertionError
+_________________ test_2_5_grabbed_target_goes_stale_within_3s _________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+record = <function record.<locals>._record at 0x10a6d1c10>
+
+    def test_2_5_grabbed_target_goes_stale_within_3s(layouts_task2, wm_factory, classify, record):
+        """抓起目标后原位置一直在视野内却看不到，3 s 内该轨迹必须离开 CONFIRMED（STALE 或 LOST）。10/10。"""
+        passed = 0
+        details = []
+        for i, layout in enumerate(layouts_task2):
+            frames, _, meta = build_grab_scenario(layout, seed=500 + i, post_grab_hold_s=3.5)
+            log = harness.run_wm(frames, wm_factory())
+            track = _target_track_before(log, meta["t_grab"], meta["target"], classify)
+            after = log.at_or_after(meta["t_grab"] + 3.0)
+            later = after.by_id(track.obj_id)
+            state_after = later.state if later else LOST  # 不在快照中 = 已 LOST
+            ok = state_after in (STALE, LOST)
+            passed += ok
+            details.append({"map": layout.map_id, "obj_id": track.obj_id, "t_grab": meta["t_grab"], "t_check": after.t,
+                            "conf_before": round(track.confidence, 3), "state_after": state_after.value,
+                            "conf_after": round(later.confidence, 3) if later else None, "ok": ok})
+        record("2_5", {"passed": passed, "threshold": 10, "details": details})
+>       assert passed == 10, f"2.5 抓取后 3 s 内跌破 STALE 的局数 {passed}/10。明细：{[d for d in details if not d['ok']]}"
+E       AssertionError: 2.5 抓取后 3 s 内跌破 STALE 的局数 0/10。明细：[{'map': 'map-01', 'obj_id': 'target_006', 't_grab': 12.0, 't_check': 15.0, 'conf_before': 0.955, 'state_after': 'confirmed', 'conf_after': 0.941, 'ok': False}, {'map': 'map-02', 'obj_id': 'target_003', 't_grab': 12.5, 't_check': 15.5, 'conf_before': 0.959, 'state_after': 'confirmed', 'conf_after': 0.943, 'ok': False}, {'map': 'map-03', 'obj_id': 'target_001', 't_grab': 11.5, 't_check': 14.5, 'conf_before': 0.94, 'state_after': 'confirmed', 'conf_after': 0.958, 'ok': False}, {'map': 'map-04', 'obj_id': 'target_006', 't_grab': 14.0, 't_check': 17.0, 'conf_before': 0.943, 'state_after': 'confirmed', 'conf_after': 0.959, 'ok': False}, {'map': 'map-05', 'obj_id': 'target_006', 't_grab': 15.5, 't_check': 18.5, 'conf_before': 0.962, 'state_after': 'confirmed', 'conf_after': 0.958, 'ok': False}, {'map': 'map-06', 'obj_id': 'target_004', 't_grab': 6.5, 't_check': 9.5, 'conf_before': 0.951, 'state_after': 'confirmed', 'conf_after': 0.919, 'ok': False}, {'map': 'map-07', 'obj_id': 'target_004', 't_grab': 6.5, 't_check': 9.5, 'conf_before': 0.955, 'state_after': 'confirmed', 'conf_after': 0.92, 'ok': False}, {'map': 'map-08', 'obj_id': 'target_003', 't_grab': 13.5, 't_check': 16.5, 'conf_before': 0.946, 'state_after': 'confirmed', 'conf_after': 0.925, 'ok': False}, {'map': 'map-09', 'obj_id': 'target_007', 't_grab': 10.5, 't_check': 13.5, 'conf_before': 0.959, 'state_after': 'confirmed', 'conf_after': 0.942, 'ok': False}, {'map': 'map-10', 'obj_id': 'target_004', 't_grab': 12.5, 't_check': 15.5, 'conf_before': 0.895, 'state_after': 'confirmed', 'conf_after': 0.916, 'ok': False}]
+E       assert 0 == 10
+
+tests/acceptance/offline/test_2_x.py:214: AssertionError
+__________ test_2_5_lost_object_removed_from_snapshot_but_not_deleted __________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+
+    def test_2_5_lost_object_removed_from_snapshot_but_not_deleted(layouts_task2, wm_factory, classify):
+        """规格 4：跌破更低阈值转 LOST 并移出活跃快照，但不物理删除，get_object 仍可取回。"""
+        layout = layouts_task2[0]
+        frames, _, meta = build_grab_scenario(layout, seed=600, post_grab_hold_s=20.0)
+        log = harness.run_wm(frames, wm_factory())
+        track = _target_track_before(log, meta["t_grab"], meta["target"], classify)
+        wm = log.wm
+        snapshot_ids = {str(o.obj_id) for o in wm.snapshot()}
+        obj = wm.get_object(track.obj_id)
+        assert obj is not None, f"注视原位置 20 s 后 get_object({track.obj_id!r}) 返回 None，LOST 记录被物理删除"
+>       assert ObjectState(obj.state) == LOST, f"注视原位置 20 s 后状态仍为 {ObjectState(obj.state).value}，期望 LOST"
+E       AssertionError: 注视原位置 20 s 后状态仍为 confirmed，期望 LOST
+E       assert <ObjectState....: 'confirmed'> == <ObjectState.LOST: 'lost'>
+E         
+E         - lost
+E         + confirmed
+
+tests/acceptance/offline/test_2_x.py:252: AssertionError
+_____________ test_2_5_released_distractor_old_position_goes_stale _____________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+
+    def test_2_5_released_distractor_old_position_goes_stale(layouts_task2, wm_factory, classify):
+        """第二个天然世界变更：混淆物被移到 1.2 m 外后，旧位置轨迹 3 s 内离开 CONFIRMED，新位置出现轨迹。"""
+        failures = []
+        for i, layout in enumerate(layouts_task2[:5]):
+            frames, _, meta = build_release_scenario(layout, seed=700 + i)
+            log = harness.run_wm(frames, wm_factory())
+            obj = meta["object"]
+            before = log.before(meta["t_release"])
+            old = [tr for tr in before.tracks if tr.state == CONFIRMED and classify(tr) == "distractor" and tr.dist(obj.x, obj.z) <= 0.5]
+            if not old:
+                failures.append(f"{layout.map_id}: 释放前旧位置没有 CONFIRMED 轨迹")
+                continue
+            after = log.at_or_after(meta["t_release"] + 3.0)
+            old_after = after.by_id(old[0].obj_id)
+            nx, nz = meta["new_pos"]
+            new_tracks = [tr for tr in log.frames[-1].tracks if classify(tr) == "distractor" and tr.dist(nx, nz) <= 0.5 and tr.state in harness.ACTIVE_STATES]
+            if old_after is not None and old_after.state == CONFIRMED and old_after.dist(obj.x, obj.z) <= 0.5:
+                failures.append(f"{layout.map_id}: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf={old_after.confidence:.2f}）")
+            if not new_tracks:
+                failures.append(f"{layout.map_id}: 释放后新位置没有活跃轨迹")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: map-01: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.93）
+E         map-03: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）
+E         map-04: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）
+E         map-05: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）
+E       assert not ['map-01: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.93）', 'map-03: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）', 'map-04: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.92）', 'map-05: 释放后 3 s 旧位置轨迹仍 CONFIRMED（conf=0.89）']
+
+tests/acceptance/offline/test_2_x.py:277: AssertionError
+_______________ test_2_6_wm_to_contract_outputs_confirmed_tracks _______________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+record = <function record.<locals>._record at 0x10a7a6700>
+
+    def test_2_6_wm_to_contract_outputs_confirmed_tracks(layouts_task2, wm_factory, record):
+        """规格公开 API wm.to_contract() 也是契约出口：快照中存在 CONFIRMED 轨迹时它不得为空，且字段合法。"""
+        problems: List[str] = []
+        observed = []
+        for frame, snapshot, wm in _contract_checkpoints(layouts_task2[0], wm_factory()):
+            confirmed = [o for o in snapshot if ObjectState(o.state) == CONFIRMED]
+            if not confirmed:
+                continue
+            # 用最宽松的参数调用，排除阈值/时效/尺寸信任过滤的影响
+            wm_contract = wm.to_contract(min_confidence=0.0, max_staleness_s=1e9, now=frame.t, require_size_trusted=False)
+            observed.append({"frame": frame.index, "confirmed": len(confirmed), "contract": len(wm_contract)})
+            if not wm_contract:
+                problems.append(f"帧{frame.index}: 快照有 {len(confirmed)} 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表")
+            problems += [f"帧{frame.index} to_contract: {p}" for p in harness.validate_contract_records(wm_contract)]
+        record("2_6_to_contract", {"observed": observed, "problems": problems})
+        assert observed, "前置条件：整局没有出现 CONFIRMED 轨迹"
+>       assert not problems, "2.6 wm.to_contract 校验失败：\n" + "\n".join(problems[:20])
+E       AssertionError: 2.6 wm.to_contract 校验失败：
+E         帧15: 快照有 4 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表
+E         帧30: 快照有 5 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表
+E         帧59: 快照有 7 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表
+E       assert not ['帧15: 快照有 4 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表', '帧30: 快照有 5 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表', '帧59: 快照有 7 条 CONFIRMED 轨迹，wm.to_contract() 却返回空列表']
+
+tests/acceptance/offline/test_2_x.py:325: AssertionError
+______________________ test_2_7_robust_to_odometry_noise _______________________
+
+layouts_task2 = [Layout(task_id='R2-GYI-MVP-02', map_id='map-01', start={'x': -2.4865, 'z': -7.6757, 'heading': 3.141592653589793}, un...35125), (1.139, 0.8648625000000001), (-2.027025, 1.0540624999999997), (-1.1196875000000002, 1.0154499999999997))), ...]
+wm_factory = <function wm_factory.<locals>.factory at 0x10a79ee50>
+classify = <function make_track_classifier.<locals>.classify at 0x10a7a6c10>
+record = <function record.<locals>._record at 0x10a79ef70>
+
+    def test_2_7_robust_to_odometry_noise(layouts_task2, wm_factory, classify, record):
+        """里程计叠加 2% 距离噪声（每步位移相对高斯）+ 每次转向 1° 持久航向噪声：
+        CONFIRMED 轨迹终态定位误差中位数 ≤ 30 cm，且错并仍为 0。"""
+        noise = OdomNoise(distance_rel_std=0.02, heading_deg_std_per_turn=1.0)
+        errors_all: List[float] = []
+        merges_total = 0
+        details = []
+        for i, layout in enumerate(layouts_task2):
+            frames, _ = build_tour(layout, seed=900 + i, odom=noise)
+            log = harness.run_wm(frames, wm_factory())
+            errs = harness.localization_errors(log.frames[-1].tracks, layout, classify, states=harness.ACTIVE_STATES)
+            _, track_to_truths = harness.truth_associations(log, layout, classify, harness.match_radius(layout))
+            merges = harness.merge_count(track_to_truths)
+            merges_total += merges
+            errors_all += errs
+            details.append({"map": layout.map_id, "median_cm": round(100 * statistics.median(errs), 1) if errs else None,
+                            "p90_cm": round(100 * harness.percentile(errs, 0.9), 1) if errs else None, "tracks": len(errs), "merges": merges})
+        median_cm = 100 * statistics.median(errors_all) if errors_all else math.inf
+        p90_cm = 100 * harness.percentile(errors_all, 0.9) if errors_all else math.inf
+        record("2_7", {"median_cm": median_cm, "p90_cm": p90_cm, "merges": merges_total,
+                       "noise": {"distance_rel_std": 0.02, "heading_deg_std_per_turn": 1.0}, "details": details})
+        assert errors_all, "没有任何活跃轨迹，无法评估"
+        assert median_cm <= 30.0, f"2.7 有噪定位误差中位数 {median_cm:.1f} cm，门限 ≤ 30 cm（P90 {p90_cm:.1f} cm）。明细：{details}"
+>       assert merges_total == 0, f"2.7 有噪条件下错并 {merges_total} 次，门限 0。明细：{[d for d in details if d['merges']]}"
+E       AssertionError: 2.7 有噪条件下错并 4 次，门限 0。明细：[{'map': 'map-05', 'median_cm': 1.1, 'p90_cm': 2.6, 'tracks': 6, 'merges': 1}, {'map': 'map-07', 'median_cm': 3.9, 'p90_cm': 13.2, 'tracks': 6, 'merges': 1}, {'map': 'map-09', 'median_cm': 12.3, 'p90_cm': 14.9, 'tracks': 6, 'merges': 1}, {'map': 'map-10', 'median_cm': 3.5, 'p90_cm': 150.0, 'tracks': 7, 'merges': 1}]
+E       assert 4 == 0
+
+tests/acceptance/offline/test_2_x.py:372: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/acceptance/offline/test_2_x.py::test_2_2_single_frame_detection_is_not_confirmed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_3_no_track_split
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_adjacent_pair_seen_simultaneously
+PASSED tests/acceptance/offline/test_2_x.py::test_2_4_pair_seen_after_long_gap
+PASSED tests/acceptance/offline/test_2_x.py::test_2_5_out_of_fov_object_is_not_fast_decayed
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_fields_exactly_eight
+PASSED tests/acceptance/offline/test_2_x.py::test_2_6_contract_excludes_lost_and_matches_snapshot
+PASSED tests/acceptance/offline/test_2_x.py::test_2_7_noise_free_localization_reference
+PASSED tests/acceptance/offline/test_2_x.py::test_2_8_gate_grows_with_time_gap_and_is_capped
+PASSED tests/acceptance/offline/test_3_x.py::test_3_2_shortest_turn_20_cases
+PASSED tests/acceptance/offline/test_3_x.py::test_3_3_cost_optimal_beats_euclidean_nearest
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_no_truth_leak_and_no_hardcoded_coordinates
+PASSED tests/acceptance/offline/test_3_x.py::test_3_5_truth_guard_blocks_algorithm_frames
+FAILED tests/acceptance/offline/test_2_x.py::test_2_0_provider_frame_convention
+FAILED tests/acceptance/offline/test_2_x.py::test_2_2_track_count_matches_truth
+FAILED tests/acceptance/offline/test_2_x.py::test_2_4_no_false_merge - Assert...
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_grabbed_target_goes_stale_within_3s
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_lost_object_removed_from_snapshot_but_not_deleted
+FAILED tests/acceptance/offline/test_2_x.py::test_2_5_released_distractor_old_position_goes_stale
+FAILED tests/acceptance/offline/test_2_x.py::test_2_6_wm_to_contract_outputs_confirmed_tracks
+FAILED tests/acceptance/offline/test_2_x.py::test_2_7_robust_to_odometry_noise
+8 failed, 13 passed in 1.17s
+

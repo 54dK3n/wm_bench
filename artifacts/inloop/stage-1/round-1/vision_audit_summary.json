@@ -1,0 +1,59 @@
+{
+  "schema": "wm-vision-audit-summary/v1",
+  "generatedAt": "2026-09-23T09:44:21.094152+00:00",
+  "taskId": "R2-GYI-MVP-02",
+  "simulationRunsStartedByAudit": 0,
+  "counts": {
+    "observes": 103,
+    "verified_images": 103,
+    "verified_log_query_bindings": 103,
+    "verified_exact_render_truth": 0,
+    "expected_missing_frames": 1,
+    "false_red_candidate_frames": 3
+  },
+  "nativePngCount": 111,
+  "nativePngBytesAllTenRuns": 27697922,
+  "perRunBudgetBytes": 20971520,
+  "allPerRunNativeAccountingChecksPass": true,
+  "bindingProblems": [],
+  "poseSampleAgeTicks": {
+    "0": 69,
+    "2": 18,
+    "1": 9,
+    "3": 7
+  },
+  "offlinePixelRecomputedObserveCount": 103,
+  "offlinePixelMatchingObserveCount": 103,
+  "exactRenderTruthIntroducedForNextRoundOnly": true,
+  "offlineHookTests": {
+    "command": "node tools/test_vision_truth_hook.js",
+    "passed": true,
+    "verified": [
+      "original return and exceptions preserved",
+      "one requested render stays one render",
+      "native evidence ledger unchanged",
+      "deep render-time snapshot survives later pose/object changes",
+      "capture tick kept separate from evidence completion tick",
+      "one render snapshot cannot be reused for another evidence"
+    ]
+  },
+  "offlineDiagnosticContractTests": {
+    "passed": true,
+    "verified": [
+      "matrixWorld-derived camera origin and basis override sampled pose",
+      "capture and evidence ticks remain distinct",
+      "wrong image hash rejects truth binding",
+      "nearest later-turn sample is rejected"
+    ]
+  },
+  "artifacts": {
+    "tools/vision_diagnostics.py": "353cc00c0103cdc33f9ac309555a2c2a9f374274ca601a3b799f1b328d233200",
+    "tools/vision_pixel_audit.js": "076ce10e360880bc05319283e173cfe74c854cc073e1780d71300af0035cc9ad",
+    "tools/vision_truth_hook.js": "2679393d52e960c4e62f812135837c0b5a849051c959f15f6d1047b948fb57b9",
+    "tools/test_vision_truth_hook.js": "5b30f97942af112cde2b938995058ddb7a5f48c252e7a497f4dafcc55740b6de",
+    "tools/inloop_driver.js": "85a4c0bd2f978b9ee4af933d07909bf01e5b6e3b0587e3f269419bbb9a962b53",
+    "artifacts/inloop/stage-1/round-1/vision_diagnostics.json": "35f89addb7c8f8b2c9d5dff3826538badd9b61776424350ce10e4bd9c4a63250",
+    "artifacts/inloop/stage-1/round-1/pixel_audit.json": "ddb35bb6f9af6eb6a24151ea8c8d2bf1c3ff6e12d14298eed6557a6f9b93f1d9",
+    "artifacts/inloop/stage-1/round-1/VISION_FINDINGS.md": "9e0dce5c19bf367f2bccbd5338dc95a06d1ce217de33ba121e480dc92db64bc5"
+  }
+}

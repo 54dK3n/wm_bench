@@ -1,0 +1,139 @@
+{
+  "scope": "Execute selected real bridge functions transformed with ALL full-program names.\n\nOffline review only: public navigation/event access is replaced by explicit test\nadapters; the WM, calibration, bridge, target-ID and expiry logic are real code.\nNo robot controller, navigation runner or simulation is loaded.\n",
+  "program": "/Users/ken/Desktop/wm_bench/programs/world_model_opt2.py",
+  "program_sha256": "90191e8764de3b98cd4251341f582a60e4b097e98453273bf5b5ab2eefe0a029",
+  "worker_sha256": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4",
+  "full_program_function_names_count": 144,
+  "checks": [
+    {
+      "name": "no_await_in_generators",
+      "pass": true
+    },
+    {
+      "name": "raw_29_positive_red_not_miss",
+      "pass": true
+    },
+    {
+      "name": "raw_93_positive_red_not_miss",
+      "pass": true
+    },
+    {
+      "name": "raw_100_positive_red_not_miss",
+      "pass": true
+    },
+    {
+      "name": "real_empty_archives_and_unlocks",
+      "pass": true
+    },
+    {
+      "name": "history_and_non_target_state_preserved",
+      "pass": true
+    },
+    {
+      "name": "old_goal_expires",
+      "pass": true
+    },
+    {
+      "name": "abandon_return_does_not_abort_patrol",
+      "pass": true
+    },
+    {
+      "name": "same_frame_old_lost_new_track_retained",
+      "pass": true
+    },
+    {
+      "name": "old_goal_lost_even_with_new_red",
+      "pass": true
+    },
+    {
+      "name": "new_track_not_immediately_called_confirmation_failure",
+      "pass": true
+    },
+    {
+      "name": "new_memory_remains_selectable",
+      "pass": true
+    },
+    {
+      "name": "capped_ray_positive_kept",
+      "pass": true
+    },
+    {
+      "name": "capped_ray_new_empty_expires",
+      "pass": true
+    },
+    {
+      "name": "actual_patrol_lost_goal_continues_to_new_track",
+      "pass": true
+    },
+    {
+      "name": "actual_patrol_preserves_global_observe_count",
+      "pass": true
+    },
+    {
+      "name": "memory_expiry_reenters_patrol_in_actual_flow",
+      "pass": true
+    },
+    {
+      "name": "memory_fallback_consumes_abandon_flag",
+      "pass": true
+    },
+    {
+      "name": "flow_reaches_new_identity_after_fallback",
+      "pass": true
+    },
+    {
+      "name": "new_after_ball_start_has_new_observations_source",
+      "pass": true
+    },
+    {
+      "name": "retained_identity_has_memory_source",
+      "pass": true
+    },
+    {
+      "name": "two_patrol_abort_hooks_integrated",
+      "pass": true
+    },
+    {
+      "name": "three_real_observe_update_hooks",
+      "pass": true
+    },
+    {
+      "name": "no_expiry_in_geometry_only_planning_goal",
+      "pass": true
+    },
+    {
+      "name": "13_original_perception_confirmation_functions_unchanged",
+      "pass": true,
+      "functions": [
+        "_update_wm",
+        "calibrate_reading",
+        "calibrated_detection",
+        "_record_hit",
+        "_record_candidate_sample",
+        "_in_range_candidates",
+        "_confirmation_result",
+        "counted_observe",
+        "_planning_goal",
+        "_demo_filter_observations",
+        "_demo_observation_eligible",
+        "_demo_detection_excluded",
+        "detection_filter_update"
+      ]
+    },
+    {
+      "name": "confirmation_constants_and_WM_embedding_unchanged",
+      "pass": true
+    }
+  ],
+  "all_pass": true,
+  "stdout": "GY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 1, \"items\": [], \"outside_window\": [{\"distanceCm\": 29, \"bearingDeg\": 0.69}]}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 1, \"items\": [], \"outside_window\": [{\"distanceCm\": 93, \"bearingDeg\": 0.69}]}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 1, \"items\": [], \"outside_window\": [{\"distanceCm\": 100, \"bearingDeg\": 0.69}]}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 0, \"items\": [], \"outside_window\": []}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 1, \"seen\": 1, \"items\": [{\"distanceCm\": 64.0, \"bearingDeg\": 35.45, \"calDistanceCm\": 85.9, \"calBearingDeg\": 33.46, \"x\": 0.474, \"z\": 0.717, \"fed\": true}], \"outside_window\": []}\nGY {\"event\": \"wm_associations\", \"tick\": 266, \"items\": [{\"distanceCm\": 64, \"bearingDeg\": 35.45, \"track_id\": \"target_002\"}]}\nGY {\"event\": \"wm_targets\", \"tracks\": [{\"id\": \"target_002\", \"state\": \"tentative\", \"hit\": 1, \"conf\": 0.9, \"x\": 0.474, \"z\": 0.717}]}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 0, \"items\": [], \"outside_window\": []}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 1, \"seen\": 1, \"items\": [{\"distanceCm\": 64.0, \"bearingDeg\": 0, \"calDistanceCm\": 72.0, \"calBearingDeg\": 0.0, \"x\": 0.0, \"z\": 0.72, \"fed\": true}], \"outside_window\": []}\nGY {\"event\": \"wm_associations\", \"tick\": 266, \"items\": [{\"distanceCm\": 64, \"bearingDeg\": 0, \"track_id\": \"target_002\"}]}\nGY {\"event\": \"wm_targets\", \"tracks\": [{\"id\": \"target_002\", \"state\": \"tentative\", \"hit\": 1, \"conf\": 0.9, \"x\": 0.0, \"z\": 0.72}]}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.72, \"camera_distanceCm\": 64.0, \"target\": [0.0, 0.72], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\nGY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 0, \"items\": [], \"outside_window\": []}\nGY {\"event\": \"last_observe\", \"wm_distance_m\": 0.65, \"camera_distanceCm\": null, \"target\": [0, 0.65], \"pose\": [0, 0, -0.0], \"forward_after_last_observe_cm\": 0.0}\n",
+  "test_adapters": [
+    "public nav_odometry",
+    "event logger",
+    "single-object memory ranking; actual lock/source function executes",
+    "memory confirmation task invokes real empty bridge then returns none",
+    "patrol task supplies new identity; actual flow/source executes",
+    "post-confirmation grasp returns false to stop before delivery",
+    "patrol public road/observe/movement and confirmation outcome adapters; actual patrol/bridge/WM executes"
+  ]
+}

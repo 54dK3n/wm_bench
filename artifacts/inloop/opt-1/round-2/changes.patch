@@ -1,0 +1,484 @@
+--- /Users/ken/Desktop/wm_bench/artifacts/inloop/stage-1/round-3/program.py
++++ programs/world_model_opt1.py
+@@ -10,7 +10,7 @@
+ 
+ import hashlib, heapq, json, sys, traceback
+ 
+-PROGRAM_VERSION = "wm-stage1-r3-20260923"
++PROGRAM_VERSION = "wm-opt1-r2-20260924"
+ try:
+     _main_module = sys.modules.get("__main__")
+     _student_source = getattr(_main_module, "__dict__", {}).get("student_source")
+@@ -21,6 +21,7 @@
+ except Exception:
+     PROGRAM_SHA256 = "unavailable"
+ # 内嵌 world_model 包对应的 wm_kit 提交（由 tools/embed_world_model.py 写入；program_version 行在包解压后打印）
++DETECTION_FILTER_SHA256 = "57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322"
+ WM_KIT_COMMIT = "ad237a143f0d35e100a28c15567d4b75bd56cccf"
+ 
+ class MissionFailure(Exception):
+@@ -237,16 +238,10 @@
+ 
+ 
+ def _turn_around_and_block(road_id):
+-    """front_clearance 重试耗尽后掉头，并把当前行驶方向加入 blocked_directions。"""
++    """Remember the actual local clearance stop before turning around."""
+     state = nav_road_state()
+-    edge = edge_by_road.get(road_id)
+-    if edge is not None:
+-        progress = float(state.get("roadProgressCm") or 0.0)
+-        length = float(edge["lengthCm"])
+-        if progress <= length / 2.0:
+-            blocked_directions.add((edge["fromNodeId"], edge["toNodeId"], road_id))
+-        else:
+-            blocked_directions.add((edge["toNodeId"], edge["fromNodeId"], road_id))
++    if state.get("roadId") == road_id:
++        _vp_block_current_direction(state)
+     motion_left_angle(180)
+ 
+ CRUISE_SPEED = 100  # 由道路控制逐 tick 自动钳制到当前道路/限速区的安全上限。
+@@ -255,10 +250,8 @@
+ 
+ mission = nav_mission()
+ graph = nav_map_graph()
+-mission_objects = [item for item in mission.get("objects", []) if isinstance(item, dict)]
+-target_anchors = [item for item in mission_objects if item.get("role") == "target"]
+-distractor_anchors = [item for item in mission_objects if item.get("role") == "distractor"]
+-obstacle_anchors = [item for item in mission_objects if item.get("role") == "obstacle"]
++obstacle_anchors = [item for item in mission.get("objects", [])
++                    if isinstance(item, dict) and item.get("role") == "obstacle"]
+ if not obstacle_anchors:
+     raise RuntimeError("本程序需要普通单局的任务道路锚点；私有五局不会提供它们")
+ 
+@@ -296,6 +289,37 @@
+     if edge["toNodeId"] == node_id and not edge["oneWay"]:
+         return edge["fromNodeId"]
+     raise MissionFailure("道路方向与图定义不兼容：" + road_id)
++
++
++def _road_progress_limit(road_id, start, end):
++    """Return the reachable part of a directed road interval, in public cm.
++
++    A clearance stop describes a boundary at the measured progress, not the
++    whole road direction. Ending at that boundary is allowed; crossing is not.
++    """
++    if end == start:
++        return end
++    edge = edge_by_road[road_id]
++    direction = 1 if end > start else -1
++    a, b = ((edge["fromNodeId"], edge["toNodeId"]) if direction > 0
++            else (edge["toNodeId"], edge["fromNodeId"]))
++    if (a, b, road_id) in blocked_directions:
++        return start
++    stops = [(max(start, stop) if direction > 0 else min(start, stop))
++             for (name, sign, _key), stop in VP_STATE.get("local_blocks", {}).items()
++             if name == road_id and sign == direction
++             and round(direction * (stop - start), 1) >= 0 and direction * (end - stop) > 0]
++    if stops:
++        return min(stops) if direction > 0 else max(stops)
++    return end
++
++
++def _road_progress_blocked(road_id, start, end):
++    return _road_progress_limit(road_id, start, end) != end
++
++
++def _vp_block_revision():
++    return len(blocked_directions), tuple(sorted(VP_STATE.get("local_blocks", {}).items()))
+ 
+ 
+ def dijkstra(start_node, goal_node, extra_blocked=None):
+@@ -318,7 +342,10 @@
+         for next_node, road_id, length_cm in adj[current]:
+             if road_id in forbidden:
+                 continue
+-            if (current, next_node, road_id) in blocked_directions:
++            edge = edge_by_road[road_id]
++            start = 0.0 if current == edge["fromNodeId"] else float(length_cm)
++            end = float(length_cm) - start
++            if _road_progress_blocked(road_id, start, end):
+                 continue
+             candidate = distance[current] + length_cm
+             if next_node not in distance or candidate < distance[next_node]:
+@@ -736,6 +763,70 @@
+     return moved >= OBS_MIN_TRANSLATION_CM or turned >= OBS_MIN_TURN_DEG, current, moved, turned
+ 
+ 
++# BEGIN EXACT STANDALONE DETECTION FILTER
++"""Conservative red/blue confidence filter; runtime inputs only.
++
++The two cutoffs were selected on the authorized development observations.
++They preserve the lowest-confidence labelled true observation of each class.
++See the offline development provenance for support and unknown-label coverage.
++
++This module does not modify observations, query a robot, estimate range, alter
++confirmation, or use coordinates, layouts, package identities, or truth labels.
++Confidence suppression is limited to the existing WM raw-distance window.
++Outside that window, or without a finite measurement, the rule abstains.
++This v2 scope change was proposed after v1 test feedback: that test is no
++longer held out, even though supporting evidence uses development data only.
++"""
++import math
++
++FILTER_VERSION = "confidence-floor-wm-window-v2"
++CONFIDENCE_FLOORS = {"target": 0.84, "distractor": 0.80}
++
++
++def detection_filter_update(observations, odometry=None, road_state=None, tick=None):
++    """Return an exact, ordered partition of the original detection indices.
++
++    Odometry, road state and tick are accepted for interface compatibility;
++    no rule depends on them. In particular, clipped distance readings are
++    never treated as localization points. The caller retains all raw logs.
++    The runtime calls this top-level name for platform async transformation.
++    """
++    kept, rejected, diagnostics = [], [], []
++    for index, observation in enumerate(observations):
++        category = str(observation.get("category") or "").strip().lower()
++        floor = CONFIDENCE_FLOORS.get(category)
++        confidence = observation.get("confidence")
++        valid = type(confidence) in (int, float) and math.isfinite(confidence)
++        distance = observation.get("distanceCm")
++        valid_distance = type(distance) in (int, float) and math.isfinite(distance)
++        in_window = valid_distance and 40 <= distance < 90
++        reject = floor is not None and valid and in_window and confidence < floor
++        if reject:
++            rejected.append(index)
++            reason = "confidence_below_class_floor"
++        else:
++            kept.append(index)
++            reason = ("class_not_filtered" if floor is None else
++                      "unknown_confidence_retained" if not valid else
++                      "unknown_distance_retained" if not valid_distance else
++                      "outside_wm_window_retained" if not in_window else
++                      "confidence_at_or_above_class_floor")
++        diagnostics.append({"index": index, "keep": not reject, "reason": reason,
++                            "category": category, "confidence": confidence,
++                            "confidence_floor": floor, "distance_cm": distance,
++                            "wm_window_eligible": in_window})
++    return {"kept_indices": kept, "rejected_indices": rejected,
++            "decisions": diagnostics, "filter_version": FILTER_VERSION}
++
++
++class DetectionFilter:
++    """Offline adapter; the robot runtime uses the top-level function."""
++
++    def update(self, observations, odometry=None, road_state=None, tick=None):
++        return detection_filter_update(observations, odometry, road_state, tick)
++# END EXACT STANDALONE DETECTION FILTER
++
++
+ def counted_observe(category=None, confidence=0.6, targets_only=False):
+     if STATE["observe_count"] >= MAX_OBSERVES:
+         print("GY " + json.dumps({
+@@ -769,6 +860,14 @@
+                               "odo": observed_pose, "translationSinceObserveCm": moved,
+                               "turnSinceObserveDeg": turned,
+                               "raw": raw}, ensure_ascii=False))
++    # The raw red/blue log above is complete; filtering never mutates it.
++    filter_input = list(result or [])
++    filter_result = detection_filter_update(filter_input, odometry=odo, road_state=None, tick=odo.get("tick"))
++    print("GY " + json.dumps({"event": "detection_filter", "tick": odo.get("tick"),
++                              "observe_count": STATE["observe_count"],
++                              "filter_sha256": DETECTION_FILTER_SHA256,
++                              **filter_result}, ensure_ascii=False))
++    result = [filter_input[index] for index in filter_result["kept_indices"]]
+     result = [item for item in (result or []) if float(item.get("confidence") or 0.0) >= confidence]
+     if category is not None:
+         requested = str(category).strip().lower().replace("_", "-")
+@@ -1151,9 +1250,7 @@
+     plans = []
+     if current["roadId"] == road_id and (not current["oneWay"] or progress >= start_s):
+         direction = 1 if progress >= start_s else -1
+-        a, b = ((current["fromNodeId"], current["toNodeId"]) if direction > 0
+-                else (current["toNodeId"], current["fromNodeId"]))
+-        if progress == start_s or (a, b, road_id) not in blocked_directions:
++        if not _road_progress_blocked(road_id, start_s, progress):
+             plans.append({"cost_cm": abs(progress - start_s), "direct": True,
+                           "direction": direction, "route": []})
+     starts = [(current["toNodeId"], float(current["lengthCm"]) - start_s, 1)]
+@@ -1162,12 +1259,26 @@
+     ends = [(target["fromNodeId"], progress)]
+     if not target["oneWay"]:
+         ends.append((target["toNodeId"], float(target["lengthCm"]) - progress))
++    if enter_only:
++        # A gateway names one endpoint of an unknown interval. Entering from
++        # the other endpoint does not reach that gateway, even if it is cheaper.
++        endpoint = target["fromNodeId"] if progress == 0.0 else target["toNodeId"]
++        ends = [(node, distance) for node, distance in ends if node == endpoint]
+     for node, initial_cm, direction in starts:
+-        from_node = current["fromNodeId"] if direction > 0 else current["toNodeId"]
+-        if initial_cm > 0 and (from_node, node, current["roadId"]) in blocked_directions:
++        endpoint_s = float(current["lengthCm"]) if direction > 0 else 0.0
++        if _road_progress_blocked(current["roadId"], start_s, endpoint_s):
+             continue
+         for end_node, final_cm in ends:
+-            entry_cm = min(float(target["lengthCm"]), VP_EXIT_ENTRY_CM)
++            length = float(target["lengthCm"])
++            entry_s = 0.0 if end_node == target["fromNodeId"] else length
++            entry_sign = 1 if entry_s == 0.0 else -1
++            nominal_landing = entry_s + entry_sign * min(length, VP_EXIT_ENTRY_CM)
++            # take_exit may legally stop at an already measured clearance
++            # boundary before its public 25cm maximum entry distance.
++            landing = _road_progress_limit(road_id, entry_s, nominal_landing)
++            entry_cm = abs(landing - entry_s)
++            if entry_cm == 0:
++                continue
+             if enter_only:
+                 # An unknown frontier at the endpoint is a gateway, not a demand
+                 # to stop before the public take_exit landing position.
+@@ -1176,19 +1287,14 @@
+                 continue
+             else:
+                 final_cost_cm = entry_cm + abs(final_cm - entry_cm)
+-            destination_node = target["toNodeId"] if end_node == target["fromNodeId"] else target["fromNodeId"]
+-            if (end_node, destination_node, road_id) in blocked_directions:
+-                continue
+-            if (not enter_only and final_cm < entry_cm
+-                    and (destination_node, end_node, road_id) in blocked_directions):
++            if not enter_only and _road_progress_blocked(road_id, landing, progress):
+                 continue
+             route = dijkstra(node, end_node)
+             if route is not None:
+                 plans.append({"cost_cm": initial_cm + route[1] + final_cost_cm, "direct": False,
+                               "direction": direction, "entry_node": node,
+                               "target_entry_node": end_node,
+-                              "landing_progress_cm": (entry_cm if end_node == target["fromNodeId"]
+-                                                       else float(target["lengthCm"]) - entry_cm),
++                              "landing_progress_cm": landing,
+                               "route": list(route[0]) + [road_id]})
+     return min(plans, key=lambda plan: plan["cost_cm"]) if plans else None
+ 
+@@ -1345,7 +1451,7 @@
+ 
+ 
+ def _vp_block_current_direction(before_state, planned_direction=None):
+-    """Block the actual attempted road direction, never infer it from half-road position."""
++    """Record a local clearance boundary in the actual attempted direction."""
+     pose, state = _vp_remember()
+     road_id = state.get("roadId")
+     edge = edge_by_road.get(road_id)
+@@ -1364,13 +1470,16 @@
+         direction = planned_direction
+     if direction is None:
+         return False
+-    from_node, to_node = ((edge["fromNodeId"], edge["toNodeId"]) if direction > 0
+-                          else (edge["toNodeId"], edge["fromNodeId"]))
+-    key = (from_node, to_node, road_id)
+-    changed = key not in blocked_directions
+-    blocked_directions.add(key)
+-    _vp_event("viewpoint_direction_blocked", roadId=road_id, fromNodeId=from_node,
+-              toNodeId=to_node, roadProgressCm=state.get("roadProgressCm"), changed=changed)
++    progress = float(state.get("roadProgressCm") or 0.0)
++    key = (road_id, direction, round(progress, 1))
++    blocks = VP_STATE.setdefault("local_blocks", {})
++    previous = blocks.get(key)
++    stop = progress if previous is None else (min(previous, progress) if direction > 0 else max(previous, progress))
++    changed = previous != stop
++    blocks[key] = stop
++    _vp_event("viewpoint_local_clearance_blocked", roadId=road_id, direction=direction,
++              roadProgressCm=progress, stopProgressCm=stop, changed=changed,
++              scope="crossing_measured_stop_only")
+     return changed
+ 
+ 
+@@ -1411,7 +1520,7 @@
+     reason = None
+     if plan is not None:
+         key = (candidate["key"], state.get("roadId"), round(float(state.get("roadProgressCm") or 0.0), 1),
+-               plan["direction"], plan.get("entry_node"), tuple(plan["route"]), len(blocked_directions))
++               plan["direction"], plan.get("entry_node"), tuple(plan["route"]), _vp_block_revision())
+         attempted = VP_STATE.setdefault("travel_attempts", set())
+         if key in attempted:
+             _vp_event("viewpoint_unreachable", key=candidate["key"], reason="repeated_travel_state")
+@@ -1462,8 +1571,8 @@
+                 if now.get("nodeId") != plan["entry_node"]:
+                     reason = "different_transition_node"
+                 else:
+-                    blocked_before = len(blocked_directions)
+-                    if _vp_enter(plan["route"][0]) or len(blocked_directions) > blocked_before:
++                    blocked_before = _vp_block_revision()
++                    if _vp_enter(plan["route"][0]) or _vp_block_revision() != blocked_before:
+                         return "replan"
+                     reason = "planned_exit_unavailable_or_blocked"
+     VP_STATE["failed"].add(candidate["key"])
+@@ -1498,8 +1607,9 @@
+             edge = edge_by_road[exit_road]
+             if edge["oneWay"] and state.get("nodeId") != edge["fromNodeId"]:
+                 continue
+-            destination = edge["toNodeId"] if state.get("nodeId") == edge["fromNodeId"] else edge["fromNodeId"]
+-            if (state.get("nodeId"), destination, exit_road) in blocked_directions:
++            entry_s = 0.0 if state.get("nodeId") == edge["fromNodeId"] else float(edge["lengthCm"])
++            end_s = float(edge["lengthCm"]) - entry_s
++            if _road_progress_limit(exit_road, entry_s, end_s) == entry_s:
+                 continue
+             yaw = pose.yaw_rad - math.radians(float(item.get("turnDeg") or 0.0))
+             covered = sum(end - start for start, end in VP_STATE["intervals"].get(exit_road, []))
+@@ -1524,11 +1634,12 @@
+             continue
+         if canonical is not None:
+             positive = math.sin(planned_yaw) * canonical[0] + math.cos(planned_yaw) * canonical[1] >= 0
+-            from_node, to_node = ((edge["fromNodeId"], edge["toNodeId"]) if positive
+-                                  else (edge["toNodeId"], edge["fromNodeId"]))
+-            if (from_node, to_node, road_id) in blocked_directions or (edge["oneWay"] and not positive):
++            start_s = float(state.get("roadProgressCm") or 0.0)
++            end_s = float(edge["lengthCm"]) if positive else 0.0
++            if _road_progress_limit(road_id, start_s, end_s) == start_s or (edge["oneWay"] and not positive):
+                 continue
+-        elif any(item[2] == road_id for item in blocked_directions):
++        elif (any(item[2] == road_id for item in blocked_directions)
++              or any(item[0] == road_id for item in VP_STATE.get("local_blocks", {}))):
+             # Do not guess canonical orientation when a directional restriction exists.
+             continue
+         VP_STATE["explored"].add(key)
+@@ -1811,110 +1922,8 @@
+     return {"moved_cm": moved_cm, "result": result, "state": state, "blocked": False}
+ 
+ 
+-def _approach_graph_exit_fallback(state):
+-    """road_state.exits 为空时，用公开 graph 找通往任一 target 锚点的下一段路。"""
+-    road_id = state.get("roadId")
+-    edge = edge_by_road.get(road_id) if road_id else None
+-    if edge is None:
+-        return None, []
+-    node_id = state.get("nodeId")
+-    if not node_id:
+-        progress = state.get("roadProgressCm")
+-        if progress is not None:
+-            try:
+-                node_id = (edge["toNodeId"] if float(progress) >= float(edge["lengthCm"]) / 2.0
+-                           else edge["fromNodeId"])
+-            except (TypeError, ValueError):
+-                node_id = edge["toNodeId"]
+-        else:
+-            node_id = edge["toNodeId"]
+-    goal_nodes = []
+-    for anchor in target_anchors:
+-        anchor_edge = edge_by_road.get(anchor.get("roadId"))
+-        if anchor_edge is not None:
+-            goal_nodes.extend(endpoints(anchor_edge))
+-    candidates = []
+-    for next_node, candidate_road, _length_cm in adj.get(node_id, []):
+-        if candidate_road == road_id:
+-            continue
+-        best_remaining = None
+-        for goal_node in goal_nodes:
+-            route_info = dijkstra(next_node, goal_node, {road_id})
+-            if route_info is not None and (best_remaining is None or route_info[1] < best_remaining):
+-                best_remaining = route_info[1]
+-        if best_remaining is not None:
+-            candidates.append({
+-                "roadId": candidate_road,
+-                "nextNodeId": next_node,
+-                "remainingToTargetAnchorCm": round(best_remaining, 1),
+-            })
+-    candidates.sort(key=lambda item: item["remainingToTargetAnchorCm"])
+-    return node_id, candidates
+-
+-
+-def _approach_choose_exit(state, target_bearing_deg):
+-    """按 WorldModel 目标方位选择最接近的出口。"""
+-    road_id = state.get("roadId")
+-    exits = [dict(item) for item in state.get("exits", []) if item.get("roadId")]
+-    if not exits:
+-        fallback_node, fallback_candidates = _approach_graph_exit_fallback(state)
+-        if fallback_candidates:
+-            chosen_fallback = fallback_candidates[0]
+-            print("GY " + json.dumps({
+-                "event": "approach_junction_decision",
+-                "roadId": road_id,
+-                "nodeId": fallback_node,
+-                "targetBearingDeg": round(target_bearing_deg, 1),
+-                "exits": [{"roadId": item["roadId"],
+-                           "direction": "graph_fallback",
+-                           "turnDeg": None,
+-                           "remainingToTargetAnchorCm": item["remainingToTargetAnchorCm"]}
+-                          for item in fallback_candidates],
+-                "chosenRoadId": chosen_fallback["roadId"],
+-                "chosenDirection": "graph_fallback",
+-                "chosenTurnDeg": None,
+-                "reason": "road_state_exits_empty_use_graph_shortest_to_target_anchor",
+-            }, ensure_ascii=False))
+-            return {"roadId": chosen_fallback["roadId"],
+-                    "direction": "graph_fallback",
+-                    "turnDeg": None}, 0.0
+-        print("GY " + json.dumps({
+-            "event": "approach_junction_decision",
+-            "roadId": road_id,
+-            "nodeId": fallback_node,
+-            "targetBearingDeg": round(target_bearing_deg, 1),
+-            "exits": [],
+-            "chosenRoadId": None,
+-            "reason": "no_exits_and_no_graph_fallback",
+-        }, ensure_ascii=False))
+-        return None, 180.0
+-    desired_turn_deg = _wrap_deg(-float(target_bearing_deg))
+-    scored = []
+-    for exit_item in exits:
+-        turn_deg = float(exit_item.get("turnDeg") or 0.0)
+-        error = abs(_wrap_deg(turn_deg - desired_turn_deg))
+-        scored.append((error, exit_item, turn_deg))
+-    scored.sort(key=lambda item: item[0])
+-    error, chosen, chosen_turn = scored[0]
+-    reason = ("all_exits_turn_away" if error > 90.0
+-              else "minimum_turn_error_to_target_bearing")
+-    print("GY " + json.dumps({
+-        "event": "approach_junction_decision",
+-        "roadId": road_id,
+-        "targetBearingDeg": round(target_bearing_deg, 1),
+-        "desiredExitTurnDeg": round(desired_turn_deg, 1),
+-        "exits": [
+-            {"roadId": item.get("roadId"), "direction": item.get("direction"),
+-             "turnDeg": item.get("turnDeg")}
+-            for item in exits
+-        ],
+-        "chosenRoadId": chosen.get("roadId"),
+-        "chosenDirection": chosen.get("direction"),
+-        "chosenTurnDeg": chosen_turn,
+-        "chosenTurnErrorDeg": round(error, 1),
+-        "reason": reason,
+-    }, ensure_ascii=False))
+-    return chosen, error
++
++
+ 
+ 
+ """Road-graph approach using runtime geometry only; embedded by the main program."""
+@@ -2003,9 +2012,8 @@
+             for progress, end, direction in ((left, right, 1), (right, left, -1)):
+                 if edge["oneWay"] and direction < 0:
+                     continue
+-                from_node, to_node = ((edge["fromNodeId"], edge["toNodeId"]) if direction > 0
+-                                      else (edge["toNodeId"], edge["fromNodeId"]))
+-                if (from_node, to_node, road_id) in blocked_directions:
++                end = _road_progress_limit(road_id, progress, end)
++                if round(direction * (end - progress), 1) <= 0:
+                     continue
+                 frontier_key = (road_id, direction, round(end, 1))
+                 if frontier_key in failed:
+@@ -2021,6 +2029,16 @@
+                             if point is not None else None)
+                 evaluation_progress = (plan["landing_progress_cm"]
+                                        if enter_only and not plan["direct"] else progress)
++                if (enter_only and not plan["direct"]
++                        and any(round(evaluation_progress - left, 1) >= 0
++                                and round(right - evaluation_progress, 1) >= 0 for left, right in merged)):
++                    # An unknown endpoint cannot be explored by re-entering at
++                    # the same known landing. The measured landing instead has
++                    # its own directed frontier into each still-unknown gap.
++                    _approach_event("approach_frontier_rejected", key=key,
++                                    reason="gateway_landing_already_measured",
++                                    landingProgressCm=evaluation_progress)
++                    continue
+                 remaining_bound = (max(0.0, (distance - APPROACH_FINE_DISTANCE_M) * 100.0)
+                                    if distance is not None else
+                                    max(0.0, node_bounds[edge["fromNodeId"]] - evaluation_progress,
+@@ -2115,7 +2133,7 @@
+         operation_key = (kind, chosen["key"], chosen.get("direction"), state.get("roadId"),
+                          round(float(state.get("roadProgressCm") or 0.0), 1),
+                          plan.get("direction"), plan.get("entry_node"), tuple(plan.get("route", [])),
+-                         len(blocked_directions), coverage)
++                         _vp_block_revision(), coverage)
+         if operation_key in attempted:
+             if kind == "candidate":
+                 tried.add(chosen["key"])
