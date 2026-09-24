@@ -11,7 +11,7 @@ import pytest
 
 
 PROGRAMS = Path(__file__).resolve().parents[1]
-FRAGMENT = PROGRAMS / "viewpoint_planner_fragment.py"
+FRAGMENT = PROGRAMS.parent / "artifacts/inloop/refactor/legacy_sources/viewpoint_planner_fragment.py"
 
 
 def edge(name, start, end, length=100.0, one_way=False):
@@ -92,7 +92,7 @@ def planner(robot=None, edges=None):
         "CONFIRM_PREDICT_MIN_CM": 45.0, "CONFIRM_PREDICT_MAX_CM": 85.0,
         "APPROACH_FOLLOW_STEP_CM": 10.0, "NODE_NUDGE_CM": 2.0, "SLOW_SPEED": 30,
     }
-    tree = ast.parse((PROGRAMS / "world_model_target_delivery.py").read_text())
+    tree = ast.parse((PROGRAMS.parent / "artifacts/inloop/stage-1/round-3/program.py").read_text())
     dijkstra = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "dijkstra")
     exec(compile(ast.Module(body=[dijkstra], type_ignores=[]), "dijkstra", "exec"), ns)
     exec(compile(FRAGMENT.read_text(), str(FRAGMENT), "exec"), ns)

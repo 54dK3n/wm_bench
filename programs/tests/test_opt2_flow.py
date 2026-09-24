@@ -12,7 +12,7 @@ spec.loader.exec_module(demo)
 
 def namespace(tracks=()):
     ns, machine = demo.namespace(tracks)
-    source = (ROOT / "programs/opt2_flow_fragment.py").read_text()
+    source = (ROOT / "programs/src/opt2_flow_fragment.py").read_text()
     exec(compile(source, "opt2-flow", "exec"), ns)
     ns.update(TURN_COST_K=0.1, edge_by_road={}, nav_road_state=Mock(return_value={"onRoad": True}),
               select_target=Mock(return_value={"selected_candidate_id": None, "status": "unknown"}))
@@ -104,8 +104,8 @@ def test_final_selected_object_source_is_its_own_start_of_ball_memory():
 
 
 def test_fixed_confirmation_and_release_helpers_still_exact_demo():
-    old = ast.parse((ROOT / "programs/demo_flow_fragment.py").read_text())
-    new = ast.parse((ROOT / "programs/opt2_flow_fragment.py").read_text())
+    old = ast.parse((ROOT / "artifacts/inloop/refactor/legacy_sources/demo_flow_fragment.py").read_text())
+    new = ast.parse((ROOT / "programs/src/opt2_flow_fragment.py").read_text())
     funcs = lambda tree: {node.name: ast.dump(node) for node in tree.body if isinstance(node, ast.FunctionDef)}
     for name in ("_demo_release_active_target", "_demo_detection_excluded", "_demo_filter_observations"):
         assert funcs(old)[name] == funcs(new)[name]

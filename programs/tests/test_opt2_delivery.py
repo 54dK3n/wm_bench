@@ -14,7 +14,7 @@ from test_viewpoint_planner import edge
 
 ROOT = Path(__file__).resolve().parents[2]
 FROZEN = ROOT / "artifacts/inloop/opt-1/round-2/program.py"
-FRAGMENT = ROOT / "programs/opt2_delivery_fragment.py"
+FRAGMENT = ROOT / "programs/src/opt2_delivery_fragment.py"
 
 
 class PublicRobot:
@@ -149,7 +149,7 @@ def delivery(progress=50, roads=None):
     nodes = [node for node in tree.body if isinstance(node, ast.FunctionDef)
              and (node.name.startswith("_vp_") or node.name in needed)]
     exec(compile(ast.Module(body=nodes, type_ignores=[]), str(FROZEN), "exec"), ns)
-    tree = ast.parse((ROOT / "programs/demo_flow_fragment.py").read_text())
+    tree = ast.parse((ROOT / "artifacts/inloop/refactor/legacy_sources/demo_flow_fragment.py").read_text())
     helper = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_demo_release_active_target")
     exec(compile(ast.Module(body=[helper], type_ignores=[]), "demo_release", "exec"), ns)
     exec(compile(FRAGMENT.read_text(), str(FRAGMENT), "exec"), ns)

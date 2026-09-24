@@ -10,7 +10,7 @@ import pytest
 from test_viewpoint_planner import StraightRoadRobot, edge, planner, seed_local_direction
 
 
-FRAGMENT = Path(__file__).resolve().parents[1] / "memory_approach_fragment.py"
+FRAGMENT = Path(__file__).resolve().parents[2] / "artifacts/inloop/refactor/legacy_sources/memory_approach_fragment.py"
 
 
 def memory(robot=None, edges=None, target=None):

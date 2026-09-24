@@ -112,7 +112,7 @@ class DemoAuditTests(unittest.TestCase):
                 self.assertEqual(static_checks(program, [self.version])["no_target_anchor_access"]["status"] == "pass", expected)
 
     def test_real_demo_static_checks_keep_legal_obstacle_anchors(self):
-        program = Path(__file__).resolve().parents[2] / "programs/world_model_two_target_demo.py"
+        program = Path(__file__).resolve().parents[2] / "artifacts/inloop/demo/program.py"
         self.assertEqual(static_checks(program, [self.version])["no_target_anchor_access"]["status"], "pass")
 
 

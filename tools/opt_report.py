@@ -146,7 +146,7 @@ def evaluate(folder, previous, filter_report):
     # Bind the test verdict to this round's runtime filter and evaluator identity.
     filter_metrics = read(filter_report)
     manifest = read(folder / "code_manifest.json")
-    filter_path = str(ROOT / "programs/detection_filter.py")
+    filter_path = str(ROOT / "programs/src/detection_filter.py")
     evaluator_path = str(ROOT / "tools/detection_evaluation.py")
     test_files = filter_metrics.get("frozen_files") or {}
     filter_binding = (filter_metrics.get("dataset") == "test"

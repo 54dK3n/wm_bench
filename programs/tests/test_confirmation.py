@@ -14,7 +14,7 @@ from unittest.mock import Mock
 import pytest
 
 
-PROGRAM = Path(__file__).resolve().parents[1] / "world_model_target_delivery.py"
+PROGRAM = Path(__file__).resolve().parents[2] / "artifacts/inloop/stage-1/round-3/program.py"
 
 
 def isolated(*names, **overrides):

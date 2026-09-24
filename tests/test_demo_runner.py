@@ -14,7 +14,7 @@ import run_demo
 @pytest.mark.parametrize("failure", ["execution_unknown", "identity_mismatch"])
 def test_unresolved_execution_blocks_resume(tmp_path, monkeypatch, failure):
     program = tmp_path / "demo.py"
-    program.write_bytes((ROOT / "programs/world_model_two_target_demo.py").read_bytes())
+    program.write_bytes((ROOT / "artifacts/inloop/demo/program.py").read_bytes())
     for name in run_demo.MANIFEST_FILES:
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)

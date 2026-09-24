@@ -13,8 +13,9 @@ const { installVisionTruthCapture } = require("./vision_truth_hook.js");
 const { installDemoKeyframesCapture } = require("./demo_keyframes_hook.js");
 const { spawn, spawnSync } = require("node:child_process");
 
-const PLATFORM_ROOT = process.env.GUANGYANG_PLATFORM_ROOT
-  || "/Users/ken/Desktop/robot_competition-main/projects/car-python";
+const configuredPlatformRoot = process.env.GUANGYANG_PLATFORM_ROOT;
+assert.ok(configuredPlatformRoot, "GUANGYANG_PLATFORM_ROOT must point to the external car-python platform");
+const PLATFORM_ROOT = path.resolve(configuredPlatformRoot);
 const { createServer } = require(path.join(PLATFORM_ROOT, "server.js"));
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 

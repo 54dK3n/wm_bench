@@ -12,9 +12,9 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROGRAM = ROOT / "programs/world_model_two_target_demo.py"
+PROGRAM = ROOT / "artifacts/inloop/demo/program.py"
 BASE = ROOT / "artifacts/inloop/stage-1/round-3/program.py"
-FRAGMENT = ROOT / "programs/demo_flow_fragment.py"
+FRAGMENT = ROOT / "artifacts/inloop/refactor/legacy_sources/demo_flow_fragment.py"
 
 
 class Status(Enum):

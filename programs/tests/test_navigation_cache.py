@@ -8,16 +8,18 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from tools.platform_paths import platform_root, platform_worker
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def load(robot, transformed=False):
-    source = (ROOT / "navigation_cache_fragment.py").read_text()
+    source = (ROOT / "src/navigation_cache_fragment.py").read_text()
     tree = ast.parse(source)
     ns = {"robot": robot, "json": json, "MissionFailure": type("MissionFailure", (Exception,), {})}
     if transformed:
-        worker = Path("/Users/ken/Desktop/robot_competition-main/projects/car-python/python-worker.js").read_text()
+        worker = platform_worker().read_text()
         start = worker.index("class AsyncRobotTransformer(")
         end = worker.index("student_run_target =", start)
         transformers = {"ast": ast}

@@ -160,11 +160,13 @@ for (const kind of ["png", "metadata", "query", "inventory"]) test(`final archiv
 
 test("preserved real map08 native archive validates without modifying its historical timeout", () => {
   const raw=JSON.parse(fs.readFileSync(path.join(ROOT,"artifacts/inloop/opt-2/round-1/map-08.json"),"utf8"));
-  const record=JSON.parse(fs.readFileSync(raw.fullRecordFile,"utf8"));
-  const bytes=fs.readFileSync(raw.visionEvidenceFile),exported=JSON.parse(bytes);
+  const relocate = value => path.join(ROOT, "artifacts", value.split("/artifacts/").slice(1).join("/artifacts/"));
+  const record=JSON.parse(fs.readFileSync(relocate(raw.fullRecordFile),"utf8"));
+  const evidenceFile=relocate(raw.visionEvidenceFile);
+  const bytes=fs.readFileSync(evidenceFile),exported=JSON.parse(bytes);
   assert.equal(exported.exportErrors.length,1);
-  const result=verifyNativeExport(record,exported,raw.visionEvidenceFile);
+  const result=verifyNativeExport(record,exported,evidenceFile);
   assert.equal(result.frames,61);assert.equal(result.queries,62);assert.equal(result.pngBytes,15037811);
-  assert.equal(sha(fs.readFileSync(raw.visionEvidenceFile)),sha(bytes));
+  assert.equal(sha(fs.readFileSync(evidenceFile)),sha(bytes));
   assert.equal(exported.exportErrors.length,1);
 });

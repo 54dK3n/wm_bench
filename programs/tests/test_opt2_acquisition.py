@@ -7,19 +7,18 @@ from unittest.mock import Mock
 
 import pytest
 
+from tools.platform_paths import platform_root, platform_worker
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "vendor/wm_kit_opt2"))
-from world_model import WorldModel
-from world_model.decay import DecayConfig, FovConfig
-from world_model.providers.guangyang import guangyang_static_association_config
+from world_model.providers.guangyang import guangyang_static_world_model
 from world_model.types import Detection, ObjectState, RobotPose
 
-SOURCE = (ROOT / "programs/opt2_acquisition_fragment.py").read_text()
+SOURCE = (ROOT / "programs/src/opt2_acquisition_fragment.py").read_text()
 
 
 def namespace():
-    wm = WorldModel(assoc_cfg=guangyang_static_association_config(),
-                    decay_cfg=DecayConfig(), fov_cfg=FovConfig(max_range_m=.9))
+    wm = guangyang_static_world_model(max_range_m=.9)
     pose = RobotPose(0, 0, 0)
     wm.update([Detection(class_name="target", x=0, z=.65, confidence=.9, timestamp=0)], pose, now=0)
     target = wm.get_scene()[0]
@@ -82,9 +81,7 @@ def test_lost_selection_keeps_other_current_frame_associations_and_does_not_abor
 
 
 def test_integration_only_checks_expiry_after_real_observe():
-    sys.path.insert(0, str(ROOT / "tools"))
-    from build_opt2_program import BASE, acquisition_bridges
-    source = acquisition_bridges(BASE.read_text())
+    source = (ROOT / "programs/world_model_opt2.py").read_text()
     tree = ast.parse(source)
     funcs = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
     func = funcs["_try_enter_range_and_confirm"]
@@ -100,7 +97,7 @@ def test_integration_only_checks_expiry_after_real_observe():
 
 def test_real_async_transform_calls_bridge_before_state_check():
     ns, pose, target = namespace()
-    worker = Path("/Users/ken/Desktop/robot_competition-main/projects/car-python/python-worker.js").read_text()
+    worker = platform_worker().read_text()
     loader = {"ast": ast}
     exec(worker[worker.index("class AsyncRobotTransformer("):worker.index("student_run_target =")], loader)
     tree = ast.parse(SOURCE)

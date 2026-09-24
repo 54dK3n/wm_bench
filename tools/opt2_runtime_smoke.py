@@ -18,9 +18,10 @@ from pathlib import Path
 import sys
 import traceback
 from types import SimpleNamespace
+from platform_paths import file_reference, platform_root, platform_worker, recorded_repository_path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_WORKER = Path('/Users/ken/Desktop/robot_competition-main/projects/car-python/python-worker.js')
+DEFAULT_WORKER = None
 DEFAULT_FIXTURE = ROOT / 'tools/fixtures/opt2_runtime_public_prefix.json'
 FROZEN_COUNTEREXAMPLE = ROOT / 'artifacts/inloop/opt-2/round-2/program.py'
 PUBLIC_TYPES = {'navigation_query', 'navigation_control', 'vision_query'}
@@ -40,6 +41,14 @@ class SyntheticAPIError(RuntimeError):
 
 def file_sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def diagnostic_reference(path):
+    """Production dependencies are portable; temporary negative fixtures are explicit."""
+    try:
+        return file_reference(path)
+    except ValueError:
+        return str(Path(path).resolve())
 
 
 def _arguments(method, args):
@@ -110,7 +119,7 @@ class PublicPrefix:
 
 def _runtime_template(worker):
     """Decode the worker's literal JS template before compiling its Python."""
-    text = Path(worker).read_text()
+    text = platform_worker(worker).read_text()
     start = text.index('  const runtime = `') + len('  const runtime = `')
     raw = text[start:text.index('`;\n  try {', start)]
     if '${' in raw:
@@ -183,17 +192,19 @@ async def _scope_checks(backend):
 
 
 async def run_smoke_async(program, fixture=DEFAULT_FIXTURE, worker=DEFAULT_WORKER, check_scopes=True):
-    program, fixture, worker = Path(program), Path(fixture), Path(worker)
+    program, fixture, worker = Path(program), Path(fixture), platform_worker(worker)
     raw_source = program.read_text()
     source = raw_source.strip()  # Platform editor/run boundary uses trim().
     payload = json.loads(fixture.read_text())
     backend = PublicPrefix(payload)
     logs, runtime_scope = [], None
     result = {'schema': 'opt2-full-worker-runtime-smoke/v1', 'all_pass': False,
-              'program': str(program.resolve()), 'program_raw_sha256': file_sha(program),
+              'program': diagnostic_reference(program), 'program_raw_sha256': file_sha(program),
               'executed_source_sha256': hashlib.sha256(source.encode()).hexdigest(),
-              'dependencies': {str(p.resolve()): file_sha(p) for p in (program, fixture, worker, Path(__file__))},
-              'fixture_provenance': payload.get('provenance'),
+              'dependencies': {diagnostic_reference(p): file_sha(p) for p in (program, fixture, worker, Path(__file__))},
+              'fixture_provenance': {key: file_reference(recorded_repository_path(value))
+                                     if key.endswith('_path') and isinstance(value, str) else value
+                                     for key, value in payload.get('provenance', {}).items()},
               'limitations': ['No simulator, controller, renderer, detector or browser runs.',
                   'Native prefix checks API order/arguments/results only, not changed-program physical equivalence.',
                   'Memory scope uses static public replies and the real graph target-lost return; it does not test target capture or delivery.',

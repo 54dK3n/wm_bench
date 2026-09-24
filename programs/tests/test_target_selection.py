@@ -10,7 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from programs.target_selection import select_target, selection_shortest_turn
+from tools.platform_paths import platform_root, platform_worker
+
+from programs.src.target_selection import select_target, selection_shortest_turn
 
 ANGLE_CASES = [
     (350, 10, 20), (10, 350, -20), (355, 5, 10), (5, 355, -10), (-5, 5, 10),
@@ -214,11 +216,11 @@ def test_zero_length_cycle_terminates():
 
 def test_complete_source_after_actual_platform_async_transform():
     """Catches async method/alias/lambda mistakes using actual shipped transformer."""
-    path = Path(__file__).resolve().parents[1] / "target_selection.py"
+    path = Path(__file__).resolve().parents[1] / "src/target_selection.py"
     source = path.read_text();tree = ast.parse(source)
     assert not any(isinstance(n, ast.ClassDef) for n in ast.walk(tree))
     names = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
-    platform = Path(os.environ.get("GUANGYANG_PLATFORM_ROOT", "/Users/ken/Desktop/robot_competition-main/projects/car-python"))
+    platform = platform_root()
     worker = (platform / "python-worker.js").read_text()
     transformer = worker[worker.index("class AsyncRobotTransformer("):worker.index("student_run_target =")]
     ns = {"ast": ast};exec(transformer, ns)

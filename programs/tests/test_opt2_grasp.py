@@ -9,7 +9,9 @@ from types import SimpleNamespace
 
 import pytest
 
-SOURCE = Path(__file__).resolve().parents[1] / "opt2_grasp_fragment.py"
+from tools.platform_paths import platform_root, platform_worker
+
+SOURCE = Path(__file__).resolve().parents[1] / "src/opt2_grasp_fragment.py"
 
 
 class Rig:
@@ -201,7 +203,7 @@ def _approach_event(event, **kw): driver.event(event, **kw)
     assert not any(isinstance(n,ast.ClassDef) for n in ast.walk(tree))
     names = {n.name for n in ast.walk(tree) if isinstance(n,ast.FunctionDef)}
     assert not any(isinstance(n,ast.Attribute) and n.attr in ("observe","approach") for n in ast.walk(tree))
-    platform = Path(os.environ.get("GUANGYANG_PLATFORM_ROOT","/Users/ken/Desktop/robot_competition-main/projects/car-python"))
+    platform = platform_root()
     worker = (platform/"python-worker.js").read_text()
     transformer = worker[worker.index("class AsyncRobotTransformer("):worker.index("student_run_target =")]
     ns = {"ast":ast};exec(transformer,ns)

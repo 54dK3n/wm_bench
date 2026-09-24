@@ -2,10 +2,12 @@
 
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
-当前保留的是实验结束时的真实状态：最小双球 demo 已成功；阶段 2 三轮用尽后停止，最终双球送达 2/10，未达到 8/10。阶段 3–4 未执行，赛题 1 未运行。阶段 1 的过滤测试集污染限制仍有效。本仓库不代表总验收通过。
+最小双球 demo 已成功；旧 opt-2 三轮结束，最终双球送达 2/10，未达到 8/10。当前按新任务执行 demo 整理 → WorldModel 回流 → 行为不变重构 → opt-2b 优化；进度见下方执行状态。旧阶段 3–4 未执行，赛题 1 未运行，过滤测试集污染限制仍有效。本仓库不代表总验收通过。
 
 ## 阅读入口
 
+- [当前 A–D 执行状态](docs/NEXT_WORK_STATE.md)
+- [WorldModel 回流结果及 PR](artifacts/worldmodel-return/SUMMARY.md)
 - [v3 全阶段状态](artifacts/inloop/V3_FINAL_STATUS.md)
 - [双球 demo](artifacts/inloop/demo/DEMO.md)
 - [阶段 1 报告](artifacts/inloop/opt-1/SUMMARY.md)
@@ -17,7 +19,9 @@ WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流
 
 | 路径 | 内容 |
 |---|---|
-| `programs/` | 机器人程序、规划/抓取/送货片段、检测过滤器及单测 |
+| `programs/src/` | 按模块组织的唯一运行源码；固定顺序拼接构建 |
+| `programs/world_model_opt2.py` | 当前唯一生成程序；历史生成程序位于 artifacts |
+| `programs/tests/` | 当前模块及明确冻结的历史回归测试 |
 | `tools/` | 构建、驱动、预检、评测、诊断和报告工具 |
 | `vendor/wm_kit_opt2/` | WorldModel 源码快照，按普通文件管理，不是子模块 |
 | `artifacts/` | 实验报告、校准数据、评测输入、冻结源码与版本证据 |
@@ -44,25 +48,32 @@ python -m pytest programs/tests/test_detection_filter.py -q
 
 上述单测不启动仿真。完整驱动还需要独立的 `robot_competition-main/projects/car-python` 平台、浏览器及 Node.js；当前实验使用 Node.js 26.7.0。平台项目不包含在本仓库中。
 
-当前驱动、测试及历史清单仍有本机绝对路径。`GUANGYANG_PLATFORM_ROOT` 只覆盖部分入口；迁移到另一台机器前需要配置/适配路径并恢复真实回放数据。本仓库尚不能宣称干净环境一条命令完成全部仿真复跑。根目录 `run.py`、`eval_inloop.py`、`mutate.py` 还依赖外部旧 wm_kit 中未随本仓库提供的 acceptance/planning/selection 模块，不作为默认安装检查。
+当前构建和重构运行入口使用仓库相对路径；平台位置必须通过 `GUANGYANG_PLATFORM_ROOT` 提供。历史清单中的原始路径保持不动，由当前工具解析到本仓库；迁移到另一台机器前仍须恢复真实回放数据。本仓库尚不能宣称干净环境一条命令完成全部仿真复跑。根目录 `run.py`、`eval_inloop.py`、`mutate.py` 还依赖外部旧 wm_kit 中未随本仓库提供的 acceptance/planning/selection 模块，不作为默认安装检查。
 
 ## 重新构建与运行的入口
 
-下列是供后续开发使用的入口，**不是继续已停止阶段的授权**。构建应写入临时目录并设置新版本，不覆盖冻结程序。
-
-`embed_world_model.py` 从独立 WorldModel Git 历史读取指定提交；普通 vendor 源码目录在新 clone 中没有独立 Git 历史。先从保存的 bundle 恢复：
+在仓库根目录执行；将平台环境变量设为本机独立平台目录。构建直接使用已锁定的 vendor 快照，不依赖嵌套 Git 或修改旧程序正文。
 
 ```sh
-git clone artifacts/inloop/opt-2/wm-kit-action-evidence/wm_kit_opt2.bundle /tmp/wm-kit-rebuild
-git -C /tmp/wm-kit-rebuild checkout --detach 326a5f8892b9da11996b5f3d3d0fc56341aca6e4
-python tools/build_opt2_program.py \
+export GUANGYANG_PLATFORM_ROOT="../robot_competition-main/projects/car-python"
+python3 tools/verify_worldmodel_vendor.py
+python3 tools/build_opt2_program.py \
   --calibration artifacts/inloop/opt-2/controlled-calibration/calibration.json \
   --version wm-local-review \
-  --wm-src /tmp/wm-kit-rebuild \
-  --out /tmp/wm-local-review.py
+  --out programs/world_model_opt2.py
+python3 tools/refactor_preflight.py \
+  --program programs/world_model_opt2.py --out artifacts/inloop/refactor/local-preflight
 ```
 
-预检入口为 `tools/opt2_preflight.py --program ... --out ...`，需先满足平台/路径/数据依赖。`tools/run_opt2_batch.py` 会真正运行十布局批次，仅在决定开展新实验后调用。`tools/opt2_report.py` 会写回汇总报告，应在证据副本或新输出目录使用。
+预检包含真实平台 worker 启动、无重名函数、指定 pylint 错误码与布局坐标检查。以下入口会真正运行十布局；每轮运行中不改源码，同一布局只执行一次，新轮次使用新目录。
+
+```sh
+python3 tools/run_refactor_batch.py \
+  --program programs/world_model_opt2.py --out artifacts/inloop/refactor/round-1
+python3 tools/compare_refactor_records.py --candidate artifacts/inloop/refactor/round-1
+```
+
+重构须与 `artifacts/inloop/opt-2/round-3/` 原生 inputs/events 和得分相等，最多三轮。旧 `run_opt2_batch.py`、`opt2_preflight.py` 等入口保留为历史工具，当前工作以新入口为准。冻结程序、旧轮次和成功证据不得覆盖。
 
 已保存证据的只读核验：
 

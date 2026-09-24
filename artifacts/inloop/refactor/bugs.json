@@ -1,0 +1,38 @@
+{
+  "baseline": "artifacts/inloop/opt-2/round-3/program.py",
+  "baseline_sha256": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6",
+  "changes_made": false,
+  "deferred_to": "D",
+  "items": [
+    {
+      "id": "C-DEFER-001",
+      "old_lines": [
+        2319,
+        2323
+      ],
+      "function": "approach_target_with_world_model",
+      "problem": "except Exception around motion_approach converts unexpected API/programming errors to False, as well as ordinary approach failure. Retained exactly; D must determine intended propagation.",
+      "evidence": "try:\n        approach_ok = bool(motion_approach(\"目标物\", 85, 1))\n    except Exception as error:\n        _approach_event(\"approach_failed\", reason=\"approach_exception\", error=str(error))\n        return False"
+    },
+    {
+      "id": "C-DEFER-002",
+      "old_lines": [
+        255,
+        258
+      ],
+      "function": "top-level mission initialization",
+      "problem": "A public mission with no obstacle anchor raises RuntimeError before flow starts. Empty obstacle sets cannot run. Retained unchanged; no evidence that the present fixed maps trigger it.",
+      "evidence": "if not obstacle_anchors: raise RuntimeError(...)"
+    },
+    {
+      "id": "C-DEFER-003",
+      "old_lines": [
+        2193,
+        2205
+      ],
+      "function": "approach_target_with_world_model",
+      "problem": "stop_reason is always graph_fine_phase before comparison with passed_nearest_point, leaving that historical branch unreachable. Left inside live function to preserve exact AST.",
+      "evidence": "constant assignment followed by comparison against a different string"
+    }
+  ]
+}

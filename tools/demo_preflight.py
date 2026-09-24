@@ -13,10 +13,11 @@ import subprocess
 import sys
 
 from run_diagnostic_batch import program_identity
+from platform_paths import platform_root
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "artifacts/inloop/stage-1/round-3/program.py"
-PLATFORM = Path(os.environ.get("GUANGYANG_PLATFORM_ROOT", "/Users/ken/Desktop/robot_competition-main/projects/car-python"))
+PLATFORM = platform_root(required=False)
 
 
 def dump(node):
@@ -53,7 +54,7 @@ def main():
     coordinates = subprocess.run([sys.executable, str(ROOT / "tools/check_no_layout_constants.py"), str(args.program)],
                                  env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     (folder / "static_coordinates.json").write_text(coordinates.stdout)
-    worker = (PLATFORM / "python-worker.js").read_text()
+    worker = (platform_root() / "python-worker.js").read_text()
     transformer_source = worker[worker.index("class AsyncRobotTransformer("):worker.index("student_run_target =")]
     namespace = {"ast": ast}
     exec(transformer_source, namespace)

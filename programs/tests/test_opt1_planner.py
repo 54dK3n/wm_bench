@@ -10,8 +10,9 @@ from test_memory_approach import memory
 from test_viewpoint_planner import StraightRoadRobot, edge, seed_local_direction
 
 
-PROGRAM = Path(__file__).resolve().parents[1] / "world_model_opt1.py"
-FROZEN = PROGRAM.parents[1] / "artifacts/inloop/stage-1/round-3/program.py"
+ROOT = Path(__file__).resolve().parents[2]
+PROGRAM = ROOT / "artifacts/inloop/opt-1/round-2/program.py"
+FROZEN = ROOT / "artifacts/inloop/stage-1/round-3/program.py"
 TREE = ast.parse(PROGRAM.read_text())
 FUNCTIONS = {
     "_road_progress_limit", "_road_progress_blocked", "_vp_block_revision", "dijkstra",

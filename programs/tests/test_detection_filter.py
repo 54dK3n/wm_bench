@@ -2,7 +2,7 @@
 import copy
 import unittest
 
-from programs.detection_filter import DetectionFilter, detection_filter_update
+from programs.src.detection_filter import DetectionFilter, detection_filter_update
 
 
 def detection(category, confidence, distance=60):

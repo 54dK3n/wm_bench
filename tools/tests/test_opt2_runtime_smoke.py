@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))
 from opt2_runtime_smoke import (DEFAULT_FIXTURE, DEFAULT_WORKER, FROZEN_COUNTEREXAMPLE,
                                 PublicPrefix, file_sha, run_smoke, worker_runtime)
+from platform_paths import recorded_repository_path
 
 CURRENT = ROOT / 'programs/world_model_opt2.py'
 
@@ -65,7 +66,7 @@ def test_real_worker_printer_decodes_js_template_newline_and_wrapper_is_nested()
 def test_fixture_is_exact_public_native_prefix_without_frames_or_truth():
     fixture = json.loads(DEFAULT_FIXTURE.read_text())
     provenance = fixture['provenance']
-    native_path = Path(provenance['native_record_path'])
+    native_path = recorded_repository_path(provenance['native_record_path'])
     assert file_sha(native_path) == provenance['native_record_sha256']
     native = json.loads(native_path.read_text())
     for item in fixture['inputs']:

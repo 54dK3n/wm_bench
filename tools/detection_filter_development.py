@@ -110,7 +110,7 @@ def generate(dev_dir, filter_path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dev-dir", type=Path, default=ROOT / "artifacts/inloop/opt-1/filter-development")
-    parser.add_argument("--filter-file", type=Path, default=ROOT / "programs/detection_filter.py")
+    parser.add_argument("--filter-file", type=Path, default=ROOT / "programs/src/detection_filter.py")
     parser.add_argument("--out", type=Path, default=ROOT / "artifacts/inloop/opt-1/filter-candidate-v1/constant_provenance.json")
     args = parser.parse_args()
     report = generate(args.dev_dir.resolve(), args.filter_file.resolve())

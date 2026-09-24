@@ -11,7 +11,7 @@ from demo_preflight import PLATFORM, ROOT
 
 
 def test_filter_bridge_after_actual_platform_transform_keeps_complete_raw():
-    source = (ROOT / "programs/world_model_opt1.py").read_text()
+    source = (ROOT / "artifacts/inloop/opt-1/round-2/program.py").read_text()
     tree = ast.parse(source)
     names = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef)
