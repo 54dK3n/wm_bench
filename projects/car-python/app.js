@@ -5982,7 +5982,7 @@ function consumeCompetitionTaskResult(result) {
     }
   });
   renderMissionProgress();
-  if (result.taskState.finished && !missionAttempt.completed) {
+  if (!robotBackendMode && result.taskState.finished && !missionAttempt.completed) {
     completeMissionAttempt({
       alreadySampled: true,
       deferCompetitionFinish: competitionFinishInProgress
@@ -7288,6 +7288,8 @@ function renderMissionProgress() {
 }
 
 function completeMissionAttempt({ alreadySampled = false, deferCompetitionFinish = false } = {}) {
+  // Robot runs finish only when their external controller closes the run.
+  if (robotBackendMode) return;
   if (!missionAttempt || missionAttempt.completed) return;
   missionAttempt.completed = true;
   robotLinearSpeed = 0;
@@ -11875,7 +11877,7 @@ async function moveRobot(sign, seconds, requestedSpeed = 50, distancePlan = null
     lastMoveBlocked = true;
     addLog(`${action} 被挡住：当前动作结束，程序继续执行下一条代码。`);
   }
-  if (!moved && blockedMoveCount >= 3) {
+  if (!robotBackendMode && !moved && blockedMoveCount >= 3) {
     stopRequested = true;
     setStatus("巡逻受阻，已暂停");
     addLog("连续 3 次前进都被挡住，已暂停。请在持续巡逻里加入“如果前方有障碍物 -> 左转90°/右转90°”。");
@@ -12111,11 +12113,11 @@ async function executeNavigationControl(method, args = {}) {
     throw new Error(`本次程序累计动作时间不能超过 ${MAX_PROGRAM_ACTION_SECONDS} 秒，请分段运行。`);
   }
   realtimeRun.navigationControlCount += 1;
-  if (realtimeRun.navigationControlCount > MAX_NAVIGATION_CONTROLS_PER_RUN) {
+  if (!robotBackendMode && realtimeRun.navigationControlCount > MAX_NAVIGATION_CONTROLS_PER_RUN) {
     throw new Error(`道路控制动作超过 ${MAX_NAVIGATION_CONTROLS_PER_RUN} 次，程序已停止。`);
   }
   realtimeRun.actionCount += 1;
-  if (realtimeRun.actionCount > MAX_PROGRAM_ACTION_COUNT) {
+  if (!robotBackendMode && realtimeRun.actionCount > MAX_PROGRAM_ACTION_COUNT) {
     throw new Error(`本次程序动作次数不能超过 ${MAX_PROGRAM_ACTION_COUNT} 次，请检查循环条件。`);
   }
   actionCount += 1;
