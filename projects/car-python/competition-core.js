@@ -5714,6 +5714,16 @@
         ? Math.max(0, Number(options.maxElapsedMs))
         : Infinity;
       this.now = typeof options.now === "function" ? options.now : () => Date.now();
+      this.robotRuntime = options.robotRuntime ? normalizeRobotRuntimeOptions(options.robotRuntime, {}) : null;
+      this.simulationTick = typeof options.simulationTick === "function" ? options.simulationTick : null;
+      // Only the explicitly separate robot runtime can override competition
+      // evidence budgets. The PNG format/per-image safety checks remain shared.
+      this.visionEvidenceLimitBytes = this.robotRuntime
+        ? this.robotRuntime.visionEvidenceLimitBytes : MAX_VISION_TOTAL_BYTES;
+      this.visionEvidenceFrameLimit = this.robotRuntime
+        ? this.robotRuntime.visionEvidenceFrameLimit : MAX_VISION_FRAMES;
+      this.navigationQueryLimit = this.robotRuntime ? this.robotRuntime.navigationQueryLimit : MAX_NAVIGATION_QUERIES;
+      this.navigationControlLimit = this.robotRuntime ? this.robotRuntime.navigationControlLimit : MAX_NAVIGATION_CONTROLS;
       const sourceRunDefinition = metadata.runDefinition && typeof metadata.runDefinition === "object"
         ? metadata.runDefinition
         : null;
@@ -5966,8 +5976,8 @@
     }
 
     navigationQuery(method, result, detail = {}, elapsedMsOverride = null) {
-      if (this.navigationQueryCount >= MAX_NAVIGATION_QUERIES) {
-        throw new RangeError(`run exceeds the ${MAX_NAVIGATION_QUERIES} navigation query limit`);
+      if (this.navigationQueryLimit !== null && this.navigationQueryCount >= this.navigationQueryLimit) {
+        throw new RangeError(`run exceeds the ${this.navigationQueryLimit} navigation query limit`);
       }
       const normalizedMethod = String(method || "").trim();
       const navigationDefinition = normalizeNavigationDefinition(
@@ -6001,9 +6011,9 @@
         || this.record.runDefinition?.navigationControlDefinition;
       if (!definitionSource) throw new Error("run has no frozen navigation control definition");
       const definition = normalizeNavigationControlDefinition(definitionSource);
-      if (this.navigationControlCount >= MAX_NAVIGATION_CONTROLS
-        || this.navigationControlCount >= definition.actionLimit) {
-        throw new RangeError(`run exceeds the ${MAX_NAVIGATION_CONTROLS} navigation control limit`);
+      if ((this.navigationControlLimit !== null && this.navigationControlCount >= this.navigationControlLimit)
+        || (!this.robotRuntime && this.navigationControlCount >= definition.actionLimit)) {
+        throw new RangeError(`run exceeds the ${this.navigationControlLimit} navigation control limit`);
       }
       const action = normalizeNavigationControlAction(method, args, definition);
       const tick = Number(detail.tick);
@@ -6045,8 +6055,9 @@
     }
 
     visionEvidence(evidence = {}, elapsedMsOverride = null) {
-      if (this.record.visionFrames.length >= MAX_VISION_FRAMES) {
-        throw new RangeError(`run exceeds the ${MAX_VISION_FRAMES} vision frame limit`);
+      if (this.visionEvidenceFrameLimit !== null
+        && this.record.visionFrames.length >= this.visionEvidenceFrameLimit) {
+        throw new RangeError(`run exceeds the ${this.visionEvidenceFrameLimit} vision frame limit`);
       }
       const normalized = normalizeVisionEvidence(evidence, {
         evidenceId: `vision-${this.record.visionFrames.length + 1}`
@@ -6054,8 +6065,9 @@
       if (this.record.visionFrames.some(frame => frame.evidenceId === normalized.evidenceId)) {
         throw new TypeError(`vision evidenceId is duplicated: ${normalized.evidenceId}`);
       }
-      if (this.visionBytes + normalized.byteLength > MAX_VISION_TOTAL_BYTES) {
-        throw new RangeError(`run exceeds the ${MAX_VISION_TOTAL_BYTES} byte vision evidence limit`);
+      if (this.visionEvidenceLimitBytes !== null
+        && this.visionBytes + normalized.byteLength > this.visionEvidenceLimitBytes) {
+        throw new RangeError(`run exceeds the ${this.visionEvidenceLimitBytes} byte vision evidence limit`);
       }
       this.visionBytes += normalized.byteLength;
       const elapsedMs = elapsedMsOverride === null
@@ -6080,6 +6092,8 @@
         : Math.min(this.maxElapsedMs, Math.max(0, Number(elapsedMsOverride) || 0));
       const event = {
         ...clone(detail),
+        ...(this.robotRuntime && this.simulationTick && detail.tick === undefined
+          ? {tick: this.simulationTick()} : {}),
         seq: ++this.sequence,
         t: round(elapsedMs, 3),
         type: String(type || "event")
@@ -6101,9 +6115,43 @@
     }
   }
 
+  function normalizeRobotRuntimeOptions(input, config) {
+    if (!input || typeof input !== "object" || Array.isArray(input)) {
+      throw new TypeError("robotRuntime must be an options object");
+    }
+    const allowed = ["timeLimitSeconds", "visionEvidenceLimitBytes", "visionEvidenceFrameLimit",
+      "navigationQueryLimit", "navigationControlLimit"];
+    for (const key of Object.keys(input)) {
+      if (!allowed.includes(key)) throw new TypeError(`unsupported robotRuntime option: ${key}`);
+    }
+    const configuredSeconds = Number(config.timeLimitSeconds);
+    const defaults = {
+      timeLimitSeconds: Number.isFinite(configuredSeconds) && configuredSeconds > 0 ? configuredSeconds : null,
+      visionEvidenceLimitBytes: MAX_VISION_TOTAL_BYTES,
+      visionEvidenceFrameLimit: MAX_VISION_FRAMES,
+      navigationQueryLimit: null,
+      navigationControlLimit: null
+    };
+    const result = {};
+    for (const key of allowed) {
+      const value = Object.prototype.hasOwnProperty.call(input, key) ? input[key] : defaults[key];
+      if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value <= 0
+        || (key !== "timeLimitSeconds" && !Number.isSafeInteger(value)))) {
+        throw new TypeError(`robotRuntime.${key} must be a positive number or null`);
+      }
+      if (key === "timeLimitSeconds" && value !== null && !Number.isFinite(value * 1000)) {
+        throw new TypeError("robotRuntime.timeLimitSeconds is too large");
+      }
+      result[key] = value;
+    }
+    return Object.freeze(result);
+  }
+
   class CompetitionSession {
     constructor(config = {}, metadata = {}, options = {}) {
       this.config = config;
+      this.robotRuntime = options.robotRuntime === undefined
+        ? null : normalizeRobotRuntimeOptions(options.robotRuntime, config);
       this.now = typeof options.now === "function" ? options.now : () => Date.now();
       const simulationDefinitionSource = metadata.simulationDefinition ?? metadata.runDefinition?.simulationDefinition;
       this.simulationDefinition = simulationDefinitionSource
@@ -6148,7 +6196,8 @@
       this.stateRevision = 0;
       this.simulationTick = 0;
       this.simulationElapsedMs = 0;
-      const configuredLimitSeconds = Number(config.timeLimitSeconds);
+      const configuredLimitSeconds = Number(this.robotRuntime
+        ? this.robotRuntime.timeLimitSeconds : config.timeLimitSeconds);
       this.timeLimitMs = Number.isFinite(configuredLimitSeconds) && configuredLimitSeconds > 0
         ? configuredLimitSeconds * 1000
         : Infinity;
@@ -6186,9 +6235,16 @@
           ...(this.navigationControlDefinition
             ? { navigationControlDefinition: clone(this.navigationControlDefinition) }
             : {}),
-          timeLimitTicks
+          timeLimitTicks,
+          ...(this.robotRuntime ? { robotRuntime: clone(this.robotRuntime) } : {})
         }
-      }, { now: this.now, sampleIntervalMs: options.sampleIntervalMs, maxElapsedMs: this.timeLimitMs });
+      }, {
+        now: this.now,
+        sampleIntervalMs: options.sampleIntervalMs,
+        maxElapsedMs: this.timeLimitMs,
+        robotRuntime: this.robotRuntime,
+        simulationTick: () => this.simulationTick
+      });
       this.startedAtMs = this.now();
       this.previousSample = null;
       this.previousEvaluationSample = null;
@@ -6478,7 +6534,9 @@
       const actionTaskEvents = [];
       const actionViolations = [];
       const result = runner.run(action.method, action.args, {
-        maxTick: Number.isSafeInteger(timeLimitTicks) ? Math.min(timeLimitTicks, MAX_REPLAY_TICKS) : MAX_REPLAY_TICKS,
+        maxTick: this.robotRuntime
+          ? (Number.isSafeInteger(timeLimitTicks) ? timeLimitTicks : Number.MAX_SAFE_INTEGER)
+          : (Number.isSafeInteger(timeLimitTicks) ? Math.min(timeLimitTicks, MAX_REPLAY_TICKS) : MAX_REPLAY_TICKS),
         onStep: frame => {
           const sampled = this.sample({
             tick: frame.tick,
@@ -6505,7 +6563,7 @@
       });
       this.recorder.finishNavigationControl(pending.seq, result);
       if (Number.isFinite(this.timeLimitMs) && this.elapsedMs() >= this.timeLimitMs) this.finish("timeout");
-      else if (this.taskEngine && this.task.finished) this.finish("completed");
+      else if (!this.robotRuntime && this.taskEngine && this.task.finished) this.finish("completed");
       if (observeStep) observedFrames.forEach(frame => {
         try {
           observeStep(frame);
@@ -6729,13 +6787,13 @@
       const taskEvents = taskResult?.events || [];
       this.previousEvaluationSample = sample;
       if (sampled) this.previousSample = { ...recordedSample, elapsedMs: recordedSample.t };
-      if (this.taskEngine && this.task.finished && !sampled) {
+      if (!this.robotRuntime && this.taskEngine && this.task.finished && !sampled) {
         this.recorder.sample(sampleDraft, true, elapsedMs);
         const completionSample = this.recorder.latestSample();
         if (completionSample) this.previousSample = { ...completionSample, elapsedMs: completionSample.t };
         sampled = true;
       }
-      const completedRecord = this.taskEngine && this.task.finished && !options.deferFinish
+      const completedRecord = !this.robotRuntime && this.taskEngine && this.task.finished && !options.deferFinish
         ? this.finish("completed")
         : null;
       return {
@@ -6767,7 +6825,7 @@
         && Number.isFinite(completedAtMs)
         && (!Number.isFinite(this.timeLimitMs) || completedAtMs < this.timeLimitMs);
       const elapsedLimitReached = Number.isFinite(this.timeLimitMs) && this.elapsedMs() >= this.timeLimitMs;
-      const finalReason = taskCompletedInTime
+      const finalReason = !this.robotRuntime && taskCompletedInTime
         ? "completed"
         : elapsedLimitReached || reason === "timeout"
           ? "timeout"
