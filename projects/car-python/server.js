@@ -52,6 +52,7 @@ const {
   verifySsoRequest
 } = require("./backend/official-sso.js");
 const internalServiceAuth = require("./backend/platform-service-auth.js");
+const { createRobotBridge, RobotBridgeError } = require("./backend/robot-bridge.js");
 const {
   DEFAULT_BATCH_TTL_MS,
   MAX_BATCH_TTL_MS,
@@ -679,6 +680,7 @@ const TOP_LEVEL_STATIC_FILES = new Set([
   "app.js",
   "competition-core.js",
   "vision-pixel-core.js",
+  "robot-bridge-contract.js",
   "python-worker.js",
   "vision.js",
   "login.html",
@@ -1483,6 +1485,10 @@ async function serveStatic(request, response, parsedPath = null) {
 }
 
 function createServer(options = {}) {
+  const robotBridgeEnabled = options.robotBridgeEnabled === undefined
+    ? process.env.CHENLONG_ROBOT_BRIDGE === "1" : options.robotBridgeEnabled;
+  if (typeof robotBridgeEnabled !== "boolean") throw new TypeError("robotBridgeEnabled must be boolean");
+  const robotBridge = robotBridgeEnabled ? createRobotBridge(options.robotBridge || {}) : null;
   const maximumRecordBytes = boundedServerOption(
     "maxBodyBytes",
     options.maxBodyBytes ?? options.maximumRecordBytes,
@@ -2469,6 +2475,89 @@ function createServer(options = {}) {
     applySecurityHeaders(response);
     try {
       const url = new URL(request.url || "/", "http://127.0.0.1");
+      const bridgePrefix = "/api/v1/robot-bridge";
+      const isBridgeRoute = url.pathname === bridgePrefix || url.pathname.startsWith(`${bridgePrefix}/`);
+      // A bridge client capability is never an alternate login, admin, record,
+      // scene or controller credential. Existing route authorization is intact.
+      if (request.headers["x-robot-bridge-client"] !== undefined && !isBridgeRoute) {
+        throw new RobotBridgeError(403, "CLIENT_CAPABILITY_SCOPE");
+      }
+      if (isBridgeRoute) {
+        if (!robotBridge) throw new RobotBridgeError(404, "BRIDGE_DISABLED");
+        if (!internalServiceAuth.loopbackAddress(request.socket?.remoteAddress)) {
+          throw new RobotBridgeError(403, "BRIDGE_LOOPBACK_ONLY");
+        }
+        assertRequestSameOrigin(request);
+        if (url.search) throw new RobotBridgeError(400, "BRIDGE_QUERY_NOT_ALLOWED");
+        const readBridgeBody = async () => {
+          requireJsonRequest(request);
+          return parseJsonObject(await readRequestBody(request, 64 * 1024), "ROBOT_BRIDGE");
+        };
+        if (url.pathname === `${bridgePrefix}/controllers` && request.method === "POST") {
+          if (request.headers["x-robot-bridge-client"] !== undefined) {
+            throw new RobotBridgeError(403, "CLIENT_CAPABILITY_SCOPE");
+          }
+          const principal = await requirePrincipal(request);
+          const body = await readBridgeBody();
+          assertAllowedFields(body, new Set(), "ROBOT_BRIDGE");
+          writeJson(response, 201, robotBridge.register(principal.user.id));
+          return;
+        }
+        const controllerMatch = url.pathname.match(/^\/api\/v1\/robot-bridge\/controllers\/([a-f0-9]{32})\/(next|results|close|trace)$/);
+        if (controllerMatch) {
+          if (request.headers["x-robot-bridge-client"] !== undefined) {
+            throw new RobotBridgeError(403, "CLIENT_CAPABILITY_SCOPE");
+          }
+          const principal = await requirePrincipal(request);
+          const [, bridgeId, operation] = controllerMatch;
+          robotBridge.authorizeController(bridgeId, principal.user.id, request.headers["x-robot-bridge-controller"]);
+          if (operation === "next" && request.method === "GET") {
+            const abort = new AbortController();
+            const cancel = () => abort.abort();
+            response.once("close", cancel);
+            try {
+              const result = await robotBridge.next(bridgeId, abort.signal);
+              if (!response.destroyed) writeJson(response, 200, result);
+            } finally { response.removeListener("close", cancel); }
+            return;
+          }
+          if (operation === "results" && request.method === "POST") {
+            writeJson(response, 200, robotBridge.complete(bridgeId, await readBridgeBody()));
+            return;
+          }
+          if (operation === "close" && request.method === "POST") {
+            const body = await readBridgeBody();
+            assertAllowedFields(body, new Set(), "ROBOT_BRIDGE");
+            writeJson(response, 200, robotBridge.closeController(bridgeId));
+            return;
+          }
+          if (operation === "trace" && request.method === "GET") {
+            writeJson(response, 200, robotBridge.trace(bridgeId));
+            return;
+          }
+          throw new RobotBridgeError(405, "BRIDGE_METHOD_NOT_ALLOWED");
+        }
+        const clientMatch = url.pathname.match(/^\/api\/v1\/robot-bridge\/([a-f0-9]{32})\/(commands(?:\/([A-Za-z0-9_-]{1,128}))?|trace)$/);
+        if (clientMatch) {
+          const [, bridgeId, operation, requestId] = clientMatch;
+          robotBridge.authorizeClient(bridgeId, request.headers["x-robot-bridge-client"]);
+          if (operation === "commands" && request.method === "POST") {
+            const result = robotBridge.submit(bridgeId, await readBridgeBody());
+            writeJson(response, ["queued", "dispatched"].includes(result.status) ? 202 : 200, result);
+            return;
+          }
+          if (requestId && request.method === "GET") {
+            writeJson(response, 200, robotBridge.status(bridgeId, requestId));
+            return;
+          }
+          if (operation === "trace" && request.method === "GET") {
+            writeJson(response, 200, robotBridge.trace(bridgeId));
+            return;
+          }
+          throw new RobotBridgeError(405, "BRIDGE_METHOD_NOT_ALLOWED");
+        }
+        throw new RobotBridgeError(404, "BRIDGE_ROUTE_NOT_FOUND");
+      }
       if (url.pathname === "/api/v1/internal/platform/score-records") {
         if (request.method !== "GET") {
           throw new HttpError(405, "METHOD_NOT_ALLOWED", "internal score records endpoint only accepts GET", { Allow: "GET" });
@@ -4150,6 +4239,7 @@ function createServer(options = {}) {
       const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
       const code = typeof error?.code === "string" ? error.code : "INTERNAL_ERROR";
       const publicError = error instanceof HttpError
+        || error instanceof RobotBridgeError
         || error instanceof SubmissionStoreError
         || error instanceof AuthStoreError
         || error instanceof BatchEvaluationStoreError
@@ -4174,7 +4264,9 @@ function createServer(options = {}) {
   server.mapConfigStores = mapConfigStores;
   server.mapConfigPools = mapConfigPools;
   server.dataDirectoryWriterLock = writerLock;
+  server.robotBridge = robotBridge;
   server.once("close", () => {
+    robotBridge?.close();
     verificationQueue.close();
     writerLock.release();
   });
