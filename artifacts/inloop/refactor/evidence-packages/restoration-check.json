@@ -1,0 +1,49 @@
+{
+  "schema": "refactor-evidence-restoration-check/v1",
+  "manifest_sha256": "13c0e2f088638aa6622cdf879eeaa4fcb2fc4fdddb84c7702d51f911db3789d9",
+  "simulation_run": false,
+  "original_evidence_rewritten": false,
+  "tools": {
+    "package_refactor_evidence.py": "62445d065ac7701cf864ee7e7445c194f5656d26fa64151e7fb6bf0d24d6ed10",
+    "compare_refactor_records.py": "80c74a96048916f40bba23ac29909d4d3a115d184e68b7da591ab1256e095206",
+    "platform_paths.py": "07c0a12c3840514653022f4e41f41acbd72b105f4d26247d1b912916ede7b40d"
+  },
+  "restore": {
+    "all_pass": true,
+    "mode": "restore",
+    "archives": 20,
+    "verified_files": 859,
+    "verified_bytes": 493750127,
+    "existing_identical": 0,
+    "missing": 859,
+    "restored": 859
+  },
+  "restore_exit_code": 0,
+  "comparison_exit_code": 1,
+  "comparison": {
+    "all_pass": false,
+    "passing_layouts": 0,
+    "layout_count": 10,
+    "gates": {
+      "both_native_records_complete": true,
+      "both_runs_valid_without_errors": true,
+      "inputs_equal": false,
+      "events_equal": false,
+      "score_equal": false
+    },
+    "equal_counts": {
+      "inputs": 0,
+      "events": 5,
+      "score": 8
+    },
+    "no_load_errors": true,
+    "full_report_byte_equal": true,
+    "original_report_sha256": "90c8502ab49e2743fed97097510a474ebbd0cbd70355b84465fcd5e6c6bdaa85",
+    "restored_report_sha256": "90c8502ab49e2743fed97097510a474ebbd0cbd70355b84465fcd5e6c6bdaa85"
+  },
+  "all_pass": true,
+  "commands": [
+    "python3 tools/package_refactor_evidence.py --restore",
+    "python3 tools/compare_refactor_records.py --baseline artifacts/inloop/opt-2/round-3 --candidate artifacts/inloop/refactor/round-1"
+  ]
+}

@@ -1,0 +1,813 @@
+{
+  "schema": "opt2-full-worker-runtime-smoke/v1",
+  "all_pass": true,
+  "program": "artifacts/inloop/opt-2/round-3/program.py",
+  "program_raw_sha256": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6",
+  "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0",
+  "dependencies": {
+    "artifacts/inloop/opt-2/round-3/program.py": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6",
+    "tools/fixtures/opt2_runtime_public_prefix.json": "17b512eb65e66c729678d8c3236bcf68d3d71d515c12cd82a26bce5e7a6d2344",
+    "@platform/python-worker.js": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4",
+    "tools/opt2_runtime_smoke.py": "ecf78a15fac07f7342d94d491e2af5d6f504090ef78353aafb0bcbc09b6d8c61"
+  },
+  "fixture_provenance": {
+    "raw_path": "artifacts/inloop/opt-2/round-1/map-05.json",
+    "raw_sha256": "03629bed2f5c371020b0800189567d44b458cb6fe2e2c81f68e37fbe6a729987",
+    "native_record_path": "artifacts/inloop/opt-2/round-1/attempts/attempt-001.record.json",
+    "native_record_sha256": "5d7412f694b5bddb8f53fa2a2bb6de2f291a33459f536c9f1a536a3cfd81ac10",
+    "native_source_sha256": "e0de6c25cc6a9d82de674f0ce892fbb45b24f1bf7d8a9a681209037654e04b34",
+    "runId": "run_b6b0743a57964c989de59b6f0f97d24c"
+  },
+  "limitations": [
+    "No simulator, controller, renderer, detector or browser runs.",
+    "Native prefix checks API order/arguments/results only, not changed-program physical equivalence.",
+    "Memory scope uses static public replies and the real graph target-lost return; it does not test target capture or delivery.",
+    "CPython executes the worker Python semantics; Pyodide/JS transport scheduling is not exercised."
+  ],
+  "startup": {
+    "status": "prefix_completed",
+    "consumed_inputs": 10,
+    "prefix_inputs": 10,
+    "scope_keys": [
+      "__builtins__",
+      "__student_main__",
+      "print",
+      "robot"
+    ],
+    "student_helper_global_keys": [],
+    "checks": {
+      "whole_prefix_consumed": true,
+      "stopped_only_after_public_prefix": true,
+      "accepted_first_legal_move": true,
+      "first_patrol_enter_returned": true,
+      "no_student_globals_injected": true
+    }
+  },
+  "memory_scope": {
+    "mode": "explicit synthetic static public replies, real nested functions and shared closure",
+    "checks": {
+      "default_speed_is_30": true,
+      "real_graph_normal_target_lost_return": true,
+      "speed_100_during_real_memory_wrapper": true,
+      "normal_return_restores_30": true,
+      "synthetic_API_exception_propagates": true,
+      "exception_restores_30": true
+    },
+    "all_pass": true,
+    "speed_probes": [
+      {
+        "method": "odometry",
+        "speed": 100
+      },
+      {
+        "method": "road_state",
+        "speed": 100
+      },
+      {
+        "method": "odometry",
+        "speed": 100
+      }
+    ],
+    "before_speed": 30,
+    "after_normal_speed": 30,
+    "after_error_speed": 30,
+    "normal_result": false,
+    "exception_type": "SyntheticAPIError"
+  },
+  "failures": [],
+  "public_calls": [
+    {
+      "mode": "native_prefix",
+      "fixture_index": 0,
+      "native_input_index": 0,
+      "seq": 3,
+      "tick": 0,
+      "result": {
+        "schemaVersion": "chenlong.navigation-mission/v1",
+        "mapId": "guangyang-island",
+        "mapVersion": "2026.08-source-png-3d.3",
+        "start": {
+          "id": "start",
+          "roadId": "parking-connector",
+          "progressCm": 0
+        },
+        "storage": {
+          "id": "storage",
+          "roadId": "nw-bag",
+          "progressCm": 4.4
+        },
+        "checkpoints": [
+          {
+            "id": "checkpoint-ds-lake",
+            "roadId": "middle-west",
+            "progressCm": 0
+          },
+          {
+            "id": "checkpoint-egret",
+            "roadId": "camp-connector",
+            "progressCm": 0
+          },
+          {
+            "id": "checkpoint-rapeseed",
+            "roadId": "central-north",
+            "progressCm": 37.8
+          },
+          {
+            "id": "checkpoint-camp",
+            "roadId": "oil-west-arc",
+            "progressCm": 17.1
+          },
+          {
+            "id": "checkpoint-central-north",
+            "roadId": "east-north-outer",
+            "progressCm": 55.7
+          },
+          {
+            "id": "checkpoint-central-south",
+            "roadId": "bailu-south",
+            "progressCm": 0
+          }
+        ],
+        "return": {
+          "id": "return",
+          "roadId": "parking-connector",
+          "progressCm": 0
+        },
+        "objects": [
+          {
+            "role": "distractor",
+            "roadId": "west-south-connector",
+            "progressCm": 57.2
+          },
+          {
+            "role": "distractor",
+            "roadId": "bailu-outer-arc",
+            "progressCm": 68.1
+          },
+          {
+            "role": "obstacle",
+            "roadId": "west-south-connector",
+            "progressCm": 38
+          },
+          {
+            "role": "obstacle",
+            "roadId": "middle-east",
+            "progressCm": 45.2
+          },
+          {
+            "role": "target",
+            "roadId": "oil-south",
+            "progressCm": 36.3
+          },
+          {
+            "role": "target",
+            "roadId": "lower-east",
+            "progressCm": 37.5
+          }
+        ]
+      },
+      "method": "mission",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 1,
+      "native_input_index": 1,
+      "seq": 4,
+      "tick": 0,
+      "result": {
+        "schemaVersion": "chenlong.road-graph/v1",
+        "nodes": [
+          {
+            "nodeId": "node:bailu-outer-arc:end",
+            "roadIds": [
+              "bailu-outer-arc",
+              "bailu-south",
+              "east-north-outer"
+            ]
+          },
+          {
+            "nodeId": "node:bailu-outer-arc:start",
+            "roadIds": [
+              "bailu-outer-arc",
+              "bailu-west-arc",
+              "north-east-main"
+            ]
+          },
+          {
+            "nodeId": "node:bailu-south:start",
+            "roadIds": [
+              "bailu-south",
+              "bailu-to-middle",
+              "bailu-west-arc"
+            ]
+          },
+          {
+            "nodeId": "node:bailu-to-middle:end",
+            "roadIds": [
+              "bailu-to-middle",
+              "middle-east",
+              "oil-west-arc"
+            ]
+          },
+          {
+            "nodeId": "node:camp-connector:end",
+            "roadIds": [
+              "camp-connector",
+              "east-outer-south",
+              "southeast-spur"
+            ]
+          },
+          {
+            "nodeId": "node:camp-connector:start",
+            "roadIds": [
+              "camp-connector",
+              "east-inner-south",
+              "lower-east"
+            ]
+          },
+          {
+            "nodeId": "node:central-north:end",
+            "roadIds": [
+              "central-north",
+              "central-south",
+              "middle-east",
+              "middle-west"
+            ]
+          },
+          {
+            "nodeId": "node:central-north:start",
+            "roadIds": [
+              "central-north",
+              "north-east-main",
+              "north-west-main",
+              "parking-connector"
+            ]
+          },
+          {
+            "nodeId": "node:central-south:end",
+            "roadIds": [
+              "central-south",
+              "lower-east",
+              "lower-west",
+              "southwest-spur"
+            ]
+          },
+          {
+            "nodeId": "node:east-inner-south:start",
+            "roadIds": [
+              "east-inner-south",
+              "oil-south",
+              "oil-west-arc"
+            ]
+          },
+          {
+            "nodeId": "node:east-north-outer:end",
+            "roadIds": [
+              "east-north-outer",
+              "east-outer-south",
+              "oil-south"
+            ]
+          },
+          {
+            "nodeId": "node:huangge-spur:end",
+            "roadIds": [
+              "huangge-spur"
+            ]
+          },
+          {
+            "nodeId": "node:huangge-spur:start",
+            "roadIds": [
+              "huangge-spur",
+              "lower-west",
+              "west-south-connector"
+            ]
+          },
+          {
+            "nodeId": "node:middle-west:start",
+            "roadIds": [
+              "middle-west",
+              "northwest-connector",
+              "west-middle",
+              "west-south-connector"
+            ]
+          },
+          {
+            "nodeId": "node:north-west-main:start",
+            "roadIds": [
+              "north-west-main",
+              "northwest-connector",
+              "nw-bag"
+            ]
+          },
+          {
+            "nodeId": "node:nw-bag:start",
+            "roadIds": [
+              "nw-bag"
+            ]
+          },
+          {
+            "nodeId": "node:parking-connector:start",
+            "roadIds": [
+              "parking-connector"
+            ]
+          },
+          {
+            "nodeId": "node:southeast-spur:end",
+            "roadIds": [
+              "southeast-spur"
+            ]
+          },
+          {
+            "nodeId": "node:southwest-spur:end",
+            "roadIds": [
+              "southwest-spur"
+            ]
+          },
+          {
+            "nodeId": "node:west-middle:start",
+            "roadIds": [
+              "west-middle"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "roadId": "bailu-outer-arc",
+            "fromNodeId": "node:bailu-outer-arc:start",
+            "toNodeId": "node:bailu-outer-arc:end",
+            "lengthCm": 185.2,
+            "oneWay": false
+          },
+          {
+            "roadId": "bailu-south",
+            "fromNodeId": "node:bailu-south:start",
+            "toNodeId": "node:bailu-outer-arc:end",
+            "lengthCm": 58.3,
+            "oneWay": false
+          },
+          {
+            "roadId": "bailu-to-middle",
+            "fromNodeId": "node:bailu-south:start",
+            "toNodeId": "node:bailu-to-middle:end",
+            "lengthCm": 36.3,
+            "oneWay": false
+          },
+          {
+            "roadId": "bailu-west-arc",
+            "fromNodeId": "node:bailu-outer-arc:start",
+            "toNodeId": "node:bailu-south:start",
+            "lengthCm": 31.3,
+            "oneWay": false
+          },
+          {
+            "roadId": "camp-connector",
+            "fromNodeId": "node:camp-connector:start",
+            "toNodeId": "node:camp-connector:end",
+            "lengthCm": 24.2,
+            "oneWay": false
+          },
+          {
+            "roadId": "central-north",
+            "fromNodeId": "node:central-north:start",
+            "toNodeId": "node:central-north:end",
+            "lengthCm": 59.1,
+            "oneWay": false
+          },
+          {
+            "roadId": "central-south",
+            "fromNodeId": "node:central-north:end",
+            "toNodeId": "node:central-south:end",
+            "lengthCm": 64.9,
+            "oneWay": false
+          },
+          {
+            "roadId": "east-inner-south",
+            "fromNodeId": "node:east-inner-south:start",
+            "toNodeId": "node:camp-connector:start",
+            "lengthCm": 84.2,
+            "oneWay": false
+          },
+          {
+            "roadId": "east-north-outer",
+            "fromNodeId": "node:bailu-outer-arc:end",
+            "toNodeId": "node:east-north-outer:end",
+            "lengthCm": 55.7,
+            "oneWay": false
+          },
+          {
+            "roadId": "east-outer-south",
+            "fromNodeId": "node:east-north-outer:end",
+            "toNodeId": "node:camp-connector:end",
+            "lengthCm": 203.9,
+            "oneWay": false
+          },
+          {
+            "roadId": "huangge-spur",
+            "fromNodeId": "node:huangge-spur:start",
+            "toNodeId": "node:huangge-spur:end",
+            "lengthCm": 27.9,
+            "oneWay": false
+          },
+          {
+            "roadId": "lower-east",
+            "fromNodeId": "node:central-south:end",
+            "toNodeId": "node:camp-connector:start",
+            "lengthCm": 97.3,
+            "oneWay": false
+          },
+          {
+            "roadId": "lower-west",
+            "fromNodeId": "node:huangge-spur:start",
+            "toNodeId": "node:central-south:end",
+            "lengthCm": 76.9,
+            "oneWay": false
+          },
+          {
+            "roadId": "middle-east",
+            "fromNodeId": "node:central-north:end",
+            "toNodeId": "node:bailu-to-middle:end",
+            "lengthCm": 105,
+            "oneWay": false
+          },
+          {
+            "roadId": "middle-west",
+            "fromNodeId": "node:middle-west:start",
+            "toNodeId": "node:central-north:end",
+            "lengthCm": 113.9,
+            "oneWay": false
+          },
+          {
+            "roadId": "north-east-main",
+            "fromNodeId": "node:central-north:start",
+            "toNodeId": "node:bailu-outer-arc:start",
+            "lengthCm": 107,
+            "oneWay": false
+          },
+          {
+            "roadId": "north-west-main",
+            "fromNodeId": "node:north-west-main:start",
+            "toNodeId": "node:central-north:start",
+            "lengthCm": 88.1,
+            "oneWay": false
+          },
+          {
+            "roadId": "northwest-connector",
+            "fromNodeId": "node:north-west-main:start",
+            "toNodeId": "node:middle-west:start",
+            "lengthCm": 66.4,
+            "oneWay": false
+          },
+          {
+            "roadId": "nw-bag",
+            "fromNodeId": "node:nw-bag:start",
+            "toNodeId": "node:north-west-main:start",
+            "lengthCm": 44.4,
+            "oneWay": false
+          },
+          {
+            "roadId": "oil-south",
+            "fromNodeId": "node:east-inner-south:start",
+            "toNodeId": "node:east-north-outer:end",
+            "lengthCm": 82.6,
+            "oneWay": false
+          },
+          {
+            "roadId": "oil-west-arc",
+            "fromNodeId": "node:bailu-to-middle:end",
+            "toNodeId": "node:east-inner-south:start",
+            "lengthCm": 31.4,
+            "oneWay": false
+          },
+          {
+            "roadId": "parking-connector",
+            "fromNodeId": "node:parking-connector:start",
+            "toNodeId": "node:central-north:start",
+            "lengthCm": 27.4,
+            "oneWay": false
+          },
+          {
+            "roadId": "southeast-spur",
+            "fromNodeId": "node:camp-connector:end",
+            "toNodeId": "node:southeast-spur:end",
+            "lengthCm": 31.8,
+            "oneWay": false
+          },
+          {
+            "roadId": "southwest-spur",
+            "fromNodeId": "node:central-south:end",
+            "toNodeId": "node:southwest-spur:end",
+            "lengthCm": 110.6,
+            "oneWay": false
+          },
+          {
+            "roadId": "west-middle",
+            "fromNodeId": "node:west-middle:start",
+            "toNodeId": "node:middle-west:start",
+            "lengthCm": 66.8,
+            "oneWay": false
+          },
+          {
+            "roadId": "west-south-connector",
+            "fromNodeId": "node:middle-west:start",
+            "toNodeId": "node:huangge-spur:start",
+            "lengthCm": 80.3,
+            "oneWay": false
+          }
+        ]
+      },
+      "method": "map_graph",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 2,
+      "native_input_index": 2,
+      "seq": 5,
+      "tick": 0,
+      "result": {
+        "forwardCm": 0,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 0,
+        "tick": 0
+      },
+      "method": "odometry",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 3,
+      "native_input_index": 3,
+      "seq": 6,
+      "tick": 0,
+      "result": {
+        "onRoad": true,
+        "roadId": "parking-connector",
+        "roadIds": [
+          "parking-connector"
+        ],
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 240.4,
+        "atJunction": false,
+        "junctionId": null,
+        "exits": [
+          {
+            "roadId": "parking-connector",
+            "direction": "straight",
+            "turnDeg": 0
+          }
+        ],
+        "roadProgressCm": 0,
+        "fromNodeId": "node:parking-connector:start",
+        "toNodeId": "node:central-north:start",
+        "atNode": true,
+        "nodeId": "node:parking-connector:start",
+        "tick": 0
+      },
+      "method": "road_state",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 4,
+      "native_input_index": 4,
+      "seq": 8,
+      "tick": 0,
+      "result": [
+        {
+          "category": "obstacle",
+          "categoryLabel": "障碍物",
+          "name": "障碍物",
+          "label": "障碍物",
+          "direction": "中间",
+          "distanceCm": 30,
+          "confidence": 0.87,
+          "near": false,
+          "stable": true,
+          "bearingDeg": -0.14
+        },
+        {
+          "category": "obstacle",
+          "categoryLabel": "障碍物",
+          "name": "障碍物",
+          "label": "障碍物",
+          "direction": "左",
+          "distanceCm": 100,
+          "confidence": 0.86,
+          "near": false,
+          "stable": true,
+          "bearingDeg": -27.35
+        },
+        {
+          "category": "obstacle",
+          "categoryLabel": "障碍物",
+          "name": "障碍物",
+          "label": "障碍物",
+          "direction": "左",
+          "distanceCm": 100,
+          "confidence": 0.82,
+          "near": false,
+          "stable": true,
+          "bearingDeg": -35.82
+        },
+        {
+          "category": "distractor",
+          "categoryLabel": "混淆物",
+          "name": "混淆物",
+          "label": "混淆物",
+          "direction": "左",
+          "distanceCm": 100,
+          "confidence": 0.81,
+          "near": false,
+          "stable": true,
+          "bearingDeg": -19.35
+        }
+      ],
+      "method": "observe",
+      "args": [
+        null,
+        0.0
+      ]
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 5,
+      "native_input_index": 5,
+      "seq": 9,
+      "tick": 0,
+      "result": {
+        "forwardCm": 0,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 0,
+        "tick": 0
+      },
+      "method": "odometry",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 6,
+      "native_input_index": 6,
+      "seq": 10,
+      "tick": 0,
+      "result": {
+        "onRoad": true,
+        "roadId": "parking-connector",
+        "roadIds": [
+          "parking-connector"
+        ],
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 240.4,
+        "atJunction": false,
+        "junctionId": null,
+        "exits": [
+          {
+            "roadId": "parking-connector",
+            "direction": "straight",
+            "turnDeg": 0
+          }
+        ],
+        "roadProgressCm": 0,
+        "fromNodeId": "node:parking-connector:start",
+        "toNodeId": "node:central-north:start",
+        "atNode": true,
+        "nodeId": "node:parking-connector:start",
+        "tick": 0
+      },
+      "method": "road_state",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 7,
+      "native_input_index": 7,
+      "seq": 11,
+      "tick": 0,
+      "result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "roadId": "parking-connector",
+        "distanceCm": 25,
+        "elapsedTicks": 134
+      },
+      "method": "take_exit",
+      "args": {
+        "roadId": "parking-connector",
+        "speed": 30.0,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 8,
+      "native_input_index": 8,
+      "seq": 38,
+      "tick": 134,
+      "result": {
+        "forwardCm": 25,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 25,
+        "tick": 134
+      },
+      "method": "odometry",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "fixture_index": 9,
+      "native_input_index": 9,
+      "seq": 39,
+      "tick": 134,
+      "result": {
+        "onRoad": true,
+        "roadId": "parking-connector",
+        "roadIds": [
+          "parking-connector",
+          "central-north",
+          "north-east-main",
+          "north-west-main"
+        ],
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 215.4,
+        "atJunction": true,
+        "junctionId": "node:central-north:start",
+        "exits": [
+          {
+            "roadId": "north-east-main",
+            "direction": "left",
+            "turnDeg": 90
+          },
+          {
+            "roadId": "central-north",
+            "direction": "straight",
+            "turnDeg": 0.8
+          },
+          {
+            "roadId": "north-west-main",
+            "direction": "right",
+            "turnDeg": -90
+          },
+          {
+            "roadId": "parking-connector",
+            "direction": "back",
+            "turnDeg": -180
+          }
+        ],
+        "roadProgressCm": 25,
+        "fromNodeId": "node:parking-connector:start",
+        "toNodeId": "node:central-north:start",
+        "atNode": true,
+        "nodeId": "node:central-north:start",
+        "tick": 134
+      },
+      "method": "road_state",
+      "args": null
+    },
+    {
+      "mode": "native_prefix",
+      "stopped_before_reply": true,
+      "method": "follow_road",
+      "args": {
+        "maxCm": 10.0,
+        "speed": 30.0,
+        "obeySpeedLimit": true
+      }
+    },
+    {
+      "mode": "synthetic_scope",
+      "method": "odometry",
+      "args": null
+    },
+    {
+      "mode": "synthetic_scope",
+      "method": "road_state",
+      "args": null
+    },
+    {
+      "mode": "synthetic_scope",
+      "method": "odometry",
+      "args": null
+    }
+  ],
+  "logs": [
+    "GY {\"event\": \"program_version\", \"version\": \"wm-opt2-r3-20260924\", \"file_sha256\": \"efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0\", \"wm_kit_commit\": \"326a5f8892b9da11996b5f3d3d0fc56341aca6e4\", \"wm_embed_sha256\": \"61308c1c20270ec31d8ee5870ed2b01bf6920075e4820e5fc8c30bd2e626f1fb\", \"turn_cost_k\": 0.060290462706043484, \"turn_calibration_sha256\": \"be38032897487e85cf36d994b308cba0c4ed9dc6821485e16bd6982123f3a195\", \"log_conventions\": {\"pose\": \"[x_m 右, z_m 前, headingDeg 左转为正 = odometry.headingDeg]\", \"bearingDeg\": \"右为正（observe / WM 方位同号）\"}}\n",
+    "GY {\"event\": \"ball_start\", \"tick\": 0, \"ball_index\": 1, \"track_id\": null, \"target_source\": \"new_observations\", \"retained_wm_targets\": 0, \"delivered_count\": 0, \"observe_count\": 0, \"approach_calls\": 0}\n",
+    "GY {\"event\": \"observe\", \"observe_count\": 1, \"tick\": 0, \"query\": null, \"confidence\": 0.0, \"requested_category\": null, \"requested_confidence\": 0.4, \"odo\": [0.0, 0.0, 0.0], \"translationSinceObserveCm\": null, \"turnSinceObserveDeg\": null, \"raw\": [{\"category\": \"distractor\", \"distanceCm\": 100, \"bearingDeg\": -19.35, \"confidence\": 0.81}]}\n",
+    "GY {\"event\": \"detection_filter\", \"tick\": 0, \"observe_count\": 1, \"filter_sha256\": \"57ea75300c330bea5b4ecdb7a529cdc802e617a76572c75f4f76fe6d319f7322\", \"kept_indices\": [0, 1, 2, 3], \"rejected_indices\": [], \"decisions\": [{\"index\": 0, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.87, \"confidence_floor\": null, \"distance_cm\": 30, \"wm_window_eligible\": false}, {\"index\": 1, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.86, \"confidence_floor\": null, \"distance_cm\": 100, \"wm_window_eligible\": false}, {\"index\": 2, \"keep\": true, \"reason\": \"class_not_filtered\", \"category\": \"obstacle\", \"confidence\": 0.82, \"confidence_floor\": null, \"distance_cm\": 100, \"wm_window_eligible\": false}, {\"index\": 3, \"keep\": true, \"reason\": \"outside_wm_window_retained\", \"category\": \"distractor\", \"confidence\": 0.81, \"confidence_floor\": 0.8, \"distance_cm\": 100, \"wm_window_eligible\": false}], \"filter_version\": \"confidence-floor-wm-window-v2\"}\n",
+    "GY {\"event\": \"target_observations\", \"count\": 0, \"seen\": 0, \"items\": [], \"outside_window\": []}\n",
+    "GY {\"event\": \"viewpoint_take_exit\", \"roadId\": \"parking-connector\", \"distanceCm\": 25, \"stoppedBy\": \"entered_road\", \"actualRoadId\": \"parking-connector\", \"actualProgressCm\": 25}\n",
+    "GY {\"event\": \"approach_failed\", \"reason\": \"memory_graph_target_lost_or_changed\", \"track_id\": \"synthetic-absent-track\"}\n"
+  ]
+}

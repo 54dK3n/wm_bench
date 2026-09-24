@@ -8,6 +8,7 @@ WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流
 
 - [当前 A–D 执行状态](docs/NEXT_WORK_STATE.md)
 - [WorldModel 回流结果及 PR](artifacts/worldmodel-return/SUMMARY.md)
+- [重构第 1 轮：未通过及视觉输入差异](artifacts/inloop/refactor/SUMMARY.md)
 - [v3 全阶段状态](artifacts/inloop/V3_FINAL_STATUS.md)
 - [双球 demo](artifacts/inloop/demo/DEMO.md)
 - [阶段 1 报告](artifacts/inloop/opt-1/SUMMARY.md)
@@ -28,7 +29,13 @@ WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流
 | `docs/` | 数据保留策略、WorldModel 来源、本地大证据清单 |
 | 根目录旧脚本 | 历史验收入口，依赖外部旧版 wm_kit，见下方限制 |
 
-源码、报告、小型评测数据、冻结程序和 WorldModel Git bundle 纳入版本控制。系统/测试缓存、虚拟环境、安装依赖和凭据由 `.gitignore` 排除。大型 PNG、完整 record、samples、终端副本留在本机，没有删除；仅 demo 的关键帧作为小型展示文件直接入库。
+源码、报告、小型评测数据、冻结程序和 WorldModel Git bundle 纳入版本控制。系统/测试缓存、虚拟环境、安装依赖和凭据由 `.gitignore` 排除。大型原始证据留在本机，没有删除；demo 关键帧直接入库。本次 C 第 1 轮及其 opt-2 round-3 对照证据另以可校验压缩包入库，包含日志、record、samples 和全部帧；其他旧轮次仍依照本地证据清单管理。
+
+新 clone 恢复本次 C 比较所需原始证据（原字节不改，已有不同文件会拒绝覆盖）：
+
+```sh
+python3 tools/package_refactor_evidence.py --restore
+```
 
 被排除的实验文件不是缓存，也没有自动上传到其他存储。其相对路径、大小和 SHA256 见 [本地证据清单](docs/local-evidence-manifest.json)；恢复和核验方法见 [数据保留说明](docs/DATA_POLICY.md)。没有恢复这些文件时，部分历史报告的图片/原始证据链接与真实回放测试不可用。
 
@@ -73,7 +80,7 @@ python3 tools/run_refactor_batch.py \
 python3 tools/compare_refactor_records.py --candidate artifacts/inloop/refactor/round-1
 ```
 
-重构须与 `artifacts/inloop/opt-2/round-3/` 原生 inputs/events 和得分相等，最多三轮。旧 `run_opt2_batch.py`、`opt2_preflight.py` 等入口保留为历史工具，当前工作以新入口为准。冻结程序、旧轮次和成功证据不得覆盖。
+重构须与 `artifacts/inloop/opt-2/round-3/` 原生 inputs/events 和得分相等，最多三轮。第 1 轮已运行完毕且未通过：inputs 0/10、events 5/10、得分 8/10 相等；当前暂停，未进入 opt-2b。上面的 `round-1` 是已完成证据目录，运行器拒绝覆盖或重跑已执行的布局。旧 `run_opt2_batch.py`、`opt2_preflight.py` 等入口保留为历史工具，当前工作以新入口为准。冻结程序、旧轮次和成功证据不得覆盖。
 
 已保存证据的只读核验：
 

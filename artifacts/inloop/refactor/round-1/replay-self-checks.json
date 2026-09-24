@@ -1,0 +1,254 @@
+{
+  "all_pass": true,
+  "checks": {
+    "baseline_completes": true,
+    "wrong_motion_speed_rejected_at_first_take_exit": true,
+    "altered_world_model_state_detected": true,
+    "changed_program_version_turn_cost_k_detected": true,
+    "only_four_identity_fields_ignored": true,
+    "holding_native_return_absence_not_reclassified_as_recorded": true
+  },
+  "engine": "pyodide",
+  "python_version": "3.12.7 (main, Jun  4 2025, 22:38:17) [Clang 19.0.0git (https:/github.com/llvm/llvm-project 0a8cd1ed1f4f35905df318015b",
+  "motion_mismatch": {
+    "reason": "public_request_or_argument_mismatch",
+    "method": "take_exit",
+    "args": {
+      "roadId": "parking-connector",
+      "speed": 31.0,
+      "obeySpeedLimit": true
+    },
+    "native_input_index": 7,
+    "expected": {
+      "native_input_index": 7,
+      "seq": 11,
+      "t": 0,
+      "tick": 0,
+      "type": "navigation_control",
+      "method": "take_exit",
+      "args": {
+        "roadId": "parking-connector",
+        "speed": 30,
+        "obeySpeedLimit": true
+      },
+      "result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "roadId": "parking-connector",
+        "distanceCm": 25,
+        "elapsedTicks": 134
+      }
+    }
+  },
+  "strict_missing_evidence_boundary": {
+    "reason": "holding_return_not_recorded_in_native_inputs",
+    "method": "holding",
+    "native_input_index": 221,
+    "last_consumed_seq": 1115
+  },
+  "first_wm_snapshot_difference": {
+    "index": 6,
+    "baseline": {
+      "log_index": 24,
+      "event": {
+        "event": "wm_associations",
+        "tick": 1718,
+        "items": [
+          {
+            "distanceCm": 55,
+            "bearingDeg": -2.62,
+            "track_id": "target_001"
+          }
+        ]
+      },
+      "next_native_input_index": 90,
+      "wm": {
+        "_objects": {
+          "target_001": {
+            "obj_id": "target_001",
+            "name": "target",
+            "aliases": [],
+            "x": -1.5494969570255135,
+            "z": 1.0797690673763842,
+            "radius_cm": 22.0,
+            "size_source": "local_registry",
+            "size_trusted": true,
+            "radius_semantics": "outer_radius",
+            "confidence": 0.88,
+            "first_seen": 34.36,
+            "last_seen": 34.36,
+            "last_updated": 34.36,
+            "hit_count": 1,
+            "miss_count": 0,
+            "state": "tentative",
+            "pose_uncertainty_cm": 0.0,
+            "source": "guangyang",
+            "last_bbox": null,
+            "last_frame_id": "guangyang:34.360000",
+            "last_frame_quality": {
+              "frame_id": "guangyang:34.360000",
+              "degraded": false,
+              "frames_skipped": 0,
+              "detections_skipped": 0,
+              "calibration_trusted": true,
+              "coordinate_frame": "world"
+            }
+          }
+        },
+        "_lost": {},
+        "_hit_poses": {
+          "target_001": [
+            [
+              -1.208,
+              0.552
+            ]
+          ]
+        },
+        "pose": {
+          "x": -1.208,
+          "z": 0.552,
+          "yaw_rad": -0.5323254218582705,
+          "pose_uncertainty_cm": 0.0
+        },
+        "last_update_time": 34.36,
+        "assoc_cfg": {
+          "gate_distance_m": 0.3,
+          "max_speed_mps": 0.0,
+          "max_gate_distance_m": 0.3,
+          "class_mismatch_penalty": 1.0,
+          "allow_cross_class": false,
+          "appearance_weight": 0.0,
+          "static_equal_weight": true,
+          "min_hit_pose_gap_m": 0.15
+        },
+        "decay_cfg": {
+          "half_life_in_fov_missed_s": 1.5,
+          "half_life_out_of_fov_s": 60.0,
+          "class_half_life_scale": {
+            "basket": 4.0,
+            "table": 8.0,
+            "ball": 1.0,
+            "bottle": 2.0,
+            "target": 1.0,
+            "distractor": 1.5,
+            "obstacle": 8.0,
+            "storage-zone": 8.0,
+            "cleanup-zone": 8.0
+          },
+          "stale_threshold": 0.5,
+          "lost_threshold": 0.15,
+          "confirm_hits": 3
+        },
+        "fov_cfg": {
+          "horizontal_fov_deg": 75.2,
+          "max_range_m": 0.9,
+          "min_range_m": 0.15
+        }
+      }
+    },
+    "candidate": {
+      "log_index": 24,
+      "event": {
+        "event": "wm_associations",
+        "tick": 1718,
+        "items": [
+          {
+            "distanceCm": 55,
+            "bearingDeg": -2.62,
+            "track_id": "target_001"
+          }
+        ]
+      },
+      "next_native_input_index": 90,
+      "wm": {
+        "_objects": {
+          "target_001": {
+            "obj_id": "target_001",
+            "name": "target",
+            "aliases": [],
+            "x": -1.5394969570255135,
+            "z": 1.0797690673763842,
+            "radius_cm": 22.0,
+            "size_source": "local_registry",
+            "size_trusted": true,
+            "radius_semantics": "outer_radius",
+            "confidence": 0.88,
+            "first_seen": 34.36,
+            "last_seen": 34.36,
+            "last_updated": 34.36,
+            "hit_count": 1,
+            "miss_count": 0,
+            "state": "tentative",
+            "pose_uncertainty_cm": 0.0,
+            "source": "guangyang",
+            "last_bbox": null,
+            "last_frame_id": "guangyang:34.360000",
+            "last_frame_quality": {
+              "frame_id": "guangyang:34.360000",
+              "degraded": false,
+              "frames_skipped": 0,
+              "detections_skipped": 0,
+              "calibration_trusted": true,
+              "coordinate_frame": "world"
+            }
+          }
+        },
+        "_lost": {},
+        "_hit_poses": {
+          "target_001": [
+            [
+              -1.208,
+              0.552
+            ]
+          ]
+        },
+        "pose": {
+          "x": -1.208,
+          "z": 0.552,
+          "yaw_rad": -0.5323254218582705,
+          "pose_uncertainty_cm": 0.0
+        },
+        "last_update_time": 34.36,
+        "assoc_cfg": {
+          "gate_distance_m": 0.3,
+          "max_speed_mps": 0.0,
+          "max_gate_distance_m": 0.3,
+          "class_mismatch_penalty": 1.0,
+          "allow_cross_class": false,
+          "appearance_weight": 0.0,
+          "static_equal_weight": true,
+          "min_hit_pose_gap_m": 0.15
+        },
+        "decay_cfg": {
+          "half_life_in_fov_missed_s": 1.5,
+          "half_life_out_of_fov_s": 60.0,
+          "class_half_life_scale": {
+            "basket": 4.0,
+            "table": 8.0,
+            "ball": 1.0,
+            "bottle": 2.0,
+            "target": 1.0,
+            "distractor": 1.5,
+            "obstacle": 8.0,
+            "storage-zone": 8.0,
+            "cleanup-zone": 8.0
+          },
+          "stale_threshold": 0.5,
+          "lost_threshold": 0.15,
+          "confirm_hits": 3
+        },
+        "fov_cfg": {
+          "horizontal_fov_deg": 75.2,
+          "max_range_m": 0.9,
+          "min_range_m": 0.15
+        }
+      }
+    }
+  },
+  "mutation_provenance": {
+    "motion": "replace in-memory first live take_exit speed with31",
+    "wm": "in-memory add0.01m to track x immediately after fusion"
+  },
+  "production_files_modified": false,
+  "simulator_started": false
+}

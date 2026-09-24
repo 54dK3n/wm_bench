@@ -3,6 +3,17 @@
   "baseline_sha256": "59d8f617a7fd82135b710b6a32cf112b4c17c80aa770beb59407aa50d5cf17e6",
   "changes_made": false,
   "deferred_to": "D",
+  "external_blockers": [
+    {
+      "id": "C-ENV-001",
+      "component": "platform visual capture",
+      "problem": "Visible checkpoint animation follows browser requestAnimationFrame time, while captureVirtualCameraFrame renders the current scene without resetting it to simulation time. Preserved first-frame PNGs differ for all ten layouts at identical recorded vehicle/camera/package states; current pixel detection exactly reconstructs all twenty recorded first-frame results.",
+      "evidence": "round-1/vision-diagnosis.json",
+      "limits": "Animation phase was not recorded and the old renderer/resource source was not completely frozen. This identifies a non-deterministic input mechanism, not an exclusive reconstruction of every changed pixel.",
+      "changes_made": false,
+      "requires_scope_decision": "Platform behavior repair and rebuilding the old-program comparison baseline are outside C's refactor-only scope. Do not proceed to D or relax the native equality gate."
+    }
+  ],
   "items": [
     {
       "id": "C-DEFER-001",

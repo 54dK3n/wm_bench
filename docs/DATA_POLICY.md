@@ -2,7 +2,7 @@
 
 本仓库保存可审查的源码、测试、文档、报告、校准/评测 JSON、冻结源码索引以及 WorldModel Git 历史 bundle。旧实验字节、判定结果与失败记录保持原样。
 
-大型原始证据保留在当前工作目录，但不写入 Git：
+大型原始证据保留在当前工作目录，通常不以展开形式写入 Git：
 
 - 原生帧 PNG（demo 抓取/送达关键帧除外）；
 - 完整 `*.record.json`、`*.samples.json`、`*.partial.txt`；
@@ -19,7 +19,14 @@
 python3 tools/repository_evidence.py --check
 ```
 
-在只克隆源码的新机器上，缺失文件会明确报告并返回非零退出码，不跳过或假装证据齐全。需要向原持有人索取这些文件，按清单中的相对路径恢复到项目根目录，然后重新核验。GitHub 不是这部分数据的备份；若迁移或清理本机，应另行备份清单列出的文件。
+本次 C 交付有一个明确例外：`artifacts/inloop/refactor/evidence-packages/` 保存 opt-2 round-3 与 refactor round-1 的已执行布局证据压缩包。完整原生 record 已包含视觉 PNG 字节；恢复工具据此逐字节导出 PNG，避免在包内重复存储，独立的抓取/送达截图则直接保存。日志、samples、清单和 record 的原字节及历史路径均保留。平台代码、服务器数据、浏览器配置和认证存储不入包。
+
+```sh
+python3 tools/package_refactor_evidence.py --restore
+python3 tools/package_refactor_evidence.py --check
+```
+
+恢复会验证包及所有文件的 SHA256，拒绝覆盖任何不同的已有文件。上述范围之外，在只克隆源码的新机器上仍须向原持有人索取缺失数据，按本地清单中的相对路径恢复后核验；缺失会明确返回非零退出码，不跳过或假装齐全。GitHub 尚未备份全部历史原始数据，迁移或清理本机前应另行备份。
 
 新增实验证据后，先检查 `.gitignore`、确认留存范围，再更新清单：
 

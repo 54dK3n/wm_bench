@@ -1,0 +1,6802 @@
+{
+  "baseline": "artifacts/inloop/opt-2/round-3",
+  "candidate": "artifacts/inloop/refactor/round-1",
+  "tool_sha256": "871177cffbd44ea1fc047fb3dcd33729c8009f95f7b7716ff0ead9a1194e85f7",
+  "indexing": "input/event/list indices are zero-based; raw log line_number is one-based",
+  "diagnostic_only": true,
+  "equivalence_exceptions_added": [],
+  "scope": "Only source records are read. No controller, simulator, image processing, program edits or gate changes.",
+  "request_projection_fields": {
+    "navigation_query": [
+      "type",
+      "method",
+      "args"
+    ],
+    "vision_query": [
+      "type",
+      "method",
+      "args"
+    ],
+    "navigation_control": [
+      "type",
+      "method",
+      "args"
+    ],
+    "control": [
+      "type",
+      "command",
+      "source"
+    ],
+    "package_grab": [
+      "type",
+      "intent"
+    ],
+    "package_release": [
+      "type",
+      "intent"
+    ],
+    "run_end": [
+      "type",
+      "reason",
+      "source"
+    ]
+  },
+  "action_types": [
+    "control",
+    "navigation_control",
+    "package_grab",
+    "package_release"
+  ],
+  "totals": {
+    "layouts": 10,
+    "inputs_equal": 0,
+    "events_equal": 5,
+    "scores_equal": 8,
+    "first_difference_is_perception_payload": 10,
+    "first_difference_frame_id_changed": 1,
+    "first_difference_identity_only": 0,
+    "request_action_relations": {
+      "no_different_action_request_in_complete_runs": 5,
+      "before_first_different_action_request_in_both_runs": 5
+    }
+  },
+  "layouts": [
+    {
+      "map": "map-01",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-01.json",
+          "raw_sha256": "04ec26e522c31cb1be2c5a5fd22b72b61d1728aa0c36660ce2fb9e76fe3f1969",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-008.record.json",
+          "native_sha256": "8cbe4f38ff61da5c9ee5cdb3fdfcbd6ed1a97b1c52dd72c87a0edb95e372af66",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_657f98b9aa284f9182279d5c96730448",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-01.json",
+          "raw_sha256": "8cf6485dd2a138badb2bb527a875abfc81527ced7539bff08b27e4bd560c6d16",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-015.record.json",
+          "native_sha256": "bb4c3736ef0d7ae06fb56630573c2654179fda8871b1b13feb5798fe7b3f1b8e",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_21b39a829be54a1fb3cd574314b76f6d",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": true,
+        "score_equal": true,
+        "baseline_score": 40,
+        "candidate_score": 40
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 8,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/frameId",
+            "baseline": 7,
+            "candidate": 8
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": true,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.82,
+            "direction": "中间",
+            "distanceCm": 40,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.81,
+            "direction": "中间",
+            "distanceCm": 40,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": null,
+      "first_different_action_request": null,
+      "first_different_full_action_record": null,
+      "input_difference_vs_first_action_request": "no_different_action_request_in_complete_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "60a7ec75cc564fa10c40d80bde038528963b641d8cdcc3111275bde5032358d1",
+        "candidate": "b01f1930dcb1bef2d8448951cc8c2a021491b2b2049b3436998383df0a4cd78e"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-02",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-02.json",
+          "raw_sha256": "b439919b24805a7ab5fcd0b7b1c0dbd91feee8e0ed81c70ebc3171b187f8ffb1",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-006.record.json",
+          "native_sha256": "15955fdc22d379f6981b7a1404f5df2dd33a63471be83ef8f0c3e11c3f4dbeac",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_c323082363d149209dde6774c859f445",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-02.json",
+          "raw_sha256": "96eb03589876dd731a1ba295e2cbccafba9dfab34b765936e654291501a09595",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-013.record.json",
+          "native_sha256": "9b1bcf58d40f5eb995833ecfbc6e2f0a11aa9885c52c0d8649e84d96a8f71512",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_d63e01371d2c49b68a8e72f627d3b5e2",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": false,
+        "score_equal": true,
+        "baseline_score": 49.2,
+        "candidate_score": 49.2
+      },
+      "first_native_input_difference": {
+        "ordinal": 13,
+        "baseline": {
+          "input_index": 13,
+          "seq": 47,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 147,
+          "t": 2940,
+          "frameId": 8,
+          "evidenceId": "vision-2"
+        },
+        "candidate": {
+          "input_index": 13,
+          "seq": 47,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 147,
+          "t": 2940,
+          "frameId": 8,
+          "evidenceId": "vision-2"
+        },
+        "differences": [
+          {
+            "path": "/result/0/bearingDeg",
+            "baseline": -36.89,
+            "candidate": -0.14
+          },
+          {
+            "path": "/result/0/category",
+            "baseline": "storage-zone",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/0/categoryLabel",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/0/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/0/distanceCm",
+            "baseline": 100,
+            "candidate": 35
+          },
+          {
+            "path": "/result/0/label",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/0/name",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -26.36,
+            "candidate": -36.89
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "obstacle",
+            "candidate": "storage-zone"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.82,
+            "candidate": 0.85
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -29.06,
+            "candidate": -26.36
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.81,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -33.96,
+            "candidate": -29.06
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 95,
+            "candidate": 100
+          },
+          {
+            "path": "/result/4/bearingDeg",
+            "baseline": 11.29,
+            "candidate": -33.96
+          },
+          {
+            "path": "/result/4/confidence",
+            "baseline": 0.8,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/4/direction",
+            "baseline": "右",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/4/distanceCm",
+            "baseline": 87,
+            "candidate": 95
+          },
+          {
+            "path": "/result/5",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "category": "obstacle",
+              "categoryLabel": "障碍物",
+              "name": "障碍物",
+              "label": "障碍物",
+              "direction": "右",
+              "distanceCm": 87,
+              "confidence": 0.8,
+              "near": false,
+              "stable": true,
+              "bearingDeg": 11.29
+            }
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/0/bearingDeg",
+            "baseline": -36.89,
+            "candidate": -0.14
+          },
+          {
+            "path": "/result/0/category",
+            "baseline": "storage-zone",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/0/categoryLabel",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/0/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/0/distanceCm",
+            "baseline": 100,
+            "candidate": 35
+          },
+          {
+            "path": "/result/0/label",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/0/name",
+            "baseline": "存放点",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -26.36,
+            "candidate": -36.89
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "obstacle",
+            "candidate": "storage-zone"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.82,
+            "candidate": 0.85
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "障碍物",
+            "candidate": "存放点"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -29.06,
+            "candidate": -26.36
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.81,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -33.96,
+            "candidate": -29.06
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 95,
+            "candidate": 100
+          },
+          {
+            "path": "/result/4/bearingDeg",
+            "baseline": 11.29,
+            "candidate": -33.96
+          },
+          {
+            "path": "/result/4/confidence",
+            "baseline": 0.8,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/4/direction",
+            "baseline": "右",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/4/distanceCm",
+            "baseline": 87,
+            "candidate": 95
+          },
+          {
+            "path": "/result/5",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "category": "obstacle",
+              "categoryLabel": "障碍物",
+              "name": "障碍物",
+              "label": "障碍物",
+              "direction": "右",
+              "distanceCm": 87,
+              "confidence": 0.8,
+              "near": false,
+              "stable": true,
+              "bearingDeg": 11.29
+            }
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "storage-zone",
+            "categoryLabel": "存放点",
+            "name": "存放点",
+            "label": "存放点",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.85,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -36.89
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -26.36
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -29.06
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 95,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -33.96
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 87,
+            "confidence": 0.8,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 11.29
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 35,
+            "confidence": 0.85,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "storage-zone",
+            "categoryLabel": "存放点",
+            "name": "存放点",
+            "label": "存放点",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.85,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -36.89
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -26.36
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -29.06
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 95,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -33.96
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 87,
+            "confidence": 0.8,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 11.29
+          }
+        ],
+        "removed_exact_detection_items": [],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.85,
+            "direction": "中间",
+            "distanceCm": 35,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": {
+        "ordinal": 616,
+        "baseline": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "candidate": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 24.44999999999999,
+            "candidate": 24.560000000000002
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.42673300211261334,
+            "candidate": 0.42865286428980737
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.641280777356205,
+            "candidate": 1.6486648626531053
+          }
+        ]
+      },
+      "first_different_action_request": {
+        "ordinal": 193,
+        "baseline": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "candidate": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 24.44999999999999,
+            "candidate": 24.560000000000002
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.42673300211261334,
+            "candidate": 0.42865286428980737
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.641280777356205,
+            "candidate": 1.6486648626531053
+          }
+        ]
+      },
+      "first_different_full_action_record": {
+        "ordinal": 193,
+        "baseline": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "candidate": {
+          "input_index": 616,
+          "seq": 2481,
+          "type": "control",
+          "tick": 8491,
+          "t": 169820
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 24.44999999999999,
+            "candidate": 24.560000000000002
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.42673300211261334,
+            "candidate": 0.42865286428980737
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.641280777356205,
+            "candidate": 1.6486648626531053
+          }
+        ]
+      },
+      "input_difference_vs_first_action_request": "before_first_different_action_request_in_both_runs",
+      "prior_prefix": {
+        "native_input_count": 13,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 2,
+        "actions": [
+          {
+            "input_index": 7,
+            "seq": 11,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 0,
+            "t": 0
+          },
+          {
+            "input_index": 10,
+            "seq": 40,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 134,
+            "t": 2680
+          }
+        ],
+        "last_action": {
+          "position": {
+            "input_index": 10,
+            "seq": 40,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 134,
+            "t": 2680
+          },
+          "record": {
+            "seq": 40,
+            "t": 2680,
+            "tick": 134,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "args": {
+              "maxCm": 10,
+              "speed": 30,
+              "obeySpeedLimit": true
+            },
+            "result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "roadId": "parking-connector",
+              "distanceCm": 2.4,
+              "elapsedTicks": 13
+            }
+          }
+        },
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 147,
+        "sample_counts": [
+          30,
+          30
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "dc5c722910d161580e20cadf7b1dc60ac57cd5a41058621d06f717099a81deea",
+        "candidate": "f65a998d24c8f74c6cd6e77abf019007ebddf96d4e4d2d59c9827d59d91d2016"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 6,
+            "line_number": 7,
+            "observe_count": 2,
+            "tick": 147
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 6,
+            "line_number": 7,
+            "observe_count": 2,
+            "tick": 147
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-03",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-03.json",
+          "raw_sha256": "78884a9caa0fbbe00f8e3ad663796b3df0c9c615415dcb1a624b350a4f24ccb3",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-016.record.json",
+          "native_sha256": "202d930d825418eb2ce7ccbd75aaa44caaa7c8cb1b47188c41d04d251367ec50",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_b39a9b0c0397467d98b6b8f61be7bae0",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-03.json",
+          "raw_sha256": "9deebb3391b3484b4002771fffe571f428934464e12c81fbfe9a2ee194e569b2",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-005.record.json",
+          "native_sha256": "a4023cfce3c6e8cb0492f1ff1dca59da2f78e28bf4429ce6fc41938546c7c046",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_54f60f2b0e35487a87eb6e89046ea9e6",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": true,
+        "score_equal": true,
+        "baseline_score": 46.2,
+        "candidate_score": 46.2
+      },
+      "first_native_input_difference": {
+        "ordinal": 491,
+        "baseline": {
+          "input_index": 491,
+          "seq": 1914,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 6332,
+          "t": 126640,
+          "frameId": 21,
+          "evidenceId": "vision-15"
+        },
+        "candidate": {
+          "input_index": 491,
+          "seq": 1914,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 6332,
+          "t": 126640,
+          "frameId": 21,
+          "evidenceId": "vision-15"
+        },
+        "differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": 23.06,
+            "candidate": 17.99
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/distanceCm",
+            "baseline": 100,
+            "candidate": 89
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": 17.99,
+            "candidate": 23.06
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 89,
+            "candidate": 100
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": 23.06,
+            "candidate": 17.99
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/distanceCm",
+            "baseline": 100,
+            "candidate": 89
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": 17.99,
+            "candidate": 23.06
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 89,
+            "candidate": 100
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.9,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 2.89
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "右",
+            "distanceCm": 100,
+            "confidence": 0.83,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 23.06
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 89,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 17.99
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -5.91
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 76,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 6.72
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 42,
+            "confidence": 0.78,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -21.41
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 64,
+            "confidence": 0.78,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 23.18
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.9,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 2.89
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 89,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 17.99
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "右",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 23.06
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -5.91
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 76,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 6.72
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 42,
+            "confidence": 0.78,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -21.41
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 64,
+            "confidence": 0.78,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 23.18
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": 23.06,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.83,
+            "direction": "右",
+            "distanceCm": 100,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": 23.06,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.81,
+            "direction": "右",
+            "distanceCm": 100,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": null,
+      "first_different_action_request": null,
+      "first_different_full_action_record": null,
+      "input_difference_vs_first_action_request": "no_different_action_request_in_complete_runs",
+      "prior_prefix": {
+        "native_input_count": 491,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 152,
+        "actions": [
+          {
+            "input_index": 7,
+            "seq": 11,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 0,
+            "t": 0
+          },
+          {
+            "input_index": 10,
+            "seq": 40,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 134,
+            "t": 2680
+          },
+          {
+            "input_index": 16,
+            "seq": 50,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 147,
+            "t": 2940
+          },
+          {
+            "input_index": 19,
+            "seq": 86,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 310,
+            "t": 6200
+          },
+          {
+            "input_index": 22,
+            "seq": 100,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 365,
+            "t": 7300
+          },
+          {
+            "input_index": 25,
+            "seq": 114,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 422,
+            "t": 8440
+          },
+          {
+            "input_index": 28,
+            "seq": 128,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 477,
+            "t": 9540
+          },
+          {
+            "input_index": 31,
+            "seq": 142,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 532,
+            "t": 10640
+          },
+          {
+            "input_index": 34,
+            "seq": 156,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 586,
+            "t": 11720
+          },
+          {
+            "input_index": 37,
+            "seq": 170,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 640,
+            "t": 12800
+          },
+          {
+            "input_index": 43,
+            "seq": 184,
+            "type": "control",
+            "tick": 675,
+            "t": 13500
+          },
+          {
+            "input_index": 46,
+            "seq": 200,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 732,
+            "t": 14640
+          },
+          {
+            "input_index": 49,
+            "seq": 214,
+            "type": "control",
+            "tick": 786,
+            "t": 15720
+          },
+          {
+            "input_index": 52,
+            "seq": 223,
+            "type": "control",
+            "tick": 807,
+            "t": 16140
+          },
+          {
+            "input_index": 58,
+            "seq": 242,
+            "type": "control",
+            "tick": 857,
+            "t": 17140
+          },
+          {
+            "input_index": 61,
+            "seq": 249,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 870,
+            "t": 17400
+          },
+          {
+            "input_index": 64,
+            "seq": 263,
+            "type": "control",
+            "tick": 925,
+            "t": 18500
+          },
+          {
+            "input_index": 67,
+            "seq": 270,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 938,
+            "t": 18760
+          },
+          {
+            "input_index": 70,
+            "seq": 281,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 975,
+            "t": 19500
+          },
+          {
+            "input_index": 73,
+            "seq": 334,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 1226,
+            "t": 24520
+          },
+          {
+            "input_index": 76,
+            "seq": 383,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 1458,
+            "t": 29160
+          },
+          {
+            "input_index": 79,
+            "seq": 426,
+            "type": "control",
+            "tick": 1655,
+            "t": 33100
+          },
+          {
+            "input_index": 82,
+            "seq": 442,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1712,
+            "t": 34240
+          },
+          {
+            "input_index": 85,
+            "seq": 455,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 1763,
+            "t": 35260
+          },
+          {
+            "input_index": 88,
+            "seq": 509,
+            "type": "control",
+            "tick": 2017,
+            "t": 40340
+          },
+          {
+            "input_index": 94,
+            "seq": 526,
+            "type": "control",
+            "tick": 2056,
+            "t": 41120
+          },
+          {
+            "input_index": 97,
+            "seq": 534,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 2074,
+            "t": 41480
+          },
+          {
+            "input_index": 100,
+            "seq": 548,
+            "type": "control",
+            "tick": 2128,
+            "t": 42560
+          },
+          {
+            "input_index": 106,
+            "seq": 561,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 2146,
+            "t": 42920
+          },
+          {
+            "input_index": 109,
+            "seq": 597,
+            "type": "control",
+            "tick": 2314,
+            "t": 46280
+          },
+          {
+            "input_index": 111,
+            "seq": 604,
+            "type": "control",
+            "tick": 2327,
+            "t": 46540
+          },
+          {
+            "input_index": 114,
+            "seq": 611,
+            "type": "control",
+            "tick": 2340,
+            "t": 46800
+          },
+          {
+            "input_index": 117,
+            "seq": 618,
+            "type": "control",
+            "tick": 2353,
+            "t": 47060
+          },
+          {
+            "input_index": 121,
+            "seq": 626,
+            "type": "control",
+            "tick": 2360,
+            "t": 47200
+          },
+          {
+            "input_index": 126,
+            "seq": 634,
+            "type": "control",
+            "tick": 2365,
+            "t": 47300
+          },
+          {
+            "input_index": 127,
+            "seq": 641,
+            "type": "package_grab",
+            "tick": 2389,
+            "t": 47780
+          },
+          {
+            "input_index": 128,
+            "seq": 644,
+            "type": "control",
+            "tick": 2389,
+            "t": 47780
+          },
+          {
+            "input_index": 131,
+            "seq": 653,
+            "type": "control",
+            "tick": 2410,
+            "t": 48200
+          },
+          {
+            "input_index": 134,
+            "seq": 661,
+            "type": "control",
+            "tick": 2430,
+            "t": 48600
+          },
+          {
+            "input_index": 135,
+            "seq": 668,
+            "type": "package_grab",
+            "tick": 2454,
+            "t": 49080
+          },
+          {
+            "input_index": 136,
+            "seq": 671,
+            "type": "control",
+            "tick": 2454,
+            "t": 49080
+          },
+          {
+            "input_index": 139,
+            "seq": 680,
+            "type": "control",
+            "tick": 2475,
+            "t": 49500
+          },
+          {
+            "input_index": 142,
+            "seq": 687,
+            "type": "control",
+            "tick": 2488,
+            "t": 49760
+          },
+          {
+            "input_index": 143,
+            "seq": 695,
+            "type": "package_grab",
+            "tick": 2512,
+            "t": 50240
+          },
+          {
+            "input_index": 144,
+            "seq": 698,
+            "type": "control",
+            "tick": 2512,
+            "t": 50240
+          },
+          {
+            "input_index": 147,
+            "seq": 707,
+            "type": "control",
+            "tick": 2533,
+            "t": 50660
+          },
+          {
+            "input_index": 150,
+            "seq": 715,
+            "type": "control",
+            "tick": 2546,
+            "t": 50920
+          },
+          {
+            "input_index": 151,
+            "seq": 722,
+            "type": "package_grab",
+            "tick": 2570,
+            "t": 51400
+          },
+          {
+            "input_index": 152,
+            "seq": 725,
+            "type": "control",
+            "tick": 2570,
+            "t": 51400
+          },
+          {
+            "input_index": 155,
+            "seq": 734,
+            "type": "control",
+            "tick": 2591,
+            "t": 51820
+          },
+          {
+            "input_index": 158,
+            "seq": 745,
+            "type": "control",
+            "tick": 2621,
+            "t": 52420
+          },
+          {
+            "input_index": 159,
+            "seq": 752,
+            "type": "package_grab",
+            "tick": 2645,
+            "t": 52900
+          },
+          {
+            "input_index": 160,
+            "seq": 755,
+            "type": "control",
+            "tick": 2645,
+            "t": 52900
+          },
+          {
+            "input_index": 163,
+            "seq": 764,
+            "type": "control",
+            "tick": 2666,
+            "t": 53320
+          },
+          {
+            "input_index": 166,
+            "seq": 771,
+            "type": "control",
+            "tick": 2679,
+            "t": 53580
+          },
+          {
+            "input_index": 167,
+            "seq": 779,
+            "type": "package_grab",
+            "tick": 2703,
+            "t": 54060
+          },
+          {
+            "input_index": 168,
+            "seq": 782,
+            "type": "control",
+            "tick": 2703,
+            "t": 54060
+          },
+          {
+            "input_index": 171,
+            "seq": 791,
+            "type": "control",
+            "tick": 2724,
+            "t": 54480
+          },
+          {
+            "input_index": 174,
+            "seq": 800,
+            "type": "control",
+            "tick": 2744,
+            "t": 54880
+          },
+          {
+            "input_index": 177,
+            "seq": 809,
+            "type": "control",
+            "tick": 2764,
+            "t": 55280
+          },
+          {
+            "input_index": 178,
+            "seq": 817,
+            "type": "package_grab",
+            "tick": 2788,
+            "t": 55760
+          },
+          {
+            "input_index": 179,
+            "seq": 820,
+            "type": "control",
+            "tick": 2788,
+            "t": 55760
+          },
+          {
+            "input_index": 182,
+            "seq": 828,
+            "type": "control",
+            "tick": 2802,
+            "t": 56040
+          },
+          {
+            "input_index": 185,
+            "seq": 835,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 2815,
+            "t": 56300
+          },
+          {
+            "input_index": 188,
+            "seq": 856,
+            "type": "control",
+            "tick": 2906,
+            "t": 58120
+          },
+          {
+            "input_index": 191,
+            "seq": 872,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 2963,
+            "t": 59260
+          },
+          {
+            "input_index": 194,
+            "seq": 880,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 2986,
+            "t": 59720
+          },
+          {
+            "input_index": 197,
+            "seq": 914,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 3141,
+            "t": 62820
+          },
+          {
+            "input_index": 200,
+            "seq": 941,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3263,
+            "t": 65260
+          },
+          {
+            "input_index": 203,
+            "seq": 950,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3291,
+            "t": 65820
+          },
+          {
+            "input_index": 206,
+            "seq": 958,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3319,
+            "t": 66380
+          },
+          {
+            "input_index": 209,
+            "seq": 967,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3347,
+            "t": 66940
+          },
+          {
+            "input_index": 212,
+            "seq": 976,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3375,
+            "t": 67500
+          },
+          {
+            "input_index": 215,
+            "seq": 984,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3404,
+            "t": 68080
+          },
+          {
+            "input_index": 218,
+            "seq": 993,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3432,
+            "t": 68640
+          },
+          {
+            "input_index": 221,
+            "seq": 1000,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 3450,
+            "t": 69000
+          },
+          {
+            "input_index": 224,
+            "seq": 1033,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3603,
+            "t": 72060
+          },
+          {
+            "input_index": 227,
+            "seq": 1042,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3631,
+            "t": 72620
+          },
+          {
+            "input_index": 230,
+            "seq": 1051,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3661,
+            "t": 73220
+          },
+          {
+            "input_index": 233,
+            "seq": 1060,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3690,
+            "t": 73800
+          },
+          {
+            "input_index": 236,
+            "seq": 1068,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3719,
+            "t": 74380
+          },
+          {
+            "input_index": 239,
+            "seq": 1076,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 3742,
+            "t": 74840
+          },
+          {
+            "input_index": 242,
+            "seq": 1115,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 3922,
+            "t": 78440
+          },
+          {
+            "input_index": 245,
+            "seq": 1126,
+            "type": "control",
+            "tick": 3961,
+            "t": 79220
+          },
+          {
+            "input_index": 248,
+            "seq": 1134,
+            "type": "control",
+            "tick": 3977,
+            "t": 79540
+          },
+          {
+            "input_index": 251,
+            "seq": 1141,
+            "type": "control",
+            "tick": 3990,
+            "t": 79800
+          },
+          {
+            "input_index": 255,
+            "seq": 1147,
+            "type": "control",
+            "tick": 3991,
+            "t": 79820
+          },
+          {
+            "input_index": 259,
+            "seq": 1155,
+            "type": "control",
+            "tick": 4004,
+            "t": 80080
+          },
+          {
+            "input_index": 263,
+            "seq": 1164,
+            "type": "control",
+            "tick": 4017,
+            "t": 80340
+          },
+          {
+            "input_index": 267,
+            "seq": 1172,
+            "type": "control",
+            "tick": 4030,
+            "t": 80600
+          },
+          {
+            "input_index": 271,
+            "seq": 1180,
+            "type": "control",
+            "tick": 4043,
+            "t": 80860
+          },
+          {
+            "input_index": 275,
+            "seq": 1189,
+            "type": "control",
+            "tick": 4056,
+            "t": 81120
+          },
+          {
+            "input_index": 279,
+            "seq": 1197,
+            "type": "control",
+            "tick": 4069,
+            "t": 81380
+          },
+          {
+            "input_index": 283,
+            "seq": 1206,
+            "type": "control",
+            "tick": 4082,
+            "t": 81640
+          },
+          {
+            "input_index": 287,
+            "seq": 1214,
+            "type": "control",
+            "tick": 4095,
+            "t": 81900
+          },
+          {
+            "input_index": 291,
+            "seq": 1222,
+            "type": "control",
+            "tick": 4108,
+            "t": 82160
+          },
+          {
+            "input_index": 295,
+            "seq": 1231,
+            "type": "control",
+            "tick": 4121,
+            "t": 82420
+          },
+          {
+            "input_index": 299,
+            "seq": 1239,
+            "type": "control",
+            "tick": 4134,
+            "t": 82680
+          },
+          {
+            "input_index": 303,
+            "seq": 1248,
+            "type": "control",
+            "tick": 4147,
+            "t": 82940
+          },
+          {
+            "input_index": 307,
+            "seq": 1256,
+            "type": "control",
+            "tick": 4160,
+            "t": 83200
+          },
+          {
+            "input_index": 311,
+            "seq": 1264,
+            "type": "control",
+            "tick": 4173,
+            "t": 83460
+          },
+          {
+            "input_index": 315,
+            "seq": 1273,
+            "type": "control",
+            "tick": 4186,
+            "t": 83720
+          },
+          {
+            "input_index": 319,
+            "seq": 1281,
+            "type": "control",
+            "tick": 4199,
+            "t": 83980
+          },
+          {
+            "input_index": 323,
+            "seq": 1290,
+            "type": "control",
+            "tick": 4212,
+            "t": 84240
+          },
+          {
+            "input_index": 327,
+            "seq": 1298,
+            "type": "control",
+            "tick": 4225,
+            "t": 84500
+          },
+          {
+            "input_index": 331,
+            "seq": 1306,
+            "type": "control",
+            "tick": 4238,
+            "t": 84760
+          },
+          {
+            "input_index": 335,
+            "seq": 1315,
+            "type": "control",
+            "tick": 4251,
+            "t": 85020
+          },
+          {
+            "input_index": 339,
+            "seq": 1323,
+            "type": "control",
+            "tick": 4264,
+            "t": 85280
+          },
+          {
+            "input_index": 343,
+            "seq": 1332,
+            "type": "control",
+            "tick": 4277,
+            "t": 85540
+          },
+          {
+            "input_index": 347,
+            "seq": 1340,
+            "type": "control",
+            "tick": 4290,
+            "t": 85800
+          },
+          {
+            "input_index": 352,
+            "seq": 1349,
+            "type": "control",
+            "tick": 4303,
+            "t": 86060
+          },
+          {
+            "input_index": 353,
+            "seq": 1355,
+            "type": "package_release",
+            "tick": 4316,
+            "t": 86320
+          },
+          {
+            "input_index": 354,
+            "seq": 1359,
+            "type": "control",
+            "tick": 4316,
+            "t": 86320
+          },
+          {
+            "input_index": 358,
+            "seq": 1369,
+            "type": "control",
+            "tick": 4337,
+            "t": 86740
+          },
+          {
+            "input_index": 359,
+            "seq": 1376,
+            "type": "control",
+            "tick": 4356,
+            "t": 87120
+          },
+          {
+            "input_index": 362,
+            "seq": 1392,
+            "type": "control",
+            "tick": 4413,
+            "t": 88260
+          },
+          {
+            "input_index": 368,
+            "seq": 1404,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 4428,
+            "t": 88560
+          },
+          {
+            "input_index": 371,
+            "seq": 1439,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4586,
+            "t": 91720
+          },
+          {
+            "input_index": 377,
+            "seq": 1448,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 4599,
+            "t": 91980
+          },
+          {
+            "input_index": 380,
+            "seq": 1486,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4770,
+            "t": 95400
+          },
+          {
+            "input_index": 383,
+            "seq": 1494,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4798,
+            "t": 95960
+          },
+          {
+            "input_index": 386,
+            "seq": 1503,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4826,
+            "t": 96520
+          },
+          {
+            "input_index": 389,
+            "seq": 1512,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4855,
+            "t": 97100
+          },
+          {
+            "input_index": 392,
+            "seq": 1520,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 4884,
+            "t": 97680
+          },
+          {
+            "input_index": 398,
+            "seq": 1532,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 4906,
+            "t": 98120
+          },
+          {
+            "input_index": 401,
+            "seq": 1580,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5133,
+            "t": 102660
+          },
+          {
+            "input_index": 407,
+            "seq": 1590,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 5146,
+            "t": 102920
+          },
+          {
+            "input_index": 410,
+            "seq": 1631,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5338,
+            "t": 106760
+          },
+          {
+            "input_index": 416,
+            "seq": 1641,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 5352,
+            "t": 107040
+          },
+          {
+            "input_index": 419,
+            "seq": 1668,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5470,
+            "t": 109400
+          },
+          {
+            "input_index": 422,
+            "seq": 1676,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5499,
+            "t": 109980
+          },
+          {
+            "input_index": 425,
+            "seq": 1685,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5528,
+            "t": 110560
+          },
+          {
+            "input_index": 428,
+            "seq": 1694,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5556,
+            "t": 111120
+          },
+          {
+            "input_index": 431,
+            "seq": 1703,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5585,
+            "t": 111700
+          },
+          {
+            "input_index": 434,
+            "seq": 1711,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5613,
+            "t": 112260
+          },
+          {
+            "input_index": 437,
+            "seq": 1720,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5641,
+            "t": 112820
+          },
+          {
+            "input_index": 443,
+            "seq": 1731,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 5660,
+            "t": 113200
+          },
+          {
+            "input_index": 446,
+            "seq": 1766,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5821,
+            "t": 116420
+          },
+          {
+            "input_index": 449,
+            "seq": 1776,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5855,
+            "t": 117100
+          },
+          {
+            "input_index": 452,
+            "seq": 1785,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5888,
+            "t": 117760
+          },
+          {
+            "input_index": 455,
+            "seq": 1796,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5925,
+            "t": 118500
+          },
+          {
+            "input_index": 458,
+            "seq": 1806,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5963,
+            "t": 119260
+          },
+          {
+            "input_index": 461,
+            "seq": 1816,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 5999,
+            "t": 119980
+          },
+          {
+            "input_index": 464,
+            "seq": 1826,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6030,
+            "t": 120600
+          },
+          {
+            "input_index": 467,
+            "seq": 1836,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6066,
+            "t": 121320
+          },
+          {
+            "input_index": 470,
+            "seq": 1847,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6105,
+            "t": 122100
+          },
+          {
+            "input_index": 473,
+            "seq": 1858,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6147,
+            "t": 122940
+          },
+          {
+            "input_index": 476,
+            "seq": 1868,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6183,
+            "t": 123660
+          },
+          {
+            "input_index": 479,
+            "seq": 1877,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6213,
+            "t": 124260
+          },
+          {
+            "input_index": 482,
+            "seq": 1887,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6248,
+            "t": 124960
+          },
+          {
+            "input_index": 485,
+            "seq": 1897,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6284,
+            "t": 125680
+          },
+          {
+            "input_index": 488,
+            "seq": 1907,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6315,
+            "t": 126300
+          }
+        ],
+        "last_action": {
+          "position": {
+            "input_index": 488,
+            "seq": 1907,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 6315,
+            "t": 126300
+          },
+          "record": {
+            "seq": 1907,
+            "t": 126300,
+            "tick": 6315,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "args": {
+              "maxCm": 10,
+              "speed": 100,
+              "obeySpeedLimit": true
+            },
+            "result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "roadId": "bailu-outer-arc",
+              "distanceCm": 4.6,
+              "elapsedTicks": 17
+            }
+          }
+        },
+        "control_start_state_count": 69,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 6332,
+        "sample_counts": [
+          1397,
+          1397
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "907e9a62c48bf9b76cd7b9e75e23ecf665b1c81f123cad12290067b10353de4b",
+        "candidate": "fc4188acfe138b94efdff90f0c8e691419f79f33c7a4b8d625be1b52db773a16"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 389,
+            "line_number": 390,
+            "observe_count": 13,
+            "tick": 6332
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 389,
+            "line_number": 390,
+            "observe_count": 13,
+            "tick": 6332
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-04",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-04.json",
+          "raw_sha256": "4cf3a5805b89450c4460803422bdade3d3676ab6b2e150cd8adb13564bdd66cd",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-011.record.json",
+          "native_sha256": "d25d7e96314fd7ae694fec54c15392b5d6118d60162f39b66819b5492bedb1d0",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_f997ab1ddb3f4804a758af7e5ec5efec",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-04.json",
+          "raw_sha256": "5fc61671e41c7da69b75b935b69ab47b900200c746b870af4cda458b3dfafc10",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-001.record.json",
+          "native_sha256": "398a2ca5718337240e33f9660b599f0165efc18fd21e169d2187d311ca04ea68",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_a484e3ca743a47d99d15751b8c2f734f",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": true,
+        "score_equal": true,
+        "baseline_score": 43.1,
+        "candidate_score": 43.1
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -0.14,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 29,
+            "candidate": 100
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -19.35,
+            "candidate": 3.3
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.79
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 100,
+            "candidate": 53
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "中间",
+              "distanceCm": 53,
+              "confidence": 0.76,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -3.58
+            }
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -0.14,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 29,
+            "candidate": 100
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -19.35,
+            "candidate": 3.3
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.79
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 100,
+            "candidate": 53
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "中间",
+              "distanceCm": 53,
+              "confidence": 0.76,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -3.58
+            }
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 29,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 53,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 3.3
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 53,
+            "confidence": 0.76,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -3.58
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.81,
+            "direction": "中间",
+            "distanceCm": 29,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": 3.3,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.79,
+            "direction": "中间",
+            "distanceCm": 53,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          },
+          {
+            "bearingDeg": -3.58,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.76,
+            "direction": "中间",
+            "distanceCm": 53,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": null,
+      "first_different_action_request": null,
+      "first_different_full_action_record": null,
+      "input_difference_vs_first_action_request": "no_different_action_request_in_complete_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "b623a6cc7b79f17a703e637fe800ba2f8c43f5f13d38b933f6814cf21752318d",
+        "candidate": "5be849e2369ec860dcdc619aae39aa759f62f734ed0029ed35e1746063ca8343"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-05",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-05.json",
+          "raw_sha256": "935a6357b5f50497315b846ff10e0d19079496abdc96a7e4e0cf8a798398f842",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-014.record.json",
+          "native_sha256": "fa9160e701ac30ce2e25049172d91fa439541b9d67f1db97feda25f8e435ae8a",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_52ce96e0a7584a41ae5e41dabe1ea983",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-05.json",
+          "raw_sha256": "f583d3d8a27df62104e5d937aaf78ba7ae10ba932c9cf2b9a87e9f82c9993d20",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-002.record.json",
+          "native_sha256": "1f5173e872874e6f2267b99a307aac8bc5a45f1612c08c78e7ef48cca72cca4c",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_b1ad1fb0b5b94a29ae22866a9cbdfe78",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": false,
+        "score_equal": false,
+        "baseline_score": 46.2,
+        "candidate_score": 43.1
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": 1.65,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -35.82,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/3/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/3/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/3/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/3/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "左",
+              "distanceCm": 100,
+              "confidence": 0.81,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -19.35
+            },
+            "candidate": {
+              "missing": true
+            }
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": 1.65,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -35.82,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/3/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/3/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/3/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/3/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "左",
+              "distanceCm": 100,
+              "confidence": 0.81,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -19.35
+            },
+            "candidate": {
+              "missing": true
+            }
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 30,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.83,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 1.65
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 30,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": 1.65,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.83,
+            "direction": "中间",
+            "distanceCm": 100,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": []
+      },
+      "first_different_program_request": {
+        "ordinal": 633,
+        "baseline": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "control",
+          "tick": 9248,
+          "t": 184960
+        },
+        "candidate": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "navigation_control",
+          "method": "follow_road",
+          "tick": 9248,
+          "t": 184960
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "maxCm": 10,
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": 1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 33.9,
+              "angleRadians": 0.5916666164260777,
+              "angularSpeed": 2.275640832407991
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "follow_road"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_action_request": {
+        "ordinal": 184,
+        "baseline": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "control",
+          "tick": 9248,
+          "t": 184960
+        },
+        "candidate": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "navigation_control",
+          "method": "follow_road",
+          "tick": 9248,
+          "t": 184960
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "maxCm": 10,
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": 1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 33.9,
+              "angleRadians": 0.5916666164260777,
+              "angularSpeed": 2.275640832407991
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "follow_road"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_full_action_record": {
+        "ordinal": 184,
+        "baseline": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "control",
+          "tick": 9248,
+          "t": 184960
+        },
+        "candidate": {
+          "input_index": 633,
+          "seq": 2615,
+          "type": "navigation_control",
+          "method": "follow_road",
+          "tick": 9248,
+          "t": 184960
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "maxCm": 10,
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": 1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 33.9,
+              "angleRadians": 0.5916666164260777,
+              "angularSpeed": 2.275640832407991
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "follow_road"
+          },
+          {
+            "path": "/result",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "accepted": true,
+              "stoppedBy": "max_distance",
+              "roadId": "east-outer-south",
+              "distanceCm": 10,
+              "elapsedTicks": 40
+            }
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/startState",
+            "baseline": {
+              "tick": 9248,
+              "elapsedMs": 184960,
+              "pose": {
+                "x": 7.083684668944,
+                "z": 8.725899997422,
+                "heading": 0.978697349941
+              },
+              "linearSpeed": 0,
+              "angularSpeed": 0,
+              "activeCommand": null,
+              "collisionCount": 0,
+              "prngState": 0
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "input_difference_vs_first_action_request": "before_first_different_action_request_in_both_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "77b2ee5bfa2690caabedc7b0b4b4c90b909aace8f389408b1fac8bb619e557a1",
+        "candidate": "bbc3bc927df500d0018331156f9f29d214dc0ed2ec92276fde6ef59ed836f88b"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-06",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-06.json",
+          "raw_sha256": "9815d1df8afd3fa27313e977065e0b45cb03ec56d47c349f83e2a865a43ff8a9",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-005.record.json",
+          "native_sha256": "3245d98fde2926bcf412fba8ce1606a63892674016d480bc869fa545763f40bf",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_7b7b0067aaa94e33a3f7cc75bd0879f5",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-06.json",
+          "raw_sha256": "ac4479cf1e930c668d320ba6457b48c42aea84c483bf523bb2394df4c3a9f5a7",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-026.record.json",
+          "native_sha256": "9218ad4857a0fddd89e3f886294adb0ecc9909588c4c070104be479cb70e27f6",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_f992ade0b9f847d7b094b64e05e2a01e",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": true,
+        "score_equal": true,
+        "baseline_score": 55.4,
+        "candidate_score": 55.4
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -0.14,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.84,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/1/distanceCm",
+            "baseline": 40,
+            "candidate": 100
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -35.82,
+            "candidate": -0.14
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 100,
+            "candidate": 40
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -0.14,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.84,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/1/distanceCm",
+            "baseline": 40,
+            "candidate": 100
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -35.82,
+            "candidate": -0.14
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 100,
+            "candidate": 40
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.84,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.84,
+            "direction": "中间",
+            "distanceCm": 40,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": -0.14,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.82,
+            "direction": "中间",
+            "distanceCm": 40,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": null,
+      "first_different_action_request": null,
+      "first_different_full_action_record": null,
+      "input_difference_vs_first_action_request": "no_different_action_request_in_complete_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "10c3fb92aea8edbd5c0b093d221ecd061886460e35070f4ce20213217a0d9766",
+        "candidate": "87200c16a74b56f16a19dd39837bb109250b572962cec70c75c9fbf5b835a12e"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-07",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-07.json",
+          "raw_sha256": "f296ce957a67681f1335f39da0040dd608070a13f88cf6b61e7ed5104582daa9",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-002.record.json",
+          "native_sha256": "07263c97cfd8d1082509bb55037e5c49b45f4b92f45efad93079776067d1894b",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_b95d7e7eee284f76b2eaaff43ce55a35",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-07.json",
+          "raw_sha256": "a2e63d025d6d8bf81c7000c1435e4a00844953d6a6ad214a61ac7429ef4f34cd",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-003.record.json",
+          "native_sha256": "382ff3bd2fec512285a0352180f0ceb471f5cbb578fb392d91a2dc82c0a4191f",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_7ef042fe60ff48d2b044eca0288d69da",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": true,
+        "score_equal": true,
+        "baseline_score": 40,
+        "candidate_score": 40
+      },
+      "first_native_input_difference": {
+        "ordinal": 40,
+        "baseline": {
+          "input_index": 40,
+          "seq": 181,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 675,
+          "t": 13500,
+          "frameId": 9,
+          "evidenceId": "vision-3"
+        },
+        "candidate": {
+          "input_index": 40,
+          "seq": 181,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 675,
+          "t": 13500,
+          "frameId": 9,
+          "evidenceId": "vision-3"
+        },
+        "differences": [
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.82
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.82
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -31.33
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.85,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -6.59
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.84,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -26.47
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 69,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 35.54
+          },
+          {
+            "category": "storage-zone",
+            "categoryLabel": "存放点",
+            "name": "存放点",
+            "label": "存放点",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.8,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -15.72
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 58,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 10.49
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 37,
+            "confidence": 0.75,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -16.86
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -31.33
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.85,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -6.59
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.84,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -26.47
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 69,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 35.54
+          },
+          {
+            "category": "storage-zone",
+            "categoryLabel": "存放点",
+            "name": "存放点",
+            "label": "存放点",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.8,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -15.72
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "右",
+            "distanceCm": 58,
+            "confidence": 0.79,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 10.49
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 37,
+            "confidence": 0.75,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -16.86
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": 35.54,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.81,
+            "direction": "右",
+            "distanceCm": 69,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": 35.54,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.82,
+            "direction": "右",
+            "distanceCm": 69,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": null,
+      "first_different_action_request": null,
+      "first_different_full_action_record": null,
+      "input_difference_vs_first_action_request": "no_different_action_request_in_complete_runs",
+      "prior_prefix": {
+        "native_input_count": 40,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 10,
+        "actions": [
+          {
+            "input_index": 7,
+            "seq": 11,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 0,
+            "t": 0
+          },
+          {
+            "input_index": 10,
+            "seq": 40,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 134,
+            "t": 2680
+          },
+          {
+            "input_index": 16,
+            "seq": 50,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 147,
+            "t": 2940
+          },
+          {
+            "input_index": 19,
+            "seq": 86,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 310,
+            "t": 6200
+          },
+          {
+            "input_index": 22,
+            "seq": 100,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 365,
+            "t": 7300
+          },
+          {
+            "input_index": 25,
+            "seq": 114,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 422,
+            "t": 8440
+          },
+          {
+            "input_index": 28,
+            "seq": 128,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 477,
+            "t": 9540
+          },
+          {
+            "input_index": 31,
+            "seq": 142,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 532,
+            "t": 10640
+          },
+          {
+            "input_index": 34,
+            "seq": 156,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 586,
+            "t": 11720
+          },
+          {
+            "input_index": 37,
+            "seq": 170,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 640,
+            "t": 12800
+          }
+        ],
+        "last_action": {
+          "position": {
+            "input_index": 37,
+            "seq": 170,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 640,
+            "t": 12800
+          },
+          "record": {
+            "seq": 170,
+            "t": 12800,
+            "tick": 640,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "args": {
+              "maxCm": 10,
+              "speed": 30,
+              "obeySpeedLimit": true
+            },
+            "result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "roadId": "north-east-main",
+              "distanceCm": 6.4,
+              "elapsedTicks": 35
+            }
+          }
+        },
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 675,
+        "sample_counts": [
+          136,
+          136
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "53bfef722b30013b715cb54f853917fa96c8687c2a10745de90d9a1e30f585dd",
+        "candidate": "a6b81f997c593c03da01cb4d724cf069c1969bcd7116ab56844a93f680a75b7f"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 10,
+            "line_number": 11,
+            "observe_count": 3,
+            "tick": 675
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 10,
+            "line_number": 11,
+            "observe_count": 3,
+            "tick": 675
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-08",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-08.json",
+          "raw_sha256": "a3c84b73b98f2462ea60154ad2372d4dae0a673aea7968418a169929d4aedca7",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-003.record.json",
+          "native_sha256": "a77015a1198caa7114c12250876cd9c41744afdf46785b7d7b849ab03aae7523",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_53f68a47b62b488285c18fd2114bba6e",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-08.json",
+          "raw_sha256": "bc62daae6f01db6561f39ac9486180d630f3c49d921f5c903e75aa455600753a",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-008.record.json",
+          "native_sha256": "2232bee483edbede0513d5194811facaed5dada372adfab53f8bfb42986aafb7",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_5e45d6d0086a4cffabacf328cb0cd5de",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": false,
+        "score_equal": false,
+        "baseline_score": 43.1,
+        "candidate_score": 46.2
+      },
+      "first_native_input_difference": {
+        "ordinal": 79,
+        "baseline": {
+          "input_index": 79,
+          "seq": 378,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 1446,
+          "t": 28920,
+          "frameId": 11,
+          "evidenceId": "vision-5"
+        },
+        "candidate": {
+          "input_index": 79,
+          "seq": 378,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 1446,
+          "t": 28920,
+          "frameId": 11,
+          "evidenceId": "vision-5"
+        },
+        "differences": [
+          {
+            "path": "/result/0/confidence",
+            "baseline": 0.86,
+            "candidate": 0.84
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -20.09,
+            "candidate": -4.26
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -4.26,
+            "candidate": -19.84
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.8
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/0/confidence",
+            "baseline": 0.86,
+            "candidate": 0.84
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -20.09,
+            "candidate": -4.26
+          },
+          {
+            "path": "/result/2/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": -4.26,
+            "candidate": -19.84
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.81,
+            "candidate": 0.8
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 36,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.6
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 48,
+            "confidence": 0.83,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -2.62
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -20.09
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -4.26
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 36,
+            "confidence": 0.84,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.6
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 48,
+            "confidence": 0.83,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -2.62
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -4.26
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.8,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.84
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": -19.6,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.86,
+            "direction": "左",
+            "distanceCm": 36,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          },
+          {
+            "bearingDeg": -20.09,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.82,
+            "direction": "左",
+            "distanceCm": 100,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": -19.6,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.84,
+            "direction": "左",
+            "distanceCm": 36,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          },
+          {
+            "bearingDeg": -19.84,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.8,
+            "direction": "左",
+            "distanceCm": 100,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": {
+        "ordinal": 584,
+        "baseline": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "candidate": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 15.31000000000003,
+            "candidate": 15.420000000000044
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.2672099084803324,
+            "candidate": 0.2691297706575264
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.0277304172320476,
+            "candidate": 1.0351145025289477
+          }
+        ]
+      },
+      "first_different_action_request": {
+        "ordinal": 167,
+        "baseline": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "candidate": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 15.31000000000003,
+            "candidate": 15.420000000000044
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.2672099084803324,
+            "candidate": 0.2691297706575264
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.0277304172320476,
+            "candidate": 1.0351145025289477
+          }
+        ]
+      },
+      "first_different_full_action_record": {
+        "ordinal": 167,
+        "baseline": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "candidate": {
+          "input_index": 584,
+          "seq": 2452,
+          "type": "control",
+          "tick": 8698,
+          "t": 173960
+        },
+        "differences": [
+          {
+            "path": "/command/angleDegrees",
+            "baseline": 15.31000000000003,
+            "candidate": 15.420000000000044
+          },
+          {
+            "path": "/command/angleRadians",
+            "baseline": 0.2672099084803324,
+            "candidate": 0.2691297706575264
+          },
+          {
+            "path": "/command/angularSpeed",
+            "baseline": 1.0277304172320476,
+            "candidate": 1.0351145025289477
+          }
+        ]
+      },
+      "input_difference_vs_first_action_request": "before_first_different_action_request_in_both_runs",
+      "prior_prefix": {
+        "native_input_count": 79,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 21,
+        "actions": [
+          {
+            "input_index": 7,
+            "seq": 11,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 0,
+            "t": 0
+          },
+          {
+            "input_index": 10,
+            "seq": 40,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 134,
+            "t": 2680
+          },
+          {
+            "input_index": 16,
+            "seq": 50,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 147,
+            "t": 2940
+          },
+          {
+            "input_index": 19,
+            "seq": 86,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 310,
+            "t": 6200
+          },
+          {
+            "input_index": 22,
+            "seq": 100,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 365,
+            "t": 7300
+          },
+          {
+            "input_index": 25,
+            "seq": 114,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 422,
+            "t": 8440
+          },
+          {
+            "input_index": 28,
+            "seq": 128,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 477,
+            "t": 9540
+          },
+          {
+            "input_index": 31,
+            "seq": 142,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 532,
+            "t": 10640
+          },
+          {
+            "input_index": 34,
+            "seq": 156,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 586,
+            "t": 11720
+          },
+          {
+            "input_index": 37,
+            "seq": 170,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 640,
+            "t": 12800
+          },
+          {
+            "input_index": 43,
+            "seq": 184,
+            "type": "navigation_control",
+            "method": "take_exit",
+            "tick": 675,
+            "t": 13500
+          },
+          {
+            "input_index": 46,
+            "seq": 237,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 929,
+            "t": 18580
+          },
+          {
+            "input_index": 49,
+            "seq": 252,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 986,
+            "t": 19720
+          },
+          {
+            "input_index": 52,
+            "seq": 266,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1043,
+            "t": 20860
+          },
+          {
+            "input_index": 55,
+            "seq": 281,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1103,
+            "t": 22060
+          },
+          {
+            "input_index": 61,
+            "seq": 294,
+            "type": "control",
+            "tick": 1132,
+            "t": 22640
+          },
+          {
+            "input_index": 64,
+            "seq": 310,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1189,
+            "t": 23780
+          },
+          {
+            "input_index": 67,
+            "seq": 326,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1250,
+            "t": 25000
+          },
+          {
+            "input_index": 70,
+            "seq": 341,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1310,
+            "t": 26200
+          },
+          {
+            "input_index": 73,
+            "seq": 355,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1366,
+            "t": 27320
+          },
+          {
+            "input_index": 76,
+            "seq": 369,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1424,
+            "t": 28480
+          }
+        ],
+        "last_action": {
+          "position": {
+            "input_index": 76,
+            "seq": 369,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "tick": 1424,
+            "t": 28480
+          },
+          "record": {
+            "seq": 369,
+            "t": 28480,
+            "tick": 1424,
+            "type": "navigation_control",
+            "method": "follow_road",
+            "args": {
+              "maxCm": 10,
+              "speed": 30,
+              "obeySpeedLimit": true
+            },
+            "result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "roadId": "bailu-outer-arc",
+              "distanceCm": 3.4,
+              "elapsedTicks": 22
+            }
+          }
+        },
+        "control_start_state_count": 1,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 1446,
+        "sample_counts": [
+          292,
+          292
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "375572ed0a6862e2f022ed73584f611a8693f4d892bab4d61a49f284ffbd19fd",
+        "candidate": "81ea8b49c3651af97fc1176a3905b63d6e4ddc8366a5922f9e158bd85ff73530"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 17,
+            "line_number": 18,
+            "observe_count": 5,
+            "tick": 1446
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 17,
+            "line_number": 18,
+            "observe_count": 5,
+            "tick": 1446
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-09",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-09.json",
+          "raw_sha256": "daec7b5fe9f193667c50a61e1da1a22431773ac848ffe7fe8829fdec2a5a1067",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-001.record.json",
+          "native_sha256": "6895635bb97d0b2cfe16188bc71746d73f8800c8b48262f1c0feb97f4592e2bb",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_546849910c5c4cc8a0160bcd1ac30280",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-09.json",
+          "raw_sha256": "dd8a9c56b29f6ded1a25413fbe73a33103871090ebec3b352dcf2539d085b1dd",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-006.record.json",
+          "native_sha256": "b8ed38fcbb014a70072ae852ea48599d93d8e6a100dfe4e4530b546adce11810",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_c59ea6b5da024fbe84d1bc80340fbf2d",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": false,
+        "score_equal": true,
+        "baseline_score": 46.2,
+        "candidate_score": 46.2
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -5.36,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -35.82,
+            "candidate": 0
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 100,
+            "candidate": 14
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/near",
+            "baseline": false,
+            "candidate": true
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": 0,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 14,
+            "candidate": 100
+          },
+          {
+            "path": "/result/3/near",
+            "baseline": true,
+            "candidate": false
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "左",
+              "distanceCm": 100,
+              "confidence": 0.81,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -19.35
+            },
+            "candidate": {
+              "missing": true
+            }
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/1/bearingDeg",
+            "baseline": -5.36,
+            "candidate": -35.82
+          },
+          {
+            "path": "/result/1/category",
+            "baseline": "distractor",
+            "candidate": "obstacle"
+          },
+          {
+            "path": "/result/1/categoryLabel",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/confidence",
+            "baseline": 0.83,
+            "candidate": 0.82
+          },
+          {
+            "path": "/result/1/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/1/label",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/1/name",
+            "baseline": "混淆物",
+            "candidate": "障碍物"
+          },
+          {
+            "path": "/result/2/bearingDeg",
+            "baseline": -35.82,
+            "candidate": 0
+          },
+          {
+            "path": "/result/2/category",
+            "baseline": "obstacle",
+            "candidate": "distractor"
+          },
+          {
+            "path": "/result/2/categoryLabel",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/direction",
+            "baseline": "左",
+            "candidate": "中间"
+          },
+          {
+            "path": "/result/2/distanceCm",
+            "baseline": 100,
+            "candidate": 14
+          },
+          {
+            "path": "/result/2/label",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/name",
+            "baseline": "障碍物",
+            "candidate": "混淆物"
+          },
+          {
+            "path": "/result/2/near",
+            "baseline": false,
+            "candidate": true
+          },
+          {
+            "path": "/result/3/bearingDeg",
+            "baseline": 0,
+            "candidate": -19.35
+          },
+          {
+            "path": "/result/3/confidence",
+            "baseline": 0.82,
+            "candidate": 0.81
+          },
+          {
+            "path": "/result/3/direction",
+            "baseline": "中间",
+            "candidate": "左"
+          },
+          {
+            "path": "/result/3/distanceCm",
+            "baseline": 14,
+            "candidate": 100
+          },
+          {
+            "path": "/result/3/near",
+            "baseline": true,
+            "candidate": false
+          },
+          {
+            "path": "/result/4",
+            "baseline": {
+              "category": "distractor",
+              "categoryLabel": "混淆物",
+              "name": "混淆物",
+              "label": "混淆物",
+              "direction": "左",
+              "distanceCm": 100,
+              "confidence": 0.81,
+              "near": false,
+              "stable": true,
+              "bearingDeg": -19.35
+            },
+            "candidate": {
+              "missing": true
+            }
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 100,
+            "confidence": 0.83,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -5.36
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 14,
+            "confidence": 0.82,
+            "near": true,
+            "stable": true,
+            "bearingDeg": 0
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 14,
+            "confidence": 0.82,
+            "near": true,
+            "stable": true,
+            "bearingDeg": 0
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": -5.36,
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "confidence": 0.83,
+            "direction": "中间",
+            "distanceCm": 100,
+            "label": "混淆物",
+            "name": "混淆物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": []
+      },
+      "first_different_program_request": {
+        "ordinal": 203,
+        "baseline": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "control",
+          "tick": 3739,
+          "t": 74780
+        },
+        "candidate": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 3739,
+          "t": 74780
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "camp-connector",
+              "speed": 30,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 37.686213019182304,
+              "angleRadians": 0.6577484997926841,
+              "angularSpeed": 2.529801922279554
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_action_request": {
+        "ordinal": 55,
+        "baseline": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "control",
+          "tick": 3739,
+          "t": 74780
+        },
+        "candidate": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 3739,
+          "t": 74780
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "camp-connector",
+              "speed": 30,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 37.686213019182304,
+              "angleRadians": 0.6577484997926841,
+              "angularSpeed": 2.529801922279554
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_full_action_record": {
+        "ordinal": 55,
+        "baseline": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "control",
+          "tick": 3739,
+          "t": 74780
+        },
+        "candidate": {
+          "input_index": 203,
+          "seq": 982,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 3739,
+          "t": 74780
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "camp-connector",
+              "speed": 30,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 37.686213019182304,
+              "angleRadians": 0.6577484997926841,
+              "angularSpeed": 2.529801922279554
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/result",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "accepted": true,
+              "stoppedBy": "entered_road",
+              "roadId": "camp-connector",
+              "distanceCm": 39.8,
+              "elapsedTicks": 263
+            }
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/startState",
+            "baseline": {
+              "tick": 3739,
+              "elapsedMs": 74780,
+              "pose": {
+                "x": 6.0202,
+                "z": 8.7259,
+                "heading": 1.553458359829
+              },
+              "linearSpeed": 0,
+              "angularSpeed": 0,
+              "activeCommand": null,
+              "collisionCount": 0,
+              "prngState": 0
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "input_difference_vs_first_action_request": "before_first_different_action_request_in_both_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "480e71cbc1b4342e21501ee22ba43e76c12ebd41a5343d557264e15c522b3b54",
+        "candidate": "2d11d6a69044bf8b3994b7707cc377856fe185b248161ffb75acf981d919ea02"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    },
+    {
+      "map": "map-10",
+      "provenance": {
+        "baseline": {
+          "raw_file": "artifacts/inloop/opt-2/round-3/map-10.json",
+          "raw_sha256": "29c0e714a632105c0b8e899b35b34206f9e3093b99e5c3eac4c1c968d9837c99",
+          "native_file": "artifacts/inloop/opt-2/round-3/attempts/attempt-007.record.json",
+          "native_sha256": "586058dca885c4d573fe82f550d9fe02e2939ad9b9fb1baffb48dc18e5d2c635",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_739a2658057e4822bab8626a8a4f906c",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "efc98999788c8f41c5c2d8023d839c85172c35e802dc2be390ab2a94f6e057a0"
+        },
+        "candidate": {
+          "raw_file": "artifacts/inloop/refactor/round-1/map-10.json",
+          "raw_sha256": "cf4e0570565623ec2e2c83afc59fc55668c9e67874de988106f7750497632a97",
+          "native_file": "artifacts/inloop/refactor/round-1/attempts/attempt-004.record.json",
+          "native_sha256": "b4279ef58e2ac956016cb4d38fcea7bcfbcc534e7d1349314c988b8029a10a8c",
+          "native_schema_version": "chenlong.run-record/v4",
+          "run_id": "run_e886369b07e84923bd9b6054ed74fd80",
+          "task_id": "R2-GYI-MVP-02",
+          "executed_source_sha256": "62bdae0c2c241341599fba9d7d39bc67710fba8d98b1fdc071e4b1b695e12b6f"
+        }
+      },
+      "original_gates_unchanged": {
+        "inputs_equal": false,
+        "events_equal": false,
+        "score_equal": true,
+        "baseline_score": 49.2,
+        "candidate_score": 49.2
+      },
+      "first_native_input_difference": {
+        "ordinal": 4,
+        "baseline": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "candidate": {
+          "input_index": 4,
+          "seq": 8,
+          "type": "vision_query",
+          "method": "observe",
+          "tick": 0,
+          "t": 0,
+          "frameId": 7,
+          "evidenceId": "vision-1"
+        },
+        "differences": [
+          {
+            "path": "/result/0/confidence",
+            "baseline": 0.9,
+            "candidate": 0.91
+          }
+        ]
+      },
+      "first_perception_difference": {
+        "same_request": true,
+        "frame_id_changed": false,
+        "evidence_id_changed": false,
+        "only_frame_or_evidence_identity_changed": false,
+        "payload_changed": true,
+        "payload_permutation_only": false,
+        "payload_differences": [
+          {
+            "path": "/result/0/confidence",
+            "baseline": 0.9,
+            "candidate": 0.91
+          }
+        ],
+        "baseline_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 65,
+            "confidence": 0.9,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 0
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "candidate_result": [
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "中间",
+            "distanceCm": 65,
+            "confidence": 0.91,
+            "near": false,
+            "stable": true,
+            "bearingDeg": 0
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "中间",
+            "distanceCm": 40,
+            "confidence": 0.87,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -0.14
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.86,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -27.35
+          },
+          {
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "name": "障碍物",
+            "label": "障碍物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.82,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -35.82
+          },
+          {
+            "category": "distractor",
+            "categoryLabel": "混淆物",
+            "name": "混淆物",
+            "label": "混淆物",
+            "direction": "左",
+            "distanceCm": 100,
+            "confidence": 0.81,
+            "near": false,
+            "stable": true,
+            "bearingDeg": -19.35
+          }
+        ],
+        "removed_exact_detection_items": [
+          {
+            "bearingDeg": 0,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.9,
+            "direction": "中间",
+            "distanceCm": 65,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ],
+        "added_exact_detection_items": [
+          {
+            "bearingDeg": 0,
+            "category": "obstacle",
+            "categoryLabel": "障碍物",
+            "confidence": 0.91,
+            "direction": "中间",
+            "distanceCm": 65,
+            "label": "障碍物",
+            "name": "障碍物",
+            "near": false,
+            "stable": true
+          }
+        ]
+      },
+      "first_different_program_request": {
+        "ordinal": 609,
+        "baseline": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "control",
+          "tick": 8315,
+          "t": 166300
+        },
+        "candidate": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 8315,
+          "t": 166300
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "lower-east",
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 34.42999999999995,
+              "angleRadians": 0.6009168614616468,
+              "angularSpeed": 2.3112186979294105
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_action_request": {
+        "ordinal": 176,
+        "baseline": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "control",
+          "tick": 8315,
+          "t": 166300
+        },
+        "candidate": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 8315,
+          "t": 166300
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "lower-east",
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 34.42999999999995,
+              "angleRadians": 0.6009168614616468,
+              "angularSpeed": 2.3112186979294105
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "first_different_full_action_record": {
+        "ordinal": 176,
+        "baseline": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "control",
+          "tick": 8315,
+          "t": 166300
+        },
+        "candidate": {
+          "input_index": 609,
+          "seq": 2390,
+          "type": "navigation_control",
+          "method": "take_exit",
+          "tick": 8315,
+          "t": 166300
+        },
+        "differences": [
+          {
+            "path": "/args",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "roadId": "lower-east",
+              "speed": 100,
+              "obeySpeedLimit": true
+            }
+          },
+          {
+            "path": "/command",
+            "baseline": {
+              "kind": "turn_angle",
+              "direction": -1,
+              "durationMs": 260,
+              "durationTicks": 13,
+              "angleDegrees": 34.42999999999995,
+              "angleRadians": 0.6009168614616468,
+              "angularSpeed": 2.3112186979294105
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/method",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": "take_exit"
+          },
+          {
+            "path": "/result",
+            "baseline": {
+              "missing": true
+            },
+            "candidate": {
+              "accepted": true,
+              "stoppedBy": "entered_road",
+              "roadId": "lower-east",
+              "distanceCm": 25,
+              "elapsedTicks": 103
+            }
+          },
+          {
+            "path": "/source",
+            "baseline": "python",
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/startState",
+            "baseline": {
+              "tick": 8315,
+              "elapsedMs": 166300,
+              "pose": {
+                "x": 4.432400000001,
+                "z": 6.8726,
+                "heading": 0.302939351545
+              },
+              "linearSpeed": 0,
+              "angularSpeed": 0,
+              "activeCommand": null,
+              "collisionCount": 0,
+              "prngState": 0
+            },
+            "candidate": {
+              "missing": true
+            }
+          },
+          {
+            "path": "/type",
+            "baseline": "control",
+            "candidate": "navigation_control"
+          }
+        ]
+      },
+      "input_difference_vs_first_action_request": "before_first_different_action_request_in_both_runs",
+      "prior_prefix": {
+        "native_input_count": 4,
+        "all_native_fields_equal": true,
+        "all_program_requests_through_first_difference_equal": true,
+        "action_count": 0,
+        "actions": [],
+        "last_action": null,
+        "control_start_state_count": 0,
+        "control_start_states_equal": true,
+        "initial_pose_equal": true,
+        "sample0_equal": true,
+        "sample_cutoff_tick": 0,
+        "sample_counts": [
+          1,
+          1
+        ],
+        "all_samples_through_first_difference_tick_equal": true,
+        "first_sample_difference": null
+      },
+      "definition_comparisons": {
+        "schemaVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "taskId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapId": {
+          "equal": true,
+          "differences": []
+        },
+        "mapVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleVersion": {
+          "equal": true,
+          "differences": []
+        },
+        "randomSeed": {
+          "equal": true,
+          "differences": []
+        },
+        "runDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "taskDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "ruleDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "scoringDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "simulationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "interactionDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationDefinition": {
+          "equal": true,
+          "differences": []
+        },
+        "navigationControlDefinition": {
+          "equal": true,
+          "differences": []
+        }
+      },
+      "challenge_digest": {
+        "equal": false,
+        "baseline": "0b1dcfb692ee2521d76eed101a83c95c9bbd3a289ac1fdd36aa7494a367be045",
+        "candidate": "636a21b219d889c48dd3b58d2025e12cb8501a7ca60c7a443480ba54f1a74177"
+      },
+      "raw_observe_log_references": {
+        "baseline": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ],
+        "candidate": [
+          {
+            "line_index": 2,
+            "line_number": 3,
+            "observe_count": 1,
+            "tick": 0
+          }
+        ]
+      },
+      "interpretation_limit": "Sequence evidence identifies when observed records first differ. It does not establish the image/rendering cause or prove a later score change was caused by this one frame."
+    }
+  ]
+}
