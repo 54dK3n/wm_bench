@@ -8,7 +8,8 @@
   const PROTOCOL_VERSION = "chenlong.robot-bridge/v1";
   const METHODS = Object.freeze(["observe", "camera_parameters", "odometry", "local_road", "holding",
     "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"]);
-  const CATEGORIES = Object.freeze(["target", "distractor", "obstacle", "storage-zone", "cleanup-zone"]);
+  // Sensor classes are appearance-based; task roles are never a camera output.
+  const CATEGORIES = Object.freeze(["red-ball", "blue-ball", "obstacle", "storage-zone"]);
   const STOP_REASONS = Object.freeze(["max_distance", "junction", "road_end", "front_clearance", "off_road",
     "wrong_way", "entered_road", "not_at_junction", "invalid_exit", "collision", "safety_limit", "time_limit"]);
   const ERROR_CODES = Object.freeze(["ACTION_FAILED", "NOT_RUNNING", "INVALID_EXIT", "AMBIGUOUS_EXIT",
@@ -72,10 +73,8 @@
   // may expose future sensor fields such as road IDs, world poses or package IDs.
   function sanitizeResponse(method, value) {
     if (!METHODS.includes(method)) fail("METHOD_NOT_ALLOWED");
-    if (method === "holding") {
-      if (value !== null && !["target", "distractor", "obstacle"].includes(value)) fail();
-      return value;
-    }
+    // A real gripper reports possession, not what the held object is.
+    if (method === "holding") return { holding: boolean(object(value).holding) };
     const v = object(value);
     if (method === "observe") {
       if (v.width !== 640 || v.height !== 480 || !Array.isArray(v.detections)) fail();

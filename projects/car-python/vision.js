@@ -237,13 +237,21 @@
     return kept;
   }
 
+  function blueRatio(box, rgba) {
+    return chromaRatio(box, rgba, (r, g, b) => b > 75 && b > r * 1.35 && b > g * 1.1);
+  }
+
   function redRatio(box, rgba) {
+    return chromaRatio(box, rgba, (r, g, b) => r > 75 && r > g * 1.35 && r > b * 1.35);
+  }
+
+  function chromaRatio(box, rgba, matches) {
     const x0 = Math.max(0, Math.floor(box.x));
     const y0 = Math.max(0, Math.floor(box.y));
     const x1 = Math.min(MODEL_SIZE, Math.ceil(box.x + box.w));
     const y1 = Math.min(MODEL_SIZE, Math.ceil(box.y + box.h));
     if (x1 <= x0 || y1 <= y0) return 0;
-    let red = 0;
+    let hits = 0;
     let total = 0;
     const stride = Math.max(1, Math.floor(Math.sqrt((x1 - x0) * (y1 - y0) / 400)));
     for (let y = y0; y < y1; y += stride) {
@@ -252,11 +260,11 @@
         const r = rgba[offset];
         const g = rgba[offset + 1];
         const b = rgba[offset + 2];
-        if (r > 75 && r > g * 1.35 && r > b * 1.35) red += 1;
+        if (matches(r, g, b)) hits += 1;
         total += 1;
       }
     }
-    return total ? red / total : 0;
+    return total ? hits / total : 0;
   }
 
   function directionForBox(box) {
@@ -266,6 +274,9 @@
 
   function toStudentDetection(candidate, rgba) {
     const isRedBall = candidate.classId === 32 && redRatio(candidate, rgba) >= 0.1;
+    // Additive colour evidence for the robot bridge; the legacy category is unchanged.
+    const colorClass = candidate.classId !== 32 ? null
+      : isRedBall ? "red" : blueRatio(candidate, rgba) >= 0.1 ? "blue" : null;
     const label = isRedBall ? "\u7ea2\u7403" : "\u969c\u788d\u7269";
     const aliases = isRedBall
       ? ["\u7403", "\u5305\u88f9", "\u76ee\u6807\u7269", "sports ball"]
@@ -274,6 +285,7 @@
     return {
       label,
       category: isRedBall ? "target" : "obstacle",
+      colorClass,
       aliases,
       source: "yolo",
       confidence: candidate.confidence,

@@ -121,6 +121,23 @@ test("trace records rejection and last completed simulation tick, never credenti
   }
 });
 
+test("rejected legacy method names containing digits stay attributable in the trace", () => {
+  const { bridge, bridgeId } = setup();
+  for (const [id, method] of [["a", "left_90"], ["b", "right_90"], ["c", "Mission"]]) {
+    assert.throws(() => bridge.submit(bridgeId, command(id, method, {})));
+  }
+  assert.deepEqual(bridge.trace(bridgeId).events.map(event => event.method), ["left_90", "right_90", null]);
+});
+
+test("sensor classes are appearance-based and the gripper reports possession only", () => {
+  assert.deepEqual([...C.CATEGORIES], ["red-ball", "blue-ball", "obstacle", "storage-zone"]);
+  for (const category of ["target", "distractor", "cleanup-zone"]) {
+    assert.throws(() => C.normalizeCommand(command("a", "observe", { category })), { code: "INVALID_PARAMS" });
+  }
+  assert.deepEqual(C.sanitizeResponse("holding", { holding: true, category: "target" }), { holding: true });
+  for (const value of [null, "target", { holding: "target" }]) assert.throws(() => C.sanitizeResponse("holding", value));
+});
+
 test("controller and client credentials are non-interchangeable and owner-bound", () => {
   const { bridge, bridgeId, clientToken, controllerToken } = setup();
   bridge.authorizeClient(bridgeId, clientToken); bridge.authorizeController(bridgeId, "owner", controllerToken);

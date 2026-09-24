@@ -46,15 +46,18 @@ otherwise unrestricted process or revoke unrelated credentials it already has.
 | camera_parameters | `{}` | `{width,height,fx,fy,cx,cy,verticalFovDeg,mount:{forwardCm,rightCm,upCm,pitchDeg}}` |
 | odometry | `{}` | `{forwardCm,rightCm,headingDeg,distanceCm,tick}` relative to run origin |
 | local_road | `{}` | `{onRoad,lateralOffsetCm,headingErrorDeg,leftClearanceCm,rightClearanceCm,frontClearanceCm,atJunction,atNode,exits:[{angleDeg}],tick}` |
-| holding | `{}` | `target`, `distractor`, `obstacle`, or null |
+| holding | `{}` | `{holding}` boolean; the gripper does not identify the object |
 | grab / release | `{}` | `{completed:true}`; use holding to assess possession |
 | forward / backward | `{distanceCm,speed?}` | `{completed:true}` |
 | turn | `{angleDeg,speed?}` | `{completed:true}`; positive left, negative right |
 | follow_road | `{distanceCm,speed?}` | `{accepted,stoppedBy,distanceCm,elapsedTicks}` |
 | take_exit | `{angleDeg,speed?}` | Same as follow_road |
 
-Categories are target, distractor, obstacle, storage-zone and cleanup-zone;
-observe category may also be null. Confidence is 0–1. Basic travel is 0.1–500cm,
+Categories are appearance classes: red-ball, blue-ball, obstacle and
+storage-zone; observe category may also be null. Task roles (target,
+distractor) are never a sensor output. Ball colour comes from the detector's
+sports-ball class plus a chroma ratio on its box; storage-zone is the visible
+#00ff00 ground region. Taught templates are not bridge detections. Confidence is 0–1. Basic travel is 0.1–500cm,
 road following 10–500cm, speed 10–100%, turn magnitude 1–360°, and exit relative
 angle −180–180°. These reuse existing platform argument bounds. Unknown methods,
 extra parameters and nonnumeric/nonfinite values are rejected. There is no

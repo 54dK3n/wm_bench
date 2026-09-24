@@ -80,7 +80,7 @@ function createRobotBridge({ pollTimeoutMs = 25_000, maxSessions = 128, maxComma
       try { normalized = contract.normalizeCommand(value); } catch (failure) {
         // Rejected values may contain credentials or arbitrary data. Retain only
         // validated identifiers and parameter names, never their unknown values.
-        const safeMethod = typeof value?.method === "string" && /^[a-z_]{1,64}$/.test(value.method) ? value.method : null;
+        const safeMethod = typeof value?.method === "string" && /^[a-z][a-z0-9_]{0,63}$/.test(value.method) ? value.method : null;
         let safeId = null;
         try { safeId = contract.requestId(value?.requestId); } catch (_error) { /* invalid identifier */ }
         append(s, { type: "rejected", requestId: safeId, method: safeMethod,
