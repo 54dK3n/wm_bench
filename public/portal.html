@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>广阳岛比赛平台</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/platform.css">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body class="portal-page">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">AI</span><span>广阳岛比赛平台</span></div>
+    <div class="top-actions">
+      <button id="inviteButton" class="invite-trigger" type="button" hidden aria-haspopup="dialog" aria-controls="inviteDialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="3.5"></circle><path d="m10 13 9-9m-3 3 2 2m-5 1 2 2"></path></svg>
+        <span>队伍邀请码</span>
+      </button>
+      <a id="adminLink" class="button" href="/admin.html" hidden>管理后台</a>
+      <button id="logoutButton" type="button">退出</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero portal-hero">
+      <div>
+        <span class="eyebrow">GUANGYANG ISLAND COMPETITION</span>
+        <h1>选择赛题，开始比赛</h1>
+      </div>
+      <div class="account" aria-label="当前账户">
+        <div><strong id="accountName">正在读取…</strong><small id="accountMeta"></small></div>
+      </div>
+    </section>
+
+    <div id="notice" class="notice" role="status">正在读取账户与成绩…</div>
+
+    <section id="scores" class="score-strip" aria-label="队伍最高成绩" hidden>
+      <div class="score-box"><span>任务1最高分</span><strong id="score1">—</strong></div>
+      <div class="score-box"><span>任务2最高分</span><strong id="score2">—</strong></div>
+      <div class="score-box"><span>任务3最高分</span><strong id="score3">—</strong></div>
+      <div class="score-box"><span>识物工坊</span><strong id="score4">—</strong></div>
+    </section>
+
+    <section class="question-grid" aria-label="比赛赛题">
+      <article class="question-card question-card-primary">
+        <header class="question-heading">
+          <div>
+            <span class="question-number">赛题一</span>
+            <h2>广阳岛智能车</h2>
+            <p>选择一种编程方式，完成相同的三个任务；两种方式共用地图与成绩。</p>
+          </div>
+          <span class="question-weight">75 分</span>
+        </header>
+
+        <div class="mode-grid">
+          <section class="mode-card" aria-labelledby="pythonModeTitle">
+            <span class="mode-type">代码编程</span>
+            <h3 id="pythonModeTitle">Python</h3>
+            <p>使用 Python、视觉感知、导航传感和道路控制完成任务。</p>
+            <a class="button primary mode-entry" href="/python/">进入 Python</a>
+          </section>
+          <section class="mode-card" aria-labelledby="blocklyModeTitle">
+            <span class="mode-type">积木编程</span>
+            <h3 id="blocklyModeTitle">Blockly</h3>
+            <p>使用积木搭建同等级程序，直观组合控制、感知与规划逻辑。</p>
+            <a class="button primary mode-entry" href="/blockly/">进入 Blockly</a>
+          </section>
+        </div>
+      </article>
+
+      <article class="question-card question-card-secondary">
+        <header class="question-heading">
+          <div>
+            <span class="question-number">赛题二</span>
+            <h2>识物工坊</h2>
+            <p>采集样本、训练图像分类模型，并提交到统一比赛评测。</p>
+          </div>
+          <span class="question-weight">25 分</span>
+        </header>
+        <div class="workshop-entry">
+          <div class="workshop-illustration" aria-hidden="true"><span></span><span></span><span></span></div>
+          <a class="button primary mode-entry" href="/workshop/">进入识物工坊</a>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="inviteDialog" class="team-invite-dialog" aria-labelledby="inviteDialogTitle" aria-describedby="inviteHint">
+    <div class="team-invite-dialog-shell">
+      <header>
+        <div>
+          <p>邀请同队成员</p>
+          <h2 id="inviteDialogTitle">我的队伍邀请码</h2>
+        </div>
+        <button id="closeInviteButton" class="team-invite-close" type="button" aria-label="关闭邀请码窗口">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="team-invite-dialog-content">
+        <p id="inviteTeam" class="team-invite-team-name"></p>
+        <code id="inviteCode" class="team-invite-code">正在读取…</code>
+        <p id="inviteHint" class="team-invite-hint">把邀请码发给同队成员；注册时选择“加入已有队伍”并填写即可。</p>
+        <p id="inviteStatus" class="team-invite-status" role="status" aria-live="polite"></p>
+      </div>
+      <footer>
+        <button id="copyInviteButton" class="primary" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path></svg>
+          <span>复制邀请码</span>
+        </button>
+        <button id="closeInviteFooterButton" type="button">关闭</button>
+      </footer>
+    </div>
+  </dialog>
+  <script src="/platform-portal.js"></script>
+</body>
+</html>

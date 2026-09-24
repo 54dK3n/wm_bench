@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>辰龙 Python 小车编程</title>
+  <script src="./auth-guard.js?v=20260822-002"></script>
+  <link rel="stylesheet" href="./styles.css?v=20260830-002">
+  <script src="./vendor/three/three.min.js"></script>
+  <script src="./vendor/lucide/lucide.min.js"></script>
+  <script src="./vendor/vision/ort.min.js"></script>
+  <script src="./vision-pixel-core.js?v=20260820-002"></script>
+  <script src="./vision.js?v=20260820-011"></script>
+  <script src="./competition-core.js?v=20260827-002"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark"><i data-lucide="bot"></i></div>
+        <div>
+          <p class="eyebrow">CHENLONGOS · ROBOT LAB</p>
+          <h1>Python</h1>
+        </div>
+      </div>
+      <div class="topbar-actions" aria-label="运行控制">
+        <label class="mode-switch target-switch" for="targetSelect">
+          <span>运行目标</span>
+          <select id="targetSelect" aria-label="选择程序运行目标">
+            <option value="sim">3D 模拟器</option>
+            <option value="real">真实小车（不计分）</option>
+          </select>
+        </label>
+        <div class="robot-connection" id="robotConnection" role="group" aria-label="真实小车连接">
+          <span class="protocol-chip">HTTP</span>
+          <input id="robotBaseUrl" value="192.168.4.1" aria-label="真实小车 IP 或地址" inputmode="url" spellcheck="false">
+          <button id="applyRobotIpButton" type="button">确认地址</button>
+        </div>
+        <button id="runButton" class="primary"><i data-lucide="play"></i><span>运行代码</span></button>
+        <button id="stopButton"><i data-lucide="square"></i><span>停止</span></button>
+        <button id="resetButton"><i data-lucide="rotate-ccw"></i><span>重置</span></button>
+        <nav class="account-quick-nav" aria-label="账户导航">
+          <a class="platform-return-link" href="/portal.html" aria-label="返回统一平台" title="返回统一平台"><i data-lucide="layout-grid" aria-hidden="true"></i><span>返回统一平台</span></a>
+          <button id="recordsNavLink" type="button" aria-haspopup="dialog" aria-controls="competitionRecordsDialog" aria-expanded="false"><i data-lucide="trophy" aria-hidden="true"></i><span>我的比赛记录</span></button>
+          <a id="adminNavLink" href="./admin.html" hidden><i data-lucide="shield" aria-hidden="true"></i><span>后台</span></a>
+          <button id="teamInviteButton" type="button" hidden aria-haspopup="dialog" aria-controls="teamInviteDialog" title="查看队伍邀请码"><i data-lucide="key-round" aria-hidden="true"></i><span>队伍邀请码</span></button>
+          <span class="account-identity" title="当前登录用户">
+            <i data-lucide="circle-user-round" aria-hidden="true"></i>
+            <b id="currentUserName">正在验证…</b>
+            <small id="currentUserRole"></small>
+          </span>
+          <button id="logoutButton" class="account-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i><span>退出</span></button>
+        </nav>
+      </div>
+    </header>
+
+    <dialog id="teamInviteDialog" class="team-invite-dialog" aria-labelledby="teamInviteDialogTitle">
+      <div class="team-invite-dialog-shell">
+        <header>
+          <div>
+            <p>邀请同队成员</p>
+            <h2 id="teamInviteDialogTitle">我的队伍邀请码</h2>
+          </div>
+          <button id="closeTeamInviteButton" class="team-invite-close" type="button" aria-label="关闭邀请码窗口"><i data-lucide="x" aria-hidden="true"></i></button>
+        </header>
+        <div class="team-invite-dialog-content">
+          <p id="teamInviteTeamName" class="team-invite-team-name"></p>
+          <code id="teamInviteCode" class="team-invite-code">正在读取…</code>
+          <p class="team-invite-hint">把邀请码发给同队同学；注册时选择“加入已有队伍”并填写即可。</p>
+          <p id="teamInviteStatus" class="team-invite-status" role="status" aria-live="polite"></p>
+        </div>
+        <footer>
+          <button id="copyTeamInviteButton" class="primary" type="button" disabled><i data-lucide="copy" aria-hidden="true"></i><span>复制邀请码</span></button>
+          <button id="closeTeamInviteFooterButton" type="button">关闭</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <section class="workspace-grid">
+      <div class="python-panel">
+        <div class="python-editor-heading">
+          <div>
+            <strong>本地 Python 代码</strong>
+          </div>
+          <div class="example-menu" id="exampleMenu">
+            <button id="loadExampleButton" type="button" aria-expanded="false" aria-controls="exampleDropdown"><i data-lucide="file-code-2"></i><span>示例</span><i data-lucide="chevron-down"></i></button>
+            <div id="exampleDropdown" class="example-dropdown" hidden role="menu" aria-label="Python 代码示例">
+              <div class="example-section-label" role="presentation">基础示例</div>
+              <button type="button" role="menuitem" data-example="square"><strong>走正方形</strong><small>循环、前进与转向</small></button>
+              <button type="button" role="menuitem" data-example="road-sensor" data-scene="guangyang"><strong>读取道路状态</strong><small>切换广阳岛并读取道路传感</small></button>
+              <button type="button" role="menuitem" data-example="topology-plan" data-scene="guangyang"><strong>规划下一途径点</strong><small>道路图搜索、节点出口与循路控制</small></button>
+              <div class="example-section-label is-training" role="presentation">广阳岛摄像头识别练习 · 保持同一地图</div>
+              <button type="button" role="menuitem" data-example="training-target" data-training-mode="target"><strong>练习：识别目标物</strong><small>在广阳岛观察、靠近并夹取</small></button>
+              <button type="button" role="menuitem" data-example="training-obstacle" data-training-mode="obstacle"><strong>练习：识别障碍物</strong><small>读取方位和距离后规划绕行</small></button>
+              <button type="button" role="menuitem" data-example="training-distractor" data-training-mode="distractor"><strong>练习：识别混淆物</strong><small>夹取后移到道路边界外</small></button>
+            </div>
+          </div>
+        </div>
+        <div class="python-file-tab"><i data-lucide="file-code-2"></i><span>main.py</span><small>Python</small></div>
+        <div class="python-editor-shell">
+          <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
+          <div class="editor-code-layer">
+            <pre id="pythonHighlight" class="python-highlight" aria-hidden="true"></pre>
+            <textarea id="pythonEditor" spellcheck="false" wrap="off" aria-label="Python 代码"># 让小车走一个正方形
+for _ in range(4):
+    robot.forward(50)
+    robot.right_angle(90)
+
+# 摄像头识别：robot.observe("目标物")
+# 导航传感：robot.mission()、robot.task_state()、robot.release_preview()、robot.odometry()、robot.road_state()、robot.map_graph()
+# 道路控制：robot.follow_road(100, 40, True)、robot.take_exit(road_id, 40, True)
+# 物体操作：robot.grab()、robot.release()、robot.holding()</textarea>
+          </div>
+        </div>
+        <div class="python-help">
+          <div class="python-help-heading">
+            <strong>常用指令</strong>
+            <button id="visionApiHelpButton" class="vision-api-help-button" type="button" aria-expanded="false" aria-controls="visionApiHelp" title="查看传感与道路控制 API 用法"><i data-lucide="circle-help"></i><span>传感与道路控制 API</span></button>
+          </div>
+          <div class="python-command-list" role="list" aria-label="常用 Python 小车指令">
+            <div class="python-command-group" role="group" aria-label="行驶指令">
+              <span class="python-command-group-label">行驶</span>
+              <div class="python-command-group-items"><code role="listitem">robot.forward(厘米)</code><code role="listitem">robot.backward(厘米)</code><code role="listitem">robot.left_angle(角度)</code><code role="listitem">robot.right_angle(角度)</code></div>
+            </div>
+            <div class="python-command-group sim-only-command" role="group" aria-label="导航传感指令">
+              <span class="python-command-group-label">导航传感</span>
+              <div class="python-command-group-items"><code role="listitem">robot.mission()</code><code role="listitem">robot.task_state()</code><code role="listitem">robot.release_preview()</code><code role="listitem">robot.odometry()</code><code role="listitem">robot.road_state()</code><code role="listitem">robot.map_graph()</code></div>
+            </div>
+            <div class="python-command-group sim-only-command" role="group" aria-label="道路控制指令">
+              <span class="python-command-group-label">道路控制</span>
+              <div class="python-command-group-items"><code role="listitem">robot.follow_road(100, 40, True)</code><code role="listitem">robot.take_exit(road_id, 40, True)</code></div>
+            </div>
+            <div class="python-command-group sim-only-command" role="group" aria-label="摄像头指令">
+              <span class="python-command-group-label">摄像头</span>
+              <div class="python-command-group-items"><code role="listitem">robot.observe("目标物")</code><code role="listitem">robot.approach("目标物", 100)</code></div>
+            </div>
+            <div class="python-command-group" role="group" aria-label="夹爪指令">
+              <span class="python-command-group-label">夹爪</span>
+              <div class="python-command-group-items"><code role="listitem">robot.grab()</code><code role="listitem">robot.release()</code><code class="sim-only-command" role="listitem">robot.holding()</code></div>
+            </div>
+          </div>
+          <section id="visionApiHelp" class="vision-api-help" hidden aria-label="传感与道路控制 API 说明">
+            <p>在编辑器里直接写 <b>robot…</b> 即可：运行器会自动等待每条小车指令完成，返回值可直接赋给变量，不需要手写 <b>await</b>。导航传感器提供任务道路锚点、真实任务进度、当前抓取物的安全投放预览、相对里程、当前道路局部状态与不含坐标的道路拓扑，六类查询每次程序合计最多 1000 次；道路控制只执行学生程序指定的短程循路或当前出口。系统不会寻找路口、选择出口、自动绕障或规划路线。虚拟车载摄像头只返回当前画面中的类别、方位、估算距离与置信度，各接口都不会提供目标物、混淆物或障碍物的地图坐标。</p>
+            <div class="vision-api-grid">
+              <article><code>robot.odometry()</code><span>读取相对本次程序起点的 <b>forwardCm</b>、<b>rightCm</b>、<b>headingDeg</b>、累计 <b>distanceCm</b> 和仿真 <b>tick</b>。航向为正表示左转，为负表示右转。</span><em>pose = robot.odometry()</em></article>
+              <article><code>robot.mission()</code><span>仅用于正式广阳岛场次。返回 <b>schemaVersion</b>、<b>mapId</b>、<b>mapVersion</b> 及当前服务端冻结地图的公共任务锚点：<b>start</b>、<b>storage</b>、按顺序的 <b>checkpoints</b>、<b>return</b>。普通单局另返回 <b>objects</b>：目标物、混淆物、障碍物各自的 <b>role</b>、<b>roadId</b> 与 <b>progressCm</b>，供程序做路线规划后再用摄像头确认；不返回任何世界坐标、朝向、推荐出口或规划路线。练习/筛选私有布局的 <b>objects</b> 固定为空。</span><em>mission = robot.mission()</em></article>
+              <article><code>robot.task_state()</code><span>仅用于正式广阳岛场次。返回 <b>schemaVersion</b>、<b>completed</b>、<b>total</b>、<b>status</b>、<b>nextCheckpointId</b>、<b>targetDelivered</b>、<b>distractorCleared</b>、<b>avoidanceStatus</b>、<b>goalReached</b> 和 <b>tick</b>。抓取或释放后应重新读取它确认任务引擎是否真正计分。</span><em>progress = robot.task_state()</em></article>
+              <article><code>robot.release_preview()</code><span>仅用于正式广阳岛场次且夹爪持有物体时。预览<b>按当前车头方向立即 release</b>的结果，返回 <b>holding</b>、<b>releaseAccepted</b>、<b>releaseReason</b>、<b>wouldCompleteDelivery</b>、<b>roadClearanceCm</b>、<b>requiredRoadClearanceCm</b> 和 <b>tick</b>。混淆物只有 <b>releaseAccepted</b> 和 <b>wouldCompleteDelivery</b> 都为 True 才应释放；它不返回预落点坐标、对象编号或道路名称。</span><em>preview = robot.release_preview()</em></article>
+              <article><code>robot.road_state()</code><span>仅用于广阳岛。返回 <b>onRoad</b>、<b>roadId</b>、<b>roadIds</b>、<b>lateralOffsetCm</b>、<b>headingErrorDeg</b>、<b>leftClearanceCm</b>、<b>rightClearanceCm</b>、<b>frontClearanceCm</b>、<b>roadProgressCm</b>、<b>fromNodeId</b>、<b>toNodeId</b>、<b>atNode</b>、<b>nodeId</b>、<b>atJunction</b>、<b>junctionId</b>、<b>exits</b> 和 <b>tick</b>。<b>frontClearanceCm</b> 是车头正前方 500 cm 内的碰撞余量，量程内没有碰撞边界时为 <b>None</b>；<b>atNode</b> 为 True 时，可从 <b>exits</b> 中自行选择一个 <b>roadId</b> 交给 <b>take_exit</b>。每个出口只含 <b>roadId</b>、<b>direction</b> 和 <b>turnDeg</b>，方向为 left、straight、right 或 back，转角左正右负；列表包含全部合法出口，不代表系统推荐。roadId 在离路时表示最近道路；横向偏移为正表示偏右、负表示偏左；两侧余量按车体边缘计算。onRoad 为 False 时不要依赖余量继续前进。</span><em>road = robot.road_state()</em></article>
+              <article><code>robot.map_graph()</code><span>读取广阳岛的无坐标道路拓扑。返回 <b>schemaVersion</b>、<b>nodes</b> 和 <b>edges</b>：节点只含 <b>nodeId</b>、<b>roadIds</b>，道路只含 <b>roadId</b>、<b>fromNodeId</b>、<b>toNodeId</b>、<b>lengthCm</b>、<b>oneWay</b>。它不会返回地图坐标、任务物体、推荐出口或规划路线，也不会让小车移动；路线仍由程序自行选择。</span><em>graph = robot.map_graph()</em></article>
+              <article><code>robot.follow_road(100, 40, True)</code><span>让小车沿当前道路短程居中行驶；距离 <b>maxCm</b> 可设 10～500 cm，<b>speed</b> 可设 10～100，表示期望速度占车辆最高速度的百分比。第三个参数 <b>obey_speed_limit=True</b> 时，道路控制会在每个仿真 tick 按冻结道路和限速区自动钳制实际速度；当前任务不设置超速扣分。它不会寻找路口、选择出口、绕障或规划路线。遇到路口、道路端点、前方障碍或道路边界会先停车。返回 <b>accepted</b>、<b>stoppedBy</b>、<b>roadId</b>、<b>distanceCm</b> 和 <b>elapsedTicks</b>；常见停止原因是 <b>max_distance</b>、<b>junction</b>、<b>road_end</b> 或 <b>front_clearance</b>。两项道路控制合计每次程序最多 300 次。比赛会把每次调用作为一个完整动作执行和记账；如需边走边观察，请减小 <b>maxCm</b> 并分多次调用。极少数弯曲路口可能停在判定半径的浮点边界外：若返回 <b>junction</b> 但紧接着读取的 <b>atJunction</b> 仍为 <b>False</b>，只执行一次 <b>robot.forward(2)</b> 前探并重新读取 <b>road_state()</b>，确认后再调用 <b>take_exit</b>，不要盲目循环前进。</span><em>result = robot.follow_road(100, 40, True)</em></article>
+              <article><code>robot.take_exit(road_id, speed=30, obey_speed_limit=False)</code><span>只在当前道路节点执行学生从 <b>road_state()["exits"]</b> 中选定的 <b>roadId</b>，转入该相邻道路后立即停车。<b>speed</b> 为 10～100 的期望速度百分比；<b>obey_speed_limit=True</b> 时每个仿真 tick 都按冻结道路和限速区自动钳制实际速度。返回 <b>accepted</b>、<b>stoppedBy</b>、<b>roadId</b>、<b>distanceCm</b> 和 <b>elapsedTicks</b>；成功进入时 <b>stoppedBy</b> 为 <b>entered_road</b>，不在节点、出口无效或方向不允许时会明确拒绝。它不会寻找路口、替学生选择出口、绕障或规划路线。</span><em>result = robot.take_exit(road_id, 60, True)</em></article>
+              <article><code>robot.observe("目标物")</code><span>返回同一摄像头帧中已稳定的识别列表；第二个置信度参数可设 0～1，默认 0.6。每项固定包含 <b>category</b>、<b>categoryLabel</b>、<b>name</b>、<b>label</b>、<b>direction</b>、<b>distanceCm</b>、<b>confidence</b>、<b>near</b> 和 <b>stable</b>；距离无法估算时 <b>distanceCm</b> 为 <b>None</b>。类别可替换为障碍物、混淆物、存放点或清理点，也可省略类别读取全部支持对象。</span><em>objects = robot.observe("目标物", 0.6)</em></article>
+              <article><code>robot.approach("目标物", 100)</code><span>按摄像头结果实际小步转向和前进；第二个参数是 5～200 cm 的目标估算距离，省略时以安全接近状态为准，第三个 <b>max_steps</b> 可设 1～100。安全到达返回 <b>True</b>，未识别、画面不稳定、遇到障碍或用完步数返回 <b>False</b>。可用于目标物、混淆物、存放点或清理点；障碍物仍应由程序自行规划路线绕开。</span><em>ok = robot.approach("目标物", 100)</em></article>
+              <article><code>robot.holding()</code><span>返回夹爪当前持有的“目标物”或“混淆物”；夹爪为空时返回 <b>None</b>。</span><em>print(robot.holding())</em></article>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="splitter" id="workspaceSplitter" role="separator" aria-orientation="vertical" aria-label="调整 Python 和 3D 模拟器宽度"></div>
+
+      <aside class="side-panel">
+        <section class="code-panel" id="codePanel">
+          <div class="panel-title">
+            <span><i data-lucide="activity"></i>运行状态</span>
+          </div>
+          <div id="pythonFeedback" class="python-feedback" hidden role="alert" aria-live="polite">
+            <strong id="pythonFeedbackTitle">Python 代码有问题</strong>
+            <p id="pythonFeedbackMessage"></p>
+          </div>
+          <div id="pythonOutput" class="python-output" hidden aria-live="polite">
+            <strong>程序输出</strong>
+            <pre id="pythonOutputContent"></pre>
+          </div>
+          <div class="robot-state">
+            <div class="state-title">小车状态</div>
+            <div class="state-grid">
+              <div><span>位置</span><strong id="poseText">--</strong></div>
+              <div><span>朝向</span><strong id="headingText">--</strong></div>
+              <div><span>夹爪</span><strong id="gripperText">--</strong></div>
+              <div><span>前方</span><strong id="frontText">--</strong></div>
+            </div>
+            <ul id="actionLog" class="action-log" aria-label="小车运行解释"></ul>
+          </div>
+        </section>
+
+        <div class="vertical-splitter" id="stateSceneSplitter" role="separator" aria-orientation="horizontal" aria-label="调整小车状态和 3D 模拟器高度"></div>
+
+        <section class="scene-panel">
+          <div class="panel-title scene-title">
+            <span><i data-lucide="box"></i><span id="scenePanelTitleText">3D 模拟器</span></span>
+            <div class="tool-row">
+              <label class="scene-mission-select">
+                <span>任务</span>
+                <select id="sceneSelect" aria-label="选择 3D 模拟器任务">
+                  <option value="guangyang">广阳岛综合任务1</option>
+                  <option value="guangyang2">广阳岛综合任务2</option>
+                  <option value="guangyang3">广阳岛综合任务3</option>
+                </select>
+              </label>
+              <button id="guangyangTrainingButton" type="button" aria-pressed="false"><i data-lucide="scan-line"></i><span>摄像头识别练习</span></button>
+              <button data-view="iso" aria-pressed="true"><i data-lucide="camera"></i><span>斜视</span></button>
+              <button data-view="top" aria-pressed="false"><i data-lucide="scan"></i><span>俯视</span></button>
+              <button data-view="follow" aria-pressed="false"><i data-lucide="navigation"></i><span>跟随</span></button>
+              <button id="toggleSceneTools"><i data-lucide="sliders-horizontal"></i><span>工具</span></button>
+            </div>
+          </div>
+          <div class="panel-tools is-collapsed" id="sceneTools">
+            <div class="tool-row">
+              <select id="mapStyleSelect" aria-label="场地外观">
+                <option value="basic">基础网格外观</option>
+                <option value="competition">比赛场地外观</option>
+              </select>
+              <button data-place="block"><i data-lucide="box"></i><span>障碍</span></button>
+              <button data-place="package" title="可连续放置；点击同一格可向上堆叠"><i data-lucide="package"></i><span>包裹</span></button>
+              <button data-place="goal"><i data-lucide="map-pin"></i><span>终点</span></button>
+              <button data-place="delete"><i data-lucide="eraser"></i><span>删除</span></button>
+              <div class="saved-map-menu" id="savedMapMenu">
+                <button id="savedMapButton" class="saved-map-trigger" type="button">
+                  <span id="savedMapButtonText">地图存档</span>
+                  <i data-lucide="chevron-down"></i>
+                </button>
+                <div id="savedMapDropdown" class="saved-map-dropdown" role="menu" aria-label="地图存档"></div>
+              </div>
+              <button id="saveMapButton"><i data-lucide="save"></i><span>保存</span></button>
+              <button id="clearSceneButton"><i data-lucide="trash-2"></i><span>清空</span></button>
+            </div>
+          </div>
+          <div id="simulator">
+            <canvas id="simCanvas"></canvas>
+            <div class="real-robot-view" id="realRobotView" aria-label="真实小车控制与摄像头预览">
+              <div class="real-robot-panel">
+                <div class="real-camera-stage" id="realCameraStage" data-camera-state="idle">
+                  <img id="cameraStream" alt="真实小车摄像头实时画面" referrerpolicy="no-referrer" draggable="false">
+                  <div class="real-camera-placeholder">
+                    <i data-lucide="video"></i>
+                    <strong>真实小车摄像头</strong>
+                    <span>切换到真实小车后自动连接画面</span>
+                  </div>
+                  <span class="real-camera-status" id="cameraStatus" role="status" aria-live="polite">摄像头尚未连接</span>
+                  <span class="real-camera-badge">仅实时预览 · 不识别</span>
+                </div>
+                <div class="real-camera-toolbar">
+                  <button id="retryCameraButton" type="button"><i data-lucide="refresh-cw"></i><span>重新连接摄像头</span></button>
+                  <small>画面只供人工查看，不会交给 Python、保存、上传或参与评分。</small>
+                </div>
+                <div class="real-robot-capabilities">
+                  <i data-lucide="radio-tower"></i>
+                  <div>
+                    <strong>真实小车基础控制</strong>
+                    <span>Python 可发送前进、后退、左转、右转、等待、抓取、松开和停止指令；实车仍不提供定位、传感或任务状态。</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mission-card" id="missionCard">
+              <div class="mission-card-header">
+                <div class="mission-card-heading">
+                  <span class="mission-card-kicker">当前任务</span>
+                  <strong id="missionTitle">任务：巡逻送包裹</strong>
+                </div>
+                <button class="mission-card-toggle" id="missionCardToggle" type="button" aria-expanded="true" aria-controls="missionCardBody" aria-label="收起当前任务" title="收起当前任务">
+                  <i data-lucide="chevron-up" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="mission-card-body" id="missionCardBody" aria-hidden="false">
+                <span id="missionText" class="mission-card-text">绕开障碍，把纸箱包裹送到快递站。</span>
+                <section id="objectTrainingPanel" class="object-training-panel" hidden aria-label="物体识别练习面板">
+                  <div class="object-training-heading">
+                    <strong>摄像头识别练习</strong>
+                    <span id="objectTrainingSummary"></span>
+                  </div>
+                  <div class="object-training-explainer" aria-label="摄像头识别练习说明">
+                    <strong>作用：练习你的程序怎么使用摄像头，不是训练识别模型。</strong>
+                    <p><b>怎么练：</b><code>observe</code> 获取类别、方向、距离和置信度 → 编写小车动作 → 查看识别框和练习反馈。</p>
+                    <small>练习只帮助你修改 Python 代码，不会改变模型、识别参数或比赛评分。</small>
+                  </div>
+                  <div class="object-training-mode-switch" role="group" aria-label="选择广阳岛训练内容">
+                    <button type="button" data-guangyang-training="target" aria-pressed="false">目标物</button>
+                    <button type="button" data-guangyang-training="obstacle" aria-pressed="false">障碍物</button>
+                    <button type="button" data-guangyang-training="distractor" aria-pressed="false">混淆物</button>
+                    <button id="exitGuangyangTrainingButton" type="button">返回正式比赛</button>
+                  </div>
+                  <div class="object-training-api" aria-label="摄像头识别练习 API">
+                    <code>robot.observe("目标物")</code>
+                    <code>robot.observe("障碍物")</code>
+                    <code>robot.observe("混淆物")</code>
+                    <code>robot.observe("存放点")</code>
+                    <code>robot.approach("目标物", 100)</code>
+                    <code>robot.grab()</code>
+                    <code>robot.release()</code>
+                    <code>robot.holding()</code>
+                  </div>
+                  <div id="objectTrainingLegend" class="object-training-legend" aria-label="场景对象图例"></div>
+                  <ol id="objectTrainingChecklist" class="object-training-checklist" aria-label="训练完成条件"></ol>
+                  <div class="object-training-live">
+                    <div><span>夹爪</span><strong id="objectTrainingHolding">空</strong></div>
+                    <div><span>摄像头观察</span><ul id="objectTrainingObservations"><li>尚未观察到练习物体</li></ul></div>
+                  </div>
+                  <div id="objectTrainingCoach" class="object-training-coach" data-state="ready" role="status" aria-live="polite">
+                    <strong>练习反馈</strong>
+                    <p id="objectTrainingCoachMessage">先运行视觉观察，再根据反馈完成下一步。</p>
+                  </div>
+                </section>
+                <div class="mission-progress" id="missionProgress" aria-live="polite">
+                  <div class="mission-progress-row"><span id="missionProgressLabel">任务进度</span><b id="missionProgressValue">0/1</b></div>
+                  <div class="mission-progress-track"><i id="missionProgressBar"></i></div>
+                  <small id="missionProgressHint">把包裹送到终点</small>
+                </div>
+              </div>
+            </div>
+            <section class="competition-hud" id="competitionHud" hidden aria-label="实时评分">
+              <header>
+                <div>
+                  <span>满分 100</span>
+                  <strong>实时评测</strong>
+                </div>
+                <div class="competition-hud-summary-actions">
+                  <b id="competitionScore">0.0</b>
+                  <small class="score-reference-note">仅供参考<br>最终成绩以后台计算为准</small>
+                  <button id="competitionHudToggle" class="competition-hud-toggle" type="button"
+                    aria-expanded="false" aria-controls="competitionHudBody">
+                    <i data-lucide="chevron-down" aria-hidden="true"></i><span>展开详情</span>
+                  </button>
+                </div>
+              </header>
+              <div id="competitionHudBody" class="competition-hud-body" hidden>
+              <section id="rankedEvaluationPanel" class="ranked-evaluation-panel five-run-evaluation-ui" data-state="pending" hidden inert aria-hidden="true"
+                aria-labelledby="rankedEvaluationTitle" aria-describedby="rankedEvaluationPolicy rankedEvaluationRecoveryPolicy">
+                <header class="ranked-evaluation-header">
+                  <div>
+                    <span>筛选五局 · 本赛季仅 1 次</span>
+                    <strong id="rankedEvaluationTitle">筛选五局（本地参考）</strong>
+                  </div>
+                  <b>authoritative: false</b>
+                </header>
+                <p id="rankedEvaluationPolicy" class="ranked-evaluation-policy">点击创建前必须二次确认。确认后源码与队伍立即锁定；关闭、过期、异常或缺局均按 0 分计入，不能换卷重来。</p>
+                <p id="rankedEvaluationRecoveryPolicy" class="ranked-evaluation-policy">唯一一次进行中的筛选可由当前账号恢复源码和进度；筛选期间会隐藏练习与单局手动操作，五局严格按顺序完成。</p>
+                <div class="ranked-evaluation-summary" aria-label="筛选五局状态">
+                  <div><span>赛季机会</span><b id="rankedEvaluationOpportunity">1 次</b></div>
+                  <div><span>进度</span><b id="rankedEvaluationProgress">0 / 5</b></div>
+                  <div><span>总分</span><b id="rankedEvaluationScore">— / 100</b></div>
+                  <div><span>服务器截止</span><b id="rankedEvaluationDeadline">—</b></div>
+                </div>
+                <div class="ranked-evaluation-actions">
+                  <button id="startRankedEvaluationButton" type="button" disabled aria-describedby="rankedEvaluationPolicy"><i data-lucide="shield-check" aria-hidden="true"></i><span>筛选服务准备中</span></button>
+                  <button id="recoverRankedEvaluationButton" type="button" hidden><i data-lucide="history" aria-hidden="true"></i><span>恢复唯一一次筛选</span></button>
+                  <button id="stopRankedEvaluationButton" class="ranked-evaluation-stop" type="button" hidden><i data-lucide="octagon-x" aria-hidden="true"></i><span>结束并按 0 分结算缺局</span></button>
+                </div>
+                <p id="rankedEvaluationStatus" class="ranked-evaluation-status" role="status" aria-live="polite" aria-atomic="true">尚未连接筛选五局服务，不会占用赛季机会。</p>
+              </section>
+              <section id="competitionBatchPanel" class="competition-batch-panel five-run-evaluation-ui" data-state="idle" hidden inert aria-hidden="true"
+                aria-labelledby="competitionBatchTitle">
+                <header class="competition-batch-header">
+                  <div>
+                    <span>练习五局 · 同图多布局</span>
+                    <strong id="competitionBatchTitle">练习五局（本地参考，不入榜）</strong>
+                  </div>
+                  <b id="competitionBatchSourceState" data-locked="false">源码未锁定</b>
+                </header>
+                <p class="competition-batch-notice">这是练习流程，所有结果均为本地参考且不进入筛选排名。当前局在本地浏览器中运行，可被技术手段检查；系统不会提前下发未来局布局，非强反作弊。</p>
+                <div class="competition-batch-current" aria-label="当前练习局状态">
+                  <div><span>当前练习局</span><b id="competitionBatchSlot">未开始</b></div>
+                  <div><span>状态</span><b id="competitionBatchState" role="status" aria-live="polite" aria-atomic="true">等待锁定源码</b></div>
+                  <div><span>本局得分</span><b id="competitionBatchCurrentScore">— / 100</b></div>
+                </div>
+                <div class="competition-batch-summary" aria-label="练习五局汇总分数">
+                  <div><span>五局均分</span><b id="competitionBatchMeanScore">— / 100</b></div>
+                  <div><span>最低分</span><b id="competitionBatchMinimumScore">— / 100</b></div>
+                  <div><span>70/30 总分</span><b id="competitionBatchScore">— / 100</b></div>
+                </div>
+                <div class="competition-batch-actions">
+                  <button id="startCompetitionBatchButton" type="button"><i data-lucide="layers-3" aria-hidden="true"></i><span>锁定源码并自动练习 5 局</span></button>
+                  <button id="stopCompetitionBatchButton" class="competition-batch-stop" type="button" hidden><i data-lucide="octagon-x" aria-hidden="true"></i><span>停止练习</span></button>
+                </div>
+                <div id="competitionBatchRecoveryPanel" class="competition-batch-recovery" hidden
+                  aria-labelledby="competitionBatchRecoveryTitle">
+                  <header>
+                    <strong id="competitionBatchRecoveryTitle">发现未完成练习</strong>
+                    <span id="competitionBatchRecoveryCount">0 项</span>
+                  </header>
+                  <p>这里只显示当前账号的练习公开进度，不包含布局、场次或源码。每次最多显示 2 项，系统不会替你猜选。</p>
+                  <div id="competitionBatchRecoveryItems" class="competition-batch-recovery-items"></div>
+                </div>
+                <p id="competitionBatchStatus" class="competition-batch-status" data-status="idle" role="status" aria-live="polite" aria-atomic="true">一份源码锁定后，将按顺序自动完成 5 局练习。</p>
+                <p class="competition-batch-policy">每个账号最多同时保留 2 个未完成练习，恢复完成或逐个确认关闭可释放未完成名额。另每个账号最多有 20 次练习五局机会；创建后无论完成或关闭都计入，关闭不会返还次数，系统不会自动删除记录。练习结果始终 authoritative: false，且不进入筛选排名。</p>
+              </section>
+              <div class="competition-hud-meta">
+                <span id="competitionRunState" class="competition-run-state" data-state="idle" role="status" aria-live="polite" aria-atomic="true">等待运行</span>
+                <time id="competitionTimer">00:00.0</time>
+              </div>
+              <div class="competition-objective-strip" id="missionCompositeProgress" data-objectives="4" hidden aria-label="综合任务完成进度">
+                <div data-complete="false"><span>物体处理</span><b id="missionDeliveryProgress">0/2</b></div>
+                <div data-complete="false" data-failed="false"><span>障碍绕行</span><b id="missionAvoidanceProgress">○</b></div>
+                <div data-complete="false"><span>道路巡检</span><b id="missionCheckpointProgress">0/4</b></div>
+                <div data-complete="false"><span>返回停车区</span><b id="missionReturnProgress">○</b></div>
+              </div>
+              <div class="competition-score-grid">
+                <div><span>任务完成</span><b id="competitionTaskScore">0.0 / 40</b></div>
+                <div><span>路径与规则</span><b id="competitionRuleScore">25.0 / 25</b></div>
+                <div><span>自主控制</span><b id="competitionAutoScore">15.0 / 15</b></div>
+                <div><span>完成效率</span><b id="competitionEfficiencyScore">0.0 / 20</b></div>
+              </div>
+              <p id="competitionLatestEvent">规则与评分参数为可配置草案，等待正式任务书冻结。</p>
+              <div class="competition-verifier" aria-label="运行记录服务端校验状态">
+                <div class="competition-verifier-health">
+                  <span><i aria-hidden="true"></i>判分服务</span>
+                  <b id="competitionVerifierHealth" data-health="checking">探测中</b>
+                </div>
+                <div class="competition-team-identity"><span>当前队伍</span><b id="competitionTeamName">从登录账号读取</b></div>
+                <input id="competitionTeamId" type="hidden" value="">
+                <small id="competitionVerifierResult" data-status="idle" role="status" aria-live="polite">尚无运行记录 · authoritative: false</small>
+                <small id="competitionSubmissionResult" data-status="idle" role="status" aria-live="polite">本次尚未绑定服务端场次 · authoritative: false</small>
+              </div>
+              <div class="competition-record-actions">
+                <button id="replayRunRecordButton" type="button" aria-pressed="false"><i data-lucide="history"></i><span>回放本次运行</span></button>
+                <button id="exportRunRecordButton" type="button"><i data-lucide="download"></i><span>导出运行记录</span></button>
+                <button id="verifyRunRecordButton" class="server-verify-button" type="button"><i data-lucide="shield-check"></i><span>服务端校验</span></button>
+                <button id="submitRunRecordButton" class="server-submit-button legacy-manual-submit" type="button" hidden inert aria-hidden="true"><i data-lucide="archive"></i><span>提交比赛存档</span></button>
+                <p id="competitionRecordActionStatus" class="competition-record-action-status" data-status="idle" role="status" aria-live="polite" aria-atomic="true">点击操作后，进度和结果会显示在这里</p>
+              </div>
+              </div>
+            </section>
+            <section id="trainingVisionWorkbench" class="training-vision-workbench" hidden
+              data-status="empty" data-frame-id="" data-scene-id=""
+              aria-labelledby="trainingVisionWorkbenchTitle">
+              <header class="training-vision-header">
+                <div>
+                  <small>CAMERA RESULT</small>
+                  <strong id="trainingVisionWorkbenchTitle">车载摄像头识别结果</strong>
+                </div>
+                <span id="trainingVisionFrameLabel">等待帧</span>
+              </header>
+              <p class="training-vision-guide">识别框会告诉程序物体类别、方向、距离和置信度；这里展示结果，不会训练或修改模型。</p>
+              <div class="training-vision-viewport">
+                <canvas id="trainingVisionCanvas" width="640" height="480" role="img"
+                  aria-label="虚拟车载摄像头尚无画面"></canvas>
+                <div id="trainingVisionOverlay" class="training-vision-overlay" role="list"
+                  aria-label="当前画面识别结果"></div>
+                <div id="trainingVisionEmpty" class="training-vision-empty" aria-hidden="true">
+                  <i data-lucide="scan-line"></i>
+                  <span>运行 robot.observe(...) 生成摄像头画面</span>
+                </div>
+              </div>
+              <p id="trainingVisionStatus" class="training-vision-status" role="status"
+                aria-live="polite" aria-atomic="true">等待虚拟摄像头画面</p>
+            </section>
+            <div class="sensor-card">
+              <span>前方距离</span>
+              <strong id="distanceText">-- cm</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="competitionRecordsDialog" class="workspace-records-dialog" aria-labelledby="competitionRecordsTitle">
+    <div class="workspace-records-shell">
+      <header class="workspace-records-header">
+        <div>
+          <small>MY COMPETITION RECORDS</small>
+          <h2 id="competitionRecordsTitle">我的比赛记录</h2>
+          <p>每次运行结束后都会自动记在这里；需要参赛时，可在对应记录上单独提交。</p>
+        </div>
+        <button id="closeCompetitionRecordsButton" class="workspace-records-close" type="button" aria-label="关闭我的比赛记录"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div class="workspace-records-content">
+        <section class="workspace-records-high-scores" aria-labelledby="competitionTaskHighScoresTitle">
+          <div><span class="workspace-records-kicker">正式提交</span><h3 id="competitionTaskHighScoresTitle">三个任务最高分</h3></div>
+          <div id="competitionTaskHighScores" class="workspace-records-high-score-grid" aria-live="polite">
+            <article><span>任务1</span><strong>—</strong></article>
+            <article><span>任务2</span><strong>—</strong></article>
+            <article><span>任务3</span><strong>—</strong></article>
+          </div>
+        </section>
+        <section id="pendingCompetitionRecord" class="pending-competition-record legacy-pending-record" data-record-state="empty" hidden inert aria-hidden="true" aria-labelledby="pendingCompetitionRecordTitle">
+          <div>
+            <span class="workspace-records-kicker">当前工作台</span>
+            <h3 id="pendingCompetitionRecordTitle">暂无待提交记录</h3>
+            <p id="pendingCompetitionRecordSummary">运行并结束一次比赛后，可在这里选择是否提交存档。</p>
+          </div>
+          <button id="submitPendingRunRecordButton" class="workspace-records-submit" type="button" hidden><i data-lucide="archive" aria-hidden="true"></i><span>提交当前运行记录</span></button>
+        </section>
+        <section class="workspace-records-archive" aria-labelledby="competitionRecordsListTitle">
+          <header>
+            <div><span class="workspace-records-kicker">自动保存</span><h3 id="competitionRecordsListTitle">运行记录</h3></div>
+            <button id="refreshCompetitionRecordsButton" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>刷新</span></button>
+          </header>
+          <p id="competitionRecordsStatus" class="workspace-records-status" role="status" aria-live="polite">打开后读取最近记录。</p>
+          <div id="competitionRecordsList" class="workspace-records-list" aria-live="polite"></div>
+        </section>
+      </div>
+      <footer class="workspace-records-footer">
+        <span>所有结果均为本地非权威重算。</span>
+        <a href="./records.html" target="_blank" rel="noopener"><i data-lucide="external-link" aria-hidden="true"></i><span>在新标签页查看完整记录</span></a>
+      </footer>
+    </div>
+  </dialog>
+
+  <div id="appStatusToast" class="app-status-toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+  <div id="loadingOverlay" class="loading-overlay" role="alert" aria-live="polite">
+    <div class="loading-card">
+      <div class="loading-icon"><i data-lucide="bot"></i></div>
+      <h2>Python 环境准备中</h2>
+      <div class="loading-bar-track">
+        <div id="loadingBarFill" class="loading-bar-fill"></div>
+      </div>
+      <p id="loadingStatus">正在加载 Pyodide 脚本…</p>
+      <small id="loadingHint"></small>
+    </div>
+  </div>
+
+  <dialog id="rankedEvaluationConfirmDialog" class="ranked-evaluation-dialog" aria-labelledby="rankedEvaluationConfirmTitle" aria-describedby="rankedEvaluationConfirmDescription">
+    <div class="ranked-evaluation-dialog-shell">
+      <header>
+        <small>SECOND CONFIRMATION</small>
+        <h2 id="rankedEvaluationConfirmTitle">确认使用本赛季唯一一次筛选机会？</h2>
+      </header>
+      <p id="rankedEvaluationConfirmDescription">确认后源码与队伍立即锁定。本次筛选关闭、过期、异常或缺局都会按 0 分计入，不能换卷，也不能重新创建第二次。</p>
+      <p>进行中的唯一筛选可由当前账号恢复；五局将严格串行，上一局经服务端确认后才会进入下一局。结果始终为 authoritative: false，仅作本地筛选参考。</p>
+      <div class="ranked-evaluation-dialog-actions">
+        <button id="cancelRankedEvaluationButton" type="button">返回检查源码</button>
+        <button id="confirmRankedEvaluationButton" type="button" disabled>确认锁定并开始</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./admin-team-scores.js?v=20260827-002"></script>
+  <script src="./app.js?v=20260907-002"></script>
+</body>
+</html>

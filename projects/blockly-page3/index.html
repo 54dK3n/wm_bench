@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>广阳岛 Blockly 闯关</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=20260830-002">
+  <script src="./vendor/blockly/blockly_compressed.js"></script>
+  <script src="./vendor/blockly/blocks_compressed.js"></script>
+  <script src="./vendor/blockly/javascript_compressed.js"></script>
+  <script src="./vendor/blockly/msg/zh-hans.js"></script>
+  <script src="./vendor/three/three.min.js"></script>
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark"><i data-lucide="bot"></i></div>
+        <div>
+          <p class="eyebrow">广阳岛</p>
+          <h1>Blockly 闯关</h1>
+        </div>
+      </div>
+      <div class="topbar-actions" aria-label="运行控制">
+        <label class="mode-switch target-switch" for="targetSelect">
+          <span>运行目标</span>
+          <select id="targetSelect" aria-label="选择程序运行目标">
+            <option value="sim">3D 模拟器</option>
+            <option value="real">真实小车（不计分）</option>
+          </select>
+        </label>
+        <div class="robot-connection" id="robotConnection" role="group" aria-label="真实小车连接">
+          <span class="protocol-toggle" id="protocolToggle"><button class="protocol-btn active" data-protocol="http" type="button">HTTP</button></span>
+          <input id="robotBaseUrl" value="192.168.4.1" aria-label="真实小车 IP 或地址" inputmode="url" spellcheck="false"><button id="applyRobotIpButton" type="button">确认地址</button>
+        </div>
+        <button id="runButton" class="primary" type="button"><i data-lucide="play"></i><span>运行代码</span></button>
+        <button id="pauseButton" type="button" disabled><i data-lucide="pause"></i><span>暂停</span></button>
+        <button id="stopButton" type="button" disabled><i data-lucide="square"></i><span>停止</span></button>
+        <button id="resetButton" type="button"><i data-lucide="rotate-ccw"></i><span>重置</span></button>
+        <div class="status-pill"><span class="status-indicator"></span><span id="statusText">等待编程</span></div>
+        <div class="account-actions">
+          <a id="platformReturnButton" class="platform-return-button" href="/portal.html" aria-label="返回统一平台" title="返回统一平台"><i data-lucide="layout-grid"></i><span>返回统一平台</span></a>
+          <span id="accountName" class="account-name">请先登录</span>
+          <button id="recordsButton" type="button" disabled><i data-lucide="trophy"></i><span>我的比赛记录</span></button>
+          <button id="teamInviteButton" type="button" disabled><i data-lucide="users"></i><span>队伍邀请码</span></button>
+          <button id="adminButton" type="button" hidden><i data-lucide="settings"></i><span>管理后台</span></button>
+          <button id="loginButton" type="button"><i data-lucide="log-in"></i><span>登录</span></button>
+          <button id="logoutButton" type="button" hidden><i data-lucide="log-out"></i><span>退出</span></button>
+        </div>
+      </div>
+    </header>
+
+    <section class="workspace-grid">
+      <div class="blockly-panel">
+        <div class="blockly-editor-heading">
+          <div>
+            <span class="section-kicker">程序积木</span>
+            <strong>自主规划控制程序</strong>
+            <small>组合导航传感、道路控制、摄像头感知和基础动作完成任务。</small>
+          </div>
+          <div class="workspace-badge" id="workspaceSaveStatus" aria-live="polite"><i data-lucide="cloud"></i><span>自动保存已开启</span></div>
+        </div>
+        <div class="blockly-workspace-tab">
+          <i data-lucide="puzzle"></i><strong>主程序</strong><small>积木</small>
+        </div>
+        <div class="blockly-stage">
+          <div id="blocklyDiv" aria-label="Blockly 工作区"></div>
+          <div class="blockly-controls" aria-label="积木工作区工具">
+            <button id="centerBlocksButton" title="定位到积木"><i data-lucide="locate-fixed"></i></button>
+            <button id="zoomInBlocksButton" title="放大积木"><i data-lucide="plus"></i></button>
+            <button id="zoomOutBlocksButton" title="缩小积木"><i data-lucide="minus"></i></button>
+            <button id="deleteBlocksButton" title="删除选中的积木"><i data-lucide="trash-2"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="splitter" id="workspaceSplitter" role="separator" aria-orientation="vertical" aria-label="调整 Blockly 和 3D 模拟器宽度"></div>
+
+      <aside class="side-panel">
+        <section class="code-panel is-code-collapsed" id="codePanel">
+          <div class="panel-title">
+            <span><i data-lucide="activity"></i>运行状态</span>
+            <div class="tool-row">
+              <button id="toggleCodeButton" title="展开或折叠代码"><i data-lucide="chevron-down"></i><span>展开代码</span></button>
+              <button id="copyButton" title="复制代码"><i data-lucide="copy"></i><span>复制</span></button>
+            </div>
+          </div>
+          <pre id="codeOutput">// 拖动积木后，这里会显示 JavaScript 代码</pre>
+          <div class="robot-state">
+            <div class="state-title">小车状态</div>
+            <div class="state-grid">
+              <div><span>位置</span><strong id="poseText">--</strong></div>
+              <div><span>朝向</span><strong id="headingText">--</strong></div>
+              <div><span>夹爪</span><strong id="gripperText">--</strong></div>
+              <div><span>前方</span><strong id="frontText">--</strong></div>
+            </div>
+            <ul id="actionLog" class="action-log" aria-label="小车运行解释"></ul>
+          </div>
+        </section>
+
+        <div class="vertical-splitter" id="stateSceneSplitter" role="separator" aria-orientation="horizontal" aria-label="调整小车状态和 3D 模拟器高度"></div>
+
+        <section class="scene-panel">
+          <div class="panel-title scene-title">
+            <span><i data-lucide="box"></i>3D 模拟器</span>
+            <div class="tool-row">
+              <label class="scene-mission-select">
+                <span>任务</span>
+                <select id="sceneSelect" aria-label="选择任务场景">
+                  <option value="guangyang1">广阳岛综合任务1</option>
+                  <option value="guangyang2">广阳岛综合任务2</option>
+                  <option value="guangyang3">广阳岛综合任务3</option>
+                </select>
+              </label>
+              <button data-view="iso"><i data-lucide="camera"></i><span>斜视</span></button>
+              <button data-view="top"><i data-lucide="scan"></i><span>俯视</span></button>
+              <button data-view="follow"><i data-lucide="navigation"></i><span>跟随</span></button>
+              <button id="toggleSceneTools" class="primary-hidden" aria-hidden="true" tabindex="-1"><i data-lucide="sliders-horizontal"></i><span>工具</span></button>
+            </div>
+          </div>
+          <div class="panel-tools is-collapsed primary-hidden" id="sceneTools" aria-hidden="true">
+            <div class="tool-row">
+              <select id="mapStyleSelect" aria-label="场地外观">
+                <option value="basic">基础网格外观</option>
+                <option value="competition">比赛场地外观</option>
+              </select>
+              <button data-place="block"><i data-lucide="box"></i><span>障碍</span></button>
+              <button data-place="package" title="可连续放置；点击同一格可向上堆叠"><i data-lucide="package"></i><span>包裹</span></button>
+              <button data-place="goal"><i data-lucide="map-pin"></i><span>终点</span></button>
+              <button data-place="delete"><i data-lucide="eraser"></i><span>删除</span></button>
+              <div class="saved-map-menu" id="savedMapMenu">
+                <button id="savedMapButton" class="saved-map-trigger" type="button">
+                  <span id="savedMapButtonText">地图存档</span>
+                  <i data-lucide="chevron-down"></i>
+                </button>
+                <div id="savedMapDropdown" class="saved-map-dropdown" role="menu" aria-label="地图存档"></div>
+              </div>
+              <button id="saveMapButton"><i data-lucide="save"></i><span>保存</span></button>
+              <button id="clearSceneButton"><i data-lucide="trash-2"></i><span>清空</span></button>
+            </div>
+          </div>
+          <div id="simulator">
+            <canvas id="simCanvas"></canvas>
+            <div class="mission-card" id="missionCard">
+              <div class="mission-card-header">
+                <div class="mission-card-heading">
+                  <span class="mission-card-kicker">当前任务</span>
+                  <strong id="missionTitle">广阳岛综合任务1</strong>
+                </div>
+                <button class="mission-card-toggle" id="missionCardToggle" type="button" aria-expanded="true" aria-controls="missionCardBody" aria-label="收起当前任务" title="收起当前任务">
+                  <i data-lucide="chevron-up" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="mission-card-body" id="missionCardBody" aria-hidden="false">
+                <span id="missionText" class="mission-card-text">按顺序经过 3 个蓝色途径点，再到达绿色终点。</span>
+                <div class="mission-progress" id="missionProgress" aria-live="polite">
+                  <div class="mission-progress-row"><span id="missionProgressLabel">任务进度</span><b id="missionProgressValue">0/1</b></div>
+                  <div class="mission-progress-track"><i id="missionProgressBar"></i></div>
+                  <small id="missionProgressHint">把包裹送到终点</small>
+                </div>
+              </div>
+            </div>
+            <section class="primary-score-hud" id="primaryScoreHud" aria-live="polite" aria-label="实时评测">
+              <header class="primary-score-header">
+                <div class="primary-score-heading">
+                  <span class="primary-score-kicker">满分 100</span>
+                  <strong>实时评测</strong>
+                </div>
+                <div class="primary-score-summary">
+                  <b id="primaryScoreValue">--</b>
+                  <small class="score-reference-note">仅供参考<br>最终成绩以后台计算为准</small>
+                  <button id="primaryScoreToggle" type="button" aria-expanded="false" aria-controls="primaryScoreBody">
+                    <i data-lucide="chevron-down" aria-hidden="true"></i>
+                    <span>展开详情</span>
+                  </button>
+                </div>
+              </header>
+              <div class="primary-score-body" id="primaryScoreBody" hidden>
+                <div class="primary-score-meta">
+                  <span id="primaryScoreRunState">等待运行</span>
+                  <time id="primaryScoreTimer">00:00.0</time>
+                </div>
+                <div class="primary-score-objective">
+                  <span id="primaryScoreHint">运行程序后开始评测</span>
+                  <b id="primaryScoreProgress">0/0</b>
+                </div>
+                <div class="primary-score-grid" aria-label="评分明细">
+                  <span><small>任务</small><b id="primaryTaskScore">0</b><em>/40</em></span>
+                  <span><small>规则</small><b id="primaryRuleScore">25</b><em>/25</em></span>
+                  <span><small>自主</small><b id="primaryAutonomousScore">15</b><em>/15</em></span>
+                  <span><small>效率</small><b id="primaryEfficiencyScore">0</b><em>/20</em></span>
+                </div>
+              </div>
+            </section>
+            <div class="real-robot-view" id="realRobotView" aria-label="真实小车控制与摄像头预览">
+              <div class="real-robot-panel">
+                <div class="real-camera-stage" id="realCameraStage" data-camera-state="idle">
+                  <img id="cameraStream" alt="真实小车摄像头实时画面" referrerpolicy="no-referrer" draggable="false">
+                  <div class="real-camera-placeholder">
+                    <i data-lucide="video"></i>
+                    <strong>真实小车摄像头</strong>
+                    <span>切换到真实小车后自动连接画面</span>
+                  </div>
+                  <span class="real-camera-status" id="cameraStatus" role="status" aria-live="polite">摄像头尚未连接</span>
+                  <span class="real-camera-badge">仅实时预览 · 不识别</span>
+                </div>
+                <div class="real-camera-toolbar">
+                  <button id="retryCameraButton" type="button"><i data-lucide="refresh-cw"></i><span>重新连接摄像头</span></button>
+                  <small>画面只供人工查看，不会交给积木程序、保存、上传或参与评分。</small>
+                </div>
+                <div class="real-robot-capabilities">
+                  <i data-lucide="radio-tower"></i>
+                  <div>
+                    <strong>真实小车基础控制</strong>
+                    <span>可发送前进、后退、左转、右转、等待、抓取、松开和停止指令；实车仍不提供定位、传感或任务状态。</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="runtimeFeedback" class="runtime-feedback" data-tone="output" aria-live="polite" hidden>
+              <span id="runtimeFeedbackLabel">程序输出</span>
+              <strong id="runtimeFeedbackValue">--</strong>
+            </div>
+            <div class="sensor-card primary-hidden" aria-hidden="true">
+              <span>前方距离</span>
+              <strong id="distanceText">-- cm</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <xml id="toolbox" style="display:none">
+    <category name="小车移动" colour="#1177cc">
+      <block type="robot_move_cm">
+        <field name="DIR">forward</field>
+        <value name="DISTANCE_CM">
+          <shadow type="math_number"><field name="NUM">50</field></shadow>
+        </value>
+      </block>
+      <block type="robot_move_cm">
+        <field name="DIR">backward</field>
+        <value name="DISTANCE_CM">
+          <shadow type="math_number"><field name="NUM">20</field></shadow>
+        </value>
+      </block>
+      <block type="robot_turn_left_90"></block>
+      <block type="robot_turn_right_90"></block>
+      <block type="robot_turn_left_angle">
+        <field name="DEGREES">45</field>
+      </block>
+      <block type="robot_turn_right_angle">
+        <field name="DEGREES">45</field>
+      </block>
+    </category>
+    <category name="物品操作" colour="#d97706">
+      <block type="robot_gripper"><field name="ACTION">grab</field></block>
+      <block type="robot_gripper"><field name="ACTION">release</field></block>
+    </category>
+    <category name="顺序与选择" colour="#8b5cf6">
+      <block type="robot_sequence"></block>
+      <block type="controls_if"></block>
+      <block type="controls_if"><mutation else="1"></mutation></block>
+      <block type="robot_if_obstacle"></block>
+    </category>
+    <category name="循环" colour="#5ba55b">
+      <block type="controls_repeat_ext">
+        <value name="TIMES">
+          <shadow type="math_number"><field name="NUM">4</field></shadow>
+        </value>
+      </block>
+      <block type="controls_whileUntil">
+        <field name="MODE">WHILE</field>
+        <value name="BOOL"><shadow type="logic_boolean"><field name="BOOL">TRUE</field></shadow></value>
+      </block>
+      <block type="controls_whileUntil">
+        <field name="MODE">UNTIL</field>
+        <value name="BOOL"><shadow type="logic_boolean"><field name="BOOL">FALSE</field></shadow></value>
+      </block>
+      <block type="controls_for">
+        <field name="VAR">i</field>
+        <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="TO"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="BY"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="controls_forEach"><field name="VAR">项目</field></block>
+      <block type="robot_forever"></block>
+      <block type="controls_flow_statements"><field name="FLOW">BREAK</field></block>
+      <block type="controls_flow_statements"><field name="FLOW">CONTINUE</field></block>
+    </category>
+    <category name="基础传感" colour="#0891b2">
+      <block type="robot_front_blocked"></block>
+      <block type="robot_sensor_distance"></block>
+      <block type="robot_on_road"></block>
+      <block type="robot_holding_package"></block>
+      <block type="robot_checkpoint_count"></block>
+      <block type="robot_task_complete"></block>
+      <block type="logic_compare">
+        <field name="OP">LT</field>
+        <value name="A"><block type="robot_sensor_distance"></block></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">30</field></shadow></value>
+      </block>
+    </category>
+    <category name="导航传感" colour="#0f766e">
+      <block type="robot_mission"></block>
+      <block type="robot_task_state"></block>
+      <block type="robot_release_preview"></block>
+      <block type="robot_odometry"></block>
+      <block type="robot_odometry_value"><field name="FIELD">distanceCm</field></block>
+      <block type="robot_road_state"></block>
+      <block type="robot_road_boolean"><field name="FIELD">onRoad</field></block>
+      <block type="robot_road_number"><field name="FIELD">roadProgressCm</field></block>
+      <block type="robot_road_text"><field name="FIELD">roadId</field></block>
+      <block type="robot_map_graph"></block>
+    </category>
+    <category name="道路控制" colour="#2563eb">
+      <block type="robot_follow_road">
+        <value name="MAX_CM"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">40</field></shadow></value>
+        <value name="OBEY"><shadow type="logic_boolean"><field name="BOOL">FALSE</field></shadow></value>
+      </block>
+      <block type="robot_take_exit">
+        <value name="ROAD_ID"><shadow type="text"><field name="TEXT">道路编号</field></shadow></value>
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">30</field></shadow></value>
+        <value name="OBEY"><shadow type="logic_boolean"><field name="BOOL">FALSE</field></shadow></value>
+      </block>
+      <block type="robot_last_road_result"></block>
+      <block type="robot_last_road_result_value"><field name="FIELD">stoppedBy</field></block>
+    </category>
+    <category name="摄像头感知" colour="#c026d3">
+      <block type="robot_vision_sees"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_count"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_direction"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_distance"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_near"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_centered"><field name="TARGET">目标物</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_observe"><field name="TARGET">全部</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_detect"><field name="TARGET">全部</field><value name="CONFIDENCE"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block>
+      <block type="robot_vision_approach"><field name="TARGET">目标物</field><value name="DISTANCE_CM"><shadow type="math_number"><field name="NUM">20</field></shadow></value><value name="MAX_STEPS"><shadow type="math_number"><field name="NUM">60</field></shadow></value></block>
+    </category>
+    <category name="数据与列表" colour="#7c3aed">
+      <block type="robot_data_get"><value name="KEY"><shadow type="text"><field name="TEXT">roadId</field></shadow></value></block>
+      <block type="robot_list_item"><value name="INDEX"><shadow type="math_number"><field name="NUM">1</field></shadow></value></block>
+      <block type="robot_data_length"></block>
+      <block type="robot_json_text"></block>
+      <block type="lists_create_with"><mutation items="0"></mutation></block>
+      <block type="lists_create_with"></block>
+      <block type="lists_length"></block>
+      <block type="lists_isEmpty"></block>
+      <block type="lists_getIndex"></block>
+      <block type="lists_setIndex"></block>
+    </category>
+    <category name="等待与输出" colour="#6a6f7a">
+      <block type="robot_wait">
+        <value name="SECONDS"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="text_print">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">你好，小车！</field></shadow></value>
+      </block>
+    </category>
+    <category name="数学与逻辑" colour="#5b67a5">
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+      <block type="math_number_property"></block>
+      <block type="logic_boolean"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_ternary"></block>
+      <block type="math_single"></block>
+      <block type="math_round"></block>
+      <block type="math_modulo"></block>
+      <block type="math_constrain"></block>
+    </category>
+    <category name="文本" colour="#a855f7">
+      <block type="text"></block>
+      <block type="text_join"></block>
+      <block type="text_length"></block>
+      <block type="text_isEmpty"></block>
+      <block type="text_indexOf"></block>
+      <block type="text_charAt"></block>
+    </category>
+    <category name="变量" custom="VARIABLE" colour="#a65c81"></category>
+    <category name="函数" custom="PROCEDURE" colour="#995ba5"></category>
+  </xml>
+
+  <dialog id="recordsDialog" class="primary-dialog" aria-labelledby="recordsDialogTitle">
+    <section class="primary-dialog-shell"><header><h2 id="recordsDialogTitle">我的比赛记录</h2><button id="closeRecordsButton" type="button" aria-label="关闭">×</button></header><p id="recordsSummary">正在读取成绩…</p><section class="primary-record-high-scores" aria-label="三个任务已提交最高分"><h3>已提交最高分</h3><div id="primaryTaskHighScores" class="primary-record-high-score-grid"><article><span>任务1</span><strong>—</strong></article><article><span>任务2</span><strong>—</strong></article><article><span>任务3</span><strong>—</strong></article></div></section><div id="recordsList" class="primary-record-list"></div><footer class="primary-record-pagination"><span id="primaryRecordsPageInfo">第 1/1 页 · 共 0 条</span><div><button id="primaryRecordsPrevious" type="button">上一页</button><button id="primaryRecordsNext" type="button">下一页</button></div></footer></section>
+  </dialog>
+
+  <dialog id="primaryTeamDialog" class="primary-team-dialog" aria-labelledby="primaryTeamDialogTitle">
+    <section class="primary-dialog-shell">
+      <header><h2 id="primaryTeamDialogTitle">队伍邀请码</h2><button id="closePrimaryTeamDialogButton" type="button" aria-label="关闭">×</button></header>
+      <p id="primaryTeamDialogText">将邀请码发给队友；他们注册时选择“加入已有队伍”即可使用。</p>
+      <output id="primaryTeamInviteCode" class="primary-team-code" aria-live="polite"></output>
+      <p id="primaryTeamCopyStatus" class="auth-message" aria-live="polite"></p>
+      <footer><button id="copyPrimaryTeamInviteButton" type="button">复制邀请码</button></footer>
+    </section>
+  </dialog>
+
+  <script src="./guangyang-scoring.js?v=20260827-002"></script>
+  <script src="./guangyang-map-config.js?v=20260827-001"></script>
+  <script src="./admin-team-scores.js?v=20260827-003"></script>
+  <script src="./blockly-navigation-core.js?v=20260827-001"></script>
+  <script src="./app.js?v=20260907-002"></script>
+</body>
+</html>

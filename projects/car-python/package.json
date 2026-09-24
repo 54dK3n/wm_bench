@@ -1,0 +1,28 @@
+{
+  "name": "chenlong-car-simulator",
+  "version": "0.4.0",
+  "private": true,
+  "description": "辰龙 AI 智能车浏览器仿真与评测原型",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "start:static": "python -m http.server 6178 --bind 127.0.0.1",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "node tools/browser-e2e.js",
+    "test:e2e:batch": "node tools/browser-e2e.js --batch-smoke",
+    "test:e2e:ranked": "node tools/browser-e2e.js --ranked-smoke",
+    "test:e2e:guangyang": "node tools/browser-e2e.js --guangyang",
+    "test:e2e:guangyang-recovery": "node tools/browser-e2e.js --guangyang-recovery",
+    "test:live-acceptance": "node tools/live-acceptance-test.js",
+    "check": "node --check app.js && node --check auth.js && node --check auth-guard.js && node --check records.js && node --check admin.js && node --check competition-core.js && node --check python-worker.js && node --check vision-pixel-core.js && node --check vision.js && node --check server.js && node --check backend/auth-store.js && node --check backend/canonical-json.js && node --check backend/platform-service-auth.js && node --check backend/record-capability-usage.js && node --check backend/strict-png.js && node --check backend/vision-recompute.js && node --check backend/submission-store.js && node --check backend/batch-evaluation-core.js && node --check backend/batch-evaluation-store.js && node --check backend/guangyang-map-config-store.js && node --check backend/guangyang-map-pool.js && node --check backend/guangyang-private-layout-catalog.js && node --check tools/verify-run-record.js && node --check tools/verify-run-record-worker.js && node --check tools/validate-guangyang-safe-route.js && node --check tools/validate-guangyang-recovery-route.js && node --check tools/validate-guangyang-layout-catalog.js && node --check tools/validate-guangyang-private-layout-solvability.js && node --check tools/browser-e2e.js && node --check tools/live-acceptance-test.js && node --check tools/build-release.js && node --check tools/check-release.js",
+    "validate:layouts": "node tools/validate-guangyang-layout-catalog.js && node tools/validate-guangyang-private-layout-solvability.js",
+    "validate:layout-catalog": "node tools/validate-guangyang-layout-catalog.js",
+    "validate:layout-solvability": "node tools/validate-guangyang-private-layout-solvability.js",
+    "validate:layout-solvability:v2": "node tools/validate-guangyang-private-layout-solvability.js",
+    "release:build": "node tools/build-release.js",
+    "release:check": "node tools/check-release.js",
+    "verify:record": "node tools/verify-run-record.js"
+  }
+}

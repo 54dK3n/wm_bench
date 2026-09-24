@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>登录 · 辰龙智能车仿真</title>
+  <link rel="stylesheet" href="./account.css?v=20260821-007">
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-panel-wrap" aria-label="账户入口">
+      <div class="auth-card">
+        <a class="site-brand auth-brand" href="./login.html" aria-label="辰龙智能车仿真登录页">
+          <span class="site-brand-mark"><i data-lucide="bot" aria-hidden="true"></i></span>
+          <span class="site-brand-copy"><strong>智能车仿真系统</strong></span>
+        </a>
+        <div class="auth-card-heading">
+          <h2 id="authCardTitle">欢迎回来</h2>
+          <p id="authCardDescription">登录后继续训练。</p>
+        </div>
+
+        <div class="auth-tabs" role="tablist" aria-label="登录或注册">
+          <button id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">登录</button>
+          <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel" tabindex="-1">注册</button>
+        </div>
+
+        <p id="authStatus" class="auth-status" role="alert" aria-live="polite" hidden></p>
+
+        <div id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+          <form id="loginForm" class="auth-form" novalidate>
+            <label class="field">
+              <span>用户名</span>
+              <input id="loginUsername" name="username" type="text" minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,31}" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="输入用户名">
+            </label>
+            <label class="field">
+              <span>密码</span>
+              <input id="loginPassword" name="password" type="password" minlength="10" maxlength="128" autocomplete="current-password" required placeholder="输入密码">
+            </label>
+            <button id="loginSubmit" class="primary-action" type="submit"><i data-lucide="log-in" aria-hidden="true"></i><span>登录并进入仿真</span></button>
+          </form>
+        </div>
+
+        <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+          <form id="registerForm" class="auth-form" novalidate>
+            <label class="field">
+              <span>加入方式</span>
+              <select id="registerTeamAction" name="teamAction">
+                <option value="create" selected>创建新队伍</option>
+                <option value="join">加入已有队伍</option>
+              </select>
+              <small id="registerTeamActionHint">队伍名称全局唯一；创建成功后会生成邀请码，发给队友即可加入。</small>
+            </label>
+            <label id="registerTeamNameField" class="field">
+              <span>队伍名称</span>
+              <input id="registerTeamName" name="teamName" type="text" minlength="1" maxlength="64" autocomplete="organization" required placeholder="例如：辰龙一队">
+              <small>队伍名称不可与已有队伍重名。</small>
+            </label>
+            <label id="registerInviteCodeField" class="field" hidden>
+              <span>队伍邀请码</span>
+              <input id="registerInviteCode" name="inviteCode" type="text" inputmode="text" maxlength="11" autocapitalize="characters" autocomplete="off" spellcheck="false" disabled placeholder="输入 8 位邀请码">
+              <small>向队伍成员获取邀请码；邀请码不等同于登录密码。</small>
+            </label>
+            <label class="field">
+              <span>参赛分组</span>
+              <select id="registerGroup" name="group" required>
+                <option value="" selected disabled>请选择分组</option>
+                <option value="primary">小学组</option>
+                <option value="junior">初中组</option>
+                <option value="high">高中组</option>
+              </select>
+              <small>注册后将按所选分组统计和筛选比赛记录。</small>
+            </label>
+            <label class="field">
+              <span>用户名</span>
+              <input id="registerUsername" name="username" type="text" minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,31}" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="3–32 位用户名">
+              <small>建议使用字母、数字、下划线或短横线。</small>
+            </label>
+            <label class="field">
+              <span>密码</span>
+              <input id="registerPassword" name="password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required placeholder="至少 10 位">
+            </label>
+            <label class="field">
+              <span>确认密码</span>
+              <input id="registerPasswordConfirm" name="passwordConfirm" type="password" minlength="10" maxlength="128" autocomplete="new-password" required placeholder="再次输入密码">
+            </label>
+            <button id="registerSubmit" class="primary-action" type="submit"><i data-lucide="user-plus" aria-hidden="true"></i><span>创建账户</span></button>
+          </form>
+        </div>
+
+        <noscript><p class="auth-status" data-kind="error">此系统需要启用 JavaScript 才能登录。</p></noscript>
+      </div>
+    </section>
+  </main>
+  <dialog id="teamInviteDialog" class="team-invite-dialog" aria-labelledby="teamInviteDialogTitle">
+    <form method="dialog">
+      <h2 id="teamInviteDialogTitle">保存队伍邀请码</h2>
+      <p>请将邀请码发给队友。队友注册时选择“加入已有队伍”即可使用。</p>
+      <output id="teamInviteCodeValue" class="team-invite-code" aria-live="polite"></output>
+      <p id="teamInviteCopyStatus" class="team-invite-copy-status" aria-live="polite"></p>
+      <div class="team-invite-actions">
+        <button id="copyTeamInviteCodeButton" class="secondary-action" type="button">复制邀请码</button>
+        <button id="teamInviteContinueButton" class="primary-action" type="submit">进入仿真</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="./auth.js?v=20260821-006"></script>
+</body>
+</html>

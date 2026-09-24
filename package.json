@@ -1,0 +1,21 @@
+{
+  "name": "chenlong-competition-platform",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "start:all": "node tools/start-platform.js",
+    "check": "node --check server.js && node --check packages/score-download.js && node --check packages/live-score-source.js && node --check packages/internal-service-auth.js && node --check tools/start-platform.js && node --check tools/migrate-legacy-data.js && node --check tools/live-smoke-test.js && node --check tools/multi-account-live-test.js && node --check tools/official-api-live-test.js && node --check tools/cleanup-test-data.js && node --check tools/build-delivery.js && node --check tools/verify-delivery.js && node --check public/platform-login.js && node --check public/platform-portal.js && node --check public/platform-admin.js && node --check projects/blockly-page3/server.js && node --check projects/blockly-page3/blockly-record-store.js",
+    "test": "node --test tests/*.test.js",
+    "test:live": "node tools/live-smoke-test.js",
+    "test:live:multi": "node tools/multi-account-live-test.js",
+    "test:live:official": "node tools/official-api-live-test.js",
+    "migrate": "node tools/migrate-legacy-data.js",
+    "migrate:workshop-links": "node tools/migrate-legacy-data.js --sync-workshop-links",
+    "delivery:windows": "node tools/build-delivery.js --with-dependencies",
+    "delivery:verify": "node tools/verify-delivery.js"
+  }
+}

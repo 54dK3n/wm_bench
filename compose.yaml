@@ -1,0 +1,48 @@
+name: chenlong-competition-platform
+
+services:
+  platform:
+    image: competition-platform:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 60s
+    ports:
+      - "${COMPETITION_PLATFORM_BIND_ADDRESS:-127.0.0.1}:${COMPETITION_PLATFORM_PORT:-6190}:6190"
+    environment:
+      CHENLONG_PLATFORM_BIND_HOST: "0.0.0.0"
+      CHENLONG_WORKSHOP_SKIP_BUILD: "true"
+      CHENLONG_PLATFORM_PUBLIC_ORIGIN: "${CHENLONG_PLATFORM_PUBLIC_ORIGIN:-}"
+      CHENLONG_PLATFORM_TRUSTED_PROXIES: "${CHENLONG_PLATFORM_TRUSTED_PROXIES:-}"
+      CHENLONG_RUN_ARCHIVE_MAX_BYTES: "${CHENLONG_RUN_ARCHIVE_MAX_BYTES:-}"
+      CHENLONG_REGISTRATION_OPEN: "${CHENLONG_REGISTRATION_OPEN:-}"
+      CHENLONG_OFFICIAL_SSO_SECRET: "${CHENLONG_OFFICIAL_SSO_SECRET:-}"
+      CHENLONG_SCORE_DOWNLOAD_PUBLIC_ORIGIN: "${CHENLONG_SCORE_DOWNLOAD_PUBLIC_ORIGIN:-}"
+      CHENLONG_SCORE_DOWNLOAD_TRUSTED_PROXIES: "${CHENLONG_SCORE_DOWNLOAD_TRUSTED_PROXIES:-}"
+      CHENLONG_SCORE_DOWNLOAD_APPS_FILE: "${CHENLONG_SCORE_DOWNLOAD_APPS_FILE:-}"
+      CHENLONG_SCORE_DOWNLOAD_RUNTIME_DIR: "${CHENLONG_SCORE_DOWNLOAD_RUNTIME_DIR:-/app/projects/car-python/.runtime/score-download}"
+      CHENLONG_SCORE_DOWNLOAD_PROMOTIONS_FILE: "${CHENLONG_SCORE_DOWNLOAD_PROMOTIONS_FILE:-}"
+      CHENLONG_SCORE_DOWNLOAD_SNAPSHOT_PATH: "${CHENLONG_SCORE_DOWNLOAD_SNAPSHOT_PATH:-}"
+    volumes:
+      - platform-secret:/app/data
+      - python-runtime:/app/projects/car-python/.runtime
+      - blockly-data:/app/projects/blockly-page3/.blockly-data
+      - workshop-state:/app/projects/tmm/.wrangler/state/v3
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:6190/api/readiness').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
+
+volumes:
+  platform-secret:
+  python-runtime:
+  blockly-data:
+  workshop-state:

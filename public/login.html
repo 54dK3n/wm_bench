@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录 · 广阳岛比赛平台</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/platform.css"></head>
+<body>
+  <main class="login-wrap">
+    <section class="card login-card">
+      <div class="brand"><span class="brand-mark">AI</span><span>广阳岛比赛平台</span></div>
+      <div class="tabs" role="tablist"><button id="loginTab" aria-selected="true">管理员登录</button><button id="registerTab" aria-selected="false" hidden>注册</button></div>
+      <p id="status" class="notice" hidden></p>
+      <form id="loginForm">
+        <div class="field"><label for="loginUsername">用户名</label><input id="loginUsername" required autocomplete="username"></div>
+        <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" type="password" required autocomplete="current-password"></div>
+        <button class="primary full" type="submit">登录并进入平台</button>
+      </form>
+      <form id="registerForm" hidden>
+        <div class="field-row">
+          <div class="field"><label for="registerUsername">用户名</label><input id="registerUsername" minlength="3" maxlength="32" required autocomplete="username"></div>
+          <div class="field"><label for="registerGroup">参赛组别（加入队伍时自动继承）</label><select id="registerGroup" required><option value="primary">小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></div>
+        </div>
+        <div class="field"><label for="teamAction">队伍方式</label><select id="teamAction"><option value="create">创建新队伍</option><option value="join">使用邀请码加入队伍</option></select></div>
+        <div id="teamNameField" class="field"><label for="teamName">队伍名称</label><input id="teamName" maxlength="64" required></div>
+        <div id="inviteField" class="field" hidden><label for="inviteCode">8 位队伍邀请码</label><input id="inviteCode" maxlength="8" pattern="[A-HJ-NP-Z2-9]{8}"></div>
+        <div class="field-row">
+          <div class="field"><label for="registerPassword">密码</label><input id="registerPassword" type="password" minlength="10" required autocomplete="new-password"></div>
+          <div class="field"><label for="confirmPassword">确认密码</label><input id="confirmPassword" type="password" minlength="10" required autocomplete="new-password"></div>
+        </div>
+        <button class="primary full" type="submit">注册并进入平台</button>
+      </form>
+    </section>
+  </main>
+  <dialog id="inviteDialog"><h2>队伍创建成功</h2><p>请保存并发给同队成员：</p><code id="createdInvite" class="invite"></code><button id="continueButton" class="primary">继续</button></dialog>
+  <script src="/platform-login.js"></script>
+</body></html>

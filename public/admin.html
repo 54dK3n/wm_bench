@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>管理后台 · 统一比赛平台</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/platform.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="admin-page">
+  <header class="admin-topbar">
+    <a class="admin-brand" href="/portal.html" aria-label="返回比赛平台">
+      <span class="admin-brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3v3m-6 4V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M5 10h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2Zm3 4v2m8-2v2m-5 0h2"/></svg>
+      </span>
+      <span><strong>统一比赛平台</strong><small>管理后台</small></span>
+    </a>
+    <nav class="admin-top-actions" aria-label="管理员操作">
+      <span class="admin-account"><strong id="currentAdminName">正在验证…</strong><small>管理员</small></span>
+      <a class="admin-button" href="/portal.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span>返回平台</span>
+      </a>
+      <button id="logoutButton" class="admin-button danger" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3m10-9h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg><span>退出</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="admin-shell">
+    <section class="admin-heading" aria-labelledby="adminTitle">
+      <div>
+        <p class="admin-kicker">COMPETITION CONTROL CENTER</p>
+        <h1 id="adminTitle">比赛管理</h1>
+        <p>管理参赛账号、四项比赛总成绩及各子系统。</p>
+      </div>
+      <a class="admin-button primary" href="/api/platform/admin/export">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span>导出总成绩 CSV</span>
+      </a>
+    </section>
+
+    <p id="notice" class="admin-notice" role="status" aria-live="polite">正在汇总比赛数据…</p>
+
+    <section id="metrics" class="admin-metrics" aria-label="比赛数据概览" hidden>
+      <article><span>参赛队伍</span><strong id="metricTeams">—</strong><small>已注册队伍</small></article>
+      <article><span>注册账号</span><strong id="metricUsers">—</strong><small>含管理员账号</small></article>
+      <article><span>普通用户</span><strong id="metricParticipants">—</strong><small>参赛账号</small></article>
+      <article class="accent"><span>当前最高总分</span><strong id="metricBest">—</strong><small id="metricBestTeam">等待成绩</small></article>
+    </section>
+
+    <nav class="admin-tabs" role="tablist" aria-label="后台管理内容">
+      <button type="button" role="tab" aria-selected="true" aria-controls="scorePanel" data-admin-tab="scores">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/></svg><span>队伍总成绩</span>
+      </button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="userPanel" data-admin-tab="users">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87m-2-12a4 4 0 0 1 0 7.75"/></svg><span>用户管理</span>
+      </button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="systemPanel" data-admin-tab="systems">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.12.37.34.71.6 1 .3.29.7.43 1.1.4h.1a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z"/></svg><span>系统管理</span>
+      </button>
+    </nav>
+
+    <section id="scorePanel" class="admin-panel" role="tabpanel" data-admin-panel="scores">
+      <header class="panel-heading">
+        <div><h2>队伍四项总成绩</h2><p>任务1、2、3取 Python 与 Blockly 正式提交的最高分，识物工坊取后台评分；四项各占 25%。</p></div>
+        <div class="panel-heading-actions">
+          <label class="score-group-filter"><span>分组</span><select id="scoreGroupFilter"><option value="">全部分组</option><option value="primary">小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></label>
+          <button id="refreshScores" class="admin-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg><span>刷新成绩</span>
+          </button>
+        </div>
+      </header>
+      <div class="admin-table-wrap">
+        <table class="score-table">
+          <thead><tr><th>排名</th><th>队伍</th><th>任务1</th><th>任务2</th><th>任务3</th><th>识物工坊</th><th>总分</th><th>地图套题</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <nav class="admin-pagination" aria-label="队伍总成绩分页">
+        <span id="pageInfo"></span><div><button id="prev" type="button">上一页</button><button id="next" type="button">下一页</button></div>
+      </nav>
+    </section>
+
+    <section id="userPanel" class="admin-panel" role="tabpanel" data-admin-panel="users" hidden>
+      <header class="panel-heading">
+        <div><h2>用户管理</h2><p>筛选参赛账号，修改队伍名称或小组；变更会同步到同队所有成员。</p></div>
+        <button id="refreshUsers" class="admin-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg><span>刷新用户</span>
+        </button>
+      </header>
+      <div class="admin-toolbar">
+        <label class="search-field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span class="sr-only">筛选用户名或队伍</span><input id="userSearch" type="search" placeholder="筛选用户名或队伍">
+        </label>
+        <label><span class="sr-only">筛选小组</span><select id="groupFilter"><option value="">全部小组</option><option value="primary">小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></label>
+        <label><span class="sr-only">筛选角色</span><select id="roleFilter"><option value="">全部角色</option><option value="user">普通用户</option><option value="admin">管理员</option></select></label>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="users-table"><thead><tr><th>用户名</th><th>队伍</th><th>小组</th><th>角色</th><th>操作</th></tr></thead><tbody id="userRows"></tbody></table>
+      </div>
+      <nav class="admin-pagination" aria-label="用户管理分页">
+        <span id="userPageInfo"></span><div><button id="userPrev" type="button">上一页</button><button id="userNext" type="button">下一页</button></div>
+      </nav>
+    </section>
+
+    <section id="systemPanel" class="admin-panel" role="tabpanel" data-admin-panel="systems" hidden>
+      <header class="panel-heading"><div><h2>子系统管理</h2><p>进入对应后台编辑地图、查看程序与积木记录，或管理识物工坊评测。</p></div></header>
+      <section class="readiness-panel" aria-labelledby="readinessTitle">
+        <header>
+          <div><h3 id="readinessTitle">平台运行状态</h3><p id="readinessSummary">正在检查四个服务和部署配置…</p></div>
+          <button id="refreshReadiness" class="admin-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg><span>重新检查</span>
+          </button>
+        </header>
+        <div id="readinessServices" class="readiness-services" aria-live="polite"></div>
+        <div id="readinessConfiguration" class="readiness-configuration"></div>
+        <div id="evaluationSetReadiness" class="readiness-evaluation" aria-live="polite"></div>
+      </section>
+      <div class="system-grid">
+        <article class="system-card python-card">
+          <span class="system-icon">Py</span><div><p class="system-kicker">赛题一 · 共用地图</p><h3>Python 地图与比赛记录</h3><p>编辑任务1～3的 8 / 10 / 12 套地图，并查看 Python 正式提交。</p></div>
+          <a class="admin-button primary" href="/python/admin.html" target="_blank">进入管理</a>
+        </article>
+        <article class="system-card blockly-card">
+          <span class="system-icon">积木</span><div><p class="system-kicker">赛题一 · 积木方式</p><h3>Blockly 积木记录</h3><p>查看用户提交的积木结构、生成代码和正式比赛记录。</p></div>
+          <a class="admin-button primary" href="/blockly/admin.html?platform=1" target="_blank">进入管理</a>
+        </article>
+        <article class="system-card workshop-card">
+          <span class="system-icon">识物</span><div><p class="system-kicker">赛题二</p><h3>识物工坊评测</h3><p>维护识物测试集，查看各队模型提交与后台评分。</p></div>
+          <a class="admin-button primary" href="/workshop/competition/admin" target="_blank">进入管理</a>
+        </article>
+      </div>
+      <aside class="admin-tip"><strong>地图分配说明</strong><span>同一队伍的所有账号在任务1、2、3中始终使用同一套地图；地图分配可在 Python 地图后台查看。</span></aside>
+    </section>
+  </main>
+  <script src="/platform-admin.js?v=20260828-2"></script>
+</body>
+</html>

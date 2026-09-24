@@ -1,0 +1,519 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "8a419e14-79e8-4447-90fa-d93efa00a3d6",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "competition_admin_credentials": {
+      "name": "competition_admin_credentials",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "competition_admin_credentials_singleton_check": {
+          "name": "competition_admin_credentials_singleton_check",
+          "value": "\"competition_admin_credentials\".\"id\" = 1"
+        }
+      }
+    },
+    "competition_admin_sessions": {
+      "name": "competition_admin_sessions",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "admin_id": {
+          "name": "admin_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "competition_admin_sessions_expires_idx": {
+          "name": "competition_admin_sessions_expires_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "competition_admin_sessions_admin_id_competition_admin_credentials_id_fk": {
+          "name": "competition_admin_sessions_admin_id_competition_admin_credentials_id_fk",
+          "tableFrom": "competition_admin_sessions",
+          "tableTo": "competition_admin_credentials",
+          "columnsFrom": [
+            "admin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "competition_evaluation_sets": {
+      "name": "competition_evaluation_sets",
+      "columns": {
+        "division": {
+          "name": "division",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "object_key": {
+          "name": "object_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sample_count": {
+          "name": "sample_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "labels_json": {
+          "name": "labels_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "embedding_size": {
+          "name": "embedding_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "competition_evaluation_sets_division_check": {
+          "name": "competition_evaluation_sets_division_check",
+          "value": "\"competition_evaluation_sets\".\"division\" in ('primary', 'junior', 'senior')"
+        },
+        "competition_evaluation_sets_sample_count_check": {
+          "name": "competition_evaluation_sets_sample_count_check",
+          "value": "\"competition_evaluation_sets\".\"sample_count\" >= 0"
+        },
+        "competition_evaluation_sets_embedding_size_check": {
+          "name": "competition_evaluation_sets_embedding_size_check",
+          "value": "\"competition_evaluation_sets\".\"embedding_size\" > 0"
+        }
+      }
+    },
+    "competition_sessions": {
+      "name": "competition_sessions",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "competition_sessions_team_idx": {
+          "name": "competition_sessions_team_idx",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "competition_sessions_expires_idx": {
+          "name": "competition_sessions_expires_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "competition_sessions_team_id_competition_teams_id_fk": {
+          "name": "competition_sessions_team_id_competition_teams_id_fk",
+          "tableFrom": "competition_sessions",
+          "tableTo": "competition_teams",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "competition_submissions": {
+      "name": "competition_submissions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "artifact_key": {
+          "name": "artifact_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "artifact_sha256": {
+          "name": "artifact_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "artifact_bytes": {
+          "name": "artifact_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score_micros": {
+          "name": "score_micros",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "correct_count": {
+          "name": "correct_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_count": {
+          "name": "total_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metrics_json": {
+          "name": "metrics_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "evaluation_version": {
+          "name": "evaluation_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "model_name": {
+          "name": "model_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scored_at": {
+          "name": "scored_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "competition_submissions_team_idempotency_unique": {
+          "name": "competition_submissions_team_idempotency_unique",
+          "columns": [
+            "team_id",
+            "idempotency_key"
+          ],
+          "isUnique": true
+        },
+        "competition_submissions_team_time_idx": {
+          "name": "competition_submissions_team_time_idx",
+          "columns": [
+            "team_id",
+            "submitted_at"
+          ],
+          "isUnique": false
+        },
+        "competition_submissions_status_idx": {
+          "name": "competition_submissions_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "competition_submissions_team_id_competition_teams_id_fk": {
+          "name": "competition_submissions_team_id_competition_teams_id_fk",
+          "tableFrom": "competition_submissions",
+          "tableTo": "competition_teams",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "competition_submissions_status_check": {
+          "name": "competition_submissions_status_check",
+          "value": "\"competition_submissions\".\"status\" in ('pending', 'uploaded', 'evaluating', 'scored', 'failed', 'rejected')"
+        },
+        "competition_submissions_artifact_bytes_check": {
+          "name": "competition_submissions_artifact_bytes_check",
+          "value": "\"competition_submissions\".\"artifact_bytes\" is null or \"competition_submissions\".\"artifact_bytes\" >= 0"
+        },
+        "competition_submissions_score_check": {
+          "name": "competition_submissions_score_check",
+          "value": "\"competition_submissions\".\"score_micros\" is null or \"competition_submissions\".\"score_micros\" >= 0"
+        }
+      }
+    },
+    "competition_teams": {
+      "name": "competition_teams",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_name": {
+          "name": "team_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_name_key": {
+          "name": "team_name_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "division": {
+          "name": "division",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latest_submission_id": {
+          "name": "latest_submission_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "competition_teams_team_name_key_unique": {
+          "name": "competition_teams_team_name_key_unique",
+          "columns": [
+            "team_name_key"
+          ],
+          "isUnique": true
+        },
+        "competition_teams_latest_submission_idx": {
+          "name": "competition_teams_latest_submission_idx",
+          "columns": [
+            "latest_submission_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "competition_teams_division_check": {
+          "name": "competition_teams_division_check",
+          "value": "\"competition_teams\".\"division\" in ('primary', 'junior', 'senior')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

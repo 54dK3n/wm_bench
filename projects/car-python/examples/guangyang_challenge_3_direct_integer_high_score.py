@@ -1,0 +1,155 @@
+# 广阳岛综合任务3：无感知固定路线版。
+# 仅使用基础行驶、整数角度转向和抓放；行驶距离以厘米为单位，并保留 1 位小数。
+# 当前已发布地图实测：18/18，89.3 分，
+# 0 次碰撞、0 次违规、376.6 秒。
+# 地图由管理员修改后，需要重新生成与测试路线。
+
+# 目标物1
+robot.right_angle(13)
+robot.forward(28.1)
+robot.right_angle(80)
+robot.forward(81.6)
+robot.right_angle(67)
+robot.grab()
+robot.right_angle(20)
+robot.forward(12.2)
+robot.left_angle(43)
+robot.release()
+
+# 目标物2
+robot.right_angle(178)
+robot.forward(24.4)
+robot.left_angle(43)
+robot.forward(179.1)
+robot.right_angle(36)
+robot.forward(33.8)
+robot.left_angle(38)
+robot.grab()
+robot.left_angle(150)
+robot.forward(55.3)
+robot.left_angle(29)
+robot.forward(174.4)
+robot.right_angle(87)
+robot.forward(13.1)
+robot.left_angle(41)
+robot.release()
+
+# 目标物3
+robot.right_angle(177)
+robot.forward(23.4)
+robot.left_angle(42)
+robot.forward(179.1)
+robot.right_angle(75)
+robot.forward(33.8)
+robot.right_angle(22)
+robot.forward(32.8)
+robot.left_angle(70)
+robot.forward(27.2)
+robot.left_angle(31)
+robot.forward(10.3)
+robot.grab()
+robot.left_angle(160)
+robot.forward(34.7)
+robot.right_angle(74)
+robot.forward(58.1)
+robot.left_angle(57)
+robot.forward(28.1)
+robot.left_angle(34)
+robot.forward(178.1)
+robot.right_angle(88)
+robot.forward(12.2)
+robot.left_angle(42)
+robot.release()
+
+# 混淆物1
+robot.left_angle(120)
+robot.forward(77.8)
+robot.left_angle(104)
+robot.forward(110.6)
+robot.right_angle(93)
+robot.forward(60.0)
+robot.right_angle(84)
+robot.forward(63.8)
+robot.left_angle(90)
+robot.grab()
+robot.left_angle(144)
+robot.forward(8.4)
+robot.left_angle(38)
+robot.release()
+
+# 混淆物2
+robot.right_angle(92)
+robot.forward(64.7)
+robot.left_angle(90)
+robot.forward(91.9)
+robot.grab()
+robot.left_angle(108)
+robot.forward(7.5)
+robot.right_angle(19)
+robot.release()
+
+# 混淆物3
+robot.right_angle(121)
+robot.forward(32.8)
+robot.right_angle(63)
+robot.forward(100.3)
+robot.right_angle(75)
+robot.forward(30.9)
+robot.right_angle(18)
+robot.forward(32.8)
+robot.left_angle(24)
+robot.forward(46.9)
+robot.right_angle(53)
+robot.grab()
+robot.left_angle(116)
+robot.forward(5.6)
+robot.right_angle(8)
+robot.release()
+
+# 途径点4
+robot.right_angle(120)
+robot.forward(56.2)
+
+# 途径点5
+robot.right_angle(72)
+robot.forward(60.9)
+robot.left_angle(16)
+robot.forward(35.6)
+robot.right_angle(75)
+robot.forward(114.4)
+
+# 途径点6
+robot.right_angle(180)
+robot.forward(123.8)
+
+# 途径点7
+robot.right_angle(174)
+robot.forward(64.7)
+robot.left_angle(84)
+robot.forward(106.9)
+
+# 途径点8
+robot.right_angle(113)
+robot.forward(64.7)
+robot.right_angle(69)
+robot.forward(196.9)
+robot.right_angle(38)
+robot.forward(32.8)
+robot.left_angle(31)
+robot.forward(47.8)
+robot.right_angle(54)
+robot.forward(47.8)
+
+# 返航
+robot.right_angle(173)
+robot.forward(60.0)
+robot.left_angle(46)
+robot.forward(54.4)
+robot.right_angle(27)
+robot.forward(30.9)
+robot.left_angle(33)
+robot.forward(90.9)
+robot.right_angle(86)
+robot.forward(20.6)
+
+print("广阳岛综合任务3路线执行完成")

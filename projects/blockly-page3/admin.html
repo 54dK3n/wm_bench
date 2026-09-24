@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>管理后台 · 广阳岛 Blockly</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=20260828-002">
+  <link rel="stylesheet" href="./admin.css?v=20260827-001">
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body class="primary-admin-page">
+  <main class="primary-admin-shell">
+    <header class="primary-admin-topbar">
+      <a href="./" class="primary-admin-brand"><i data-lucide="bot" aria-hidden="true"></i><span>广阳岛</span></a>
+      <div><span id="adminIdentity">正在核验管理员身份…</span><button id="adminLogoutButton" type="button">退出登录</button></div>
+    </header>
+    <section class="primary-admin-heading"><div><p>管理后台</p><h1>比赛管理</h1><span>正式成绩、参赛队伍和三套比赛地图集中管理。</span></div><a href="./" class="primary-admin-return">返回闯关</a></section>
+    <p id="adminNotice" class="primary-admin-notice" role="status" aria-live="polite" hidden></p>
+    <section class="primary-admin-summary" aria-label="汇总数据"><article><span>学生账户</span><b id="adminUserCount">--</b></article><article><span>正式提交</span><b id="adminRecordCount">--</b></article><article><span>当前最高分</span><b id="adminHighScore">--</b></article></section>
+    <nav class="primary-admin-tabs" aria-label="后台功能">
+      <button type="button" class="is-active" data-admin-tab="records" aria-selected="true">正式成绩</button>
+      <button type="button" data-admin-tab="users" aria-selected="false">用户管理</button>
+      <button type="button" data-admin-tab="maps" aria-selected="false">地图设置</button>
+    </nav>
+    <section class="primary-admin-section" data-admin-panel="records">
+      <header><div><h2>正式提交记录</h2><p>仅显示学员主动提交的成绩，可查看积木和生成代码。</p></div><div class="primary-admin-header-actions"><button id="exportAdminRecords" type="button">导出记录</button><button id="refreshAdminRecords" type="button">刷新</button></div></header>
+      <div class="primary-admin-filters"><label>搜索<input id="adminRecordFilter" placeholder="用户名或队伍名称"></label><label>小组<select id="adminRecordGroupFilter"><option value="">全部小组</option><option value="primary">小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></label><label>任务<select id="adminRecordTaskFilter"><option value="">全部任务</option><option value="GYI-PRIMARY-01">广阳岛综合任务1</option><option value="GYI-PRIMARY-02">广阳岛综合任务2</option><option value="GYI-PRIMARY-03">广阳岛综合任务3</option></select></label><label>记录范围<select id="adminRecordScope"><option value="all">全部正式提交</option><option value="team-task-best">每队每任务最高分</option></select></label><label>排序<select id="adminRecordSort"><option value="latest">最新提交</option><option value="score">分数从高到低</option></select></label></div>
+      <div class="primary-admin-table-wrap"><table><thead><tr><th>提交时间</th><th>用户名</th><th>队伍</th><th>小组</th><th>任务</th><th>地图</th><th>完成</th><th>得分</th><th>能力使用</th><th>操作</th></tr></thead><tbody id="adminRecordsBody"></tbody></table></div>
+      <footer class="primary-admin-pagination"><span id="adminRecordsPageInfo">第 1 页</span><div><button id="adminRecordsPrevious" type="button">上一页</button><button id="adminRecordsNext" type="button">下一页</button></div></footer>
+      <section class="primary-admin-team-best" aria-labelledby="adminTeamChallengeBestTitle">
+        <header><div><h3 id="adminTeamChallengeBestTitle">各队三项最高分</h3><p>按注册队伍汇总正式提交记录，同队同任务仅保留最高分。</p></div><div class="primary-admin-header-actions"><span>每页 15 支队伍</span><button id="exportAdminTeamScores" type="button">导出汇总</button></div></header>
+        <p id="adminTeamChallengeBestLoading" class="primary-admin-team-best-loading" role="status">正在核对队伍和正式提交记录…</p>
+        <div id="adminTeamChallengeBestTableWrap" class="primary-admin-table-wrap" hidden><table class="primary-admin-team-best-table"><thead><tr><th>队伍</th><th>小组</th><th>任务1最高分</th><th>任务2最高分</th><th>任务3最高分</th><th>三项总分</th></tr></thead><tbody id="adminTeamChallengeBestBody"></tbody></table></div>
+        <footer id="adminTeamChallengeBestPagination" class="primary-admin-pagination" hidden><span id="adminTeamChallengeBestPageInfo">第 1 页</span><div><button id="adminTeamChallengeBestPrevious" type="button">上一页</button><button id="adminTeamChallengeBestNext" type="button">下一页</button></div></footer>
+      </section>
+    </section>
+    <section class="primary-admin-section" data-admin-panel="users" hidden>
+      <header><div><h2>用户管理</h2><p>用户名唯一；学生可通过邀请码加入同一队伍。</p></div><div class="primary-admin-header-actions"><button id="exportAdminUsers" type="button">导出用户</button><button id="refreshAdminUsers" type="button">刷新用户</button></div></header>
+      <div class="primary-admin-filters"><label>搜索<input id="adminUserFilter" placeholder="用户名或队伍名称"></label><label>小组<select id="adminUserGroupFilter"><option value="">全部小组</option><option value="primary">小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></label></div>
+      <div class="primary-admin-table-wrap"><table><thead><tr><th>用户名</th><th>队伍</th><th>小组</th><th>身份</th><th>记录数</th><th>最高分</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div>
+      <footer class="primary-admin-pagination"><span id="adminUsersPageInfo">第 1 页</span><div><button id="adminUsersPrevious" type="button">上一页</button><button id="adminUsersNext" type="button">下一页</button></div></footer>
+    </section>
+    <section class="primary-admin-section primary-admin-map-section" data-admin-panel="maps" hidden>
+      <header><div><h2>比赛地图设置</h2><p>拖动标记或修改坐标，保存后学员下一次运行会自动使用新版本。</p></div><div class="primary-admin-header-actions"><button id="refreshAdminMaps" type="button">放弃修改</button><button id="saveAdminMap" type="button" class="primary">保存并发布</button></div></header>
+      <div class="primary-admin-map-toolbar"><label>任务<select id="adminMapTask"><option value="GYI-PRIMARY-01">广阳岛综合任务1</option><option value="GYI-PRIMARY-02">广阳岛综合任务2</option><option value="GYI-PRIMARY-03">广阳岛综合任务3</option></select></label><span id="adminMapRevision">正在读取地图…</span></div>
+      <div class="primary-admin-map-grid">
+        <div>
+          <div id="adminMapCanvas" class="primary-admin-map-canvas" aria-label="可拖动的比赛地图编辑区"></div>
+          <div class="primary-admin-map-legend"><span data-kind="checkpoint">途径点</span><span data-kind="target">目标物</span><span data-kind="storage">目标点</span><span data-kind="distractor">混淆物</span><span data-kind="obstacle">障碍物</span></div>
+        </div>
+        <div id="adminMapFields" class="primary-admin-map-fields"></div>
+      </div>
+      <p class="primary-admin-map-note">坐标单位与模拟器一致；物体必须位于道路内并保持安全间距。保存采用版本校验，避免多人编辑互相覆盖。</p>
+    </section>
+  </main>
+  <dialog id="adminRecordDialog" class="primary-dialog primary-admin-record-dialog" aria-labelledby="adminRecordDialogTitle">
+    <section class="primary-dialog-shell">
+      <header><h2 id="adminRecordDialogTitle">提交记录详情</h2><button id="closeAdminRecordDialog" type="button" aria-label="关闭">×</button></header>
+      <p id="adminRecordDetailMeta">正在读取记录…</p>
+      <div id="adminRecordCapabilities" class="primary-capability-detail" aria-label="运行时上报的能力使用"></div>
+      <h3>生成代码</h3><pre id="adminRecordProgramCode" class="primary-program-code"></pre>
+      <details><summary>查看积木结构数据</summary><pre id="adminRecordWorkspace" class="primary-program-code"></pre></details>
+    </section>
+  </dialog>
+  <script src="./guangyang-scoring.js?v=20260827-002"></script>
+  <script src="./guangyang-map-config.js?v=20260827-001"></script>
+  <script src="./admin-team-scores.js?v=20260827-003"></script>
+  <script src="./admin.js?v=20260828-007"></script>
+</body>
+</html>

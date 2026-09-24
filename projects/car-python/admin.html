@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>比赛记录管理 · 辰龙智能车仿真</title>
+  <script src="./auth-guard.js?v=20260822-002"></script>
+  <link rel="stylesheet" href="./account.css?v=20260827-014">
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body class="admin-page">
+  <div class="portal-page">
+    <header class="portal-topbar">
+      <a class="site-brand" href="./" aria-label="返回仿真工作台">
+        <span class="site-brand-mark"><i data-lucide="bot" aria-hidden="true"></i></span>
+        <span class="site-brand-copy"><strong>智能车仿真系统</strong></span>
+      </a>
+      <nav class="portal-nav" aria-label="主导航">
+        <a href="/portal.html" aria-label="返回统一平台"><i data-lucide="layout-grid" aria-hidden="true"></i><span>返回统一平台</span></a>
+        <a href="./"><i data-lucide="cuboid" aria-hidden="true"></i><span>仿真工作台</span></a>
+        <a href="./records.html"><i data-lucide="trophy" aria-hidden="true"></i><span>我的记录</span></a>
+        <a id="adminNavLink" href="./admin.html" aria-current="page"><i data-lucide="shield" aria-hidden="true"></i><span>管理后台</span></a>
+      </nav>
+      <div class="portal-account">
+        <span class="portal-user"><strong id="currentUserName">正在验证…</strong><small id="currentUserRole"></small></span>
+        <button id="logoutButton" class="danger-action" type="button"><i data-lucide="log-out" aria-hidden="true"></i><span>退出</span></button>
+      </div>
+    </header>
+
+    <main class="portal-main">
+      <section class="page-heading" aria-labelledby="adminTitle">
+        <div>
+          <h1 id="adminTitle">管理后台</h1>
+          <p>管理参赛账号、比赛地图和正式提交记录。</p>
+        </div>
+      </section>
+
+      <p id="adminNotice" class="page-notice" role="status" aria-live="polite" hidden></p>
+
+      <nav class="admin-section-tabs" role="tablist" aria-label="后台管理内容">
+        <button id="adminRecordsTab" class="admin-section-tab" type="button" role="tab" aria-selected="true" aria-controls="adminRecordsSection" data-admin-section="records">比赛记录</button>
+        <button id="adminUsersTab" class="admin-section-tab" type="button" role="tab" aria-selected="false" aria-controls="adminUsersSection" data-admin-section="users">用户管理</button>
+        <button id="adminMapsTab" class="admin-section-tab" type="button" role="tab" aria-selected="false" aria-controls="adminMapsSection" data-admin-section="maps">地图管理</button>
+      </nav>
+
+      <section class="user-management-section" id="adminUsersSection" role="tabpanel" aria-labelledby="adminUsersTab" hidden>
+        <div class="section-heading section-heading-compact">
+          <div>
+            <h2 id="adminUsersTitle">用户管理</h2>
+            <p>查看参赛账号并修改队伍和分组。</p>
+          </div>
+          <div class="section-heading-actions">
+            <button id="exportAdminUsersButton" class="ghost-action" type="button" disabled><i data-lucide="download" aria-hidden="true"></i><span>导出用户 CSV</span></button>
+            <button id="refreshAdminUsersButton" class="ghost-action" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>刷新用户</span></button>
+          </div>
+        </div>
+
+        <section class="metric-summary" aria-label="用户概览">
+          <span><span>总账号</span><strong id="adminUserMetricTotal">—</strong></span>
+          <span><span>小学组</span><strong id="adminUserMetricPrimary">—</strong></span>
+          <span><span>初中组</span><strong id="adminUserMetricJunior">—</strong></span>
+          <span><span>高中组</span><strong id="adminUserMetricHigh">—</strong></span>
+          <span><span>管理员</span><strong id="adminUserMetricAdmins">—</strong></span>
+        </section>
+
+        <section class="records-panel" aria-labelledby="adminUsersTableTitle">
+          <h3 id="adminUsersTableTitle" class="sr-only">全部注册用户</h3>
+          <div class="records-toolbar user-management-toolbar">
+            <div>
+              <label class="toolbar-search">
+                <span class="sr-only">按用户名筛选用户</span>
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input id="adminUserUsernameFilter" type="search" maxlength="64" autocomplete="off" placeholder="筛选用户名">
+              </label>
+              <label class="toolbar-search">
+                <span class="sr-only">按队伍名筛选用户</span>
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input id="adminUserTeamFilter" type="search" maxlength="128" autocomplete="off" placeholder="筛选队伍名">
+              </label>
+              <label class="toolbar-select">
+                <span class="sr-only">按参赛分组筛选用户</span>
+                <select id="adminUserGroupFilter">
+                  <option value="all">全部分组</option>
+                  <option value="primary">小学组</option>
+                  <option value="junior">初中组</option>
+                  <option value="high">高中组</option>
+                </select>
+              </label>
+              <label class="toolbar-select">
+                <span class="sr-only">按账号角色筛选用户</span>
+                <select id="adminUserRoleFilter">
+                  <option value="all">全部角色</option>
+                  <option value="user">普通用户</option>
+                  <option value="admin">管理员</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <p id="adminUsersNotice" class="inline-panel-notice" role="status" aria-live="polite" hidden></p>
+          <div id="adminUsersLoading" class="records-state compact-records-state" role="status">
+            <div><i data-lucide="loader-circle" aria-hidden="true"></i><h3>正在读取用户</h3><p>请稍候，系统正在汇总注册账号。</p></div>
+          </div>
+          <div id="adminUsersEmpty" class="records-state compact-records-state" hidden>
+            <div><i data-lucide="users" aria-hidden="true"></i><h3>当前没有注册用户</h3><p>新账号完成注册后会显示在这里。</p></div>
+          </div>
+          <div id="adminUsersError" class="records-state compact-records-state" hidden role="alert">
+            <div><i data-lucide="circle-alert" aria-hidden="true"></i><h3>用户列表暂时无法读取</h3><p id="adminUsersErrorMessage">请稍后重试。</p></div>
+          </div>
+          <div id="adminUsersTableWrap" class="record-table-wrap" hidden>
+            <table class="record-table admin-users-table">
+              <thead><tr><th>用户名</th><th>队伍名</th><th>分组</th><th>角色</th><th>注册时间</th><th><span class="sr-only">操作</span></th></tr></thead>
+              <tbody id="adminUsersTableBody"></tbody>
+            </table>
+          </div>
+          <nav id="adminUsersPagination" class="records-pagination" aria-label="用户管理分页" hidden>
+            <div class="records-pagination-info" role="status" aria-live="polite" aria-atomic="true">
+              <span id="adminUsersRange">第 0–0 条，共 0 条</span>
+              <span id="adminUsersPageStatus">第 1 页，共 1 页</span>
+            </div>
+            <div class="records-pagination-controls">
+              <button id="adminUsersPrevPage" class="records-page-button" type="button" aria-label="上一页用户" aria-controls="adminUsersTableBody" disabled>上一页</button>
+              <button id="adminUsersNextPage" class="records-page-button" type="button" aria-label="下一页用户" aria-controls="adminUsersTableBody" disabled>下一页</button>
+            </div>
+          </nav>
+        </section>
+      <p class="records-footer-note">修改队伍名会同步同队成员和历史记录；不提供删除账号、修改角色或重置密码功能。</p>
+      </section>
+
+      <section class="map-config-section" id="adminMapsSection" role="tabpanel" aria-labelledby="adminMapsTab" hidden>
+        <div class="section-heading section-heading-compact">
+          <div>
+            <h2 id="adminMapTitle">比赛地图</h2>
+            <p>选择任务和地图编号后进行编辑。</p>
+          </div>
+          <div class="section-heading-actions">
+            <button id="refreshAdminMapButton" class="ghost-action" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>重新加载</span></button>
+            <button id="toggleAdminMapEditorButton" class="ghost-action" type="button" aria-expanded="false" aria-controls="adminMapEditorBody"><i data-lucide="map" aria-hidden="true"></i><span>展开编辑</span></button>
+          </div>
+        </div>
+
+        <label class="toolbar-select map-challenge-select">
+          <span>编辑挑战</span>
+          <select id="adminMapChallengeSelect" aria-label="选择要编辑的广阳岛任务地图">
+            <option value="R2-GYI-MVP-01">广阳岛综合任务1（基础）</option>
+            <option value="R2-GYI-MVP-02">广阳岛综合任务2（进阶）</option>
+            <option value="R2-GYI-MVP-03">广阳岛综合任务3（高级）</option>
+          </select>
+        </label>
+
+        <label class="toolbar-select map-variant-select">
+          <span>编辑地图</span>
+          <select id="adminMapVariantSelect" aria-label="选择要编辑的地图编号"></select>
+        </label>
+
+        <section class="map-config-meta" aria-label="已发布地图信息">
+          <span><span>已发布版本</span><strong id="adminMapVersion">—</strong></span>
+          <span><span>修订号</span><strong id="adminMapRevision">—</strong></span>
+          <span><span>更新时间</span><strong id="adminMapUpdatedAt">—</strong></span>
+        </section>
+
+        <p id="adminMapNotice" class="inline-panel-notice map-config-notice" role="status" aria-live="polite">正在读取当前已发布地图…</p>
+        <div id="adminMapEditorBody" hidden>
+          <section class="map-config-panel" aria-label="地图配置编辑器">
+            <div id="adminMapLoading" class="records-state compact-records-state" role="status">
+              <div><i data-lucide="loader-circle" aria-hidden="true"></i><h3>正在读取地图</h3><p>请稍候，系统正在读取当前已发布配置。</p></div>
+            </div>
+            <div id="adminMapError" class="records-state compact-records-state" hidden role="alert">
+              <div><i data-lucide="circle-alert" aria-hidden="true"></i><h3>地图配置暂时无法读取</h3><p id="adminMapErrorMessage">请稍后重试。</p></div>
+            </div>
+            <div id="adminMapWorkspace" class="map-config-workspace" hidden>
+              <figure class="map-editor-preview">
+                <div id="adminMapStage" class="map-editor-stage" aria-label="广阳岛地图配置预览">
+                  <img id="adminMapImage" src="./word/广阳岛仿真沙盘地图.png" width="1387" height="860" alt="广阳岛仿真沙盘地图" draggable="false">
+                  <div id="adminMapMarkers" class="map-editor-markers"></div>
+                </div>
+                <figcaption>拖动标记定位；选中标记后也可使用方向键微调，按住 Shift 时每次移动 0.5。</figcaption>
+              </figure>
+              <div class="map-point-editor">
+                <div class="map-point-table-header" aria-hidden="true"><span>地图元素</span><span>X（cm）</span><span>Z（cm）</span></div>
+                <div id="adminMapPointList" class="map-point-list"></div>
+              </div>
+            </div>
+            <footer id="adminMapActions" class="map-config-actions" hidden>
+              <span id="adminMapDraftStatus">当前配置未修改</span>
+              <div>
+                <button id="restoreAdminMapButton" class="ghost-action" type="button">放弃修改</button>
+                <button id="saveAdminMapButton" class="primary-action" type="button" disabled><i data-lucide="save" aria-hidden="true"></i><span>保存并发布</span></button>
+              </div>
+            </footer>
+          </section>
+        </div>
+        <details class="map-assignment-panel">
+          <summary>查看队伍地图分配</summary>
+          <p>同一队伍的所有账号在同一任务中始终使用同一套地图；刷新、重新登录或换同队账号都不会换图。</p>
+          <div id="adminMapAssignmentEmpty" class="records-state compact-records-state" hidden>
+            <div><i data-lucide="users" aria-hidden="true"></i><h3>暂时没有参赛队伍</h3><p>有普通用户注册队伍后会显示在这里。</p></div>
+          </div>
+          <div id="adminMapAssignmentWrap" class="record-table-wrap" hidden>
+            <table class="record-table map-assignment-table">
+              <thead><tr><th>队伍</th><th>账号</th><th>任务1</th><th>任务2</th><th>任务3</th></tr></thead>
+              <tbody id="adminMapAssignmentTableBody"></tbody>
+            </table>
+          </div>
+        </details>
+        <p class="records-footer-note">保存后的地图用于之后新开的场次，已开始的场次不受影响。</p>
+      </section>
+
+      <section id="adminRankedEvaluationSection" class="evaluation-results-section" aria-labelledby="adminRankedEvaluationTitle" hidden inert>
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">SEASON SCREENING RANKING</p>
+            <h2 id="adminRankedEvaluationTitle">筛选五局排名</h2>
+            <p>每个账号本赛季仅 1 次，一账号一行。关闭、过期、异常或缺局均按 0 分计入；完全相同的排名指标并列。</p>
+          </div>
+          <span class="reference-badge">本地参考 · authoritative: false</span>
+        </div>
+
+        <section class="metric-grid evaluation-metric-grid" aria-label="筛选排名概览">
+          <article class="metric-card"><span>入表账号</span><strong id="adminRankingParticipants">—</strong><small>一账号一行</small></article>
+          <article class="metric-card"><span>已完成筛选</span><strong id="adminRankingFinalized">—</strong><small>含异常与缺局结算</small></article>
+          <article class="metric-card"><span>当前最高分</span><strong id="adminRankingBestScore">— / 100</strong><small>本地非权威汇总</small></article>
+          <article class="metric-card"><span>零碰撞账号</span><strong id="adminRankingCollisionFree">—</strong><small>按五局累计事件</small></article>
+        </section>
+
+        <div class="records-panel evaluation-results-panel" aria-labelledby="adminRankingTableTitle">
+          <div class="records-toolbar evaluation-ranking-toolbar">
+            <div>
+              <label class="toolbar-search">
+                <span class="sr-only">搜索筛选用户</span>
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input id="adminRankingSearch" type="search" autocomplete="off" placeholder="搜索用户" disabled>
+              </label>
+              <label class="toolbar-select">
+                <span class="sr-only">按完成情况筛选</span>
+                <select id="adminRankingCompletionFilter" disabled>
+                  <option value="all">全部完成情况</option>
+                  <option value="complete">五局均完成</option>
+                  <option value="incomplete">有未完成局</option>
+                </select>
+              </label>
+              <label class="toolbar-select">
+                <span class="sr-only">按有效情况筛选</span>
+                <select id="adminRankingValidityFilter" disabled>
+                  <option value="all">全部有效情况</option>
+                  <option value="all-valid">五局均有效</option>
+                  <option value="has-problem">含无效、超时或缺局</option>
+                </select>
+              </label>
+              <label class="toolbar-select">
+                <span class="sr-only">按碰撞情况筛选</span>
+                <select id="adminRankingSafetyFilter" disabled>
+                  <option value="all">全部碰撞情况</option>
+                  <option value="collision-free">零碰撞</option>
+                  <option value="has-collision">发生碰撞</option>
+                </select>
+              </label>
+            </div>
+            <button id="refreshAdminRankingButton" class="ghost-action" type="button" disabled><i data-lucide="refresh-cw" aria-hidden="true"></i><span>服务准备中</span></button>
+          </div>
+          <h3 id="adminRankingTableTitle" class="sr-only">筛选五局排名表</h3>
+          <div id="adminRankingLoading" class="records-state compact-records-state" hidden role="status">
+            <div><i data-lucide="loader-circle" aria-hidden="true"></i><h3>正在读取筛选排名</h3><p>请稍候。</p></div>
+          </div>
+          <div id="adminRankingPending" class="records-state compact-records-state" role="status">
+            <div><i data-lucide="list-ordered" aria-hidden="true"></i><h3>筛选排名服务正在准备</h3><p>接入后将按服务端冻结顺序显示；筛选只缩小结果，不会在浏览器中重排名。</p></div>
+          </div>
+          <div id="adminRankingEmpty" class="records-state compact-records-state" hidden>
+            <div><i data-lucide="users" aria-hidden="true"></i><h3>当前没有筛选结果</h3><p>账号完成或结算唯一一次筛选五局后，会按一账号一行显示。</p></div>
+          </div>
+          <div id="adminRankingError" class="records-state compact-records-state" hidden role="alert">
+            <div><i data-lucide="circle-alert" aria-hidden="true"></i><h3>筛选排名暂时无法读取</h3><p id="adminRankingErrorMessage">请稍后重试。</p></div>
+          </div>
+          <div id="adminRankingTableWrap" class="record-table-wrap" hidden>
+            <table class="record-table evaluation-table admin-ranking-table">
+              <thead><tr><th>名次</th><th>用户</th><th>总分 / 100</th><th>完成局 / 5</th><th>有效局 / 5</th><th>最低分 / 100</th><th>碰撞</th><th>越界</th><th>异常局</th></tr></thead>
+              <tbody id="adminRankingTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="records-footer-note">排名结果始终为 authoritative: false，仅作本地筛选参考，不代表赛事官方成绩；页面不展示源码、布局、场次或未来信息。</p>
+      </section>
+
+      <section class="archive-results-section" id="adminRecordsSection" role="tabpanel" aria-labelledby="adminRecordsTab">
+        <div class="section-heading section-heading-compact">
+          <div><h2 id="adminRunRecordsTitle">正式提交记录</h2><p>查看已提交并完成校验的比赛记录。</p></div>
+          <div class="section-heading-actions">
+            <button id="exportAdminRecordsButton" class="ghost-action" type="button" disabled><i data-lucide="download" aria-hidden="true"></i><span>导出记录 CSV</span></button>
+            <button id="refreshAdminRecordsButton" class="ghost-action" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>刷新记录</span></button>
+          </div>
+        </div>
+
+      <section class="metric-summary" aria-label="全局记录概览">
+        <span><span>正式提交</span><strong id="adminMetricTotal">—</strong></span>
+        <span><span>参赛队伍</span><strong id="adminMetricUsers">—</strong></span>
+        <span><span>校验通过</span><strong id="adminMetricVerified">—</strong></span>
+        <span><span>平均得分</span><strong id="adminMetricAverage">—</strong></span>
+        <span><span>AI 自主记录</span><strong id="adminMetricAi">—</strong></span>
+      </section>
+
+      <section class="records-panel" aria-labelledby="adminTableTitle">
+        <h2 id="adminTableTitle" class="sr-only">全部比赛记录</h2>
+        <div class="records-toolbar admin-records-toolbar">
+          <div>
+            <label class="toolbar-search">
+              <span class="sr-only">按用户名筛选</span>
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="adminUsernameFilter" type="search" maxlength="64" autocomplete="off" placeholder="筛选用户名">
+            </label>
+            <label class="toolbar-search">
+              <span class="sr-only">按注册队伍名筛选</span>
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="adminTeamFilter" type="search" maxlength="128" autocomplete="off" placeholder="筛选队伍名">
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">按比赛任务筛选</span>
+              <select id="adminTaskFilter">
+                <option value="all">全部任务</option>
+                <option value="R2-GYI-MVP-01">广阳岛综合任务1</option>
+                <option value="R2-GYI-MVP-02">广阳岛综合任务2</option>
+                <option value="R2-GYI-MVP-03">广阳岛综合任务3</option>
+              </select>
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">按参赛分组筛选</span>
+              <select id="adminGroupFilter">
+                <option value="all">全部分组</option>
+                <option value="primary">小学组</option>
+                <option value="junior">初中组</option>
+                <option value="high">高中组</option>
+              </select>
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">按校验状态筛选</span>
+              <select id="adminStatusFilter">
+                <option value="all">全部状态</option>
+                <option value="verified">确定性校验通过</option>
+                <option value="partial">校验不完整（含旧版）</option>
+                <option value="invalid">校验失败</option>
+              </select>
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">按运行方式筛选</span>
+              <select id="adminAutonomyModeFilter">
+                <option value="all">全部运行方式</option>
+                <option value="ai">AI 自主挑战</option>
+                <option value="ai-verified">AI 闭环已验证</option>
+                <option value="standard">常规模式</option>
+              </select>
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">选择记录排序方式</span>
+              <select id="adminScoreSort">
+                <option value="score-desc">分数从高到低</option>
+                <option value="score-asc">分数从低到高</option>
+                <option value="submitted-desc">最新提交优先</option>
+              </select>
+            </label>
+            <label class="toolbar-select admin-team-mode-select">
+              <span class="sr-only">选择队伍记录范围</span>
+              <select id="adminTeamRecordMode">
+                <option value="all">显示每次提交</option>
+                <option value="best-per-team">每队每任务最高分</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="adminRecordsLoading" class="records-state" role="status">
+          <div><i data-lucide="loader-circle" aria-hidden="true"></i><h2>正在汇总全部记录</h2><p>请稍候，系统正在读取本地比赛存档。</p></div>
+        </div>
+        <div id="adminRecordsEmpty" class="records-state" hidden>
+          <div><i data-lucide="database" aria-hidden="true"></i><h2>当前没有提交记录</h2><p>参赛账户提交比赛存档后，记录会显示在这里。</p></div>
+        </div>
+        <div id="adminRecordsError" class="records-state" hidden role="alert">
+          <div><i data-lucide="circle-alert" aria-hidden="true"></i><h2>全部记录暂时无法读取</h2><p id="adminRecordsErrorMessage">请稍后重试。</p></div>
+        </div>
+        <div id="adminRecordTableWrap" class="record-table-wrap" hidden>
+          <table class="record-table">
+            <thead><tr><th>用户名</th><th>队伍名</th><th>分组</th><th>运行方式</th><th>能力标记</th><th>任务 / 记录</th><th>得分 / 100</th><th>校验状态</th><th>提交时间</th><th><span class="sr-only">操作</span></th></tr></thead>
+            <tbody id="adminRecordsTableBody"></tbody>
+          </table>
+        </div>
+        <nav id="adminRecordsPagination" class="records-pagination" aria-label="正式提交记录分页" hidden>
+          <div class="records-pagination-info" aria-live="polite" aria-atomic="true">
+            <span id="adminRecordsRange">第 0–0 条，共 0 条</span>
+            <span id="adminRecordsPageStatus">第 1 页，共 1 页</span>
+          </div>
+          <div class="records-pagination-controls">
+            <button id="adminRecordsPrevPage" class="records-page-button" type="button" aria-label="上一页正式提交记录" aria-controls="adminRecordsTableBody" disabled>上一页</button>
+            <button id="adminRecordsNextPage" class="records-page-button" type="button" aria-label="下一页正式提交记录" aria-controls="adminRecordsTableBody" disabled>下一页</button>
+          </div>
+        </nav>
+      </section>
+
+      <section class="records-panel team-challenge-best-panel" aria-labelledby="adminTeamChallengeBestTitle">
+        <header class="team-challenge-best-heading">
+          <div>
+            <h2 id="adminTeamChallengeBestTitle">各队三项最高分</h2>
+            <p>按注册队伍汇总正式提交记录，同队同任务仅保留最高分。</p>
+          </div>
+          <div class="section-heading-actions"><span>每页 15 支队伍</span><button id="exportTeamChallengeBestButton" class="ghost-action" type="button" disabled><i data-lucide="download" aria-hidden="true"></i><span>导出汇总 CSV</span></button></div>
+        </header>
+        <div id="adminTeamChallengeBestLoading" class="records-state compact-records-state" role="status">
+          <div><i data-lucide="loader-circle" aria-hidden="true"></i><p>正在核对队伍和正式提交记录…</p></div>
+        </div>
+        <div id="adminTeamChallengeBestError" class="records-state compact-records-state" hidden role="alert">
+          <div><i data-lucide="circle-alert" aria-hidden="true"></i><p id="adminTeamChallengeBestErrorMessage">队伍成绩暂时无法汇总，请稍后重试。</p></div>
+        </div>
+        <div id="adminTeamChallengeBestTableWrap" class="record-table-wrap" hidden>
+          <table class="record-table team-challenge-best-table">
+            <thead><tr><th>队伍</th><th>小组</th><th>任务1最高分</th><th>任务2最高分</th><th>任务3最高分</th><th>三项总分</th></tr></thead>
+            <tbody id="adminTeamChallengeBestBody"></tbody>
+          </table>
+        </div>
+        <nav id="adminTeamChallengeBestPagination" class="records-pagination" aria-label="队伍三项最高分分页" hidden>
+          <div class="records-pagination-info" aria-live="polite" aria-atomic="true">
+            <span id="adminTeamChallengeBestRange">第 0–0 队，共 0 队</span>
+            <span id="adminTeamChallengeBestPageStatus">第 1 页，共 1 页</span>
+          </div>
+          <div class="records-pagination-controls">
+            <button id="adminTeamChallengeBestPrevPage" class="records-page-button" type="button" aria-label="上一页队伍最高分" aria-controls="adminTeamChallengeBestBody" disabled>上一页</button>
+            <button id="adminTeamChallengeBestNextPage" class="records-page-button" type="button" aria-label="下一页队伍最高分" aria-controls="adminTeamChallengeBestBody" disabled>下一页</button>
+          </div>
+        </nav>
+      </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="adminRecordDetailDialog" class="record-dialog" aria-labelledby="adminRecordDetailTitle">
+    <div class="dialog-shell">
+      <header class="dialog-header">
+        <div><h2 id="adminRecordDetailTitle">提交详情</h2></div>
+        <button id="closeAdminRecordDetailButton" class="dialog-close" type="button" aria-label="关闭详情"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div id="adminRecordDetailContent" class="dialog-content" aria-live="polite"></div>
+    </div>
+  </dialog>
+
+  <script src="./admin-team-scores.js?v=20260827-003"></script>
+  <script src="./admin.js?v=20260828-020"></script>
+</body>
+</html>

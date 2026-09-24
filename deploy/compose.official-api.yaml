@@ -1,0 +1,15 @@
+services:
+  platform:
+    environment:
+      CHENLONG_SCORE_DOWNLOAD_APPS_FILE: /run/secrets/score-download-apps.json
+      CHENLONG_SCORE_DOWNLOAD_PROMOTIONS_FILE: /run/official-score/promotions.json
+      CHENLONG_SCORE_DOWNLOAD_RUNTIME_DIR: /app/projects/car-python/.runtime/score-download
+    volumes:
+      - type: bind
+        source: ${CHENLONG_SCORE_DOWNLOAD_APPS_HOST_FILE:?请设置成绩接口调用方配置文件的部署机绝对路径}
+        target: /run/secrets/score-download-apps.json
+        read_only: true
+      - type: bind
+        source: ${CHENLONG_SCORE_DOWNLOAD_CONFIG_HOST_DIR:?请设置成绩接口动态配置目录的部署机绝对路径}
+        target: /run/official-score
+        read_only: true

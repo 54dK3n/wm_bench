@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>登录 · 广阳岛 Blockly</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=20260827-001">
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body class="primary-auth-page">
+  <main class="primary-auth-main">
+    <section class="primary-auth-card" aria-label="账户入口">
+      <div class="primary-auth-brand">
+        <span class="primary-auth-mark"><i data-lucide="bot" aria-hidden="true"></i></span>
+        <strong>广阳岛 Blockly</strong>
+      </div>
+      <div id="authHeading" class="primary-auth-heading">
+        <h1 id="authTitle">欢迎回来</h1>
+        <p id="authDescription">登录后继续你的 Blockly 闯关。</p>
+      </div>
+      <div class="primary-auth-tabs" role="tablist" aria-label="登录或注册">
+        <button id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">登录</button>
+        <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel" tabindex="-1">注册</button>
+      </div>
+      <p id="authStatus" class="primary-auth-status" role="alert" aria-live="polite" hidden></p>
+      <section id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+        <form id="loginForm" class="primary-auth-form" novalidate>
+          <label><span>用户名</span><input id="loginUsername" type="text" minlength="3" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="输入用户名"></label>
+          <label><span>密码</span><input id="loginPassword" type="password" minlength="10" maxlength="128" autocomplete="current-password" required placeholder="输入密码"></label>
+          <button class="primary-auth-submit" type="submit"><i data-lucide="log-in" aria-hidden="true"></i><span>登录并开始闯关</span></button>
+        </form>
+      </section>
+      <section id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+        <form id="registerForm" class="primary-auth-form" novalidate>
+          <label><span>加入方式</span><select id="registerTeamAction" autocomplete="off"><option value="create" selected>创建新队伍</option><option value="join">加入已有队伍</option></select><small id="registerTeamActionHint">队伍名称全局唯一；创建成功后会生成邀请码，发给队友即可加入。</small></label>
+          <label id="registerTeamNameField"><span>队伍名称</span><input id="registerTeamName" type="text" minlength="1" maxlength="64" autocomplete="organization" required placeholder="例如：阳光小车队"><small>队伍名称不可与已有队伍重名。</small></label>
+          <label id="registerInviteCodeField" hidden><span>队伍邀请码</span><input id="registerInviteCode" type="text" maxlength="11" autocomplete="off" autocapitalize="characters" spellcheck="false" disabled placeholder="输入 8 位邀请码"><small>向队友获取邀请码；它不是登录密码。</small></label>
+          <label><span>参赛小组</span><select id="registerGroup" autocomplete="organization-title" required><option value="primary" selected>小学组</option><option value="junior">初中组</option><option value="high">高中组</option></select></label>
+          <label><span>用户名</span><input id="registerUsername" type="text" minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,31}" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="3–32 位英文、数字或符号"></label>
+          <label><span>密码</span><input id="registerPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" required placeholder="至少 10 个字符"></label>
+          <label><span>确认密码</span><input id="registerPasswordConfirm" type="password" minlength="10" maxlength="128" autocomplete="new-password" required placeholder="再输入一次密码"></label>
+          <button class="primary-auth-submit" type="submit"><i data-lucide="user-plus" aria-hidden="true"></i><span>注册并开始闯关</span></button>
+        </form>
+      </section>
+    </section>
+  </main>
+  <dialog id="teamInviteDialog" class="primary-team-dialog" aria-labelledby="teamInviteDialogTitle">
+    <form method="dialog" class="primary-dialog-shell">
+      <header><h2 id="teamInviteDialogTitle">保存队伍邀请码</h2></header>
+      <p>将邀请码发给队友；队友注册时选择“加入已有队伍”即可使用。</p>
+      <output id="teamInviteCodeValue" class="primary-team-code" aria-live="polite"></output>
+      <p id="teamInviteCopyStatus" class="auth-message" aria-live="polite"></p>
+      <footer><button id="copyTeamInviteCodeButton" type="button">复制邀请码</button><button id="teamInviteContinueButton" class="primary" type="submit">进入闯关</button></footer>
+    </form>
+  </dialog>
+  <script src="./auth.js?v=20260828-007"></script>
+</body>
+</html>

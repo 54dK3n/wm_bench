@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>我的比赛记录 · 辰龙智能车仿真</title>
+  <script src="./auth-guard.js?v=20260822-002"></script>
+  <link rel="stylesheet" href="./account.css?v=20260821-004">
+  <script src="./vendor/lucide/lucide.min.js"></script>
+</head>
+<body>
+  <div class="portal-page">
+    <header class="portal-topbar">
+      <a class="site-brand" href="./" aria-label="返回仿真工作台">
+        <span class="site-brand-mark"><i data-lucide="bot" aria-hidden="true"></i></span>
+        <span class="site-brand-copy"><small>CHENLONGOS · ROBOT LAB</small><strong>智能车仿真系统</strong></span>
+      </a>
+      <nav class="portal-nav" aria-label="主导航">
+        <a href="/portal.html" aria-label="返回统一平台"><i data-lucide="layout-grid" aria-hidden="true"></i><span>返回统一平台</span></a>
+        <a href="./"><i data-lucide="cuboid" aria-hidden="true"></i><span>仿真工作台</span></a>
+        <a href="./records.html" aria-current="page"><i data-lucide="trophy" aria-hidden="true"></i><span>我的记录</span></a>
+        <a id="adminNavLink" href="./admin.html" hidden><i data-lucide="shield" aria-hidden="true"></i><span>管理后台</span></a>
+      </nav>
+      <div class="portal-account">
+        <span class="portal-user"><strong id="currentUserName">正在验证…</strong><small id="currentUserRole"></small></span>
+        <button id="logoutButton" class="danger-action" type="button"><i data-lucide="log-out" aria-hidden="true"></i><span>退出</span></button>
+      </div>
+    </header>
+
+    <main class="portal-main">
+      <section class="page-heading" aria-labelledby="recordsTitle">
+        <div>
+          <p class="page-kicker">Personal Competition Archive</p>
+          <h1 id="recordsTitle">我的比赛记录</h1>
+          <p>每次普通运行结束后都会自动保存在这里，不必先处理上一条记录。需要正式提交哪一次，就在对应记录上点击“提交”。</p>
+        </div>
+        <a class="primary-action" href="./"><i data-lucide="play" aria-hidden="true"></i><span>开始新的仿真</span></a>
+      </section>
+
+      <p id="recordsNotice" class="page-notice" role="status" aria-live="polite" hidden></p>
+      <p id="bestSubmissionHint" class="best-submission-hint" role="status" aria-live="polite" hidden></p>
+
+      <section class="archive-results-section" aria-labelledby="personalRunRecordsTitle">
+        <div class="section-heading section-heading-compact">
+          <div><p class="section-kicker">RUN RECORDS</p><h2 id="personalRunRecordsTitle">单次运行评分</h2><p>“已保存”只是你的运行草稿；只有点击该条记录的“提交”按钮，系统才会正式校验并提交。</p></div>
+        </div>
+
+      <section class="metric-grid" aria-label="记录概览">
+        <article class="metric-card"><span>累计运行</span><strong id="metricTotal">—</strong><small>自动保存的全部记录</small></article>
+        <article class="metric-card"><span>最高评分</span><strong id="metricBest">—</strong><small>统一按 100 分制显示</small></article>
+        <article class="metric-card"><span>待提交</span><strong id="metricPending">—</strong><small>可逐条选择提交</small></article>
+        <article class="metric-card"><span>最近运行</span><strong id="metricLatest">—</strong><small id="metricLatestDate">暂无记录</small></article>
+      </section>
+
+      <section class="records-panel" aria-labelledby="recordsTableTitle">
+        <h2 id="recordsTableTitle" class="sr-only">比赛记录列表</h2>
+        <div class="records-toolbar">
+          <div>
+            <label class="toolbar-search">
+              <span class="sr-only">搜索任务或记录编号</span>
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="recordSearch" type="search" autocomplete="off" placeholder="搜索任务或记录编号">
+            </label>
+            <label class="toolbar-select">
+              <span class="sr-only">按记录状态筛选</span>
+              <select id="recordStatusFilter">
+                <option value="all">全部状态</option>
+                <option value="saved">待提交</option>
+                <option value="submitted">已提交</option>
+              </select>
+            </label>
+          </div>
+          <button id="refreshRecordsButton" class="ghost-action" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>刷新</span></button>
+        </div>
+
+        <div id="recordsLoading" class="records-state" role="status">
+          <div><i data-lucide="loader-circle" aria-hidden="true"></i><h2>正在读取比赛记录</h2><p>请稍候，系统正在加载当前账户的运行记录。</p></div>
+        </div>
+        <div id="recordsEmpty" class="records-state" hidden>
+          <div><i data-lucide="archive" aria-hidden="true"></i><h2>还没有比赛记录</h2><p>完成一次普通仿真后，系统会自动把记录保存在这里。</p></div>
+        </div>
+        <div id="recordsError" class="records-state" hidden role="alert">
+          <div><i data-lucide="circle-alert" aria-hidden="true"></i><h2>记录暂时无法读取</h2><p id="recordsErrorMessage">请稍后重试。</p></div>
+        </div>
+        <div id="recordTableWrap" class="record-table-wrap" hidden>
+          <table class="record-table">
+            <thead><tr><th>记录</th><th>任务</th><th>评分 / 100</th><th>记录状态</th><th>校验状态</th><th>运行时间</th><th><span class="sr-only">操作</span></th></tr></thead>
+            <tbody id="recordsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+      <p class="records-footer-note">自动保存不会替你提交；每次正式提交都必须由当前账户明确点击对应记录。页面结果为本地参考，不代表赛事官方成绩。</p>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="recordDetailDialog" class="record-dialog" aria-labelledby="recordDetailTitle">
+    <div class="dialog-shell">
+      <header class="dialog-header">
+        <div><small>RUN RECORD DETAIL</small><h2 id="recordDetailTitle">比赛记录详情</h2></div>
+        <button id="closeRecordDetailButton" class="dialog-close" type="button" aria-label="关闭详情"><i data-lucide="x" aria-hidden="true"></i></button>
+      </header>
+      <div id="recordDetailContent" class="dialog-content" aria-live="polite"></div>
+    </div>
+  </dialog>
+
+  <script src="./records.js?v=20260822-008"></script>
+</body>
+</html>
