@@ -865,6 +865,11 @@ let virtualCameraImageData;
 let virtualCameraCapturePromise = null;
 let latestVirtualCameraFrameId = null;
 let virtualCameraGeneration = 0;
+// Host pacing is presentation only. No request means no simulator step.
+let robotBackendMode = false;
+let simulationVisionRunActive = false;
+let simulationSceneReadyPromise = Promise.resolve();
+let interactionAnimationPlan = null;
 let raycaster;
 let gridPlane;
 let floorMesh;
@@ -1203,6 +1208,56 @@ function ensureDeterministicSimulator({ reset = false } = {}) {
   if (reset || !deterministicSimulator) deterministicSimulator = new Simulator(simulationDefinition());
   else deterministicSimulator.setWorld(simulationWorldDefinition({ includePackages: true }));
   return deterministicSimulator;
+}
+
+function setRobotBackendMode(enabled) {
+  if (running || competitionSession?.status === "running") {
+    throw new Error("Cannot change robot backend mode during a run");
+  }
+  robotBackendMode = Boolean(enabled);
+  return robotBackendMode;
+}
+
+async function ensureSimulationSceneReady() {
+  // A new scene may replace the awaited promise while its old image loads.
+  for (;;) {
+    const generation = missionBuildGeneration;
+    const pending = simulationSceneReadyPromise;
+    await pending;
+    if (generation === missionBuildGeneration && pending === simulationSceneReadyPromise) return;
+  }
+}
+
+function simulationVisionContext() {
+  return {
+    tick: deterministicSimulator?.tick ?? competitionSession?.simulationTick ?? 0,
+    stepMs: deterministicSimulator?.config.stepMs ?? competitionSession?.simulationDefinition?.stepMs ?? 20,
+    stateRevision: competitionSession?.stateRevision ?? 0,
+    generation: virtualCameraGeneration
+  };
+}
+
+function beginSimulationVisionRun() {
+  invalidateVirtualCameraFrame();
+  window.CarVision.beginVirtualRun({ getContext: simulationVisionContext });
+  simulationVisionRunActive = true;
+}
+
+function endSimulationVisionRun() {
+  if (!simulationVisionRunActive) return;
+  simulationVisionRunActive = false;
+  virtualCameraGeneration += 1;
+  virtualCameraCapturePromise = null;
+  latestVirtualCameraFrameId = null;
+  window.CarVision?.endVirtualRun?.();
+}
+
+function simulationSceneElapsedMs() {
+  if (competitionSession?.simulationDefinition || simulationVisionRunActive || robotBackendMode) {
+    const context = simulationVisionContext();
+    return context.tick * context.stepMs;
+  }
+  return null;
 }
 
 function createPackageId() {
@@ -5755,6 +5810,8 @@ async function startCompetitionRun(sourceCode, expectedRunToken = runToken) {
       true
     );
   }
+  await ensureSimulationSceneReady();
+  if (expectedRunToken !== runToken || stopRequested) return false;
   let simulatorCore;
   if (batchLease) {
     simulatorCore = new globalThis.CompetitionCore.DeterministicSimulator(
@@ -5819,6 +5876,7 @@ async function startCompetitionRun(sourceCode, expectedRunToken = runToken) {
   }
   clearTimeout(competitionTimeoutId);
   clearInterval(competitionSamplingIntervalId);
+  beginSimulationVisionRun();
   const clientWatchdogMs = Math.max(30000, Math.max(1, Number(config.timeLimitSeconds) || 600) * 2000);
   competitionTimeoutId = setTimeout(() => {
     if (!competitionSession || competitionSession.status !== "running") return;
@@ -5830,7 +5888,10 @@ async function startCompetitionRun(sourceCode, expectedRunToken = runToken) {
     commitCompetitionRecord(record);
     setStatus("运行已被安全看门狗停止");
   }, clientWatchdogMs);
-  competitionSamplingIntervalId = setInterval(() => competitionTick(), 100);
+  // Deterministic telemetry is emitted by simulation steps and action boundaries.
+  // A host timer must never insert records or consume the global sequence.
+  competitionSamplingIntervalId = competitionSession.simulationDefinition
+    ? null : setInterval(() => competitionTick(), 100);
   exportRunRecordButton.disabled = false;
   replayRunRecordButton.disabled = false;
   competitionLatestEvent.textContent = "20ms 固定步长与 100ms 仿真遥测基线已启动。";
@@ -5935,6 +5996,7 @@ function clearCompetitionTimers() {
 
 function commitCompetitionRecord(record) {
   if (!record) return latestCompetitionRecord;
+  endSimulationVisionRun();
   const timeoutAlreadyShown = latestCompetitionRecord?.result?.reason === "timeout";
   const recordChanged = !latestCompetitionRecord || latestCompetitionRecord.runId !== record.runId;
   const draftSession = recordChanged && recordMatchesActiveServerSession(record)
@@ -7929,12 +7991,13 @@ function updateVirtualCameraPose() {
   virtualCamera.updateMatrixWorld(true);
 }
 
-function addCompetitionVisionEvidence(canvas, frameId) {
+function addCompetitionVisionEvidence(canvas, frameId, captureContext = null) {
   if (!canvas || !competitionSession || competitionSession.status !== "running"
     || typeof competitionSession.addVisionEvidence !== "function") return null;
   const payloadBase64 = canvas.toDataURL("image/png");
   return competitionSession.addVisionEvidence({
     frameId,
+    ...(captureContext ? { tick: captureContext.tick, stateRevision: captureContext.stateRevision } : {}),
     width: canvas.width,
     height: canvas.height,
     payloadBase64,
@@ -7954,6 +8017,10 @@ async function captureVirtualCameraFrame() {
     throw new Error("虚拟车载摄像头尚未初始化。");
   }
   const captureGeneration = virtualCameraGeneration;
+  await ensureSimulationSceneReady();
+  if (captureGeneration !== virtualCameraGeneration) return null;
+  if (navigationVisualPlayback) throw new Error("Cannot observe during navigation visual playback");
+  const captureContext = simulationVisionRunActive ? simulationVisionContext() : null;
   const previousRenderTarget = renderer.getRenderTarget();
   const reliefWasVisible = guangyangReliefRoot?.visible;
   const flatMapWasVisible = guangyangFlatMapPlane?.visible;
@@ -7981,11 +8048,16 @@ async function captureVirtualCameraFrame() {
   try {
     if (guangyangReliefRoot) guangyangReliefRoot.visible = true;
     if (guangyangFlatMapPlane && guangyangTerrainMesh) guangyangFlatMapPlane.visible = false;
+    const elapsedMs = captureContext ? captureContext.tick * captureContext.stepMs : simulationSceneElapsedMs();
+    if (elapsedMs !== null) animateSceneEffects(elapsedMs / 1000, elapsedMs);
+    scene.updateMatrixWorld(true);
     updateVirtualCameraPose();
     // setRenderTarget applies the target's own pixel-exact viewport/scissor.
     // Calling renderer.setViewport(640, 480) here would multiply those values
     // by the screen DPR and crop the camera on high-density displays.
     renderer.setRenderTarget(virtualCameraTarget);
+    // Capture must not reuse a shadow rendered at an arbitrary earlier rAF.
+    renderer.shadowMap.needsUpdate = true;
     renderer.clear(true, true, true);
     renderer.render(scene, virtualCamera);
     renderer.readRenderTargetPixels(
@@ -8014,6 +8086,7 @@ async function captureVirtualCameraFrame() {
     // Restoring the previous target also restores its associated viewport,
     // scissor and scissor-test state without applying the screen DPR twice.
     renderer.setRenderTarget(previousRenderTarget);
+    sceneShadowDirty = true;
   }
   const vision = await window.CarVision?.analyzeFrame?.(virtualCameraCanvas, {
     source: "virtual",
@@ -8023,7 +8096,13 @@ async function captureVirtualCameraFrame() {
   });
   if (captureGeneration !== virtualCameraGeneration) return null;
   latestVirtualCameraFrameId = vision?.frameId ?? window.CarVision?.getStatus?.().frameId ?? null;
-  addCompetitionVisionEvidence(virtualCameraCanvas, latestVirtualCameraFrameId);
+  if (captureContext) {
+    const current = simulationVisionContext();
+    if (Object.keys(captureContext).some(key => captureContext[key] !== current[key])) {
+      throw new Error("Simulation changed during virtual camera capture");
+    }
+  }
+  addCompetitionVisionEvidence(virtualCameraCanvas, latestVirtualCameraFrameId, captureContext);
   try {
     renderTrainingVisionWorkbenchFrame(
       virtualCameraCanvas,
@@ -8953,6 +9032,7 @@ function rebuildSceneObjects() {
   invalidateVirtualCameraFrame();
   invalidateDeterministicSimulator();
   missionBuildGeneration += 1;
+  simulationSceneReadyPromise = Promise.resolve();
   ensureMissionPackages();
   sanitizeMissionForCurrentMapStyle();
   const staleObjects = new Set([...obstacleMeshes, ...markerMeshes, ...missionWallMeshes, ...missionDecorationMeshes]);
@@ -9522,7 +9602,7 @@ function addGuangyangSourceMap(config) {
   guangyangFlatMapPlane = mapPlane;
 
   const textureUrl = new URL(source.path, document.baseURI).href;
-  loadGuangyangSourceImage(textureUrl).then(sourceImage => {
+  const ready = loadGuangyangSourceImage(textureUrl).then(sourceImage => {
     if (buildGeneration !== missionBuildGeneration || !mapPlane.parent) {
       return;
     }
@@ -9556,14 +9636,19 @@ function addGuangyangSourceMap(config) {
     try {
       createGuangyangTerrainMesh(config, canvas, texture);
     } catch (error) {
-      console.warn("广阳岛地形层生成失败，已回退到平面底图。", error);
+      throw new Error(`广阳岛地形层生成失败：${error.message || error}`);
     }
     markSceneShadowDirty();
-  }).catch(() => {
+  }).catch(error => {
     if (buildGeneration !== missionBuildGeneration) return;
     material.color.set("#2f75a9");
     addLog("广阳岛原图纹理加载失败，请检查 word/广阳岛仿真沙盘地图.png。", false);
+    throw new Error(`广阳岛视觉资源加载失败：${error.message || error}`);
   });
+  simulationSceneReadyPromise = Promise.all([simulationSceneReadyPromise, ready]);
+  // UI startup may precede the first awaited capture. Preserve the rejection
+  // for ensureSimulationSceneReady without creating an unhandled rejection.
+  void simulationSceneReadyPromise.catch(() => {});
   return mapPlane;
 }
 
@@ -11472,6 +11557,10 @@ async function animateGripper(closing) {
 
 async function animateArmTo(targetRotation, duration = 260) {
   if (!robotArm) return;
+  if (interactionAnimationPlan) {
+    queueInteractionAnimation("arm", targetRotation, duration);
+    return;
+  }
   const startRotation = robotArm.rotation.x;
   let elapsed = 0;
   let last = performance.now();
@@ -11497,6 +11586,10 @@ async function animateArmTo(targetRotation, duration = 260) {
 
 async function animateClawTo(targetScale, duration = 180) {
   if (!robotClaw) return;
+  if (interactionAnimationPlan) {
+    queueInteractionAnimation("claw", targetScale, duration);
+    return;
+  }
   const startScale = robotClaw.scale.x;
   let elapsed = 0;
   let last = performance.now();
@@ -11545,10 +11638,50 @@ function settleGripperVisual(holding = isHoldingPackage()) {
 }
 
 async function runInteractionAnimation(animation, durationMs) {
+  if (robotBackendMode || competitionSession?.simulationDefinition) {
+    if (interactionAnimationPlan) throw new Error("Interaction animations cannot overlap");
+    const plan = { segments: [], cursorMs: 0,
+      arm: robotArm?.rotation.x ?? 0, claw: robotClaw?.scale.x ?? 1 };
+    interactionAnimationPlan = plan;
+    try {
+      // Existing animation callbacks describe their stages without advancing
+      // wall time. Exactly the original wait command advances the simulator.
+      await animation();
+    } finally {
+      interactionAnimationPlan = null;
+    }
+    const simulator = ensureDeterministicSimulator();
+    const startTick = simulator.tick;
+    await runDeterministicCommand({ kind: "wait", durationMs }, frame => {
+      applyInteractionAnimation(plan, (frame.state.tick - startTick) * simulator.config.stepMs);
+    });
+    return;
+  }
   await Promise.all([
     animation(),
     runDeterministicCommand({ kind: "wait", durationMs })
   ]);
+}
+
+function queueInteractionAnimation(kind, target, durationMs) {
+  const plan = interactionAnimationPlan;
+  plan.segments.push({ kind, start: plan[kind], target, startMs: plan.cursorMs, durationMs });
+  plan[kind] = target;
+  plan.cursorMs += durationMs;
+}
+
+function applyInteractionAnimation(plan, elapsedMs) {
+  for (const segment of plan.segments) {
+    if (elapsedMs < segment.startMs) continue;
+    const t = Math.min(1, Math.max(0, (elapsedMs - segment.startMs) / segment.durationMs));
+    const eased = segment.kind === "arm"
+      ? t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+      : 1 - Math.pow(1 - t, 2);
+    const value = segment.start + (segment.target - segment.start) * eased;
+    if (segment.kind === "arm" && robotArm) robotArm.rotation.x = value;
+    if (segment.kind === "claw" && robotClaw) robotClaw.scale.x = value;
+  }
+  markSceneShadowDirty();
 }
 
 function headingName() {
@@ -11639,12 +11772,12 @@ async function runDeterministicCommand(command, onFrame = null) {
       source: "python"
     });
   }
-  let nextFrameAt = performance.now();
+  let nextFrameAt = robotBackendMode ? 0 : performance.now();
   let lastFrame = null;
   while (!stopRequested && simulatorCore.hasActiveCommand()) {
     if (pauseRequested) {
       await waitWhilePaused();
-      nextFrameAt = performance.now();
+      nextFrameAt = robotBackendMode ? 0 : performance.now();
       continue;
     }
     lastFrame = simulatorCore.step();
@@ -11660,10 +11793,12 @@ async function runDeterministicCommand(command, onFrame = null) {
     if (typeof onFrame === "function") onFrame(lastFrame);
     syncRobot(undefined, { forceTelemetry: lastFrame.completed });
     if (!simulatorCore.hasActiveCommand() || stopRequested) break;
-    nextFrameAt += simulatorCore.config.stepMs;
-    const delay = nextFrameAt - performance.now();
-    if (delay > 0) await sleep(delay);
-    else await sleep(0);
+    if (!robotBackendMode) {
+      nextFrameAt += simulatorCore.config.stepMs;
+      const delay = nextFrameAt - performance.now();
+      if (delay > 0) await sleep(delay);
+      else await sleep(0);
+    }
   }
   const result = simulatorCore.hasActiveCommand()
     ? simulatorCore.cancelCommand()
@@ -11893,7 +12028,7 @@ async function playNavigationControlFrames(frames, simulatorCore, context) {
   navigationVisualPlayback = context;
   const pendingRunId = pendingPythonRun?.id ?? null;
   if (pendingPythonRun) clearTimeout(pendingPythonRun.timer);
-  let nextFrameAt = performance.now();
+  let nextFrameAt = robotBackendMode ? 0 : performance.now();
   let localCollisionRecorded = false;
   let publishedFinalPose = false;
   try {
@@ -11901,7 +12036,7 @@ async function playNavigationControlFrames(frames, simulatorCore, context) {
       if (!navigationPlaybackContextIsCurrent(context) || stopRequested) break;
       if (pauseRequested) {
         await waitWhilePaused();
-        nextFrameAt = performance.now();
+        nextFrameAt = robotBackendMode ? 0 : performance.now();
         if (!navigationPlaybackContextIsCurrent(context) || stopRequested) break;
       }
       renderNavigationControlFrame(frame);
@@ -11913,10 +12048,12 @@ async function playNavigationControlFrames(frames, simulatorCore, context) {
         }
         addLog("道路控制检测到碰撞，本次局部动作已停止。");
       }
-      nextFrameAt += stepMs;
-      const delay = nextFrameAt - performance.now();
-      if (delay > 0) await sleep(delay);
-      else await sleep(0);
+      if (!robotBackendMode) {
+        nextFrameAt += stepMs;
+        const delay = nextFrameAt - performance.now();
+        if (delay > 0) await sleep(delay);
+        else await sleep(0);
+      }
     }
   } finally {
     const publishFinalPose = navigationPlaybackContextIsCurrent(context);
@@ -12109,7 +12246,7 @@ function makeSimRobotApi() {
       }
       evaluateMissionProgress();
       updateRobotTelemetry(undefined, true);
-      await sleep(500);
+      if (!robotBackendMode) await sleep(500);
     },
     release: async () => {
       await waitWhilePaused();
@@ -12146,7 +12283,7 @@ function makeSimRobotApi() {
         settleGripperVisual(true);
         evaluateMissionProgress();
         updateRobotTelemetry(undefined, true);
-        await sleep(500);
+        if (!robotBackendMode) await sleep(500);
         return;
       }
       if (releaseResult) {
@@ -12168,7 +12305,7 @@ function makeSimRobotApi() {
       await runInteractionAnimation(() => animateGripper(false), 420);
       evaluateMissionProgress();
       updateRobotTelemetry(undefined, true);
-      await sleep(500);
+      if (!robotBackendMode) await sleep(500);
     },
     frontBlocked: () => lastMoveBlocked || frontDistance() < FRONT_BLOCKED_DISTANCE,
     distance: () => Math.round(worldUnitsToCm(frontDistance())),
@@ -14308,7 +14445,8 @@ function animate(timestamp = performance.now()) {
   const elapsedSinceRender = timestamp - lastRenderAt;
   if (Number.isFinite(lastRenderAt) && elapsedSinceRender < interval) return;
   lastRenderAt = Number.isFinite(lastRenderAt) ? timestamp - (elapsedSinceRender % interval) : timestamp;
-  animateSceneEffects(timestamp * 0.001);
+  const sceneElapsedMs = simulationSceneElapsedMs();
+  animateSceneEffects((sceneElapsedMs ?? timestamp) * 0.001, sceneElapsedMs);
   if (cameraMode === "follow") updateFollowCamera();
   if (sceneShadowDirty) {
     renderer.shadowMap.needsUpdate = true;
@@ -14326,7 +14464,7 @@ function animate(timestamp = performance.now()) {
   }
 }
 
-function animateSceneEffects(time) {
+function animateSceneEffects(time, simulationElapsedMs = null) {
   goalPulseEffects.forEach(pulse => {
     const wave = (Math.sin(time * 2.6) + 1) / 2;
     pulse.ring.scale.setScalar(0.94 + wave * 0.18);
@@ -14342,9 +14480,9 @@ function animateSceneEffects(time) {
     signal.core.position.y = 0.36 + wave * 0.12;
     signal.core.rotation.y = time * 1.2 + signal.phase;
   });
-  const lightElapsedMs = competitionSession?.status === "running"
+  const lightElapsedMs = simulationElapsedMs ?? (competitionSession?.status === "running"
     ? competitionSession.elapsedMs()
-    : performance.now();
+    : performance.now());
   competitionTrafficLightVisuals.forEach(visual => {
     const activeState = globalThis.CompetitionCore?.trafficLightState(visual.config, lightElapsedMs) || "red";
     Object.entries(visual.lamps).forEach(([state, lamp]) => {

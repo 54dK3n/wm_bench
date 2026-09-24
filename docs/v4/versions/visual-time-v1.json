@@ -1,0 +1,38 @@
+{
+  "version": "visual-time-v1",
+  "baseline_commit": "99756da",
+  "scope": "Platform virtual camera and simulation presentation, no controller or safety-policy change",
+  "changes": [
+    "Per-run virtual frame counter independent of preview/stop; freshness bound to simulation tick, stepMs, stateRevision and generation",
+    "Await current scene texture/terrain readiness; propagate loading errors; synchronize effects, matrices and shadow at capture",
+    "Emit authoritative deterministic telemetry only from step/action boundaries, not host interval",
+    "Backend presentation does not sleep or advance without requests; original physics steps and interaction wait durations preserved; gripper interpolation uses ticks"
+  ],
+  "interfaces": [
+    "setRobotBackendMode(enabled)",
+    "ensureSimulationSceneReady()",
+    "beginSimulationVisionRun()",
+    "endSimulationVisionRun()",
+    "CarVision.beginVirtualRun({getContext})",
+    "CarVision.endVirtualRun()"
+  ],
+  "files": {
+    "projects/car-python/app.js": "ad43d61e31d50f6d3dc1b3f3123540b049d8649f689469f40b290c5038205375",
+    "projects/car-python/vision.js": "a26f0339221d0ab210ca3bdcfa4a1b1e116368c8f37b4c297d6d7769a0c2df92",
+    "projects/car-python/tests/virtual-time-determinism.test.js": "b2dfa5f52c7fb36e68c9169e6e09ac9d19268cadfd22037643abf6bb27a1f7c7",
+    "projects/car-python/tests/frontend-button-click.test.js": "77cc7ea2f7e84dbc8f8e9c8f9373cf339cada6b021196fb94aba6134b9a388aa"
+  },
+  "validation": {
+    "command": "cd projects/car-python && node --test tests/virtual-time-determinism.test.js tests/vision-runtime.test.js tests/static-contract.test.js tests/frontend-button-click.test.js tests/published-map-client-contract.test.js",
+    "tests": 128,
+    "pass": 124,
+    "fail": 0,
+    "skip": 4,
+    "skip_reason": "Existing optional local historical-v4 archive fixtures are absent; none of the 10 new determinism tests is skipped",
+    "in_loop_runs": 0,
+    "limitations": [
+      "No browser/GPU run executed in this change group; actual PNG-repeat/full-record acceptance belongs to stage-1 acceptance",
+      "Server identity and full-record management walltime are owned by the separate record/bridge change group"
+    ]
+  }
+}

@@ -641,6 +641,7 @@ function createHarness({
     "openCompetitionRecords",
     "submitPendingCompetitionRecord",
     "commitCompetitionRecord",
+    "endSimulationVisionRun",
     "exportLatestCompetitionRecord",
     "setReplayButtonState",
     "stopCompetitionReplay",
@@ -675,6 +676,7 @@ function createHarness({
     "use strict";
     ${declarations.join("\n")}
     let latestCompetitionRecord = __record;
+    let simulationVisionRunActive = false;
     let activeCompetitionServerSession = __serverSession;
     let latestCompetitionSubmissionReceipt = null;
     let latestCompetitionDraftRecordId = null;

@@ -44,6 +44,8 @@
     frame: null,
     teachingFrame: null,
     frameId: 0,
+    previewFrameId: 0,
+    virtualRun: null,
     updatedAt: 0,
     generation: 0,
     manual: false,
@@ -698,8 +700,13 @@
       : imageToVirtualFrame(image);
     if (!frame) return null;
     if (!state.enabled || generation !== state.generation) return null;
-    frame.frameId = ++state.frameId;
-    frame.capturedAt = Date.now();
+    const simulationContext = state.sourceMode === "virtual" && state.virtualRun
+      ? readVirtualContext()
+      : null;
+    frame.frameId = simulationContext ? ++state.virtualRun.frameId : ++state.previewFrameId;
+    state.frameId = frame.frameId;
+    frame.simulationContext = simulationContext;
+    frame.capturedAt = simulationContext ? simulationContext.tick * simulationContext.stepMs : Date.now();
     state.frame = frame;
     state.updatedAt = frame.capturedAt;
     state.virtualDetections = state.sourceMode === "virtual"
@@ -763,8 +770,26 @@
     }
   }
 
+  function readVirtualContext() {
+    const value = state.virtualRun.getContext();
+    if (!value || !Number.isSafeInteger(value.tick) || value.tick < 0
+      || !Number.isFinite(value.stepMs) || value.stepMs <= 0
+      || !Number.isSafeInteger(value.stateRevision) || value.stateRevision < 0
+      || !Number.isSafeInteger(value.generation) || value.generation < 0) {
+      throw new TypeError("Virtual run requires a valid simulation tick/revision/generation context");
+    }
+    return { tick: value.tick, stepMs: value.stepMs,
+      stateRevision: value.stateRevision, generation: value.generation };
+  }
+
   function isFreshFrame() {
-    return Boolean(state.enabled && state.frame && state.updatedAt && Date.now() - state.updatedAt <= FRESH_FRAME_MS);
+    if (!(state.enabled && state.frame)) return false;
+    if (state.sourceMode === "virtual" && state.virtualRun) {
+      const captured = state.frame.simulationContext;
+      const current = readVirtualContext();
+      return Boolean(captured && Object.keys(current).every(key => captured[key] === current[key]));
+    }
+    return Boolean(state.updatedAt && Date.now() - state.updatedAt <= FRESH_FRAME_MS);
   }
 
   window.CarVision = {
@@ -775,6 +800,18 @@
     detectorDefinitionHash: pixelCore.DETECTOR_DEFINITION_HASH,
     queryDefinition: pixelCore.QUERY_DEFINITION,
     queryDefinitionHash: pixelCore.QUERY_DEFINITION_HASH,
+    beginVirtualRun({ getContext } = {}) {
+      if (typeof getContext !== "function") throw new TypeError("Virtual run requires getContext");
+      this.stop();
+      state.virtualRun = { getContext, frameId: 0 };
+      readVirtualContext();
+      state.frameId = 0;
+    },
+    endVirtualRun() {
+      this.stop();
+      state.virtualRun = null;
+      state.frameId = state.previewFrameId;
+    },
     start(image, onUpdate) {
       this.stop();
       state.enabled = true;
@@ -841,7 +878,7 @@
       state.frame = null;
       state.teachingFrame = null;
       state.updatedAt = 0;
-      state.frameId += 1;
+      if (!state.virtualRun) state.frameId = ++state.previewFrameId;
       state.detections = [];
       state.namedDetections = [];
       state.virtualDetections = [];
