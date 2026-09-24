@@ -1197,11 +1197,12 @@ test("visual training examples enter a Guangyang training mode and do not contai
   assert.match(trainingZoneMarker, /visionZone[\s\S]*boundaryColor[\s\S]*vision-zone-sign/);
   assert.match(competitionZoneMarker, /guidanceColor[\s\S]*vision-zone-sign/);
   assert.match(competitionZoneMarker, /new THREE\.MeshBasicMaterial\(\{\s*color,\s*toneMapped:\s*false/,
-    "only the upright zone sign should retain the detector's saturated role color");
+    "the legacy upright sign retains the detector's saturated role color");
   assert.match(competitionZoneMarker, /new THREE\.PointLight\(\s*["']#ffffff["']\s*,\s*0\.2/,
     "zone guidance lights must not tint the ground into a detector-colored component");
-  assert.match(competitionZoneMarker, /fill\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*ring\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*beacon\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*glow\.userData\.hideFromVirtualCamera\s*=\s*true/,
-    "competition camera evidence must exclude animated zone guidance and retain only the solid sign");
+  assert.match(competitionZoneMarker, /visibleStorageGround = robotBackendMode && role === "storage"/);
+  assert.match(competitionZoneMarker, /fill\.userData\.hideFromVirtualCamera\s*=\s*!visibleStorageGround[\s\S]*ring\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*beacon\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*glow\.userData\.hideFromVirtualCamera\s*=\s*true/,
+    "legacy camera excludes ground guidance; backend adds only the static storage ground and keeps animated helpers hidden");
   assert.match(trainingZoneMarker, /if\s*\(visionZone\)\s*mesh\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*pulseRing\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*boundaryRing\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*beacon\.userData\.hideFromVirtualCamera\s*=\s*true[\s\S]*glow\.userData\.hideFromVirtualCamera\s*=\s*true/,
     "training camera evidence must exclude the pulsing pad, rings, beacon and light");
   assert.match(zoneLabel, /zoneDecal\.userData\.hideFromVirtualCamera\s*=\s*true/,

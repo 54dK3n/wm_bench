@@ -1215,6 +1215,7 @@ function setRobotBackendMode(enabled) {
     throw new Error("Cannot change robot backend mode during a run");
   }
   robotBackendMode = Boolean(enabled);
+  if (robotBackendMode) packageIdCounter = 0;
   return robotBackendMode;
 }
 
@@ -1241,6 +1242,7 @@ function beginSimulationVisionRun() {
   invalidateVirtualCameraFrame();
   window.CarVision.beginVirtualRun({ getContext: simulationVisionContext });
   simulationVisionRunActive = true;
+  lastRobotTelemetryAt = -Infinity;
 }
 
 function endSimulationVisionRun() {
@@ -1261,6 +1263,7 @@ function simulationSceneElapsedMs() {
 }
 
 function createPackageId() {
+  if (robotBackendMode) return `package-${++packageIdCounter}`;
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   packageIdCounter += 1;
   return `package-${Date.now()}-${packageIdCounter}`;
@@ -7376,7 +7379,7 @@ function evaluateMissionProgress({ allowComplete = true, announce = true } = {})
     z: robotPose.z,
     holding: heldPackageId,
     packages: ensureMissionPackages().map(record => ({ id: record.id, x: record.x, z: record.z }))
-  }, performance.now());
+  }, robotBackendMode ? simulationSceneElapsedMs() : performance.now());
   applyMissionTaskState(result.state);
   result.events.forEach(event => {
     if (event.type === "checkpoint") {
@@ -10712,20 +10715,26 @@ function addObjectTaskZoneMarker(zone) {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return null;
   const meta = GUANGYANG_OBJECT_ROLE_META[role];
   const color = /^#[0-9a-f]{6}$/i.test(String(zone.color || "")) ? String(zone.color) : meta.color;
-  // Ground guidance is deliberately neutral. Even very pale role hues can be
+  // Legacy ground guidance is deliberately neutral. Even very pale role hues can be
   // pushed back into the frozen green/orange predicates by lighting and tone
   // mapping, joining the pad to the post in the camera image. Only the upright
-  // solid sign is an official camera signature.
+  // solid sign is the legacy camera signature.
   const guidanceColor = "#e2e8f0";
+  // Backend vision observes the actual ground area. Its fixed chroma is a
+  // rendered surface, not a projection of the zone's world-space bounds.
+  const visibleStorageGround = robotBackendMode && role === "storage";
   const radius = Math.max(0.2, Math.min(5, Number(zone.radius) || 0.95));
   const group = new THREE.Group();
   const fill = new THREE.Mesh(
-    new THREE.CircleGeometry(Math.max(0.08, radius - 0.04), 48),
-    new THREE.MeshBasicMaterial({ color: guidanceColor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false })
+    new THREE.CircleGeometry(visibleStorageGround ? radius : Math.max(0.08, radius - 0.04), 48),
+    new THREE.MeshBasicMaterial(visibleStorageGround
+      ? { color: "#00ff00", transparent: false, opacity: 1, side: THREE.DoubleSide,
+        depthWrite: true, toneMapped: false, fog: false }
+      : { color: guidanceColor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false })
   );
   fill.rotation.x = -Math.PI / 2;
   fill.position.y = 0.012;
-  fill.userData.hideFromVirtualCamera = true;
+  fill.userData.hideFromVirtualCamera = !visibleStorageGround;
   group.add(fill);
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(Math.max(0.08, radius - 0.055), radius, 48),
@@ -11010,7 +11019,8 @@ function syncRobot(measuredDistance = undefined, { forceTelemetry = false, skipC
 }
 
 function updateRobotTelemetry(measuredDistance = undefined, force = false, { allowMissionComplete = true } = {}) {
-  const now = performance.now();
+  const now = simulationVisionRunActive || robotBackendMode
+    ? simulationSceneElapsedMs() : performance.now();
   if (!force && now - lastRobotTelemetryAt < ROBOT_TELEMETRY_INTERVAL_MS) return;
   lastRobotTelemetryAt = now;
   const real = targetSelect?.value === "real";
@@ -13043,7 +13053,7 @@ function isBlockingApproachObstacle(object, targetObject) {
 function readVisionObjects(confidence = 0.6) {
   const threshold = Number(confidence);
   const minimum = Number.isFinite(threshold) ? threshold : 0.6;
-  const now = Date.now();
+  const now = simulationVisionRunActive ? simulationSceneElapsedMs() : Date.now();
   return getVisionSnapshot().objects.filter(object => (
     object.confidence >= minimum
     && (object.source !== "yolo" || !object.capturedAt || now - object.capturedAt <= 1800)

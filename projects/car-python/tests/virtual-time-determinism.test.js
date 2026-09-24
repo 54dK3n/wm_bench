@@ -287,15 +287,42 @@ test("formal timer cannot append records and lifecycle starts frame count before
   const events = [];
   const context = appRuntime(definitions, {
     running: false, competitionSession: null, robotBackendMode: false, simulationVisionRunActive: false,
+    packageIdCounter: 8, lastRobotTelemetryAt: 99999,
     virtualCameraGeneration: 2, virtualCameraCapturePromise: null, latestVirtualCameraFrameId: null,
     invalidateVirtualCameraFrame() { events.push("invalidate"); }, simulationVisionContext: () => ({}),
     window: { CarVision: { beginVirtualRun() { events.push("begin"); }, endVirtualRun() { events.push("end"); } } }
   });
   assert.equal(context.setRobotBackendMode(true), true);
   context.beginSimulationVisionRun();
+  assert.equal(context.packageIdCounter, 0);
+  assert.equal(context.lastRobotTelemetryAt, -Infinity);
   context.running = true;
   assert.throws(() => context.setRobotBackendMode(false), /during a run/);
   context.endSimulationVisionRun();
   context.endSimulationVisionRun();
   assert.deepEqual(events, ["invalidate", "begin", "end"]);
+});
+
+test("backend fallback package IDs and telemetry/vision timestamps never consult wall time", () => {
+  let evaluated = 0, telemetry = 0;
+  const wallFailure = () => { throw new Error("backend used wall time"); };
+  const context = appRuntime(["createPackageId", "readVisionObjects", "updateRobotTelemetry"], {
+    robotBackendMode: true, simulationVisionRunActive: true, packageIdCounter: 0,
+    Date: { now: wallFailure }, performance: { now: wallFailure },
+    simulationSceneElapsedMs: () => 100, lastRobotTelemetryAt: -Infinity,
+    ROBOT_TELEMETRY_INTERVAL_MS: 80, targetSelect: { value: "sim" },
+    getVisionSnapshot: () => ({ objects: [{ confidence: 1, source: "virtual-cv", capturedAt: 100 },
+      { confidence: .2, source: "virtual-cv", capturedAt: 100 }] }),
+    frontDistance: () => 5, updateDistance() { telemetry += 1; }, updateRobotState() {},
+    missionAttempt: { spec: { type: "composite" } }, evaluateMissionProgress() { evaluated += 1; }
+  });
+  assert.equal(context.createPackageId(), "package-1");
+  assert.equal(context.createPackageId(), "package-2");
+  assert.equal(context.readVisionObjects(.6).length, 1);
+  context.updateRobotTelemetry();
+  context.updateRobotTelemetry();
+  assert.equal(telemetry, 1);
+  assert.equal(evaluated, 1);
+  assert.match(functionSource("evaluateMissionProgress"),
+    /robotBackendMode \? simulationSceneElapsedMs\(\) : performance\.now\(\)/);
 });

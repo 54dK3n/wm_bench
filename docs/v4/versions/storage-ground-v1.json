@@ -1,0 +1,34 @@
+{
+  "version": "storage-ground-v1",
+  "baseline_commit": "713588d",
+  "scope": "Backend-only visible storage ground and raw camera pixel regions; no world-state sensor projection",
+  "changes": [
+    "Backend storage disk uses the existing zone anchor and radius with opaque unlit unfogged #00ff00; rings/beacons remain camera-hidden; old UI marker unchanged",
+    "Independent source-640x480 exact-chroma four-connected segmentation; inclusive bbox and pixelCount come only from RGBA bytes; clipping and occlusion are retained",
+    "Backend fallback package IDs use run-reset sequence; virtual-run telemetry and legacy vision helpers use simulation milliseconds instead of wall time"
+  ],
+  "api": "CarStorageRegionPixels.detectStorageRegions(ImageData) -> [{category,confidence,bbox:{x,y,w,h},pixelCount}]",
+  "confidence_semantics": "1 means exact [0,255,0,255] chroma membership, not a fitted probability; identically colored unrelated pixels are possible ambiguities",
+  "files": {
+    "projects/car-python/app.js": "b0b365e13cb60ceb437fb420e2dbc9b1b5ea2d92ed15c7a4658ce9c4bc83b625",
+    "projects/car-python/storage-region-pixels.js": "e8707e81cac164f9db431d6ba185b69d558c5e89e0f82f4570a8ef7db5fe8b49",
+    "projects/car-python/tests/storage-region-pixels.test.js": "d6e75e1057d97703823b734b29da4a19d8d03512c4d8bbfe054483b7236e5210",
+    "projects/car-python/tests/virtual-time-determinism.test.js": "dd7a50ee34fce9582b1663ff96b12bbe3b3f12646adc2361924ad115f87feb1f",
+    "projects/car-python/tests/static-contract.test.js": "1e241f2689a02d2aaf3558cabf5cdd97413ad43cbb88560c8680b8fe6a83a072"
+  },
+  "validation": {
+    "command": "cd projects/car-python && node --test tests/storage-region-pixels.test.js tests/virtual-time-determinism.test.js tests/static-contract.test.js tests/frontend-button-click.test.js tests/published-map-client-contract.test.js tests/vision-runtime.test.js",
+    "tests": 134,
+    "pass": 130,
+    "fail": 0,
+    "skip": 4,
+    "new_storage_tests": 5,
+    "new_determinism_tests": 11,
+    "skip_reason": "Existing optional historical-v4 archive fixtures absent; all new tests executed",
+    "in_loop_runs": 0,
+    "limitations": [
+      "No WebGL/browser acceptance executed here; rendered pure-green pixel values must be checked in stage-1 acceptance",
+      "Output bounds describe visible pixel components, not full physical zone geometry; no polygon or world coordinates are exposed"
+    ]
+  }
+}
