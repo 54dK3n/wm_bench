@@ -1,0 +1,98 @@
+{
+  "map": "map-03",
+  "run": 1,
+  "directory": "map-03-run-1",
+  "allPass": true,
+  "backendVersion": "robot-backend-v4-stage1-r1",
+  "protocolVersion": "chenlong.robot-bridge/v1",
+  "script": {
+    "sensorTicks": {
+      "before": 0,
+      "after": 0
+    },
+    "pause": {
+      "wallClockPauseMs": 500,
+      "beforeTick": 0,
+      "afterTick": 0
+    },
+    "rejectedMethods": [
+      "approach",
+      "centered",
+      "count",
+      "detect",
+      "direction",
+      "distance_to",
+      "left",
+      "left_90",
+      "left_angle",
+      "map_graph",
+      "mission",
+      "near",
+      "release_preview",
+      "right",
+      "right_90",
+      "right_angle",
+      "road_state",
+      "sees",
+      "task_state",
+      "wait"
+    ],
+    "endTick": 215
+  },
+  "scopeChecks": [
+    {
+      "route": "/api/v1/map-config/R2-GYI-MVP-02",
+      "status": 403,
+      "body": {
+        "schemaVersion": "chenlong.verification-report/v1",
+        "status": "error",
+        "authoritative": false,
+        "error": {
+          "code": "CLIENT_CAPABILITY_SCOPE",
+          "message": "CLIENT_CAPABILITY_SCOPE"
+        }
+      }
+    },
+    {
+      "route": "/api/v1/records",
+      "status": 403,
+      "body": {
+        "schemaVersion": "chenlong.verification-report/v1",
+        "status": "error",
+        "authoritative": false,
+        "error": {
+          "code": "CLIENT_CAPABILITY_SCOPE",
+          "message": "CLIENT_CAPABILITY_SCOPE"
+        }
+      }
+    },
+    {
+      "route": "/api/v1/robot-bridge/controllers/<controller-managed-bridge>/trace",
+      "status": 403,
+      "body": {
+        "schemaVersion": "chenlong.verification-report/v1",
+        "status": "error",
+        "authoritative": false,
+        "error": {
+          "code": "CLIENT_CAPABILITY_SCOPE",
+          "message": "CLIENT_CAPABILITY_SCOPE"
+        }
+      }
+    }
+  ],
+  "pageErrors": [],
+  "evidence": {
+    "recordSha256": "73d585556e7d98cf016c87a0cc04162f8bd03aa35396f651bd44d835b0159080",
+    "frames": 3,
+    "pngBytes": 669360
+  },
+  "recordAudit": {
+    "allPass": true,
+    "failures": [],
+    "calls": 18,
+    "nativeItems": 73,
+    "frames": 3,
+    "serverTraceEvents": 74
+  },
+  "controllerErrors": []
+}

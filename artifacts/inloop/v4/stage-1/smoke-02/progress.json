@@ -1,0 +1,158 @@
+{
+  "schema": "wm-v4-stage1-acceptance/v1",
+  "smoke": true,
+  "maps": [
+    "map-03"
+  ],
+  "runsPerMap": 1,
+  "status": "running",
+  "manifest": {
+    "driver": {
+      "file": "tools/v4_stage1_acceptance.js",
+      "sha256": "8ce347a8f280138d28dd89385c3ed28db1b01cf11c3420d3f478d64d4b551eb9"
+    },
+    "platformRoot": "/Users/ken/Desktop/wm_bench/workspaces/guangyang-platform/projects/car-python",
+    "platform": {
+      "competition-core.js": "2b9c86e56043b0c6c61023ac263b43e9de7e2223144786fdd561741e70dc57e8",
+      "robot-record.js": "1b43cb787b0a05307526e849d440215266e06140590fb506abfacaa50bbd0950",
+      "robot-backend-runtime.js": "912306436ce285acc9195364f5250e1404d6edc6dc6c6b23a658b5bf2ecc6e16",
+      "robot-bridge-contract.js": "aa6e49f2c8f4c1e879a8ec7cc25b7558b52d40896fa222dea21fd04c218cdcca",
+      "backend/robot-bridge.js": "c2f4642d54e354a024864886a45ec6ec27b287835508ecc63026609ccf3baf07",
+      "server.js": "41100f4245b8c6ca8385a8c2824624cd94cdee1343895bb7cadeafe013ac59c1",
+      "app.js": "55acd2843d202f83c83549d4a2640f1d995358bc654546732cbaca500ae28c83",
+      "vision.js": "62274a407a689c8e48ab869eae43de5da0b4717a66e47b7bb7951ce20d654da2",
+      "vision-pixel-core.js": "7627c0429e338f481948bdcb6ab59af901ad6ed0cee8001ef38d51dfa063c614",
+      "python-worker.js": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4"
+    },
+    "brainScriptSha256": "b48d39e60fcf264427ae766ac63f918c66f1f0ea92a1e494cf04dc7393c33eab",
+    "rejectedMethods": [
+      "approach",
+      "centered",
+      "count",
+      "detect",
+      "direction",
+      "distance_to",
+      "left",
+      "left_90",
+      "left_angle",
+      "map_graph",
+      "mission",
+      "near",
+      "release_preview",
+      "right",
+      "right_90",
+      "right_angle",
+      "road_state",
+      "sees",
+      "task_state",
+      "wait"
+    ],
+    "pauseMs": 500
+  },
+  "trials": [
+    {
+      "map": "map-03",
+      "run": 1,
+      "directory": "map-03-run-1",
+      "allPass": false,
+      "backendVersion": "robot-backend-v4-stage1-r1",
+      "protocolVersion": "chenlong.robot-bridge/v1",
+      "script": {
+        "sensorTicks": {
+          "before": 0,
+          "after": 0
+        },
+        "pause": {
+          "wallClockPauseMs": 500,
+          "beforeTick": 0,
+          "afterTick": 0
+        },
+        "rejectedMethods": [
+          "approach",
+          "centered",
+          "count",
+          "detect",
+          "direction",
+          "distance_to",
+          "left",
+          "left_90",
+          "left_angle",
+          "map_graph",
+          "mission",
+          "near",
+          "release_preview",
+          "right",
+          "right_90",
+          "right_angle",
+          "road_state",
+          "sees",
+          "task_state",
+          "wait"
+        ],
+        "endTick": 215
+      },
+      "scopeChecks": [
+        {
+          "route": "/api/v1/map-config/R2-GYI-MVP-02",
+          "status": 403,
+          "body": {
+            "schemaVersion": "chenlong.verification-report/v1",
+            "status": "error",
+            "authoritative": false,
+            "error": {
+              "code": "CLIENT_CAPABILITY_SCOPE",
+              "message": "CLIENT_CAPABILITY_SCOPE"
+            }
+          }
+        },
+        {
+          "route": "/api/v1/records",
+          "status": 403,
+          "body": {
+            "schemaVersion": "chenlong.verification-report/v1",
+            "status": "error",
+            "authoritative": false,
+            "error": {
+              "code": "CLIENT_CAPABILITY_SCOPE",
+              "message": "CLIENT_CAPABILITY_SCOPE"
+            }
+          }
+        },
+        {
+          "route": "/api/v1/robot-bridge/controllers/<controller-managed-bridge>/trace",
+          "status": 403,
+          "body": {
+            "schemaVersion": "chenlong.verification-report/v1",
+            "status": "error",
+            "authoritative": false,
+            "error": {
+              "code": "CLIENT_CAPABILITY_SCOPE",
+              "message": "CLIENT_CAPABILITY_SCOPE"
+            }
+          }
+        }
+      ],
+      "pageErrors": [],
+      "evidence": {
+        "recordSha256": "0fae28af677ae27348619630029b54614c311ffe088764745d27398583ab2d8f",
+        "frames": 3,
+        "pngBytes": 669360
+      },
+      "recordAudit": {
+        "allPass": false,
+        "failures": [
+          "server trace missing denial left_90",
+          "server trace missing denial right_90"
+        ],
+        "calls": 18,
+        "nativeItems": 73,
+        "frames": 3,
+        "serverTraceEvents": 74
+      },
+      "controllerErrors": []
+    }
+  ],
+  "comparisons": [],
+  "allPass": false,
+  "fullSixRunAcceptance": false
+}
