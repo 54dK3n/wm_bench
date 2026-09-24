@@ -158,9 +158,9 @@ test("release build is reproducible, closed, tamper-evident, and starts in isola
     defaultReleaseDirectory(),
     path.resolve(__dirname, "..", "dist", "chenlong-car-simulator-0.4.0")
   );
-  assert.equal(RELEASE_PAYLOAD_FILES.length, 46, "45 runtime files plus DELIVERY.md must be frozen");
-  assert.equal(first.payloadFileCount, 46);
-  assert.equal(second.payloadFileCount, 46);
+  assert.equal(RELEASE_PAYLOAD_FILES.length, 51, "50 runtime files plus DELIVERY.md must be frozen");
+  assert.equal(first.payloadFileCount, 51);
+  assert.equal(second.payloadFileCount, 51);
   assert.equal(RELEASE_PAYLOAD_FILES.includes("backend/platform-service-auth.js"), true);
   assert.equal(RELEASE_PAYLOAD_FILES.includes("DELIVERY.md"), true);
   assert.equal(RELEASE_PAYLOAD_FILES.some(filename => /^(?:tests|examples|docs)\//.test(filename)), false);
