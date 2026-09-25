@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import math
+import re
 
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v4"
+VERSION = "autonomous-brain-actions/v5"
 
 
 def ball_inside_region(ball, region):
@@ -79,12 +80,59 @@ class Actions:
         goal = (target["position_m"]["x"], target["position_m"]["z"])
         return distance(p, goal) * 100, -wrap(heading_to(p, goal) - self.s["odometry"]["headingDeg"])
 
+    def fresh_tentative_views(self):
+        tentative = {o["id"] for o in self.r.perception.objects() if o["state"] == "TENTATIVE"}
+        return [d for d in self.s["perception"]["detections"]
+                if d["category"] in {"red-ball", "blue-ball", "storage-zone"}
+                and d.get("fed_to_world_model") and d.get("track_id") in tentative
+                and str(d.get("frame_id")) == str(self.s["observation"]["frameId"])]
+
+    def newly_confirmed(self, before_confirmed):
+        return [o["id"] for o in self.r.perception.objects()
+                if o["state"] == "CONFIRMED" and o["id"] not in before_confirmed]
+
     def look_around(self):
         before = {o["id"] for o in self.r.perception.objects()}
+        task = getattr(self.r, "config", {}).get("task", "")
+        task_categories = {category for word, english, category in (
+            ("红球", "red", "red-ball"), ("蓝球", "blue", "blue-ball"))
+            if word in task or re.search(r"\b" + english + r"\b", task, re.IGNORECASE)}
+        holding = self.s["holding"]["holding"]
+        candidates = []
         for _ in range(4):
             self.turn(90)
+            road = self.s["road"]
+            heading_error, clearance = road.get("headingErrorDeg"), road.get("frontClearanceCm")
+            # This chooses a useful final viewing direction, not confirmation
+            # evidence. It must permit a subsequent short step along the road.
+            if (not road["onRoad"] or not all(
+                    isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+                    for value in (heading_error, clearance))
+                    or abs(heading_error) > 10 or clearance < 16):
+                continue
+            for detection in self.fresh_tentative_views():
+                category = detection["category"]
+                if category not in task_categories and not (holding and category == "storage-zone"):
+                    continue
+                candidate = {"object_id": detection["track_id"], "category": category,
+                             "observation_index": self.s["observation_index"],
+                             "frame_id": self.s["observation"]["frameId"],
+                             "heading_deg": self.s["odometry"]["headingDeg"],
+                             "road_heading_error_deg": road["headingErrorDeg"],
+                             "front_clearance_cm": road["frontClearanceCm"]}
+                priority = 0 if holding and category == "storage-zone" else 1
+                candidates.append((priority, abs(detection["bearing_deg"]), candidate))
+        tentative = {o["id"] for o in self.r.perception.objects() if o["state"] == "TENTATIVE"}
+        candidates = [c for c in candidates if c[2]["object_id"] in tentative]
+        chosen = min(candidates, key=lambda c: (c[0], c[1], c[2]["observation_index"]))[2] if candidates else None
+        if chosen is not None:
+            # turn() observes again; the unchanged WM pose gate prevents this
+            # same-position view from supplying an independent confirmation hit.
+            self.turn(wrap(chosen["heading_deg"] - self.s["odometry"]["headingDeg"]))
         new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before]
-        return self.result(True, "four_views_observed", new_object_ids=new)
+        return self.result(True, "four_views_observed", new_object_ids=new,
+                           reobservation_candidate=chosen,
+                           final_heading_deg=self.s["odometry"]["headingDeg"])
 
     def return_from_blocked_road(self, blocked_result):
         """Turn back and follow the observed road, including its bends."""
@@ -120,6 +168,7 @@ class Actions:
 
     def explore(self, exit_angle=None):
         before_ids = {o["id"] for o in self.r.perception.objects()}
+        before_confirmed = {o["id"] for o in self.r.perception.objects() if o["state"] == "CONFIRMED"}
         start = position(self.s["odometry"])
         road, odo = self.s["road"], self.s["odometry"]
         if not road["onRoad"]:
@@ -138,6 +187,9 @@ class Actions:
             result = self.move("take_exit", {"angleDeg": chosen["angle_deg"], "speed": 50})
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
                 return self.return_from_blocked_road(result)
+            confirmed = self.newly_confirmed(before_confirmed)
+            if confirmed:
+                return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
             if result.get("stoppedBy") == "junction" or (
                     self.s["road"].get("atNode") and result.get("distanceCm", 0) >= 0.2):
                 return self.result(True, "next_junction_observed")
@@ -151,9 +203,13 @@ class Actions:
             if new:
                 return self.result(True, "new_objects_observed", new_object_ids=new)
             before = position(self.s["odometry"])
-            result = self.move("follow_road", {"distanceCm": 20, "speed": 50})
+            step_cm = 16 if self.fresh_tentative_views() else 20
+            result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
                 return self.return_from_blocked_road(result)
+            confirmed = self.newly_confirmed(before_confirmed)
+            if confirmed:
+                return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
             # A nearby junction can be less than one step away, or the road
             # follower can report it without moving. Neither is an obstacle.
             if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":

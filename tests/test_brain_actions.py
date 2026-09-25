@@ -112,19 +112,24 @@ class ActionEvidenceTests(unittest.TestCase):
         self.assertFalse(ball_inside_region({"x": 145, "y": 210, "w": 10, "h": 15}, dict(zone, x=0)))
 
 
-class ExploreRecoveryTests(unittest.TestCase):
-    def scripted_runtime(self, steps, *, on_road=True, pose=None):
+class ScriptedActionCase(unittest.TestCase):
+    def scripted_runtime(self, steps, *, on_road=True, pose=None, task="", objects=None,
+                         detections=None, holding=False, road=None):
         snapshot = {"observation_index": 1, "observation": {"frameId": 1},
                     "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0,
                                  **(pose or {})},
-                    "holding": {"holding": False},
-                    "road": {"onRoad": on_road, "atNode": False, "exits": []},
-                    "perception": {"detections": []}}
+                    "holding": {"holding": holding},
+                    "road": {"onRoad": on_road, "atNode": False, "exits": [],
+                             "headingErrorDeg": 0, "frontClearanceCm": 100, **(road or {})},
+                    "objects": copy.deepcopy(objects or []),
+                    "perception": {"detections": copy.deepcopy(detections or [])}}
+        for detection in snapshot["perception"]["detections"]:
+            detection.setdefault("frame_id", "1")
         moves, remaining, pending = [], copy.deepcopy(steps), []
         roads = RoadMemory()
         roads.update(snapshot["odometry"], snapshot["road"])
-        runtime = SimpleNamespace(snapshot=snapshot, round=1, roads=roads,
-            perception=SimpleNamespace(objects=lambda: []),
+        runtime = SimpleNamespace(snapshot=snapshot, round=1, roads=roads, config={"task": task},
+            perception=SimpleNamespace(objects=lambda: snapshot["objects"]),
             bridge=SimpleNamespace(seconds=0, max_seconds=1200),
             motion_log=SimpleNamespace(write=lambda row: None))
 
@@ -143,14 +148,20 @@ class ExploreRecoveryTests(unittest.TestCase):
                 step = pending.pop(0)
                 snapshot["odometry"].update(step.get("odometry", {}))
                 snapshot["road"].update(step.get("road", {}))
+                snapshot["objects"] = step.get("objects", snapshot["objects"])
+                snapshot["perception"]["detections"] = step.get("detections", [])
             snapshot["observation_index"] += 1
             snapshot["observation"]["frameId"] += 1
             snapshot["odometry"]["tick"] += 1
+            for detection in snapshot["perception"]["detections"]:
+                detection.setdefault("frame_id", str(snapshot["observation"]["frameId"]))
             roads.update(snapshot["odometry"], snapshot["road"])
 
         runtime.bridge.call, runtime.observe = call, observe
         return runtime, moves, remaining
 
+
+class ExploreRecoveryTests(ScriptedActionCase):
     def test_near_junction_ends_exploration_before_second_motion(self):
         for stopped_by in ("junction", "max_distance"):
             with self.subTest(stopped_by=stopped_by):
@@ -242,6 +253,141 @@ class ExploreRecoveryTests(unittest.TestCase):
         self.assertEqual(result["reason"], "blocked_road_return_left_road")
         self.assertEqual([method for method, _ in moves], ["follow_road", "turn", "follow_road"])
         self.assertEqual(remaining, [])
+
+
+class CandidateReobservationTests(ScriptedActionCase):
+    def candidate(self, category="red-ball", state="TENTATIVE"):
+        return ({"id": "candidate-1", "category": category, "state": state, "hit_count": 1},
+                {"track_id": "candidate-1", "category": category, "fed_to_world_model": True,
+                 "bearing_deg": .4})
+
+    def scan_steps(self, target, detection, *, road=None, return_to_candidate=False):
+        steps = []
+        for index, heading in enumerate((-111.8, -21.8, 68.2, 158.2)):
+            step = {"method": "turn", "params": {"angleDeg": 90, "speed": 50},
+                    "odometry": {"headingDeg": heading},
+                    "road": {"headingErrorDeg": 90 if index % 2 == 0 else 0}}
+            if index == 1:
+                step.update(objects=[target], detections=[detection])
+                step["road"].update(road or {})
+            steps.append(step)
+        if return_to_candidate:
+            steps.append({"method": "turn", "params": {"angleDeg": -180, "speed": 50},
+                          "odometry": {"headingDeg": -21.8}, "detections": [detection]})
+        return steps
+
+    def test_complete_scan_returns_to_observed_target_road_direction(self):
+        for task in ("把红球送到存放区", "Collect the RED balls"):
+            with self.subTest(task=task):
+                target, detection = self.candidate()
+                runtime, moves, remaining = self.scripted_runtime(
+                    self.scan_steps(target, detection, return_to_candidate=True),
+                    task=task, pose={"headingDeg": 158.2})
+                result = Actions(runtime).look_around()
+                self.assertEqual([p["angleDeg"] for _, p in moves], [90, 90, 90, 90, -180])
+                self.assertAlmostEqual(runtime.snapshot["odometry"]["headingDeg"], -21.8)
+                candidate = result["evidence"]["reobservation_candidate"]
+                self.assertEqual(candidate["object_id"], "candidate-1")
+                self.assertEqual(candidate["observation_index"], 3)
+                self.assertAlmostEqual(candidate["heading_deg"], -21.8)
+                self.assertEqual(runtime.snapshot["observation_index"], 6)
+                self.assertEqual(runtime.snapshot["objects"][0]["hit_count"], 1)
+                self.assertEqual(remaining, [])
+
+    def test_sideways_or_blocked_candidate_does_not_change_final_direction(self):
+        for road in ({"headingErrorDeg": 90}, {"frontClearanceCm": 3}, {"onRoad": False},
+                     {"headingErrorDeg": None}, {"frontClearanceCm": None},
+                     {"headingErrorDeg": float("nan")}, {"frontClearanceCm": float("inf")}):
+            with self.subTest(road=road):
+                target, detection = self.candidate()
+                runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection, road=road),
+                    task="红球", pose={"headingDeg": 158.2})
+                result = Actions(runtime).look_around()
+                self.assertEqual(len(moves), 4)
+                self.assertIsNone(result["evidence"]["reobservation_candidate"])
+                self.assertEqual(runtime.snapshot["odometry"]["headingDeg"], 158.2)
+
+    def test_unrelated_blue_or_unspecified_task_does_not_reverse(self):
+        for category, task in (("blue-ball", "收集红球"), ("red-ball", "收集球"),
+                               ("red-ball", "Move stored objects")):
+            with self.subTest(category=category, task=task):
+                target, detection = self.candidate(category)
+                runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+                    task=task, pose={"headingDeg": 158.2})
+                result = Actions(runtime).look_around()
+                self.assertEqual(len(moves), 4)
+                self.assertIsNone(result["evidence"]["reobservation_candidate"])
+
+    def test_blue_task_can_return_to_blue_candidate(self):
+        for task in ("收集蓝球", "Collect blue balls"):
+            with self.subTest(task=task):
+                target, detection = self.candidate("blue-ball")
+                runtime, moves, _ = self.scripted_runtime(
+                    self.scan_steps(target, detection, return_to_candidate=True),
+                    task=task, pose={"headingDeg": 158.2})
+                result = Actions(runtime).look_around()
+                self.assertEqual(len(moves), 5)
+                self.assertEqual(result["evidence"]["reobservation_candidate"]["category"], "blue-ball")
+
+    def test_candidate_requires_current_eligible_tentative_track(self):
+        for change in ({"fed_to_world_model": False}, {"frame_id": "old"}, {"track_id": "unknown"}):
+            with self.subTest(change=change):
+                target, detection = self.candidate()
+                detection.update(change)
+                runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+                    task="red", pose={"headingDeg": 158.2})
+                result = Actions(runtime).look_around()
+                self.assertEqual(len(moves), 4)
+                self.assertIsNone(result["evidence"]["reobservation_candidate"])
+        target, detection = self.candidate(state="CONFIRMED")
+        runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+            task="red", pose={"headingDeg": 158.2})
+        self.assertIsNone(Actions(runtime).look_around()["evidence"]["reobservation_candidate"])
+        self.assertEqual(len(moves), 4)
+
+    def test_held_object_prioritizes_observed_storage_over_task_ball(self):
+        target, detection = self.candidate()
+        zone = {"id": "zone-1", "category": "storage-zone", "state": "TENTATIVE"}
+        zone_detection = {"track_id": "zone-1", "category": "storage-zone",
+                          "fed_to_world_model": True, "bearing_deg": 10}
+        steps = self.scan_steps(target, detection)
+        steps[-1].update(objects=[target, zone], detections=[zone_detection])
+        runtime, moves, _ = self.scripted_runtime(steps, task="red", holding=True,
+                                                 pose={"headingDeg": 158.2})
+        result = Actions(runtime).look_around()
+        self.assertEqual(result["evidence"]["reobservation_candidate"]["object_id"], "zone-1")
+        self.assertEqual(len(moves), 4)
+
+    def test_explore_uses_sixteen_cm_views_and_stops_at_new_confirmation(self):
+        for category in ("red-ball", "blue-ball", "storage-zone"):
+            with self.subTest(category=category):
+                target, detection = self.candidate(category)
+                steps = [{"method": "follow_road", "params": {"distanceCm": 16, "speed": 50},
+                          "result": {"stoppedBy": "max_distance", "distanceCm": 16},
+                          "odometry": {"forwardCm": 16 * hit},
+                          "objects": [dict(target, hit_count=hit + 1,
+                                           state="CONFIRMED" if hit == 2 else "TENTATIVE")],
+                          "detections": [detection]} for hit in (1, 2)]
+                runtime, moves, remaining = self.scripted_runtime(steps, objects=[target], detections=[detection])
+                result = Actions(runtime).explore()
+                self.assertEqual(result["reason"], "new_objects_confirmed")
+                self.assertEqual(result["evidence"]["newly_confirmed_object_ids"], ["candidate-1"])
+                self.assertEqual([p["distanceCm"] for _, p in moves], [16, 16])
+                self.assertEqual(remaining, [])
+
+    def test_memory_only_tentative_or_preexisting_confirmation_keeps_twenty_cm(self):
+        for state in ("TENTATIVE", "CONFIRMED"):
+            with self.subTest(state=state):
+                target, detection = self.candidate(state=state)
+                detection["fed_to_world_model"] = False
+                runtime, moves, _ = self.scripted_runtime([{
+                    "method": "follow_road", "params": {"distanceCm": 20, "speed": 50},
+                    "result": {"stoppedBy": "junction", "distanceCm": 20},
+                    "odometry": {"forwardCm": 20}, "road": {"atNode": True},
+                }], objects=[target], detections=[detection])
+                result = Actions(runtime).explore()
+                self.assertEqual(result["reason"], "next_junction_observed")
+                self.assertEqual(len(moves), 1)
 
 
 class RoadMemoryTests(unittest.TestCase):
