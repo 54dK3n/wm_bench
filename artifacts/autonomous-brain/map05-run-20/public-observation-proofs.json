@@ -1,0 +1,2772 @@
+{
+  "schema": "public-brain-audit/v1",
+  "run": "map05-run-20",
+  "scope": "Completed public brain logs and frozen Git source only; no truth, layout, record, driver metadata, network, or robot calls. Observation-side audit only, not an official PASS or proof of physical identity.",
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-20/map-05-run-1/brain/rounds.jsonl": {
+      "sha256": "8030f3ca05d42bcb7786358bc8a5ab7892788770010899c73e4ed07ec8ef83c4",
+      "bytes": 16140435
+    },
+    "artifacts/autonomous-brain/map05-run-20/map-05-run-1/brain/observations.jsonl": {
+      "sha256": "0399d14b81b43f11e520bd33f119ecfec76fdde4477411d0b10dd54113e142d8",
+      "bytes": 103240166
+    },
+    "artifacts/autonomous-brain/map05-run-20/map-05-run-1/brain/motions.jsonl": {
+      "sha256": "0541a5ec027290ba5e99d5dd9566989ebf73f4b8fa0c1ffb107e16fc5ee6ddcc",
+      "bytes": 169361
+    },
+    "artifacts/autonomous-brain/map05-run-20/map-05-run-1/brain/llm.jsonl": {
+      "sha256": "51a232facce37d2d56e76d56d9d6d439a135a7edfab07a9ce48ae05e03a44d96",
+      "bytes": 10217103
+    },
+    "artifacts/autonomous-brain/map05-run-20/map-05-run-1/brain/summary.json": {
+      "sha256": "5da22cc3d7429ee221255995c5ae3b80d36455598989b3b24fa5fb3e9ec26f71",
+      "bytes": 379786
+    }
+  },
+  "source": {
+    "commit": "6ee4abf464504eb297242df98dc9fadaaf7debfa",
+    "sha256": {
+      "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+      "autonomous_brain/actions.py": "3523f12417091c254155290343d4c64a608d4df0b8d0c15b3d1bb981cdb1ce48",
+      "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "autonomous_brain/llm.py": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab",
+      "autonomous_brain/navigation.py": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+      "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+      "autonomous_brain/run.py": "f78d85c03bc09ea9385e4e00501a7d13f0136b978f67d94a69c4aeb6539f1436"
+    },
+    "all_match_brain_summary": true
+  },
+  "formulas": {
+    "pick_alignment": "distance_cm=100*hypot(original confirmed position-current odometry); use exact identified fresh detection bearing if available; distance<=22.5, abs(bearing)<=3",
+    "pick_old_position_absence": "After five recorded backward6cm steps with holding retained, count same-category detections with position within strict 0.15m of original confirmed position",
+    "place_ellipse": "bx=ball.x+ball.w/2; by=ball.y+ball.h; q=((bx-zone.x-zone.w/2)/(zone.w/2))^2+((by-zone.y-zone.h/2)/(zone.h/2))^2; q<=0.64 with original complete-region/w,h>=3 checks",
+    "place_unique": "All current red-ball × current green-region pairs; exclude known-delivered and original preexisting IDs; one eligible pair; empty gripper; same frame and original release boundary",
+    "release_fixed_alignment": "distance=100*hypot(fixed point-current odometry); bearing=wrap(current.headingDeg-heading_to(current,fixed point)); distance<=19cm and abs(bearing)<=3deg"
+  },
+  "successful_go_to": [
+    {
+      "round": 27,
+      "object_id": "target_031",
+      "final_observation": {
+        "observation": 169,
+        "round": 27,
+        "frame_id": 169,
+        "tick": 5561,
+        "sim_s": 111.22,
+        "odometry": {
+          "forwardCm": 109.3,
+          "rightCm": -187.7,
+          "headingDeg": -88.1,
+          "distanceCm": 598.7,
+          "tick": 5561
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 148.6
+          },
+          {
+            "angleDeg": 19.3
+          },
+          {
+            "angleDeg": -60.9
+          }
+        ]
+      },
+      "detection": {
+        "category": "red-ball",
+        "source": "virtual-cv",
+        "confidence": 0.9378255813953488,
+        "bbox": {
+          "x": 252.0,
+          "y": 222.0,
+          "w": 86.0,
+          "h": 80.0
+        },
+        "frame_id": "169",
+        "fed_to_world_model": false,
+        "track_id": "target_031",
+        "method": "virtual-cv-published-width-formula+M5",
+        "raw_distance_cm": 32,
+        "raw_bearing_deg": -3.44,
+        "distance_cm": 39.428766437751996,
+        "bearing_deg": -2.990451660908817,
+        "position_m": {
+          "x": -1.4841477331294624,
+          "z": 1.1266133707765194
+        },
+        "reason": "near_field_visibility_for_existing_confirmation",
+        "visibility_refresh_only": true
+      },
+      "same_frame_and_original_25_40cm_10deg_gate_pass": true
+    },
+    {
+      "round": 40,
+      "object_id": "storage-zone_058",
+      "final_observation": {
+        "observation": 287,
+        "round": 40,
+        "frame_id": 287,
+        "tick": 11600,
+        "sim_s": 232.0,
+        "odometry": {
+          "forwardCm": 29.1,
+          "rightCm": 101,
+          "headingDeg": -174.3,
+          "distanceCm": 1483.5,
+          "tick": 11600
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 137.5
+          },
+          {
+            "angleDeg": -21.6
+          },
+          {
+            "angleDeg": -98.2
+          }
+        ]
+      },
+      "detection": {
+        "category": "storage-zone",
+        "source": "storage-ground-pixels",
+        "confidence": 1.0,
+        "bbox": {
+          "x": 159.0,
+          "y": 252.0,
+          "w": 365.0,
+          "h": 90.0
+        },
+        "frame_id": "287",
+        "fed_to_world_model": true,
+        "track_id": "storage-zone_058",
+        "method": "visible-ground-region-bbox-centre",
+        "distance_cm": 33.88653029999333,
+        "bearing_deg": 2.565124559474206,
+        "position_m": {
+          "x": 1.0285313924577026,
+          "z": -0.04735821413232337
+        }
+      },
+      "same_frame_and_original_25_40cm_10deg_gate_pass": true
+    },
+    {
+      "round": 100,
+      "object_id": "target_111",
+      "final_observation": {
+        "observation": 652,
+        "round": 100,
+        "frame_id": 652,
+        "tick": 23931,
+        "sim_s": 478.62,
+        "odometry": {
+          "forwardCm": 152.7,
+          "rightCm": -9,
+          "headingDeg": 87.4,
+          "distanceCm": 2921.4,
+          "tick": 23931
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 91.9
+          },
+          {
+            "angleDeg": 2.6
+          },
+          {
+            "angleDeg": -94.5
+          },
+          {
+            "angleDeg": -177.4
+          }
+        ]
+      },
+      "detection": {
+        "category": "red-ball",
+        "source": "virtual-cv",
+        "confidence": 0.9372916666666666,
+        "bbox": {
+          "x": 220.0,
+          "y": 226.0,
+          "w": 96.0,
+          "h": 88.0
+        },
+        "frame_id": "652",
+        "fed_to_world_model": false,
+        "track_id": "target_111",
+        "method": "virtual-cv-published-width-formula+M5",
+        "raw_distance_cm": 29,
+        "raw_bearing_deg": -7.13,
+        "distance_cm": 36.51786729226244,
+        "bearing_deg": -6.12591029733134,
+        "position_m": {
+          "x": -0.45448742219261706,
+          "z": 1.5045415445564498
+        },
+        "reason": "near_field_visibility_for_existing_confirmation",
+        "visibility_refresh_only": true
+      },
+      "same_frame_and_original_25_40cm_10deg_gate_pass": true
+    },
+    {
+      "round": 104,
+      "object_id": "storage-zone_077",
+      "final_observation": {
+        "observation": 716,
+        "round": 104,
+        "frame_id": 716,
+        "tick": 28092,
+        "sim_s": 561.84,
+        "odometry": {
+          "forwardCm": 19.1,
+          "rightCm": 74.7,
+          "headingDeg": -131.5,
+          "distanceCm": 3581.6,
+          "tick": 28092
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 94.6
+          },
+          {
+            "angleDeg": -64.4
+          },
+          {
+            "angleDeg": -141
+          }
+        ]
+      },
+      "detection": {
+        "category": "storage-zone",
+        "source": "storage-ground-pixels",
+        "confidence": 1.0,
+        "bbox": {
+          "x": 147.0,
+          "y": 247.0,
+          "w": 325.0,
+          "h": 72.0
+        },
+        "frame_id": "716",
+        "fed_to_world_model": true,
+        "track_id": "storage-zone_077",
+        "method": "visible-ground-region-bbox-centre",
+        "distance_cm": 37.949322522084955,
+        "bearing_deg": -1.2727103225036647,
+        "position_m": {
+          "x": 1.036738718566139,
+          "z": -0.05408484847532721
+        }
+      },
+      "same_frame_and_original_25_40cm_10deg_gate_pass": true
+    }
+  ],
+  "manipulations": [
+    {
+      "round": 28,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_031"
+        }
+      },
+      "object_id": "target_031",
+      "success": true,
+      "reason": "grasp_observed",
+      "initial_observation": {
+        "observation": 170,
+        "round": 28,
+        "frame_id": 170,
+        "tick": 5561,
+        "sim_s": 111.22,
+        "odometry": {
+          "forwardCm": 109.3,
+          "rightCm": -187.7,
+          "headingDeg": -88.1,
+          "distanceCm": 598.7,
+          "tick": 5561
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 148.6
+          },
+          {
+            "angleDeg": 19.3
+          },
+          {
+            "angleDeg": -60.9
+          }
+        ]
+      },
+      "initial_object": {
+        "id": "target_031",
+        "category": "red-ball",
+        "position_m": {
+          "x": -1.5419427136083064,
+          "z": 1.1039697760914982
+        },
+        "confidence": 0.7927964377894665,
+        "state": "CONFIRMED",
+        "distance_cm": 33.523681353882196,
+        "bearing_deg": 0.024805907504344304,
+        "hit_count": 4,
+        "source": "virtual-cv",
+        "last_seen_s": 111.22,
+        "hit_poses": [
+          {
+            "frame_id": "89",
+            "simulation_time_s": 58.66,
+            "x_m": -1.895,
+            "z_m": 0.325,
+            "heading_deg": -21.8
+          },
+          {
+            "frame_id": "123",
+            "simulation_time_s": 80.12,
+            "x_m": -2.206,
+            "z_m": 1.218,
+            "heading_deg": -116.69999999999999
+          },
+          {
+            "frame_id": "137",
+            "simulation_time_s": 86.62,
+            "x_m": -2.22,
+            "z_m": 1.374,
+            "heading_deg": -101.6
+          },
+          {
+            "frame_id": "146",
+            "simulation_time_s": 94.0,
+            "x_m": -2.032,
+            "z_m": 1.161,
+            "heading_deg": -96.9
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "witness_observation": {
+        "observation": 181,
+        "round": 28,
+        "frame_id": 181,
+        "tick": 5917,
+        "sim_s": 118.34,
+        "odometry": {
+          "forwardCm": 107.7,
+          "rightCm": -200.1,
+          "headingDeg": -84.3,
+          "distanceCm": 646.2,
+          "tick": 5917
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 144.8
+          },
+          {
+            "angleDeg": 15.5
+          },
+          {
+            "angleDeg": -64.8
+          }
+        ]
+      },
+      "final_observation": {
+        "observation": 182,
+        "round": 28,
+        "frame_id": 182,
+        "tick": 5917,
+        "sim_s": 118.34,
+        "odometry": {
+          "forwardCm": 107.7,
+          "rightCm": -200.1,
+          "headingDeg": -84.3,
+          "distanceCm": 646.2,
+          "tick": 5917
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 144.8
+          },
+          {
+            "angleDeg": 15.5
+          },
+          {
+            "angleDeg": -64.8
+          }
+        ]
+      },
+      "final_object": {
+        "id": "target_031",
+        "category": "red-ball",
+        "position_m": {
+          "x": -1.5419427136083064,
+          "z": 1.1039697760914982
+        },
+        "confidence": 0.0,
+        "state": "HELD",
+        "distance_cm": 45.98488458305956,
+        "bearing_deg": 2.3377177869143964,
+        "hit_count": 4,
+        "source": "virtual-cv",
+        "last_seen_s": 114.38,
+        "hit_poses": [
+          {
+            "frame_id": "89",
+            "simulation_time_s": 58.66,
+            "x_m": -1.895,
+            "z_m": 0.325,
+            "heading_deg": -21.8
+          },
+          {
+            "frame_id": "123",
+            "simulation_time_s": 80.12,
+            "x_m": -2.206,
+            "z_m": 1.218,
+            "heading_deg": -116.69999999999999
+          },
+          {
+            "frame_id": "137",
+            "simulation_time_s": 86.62,
+            "x_m": -2.22,
+            "z_m": 1.374,
+            "heading_deg": -101.6
+          },
+          {
+            "frame_id": "146",
+            "simulation_time_s": 94.0,
+            "x_m": -2.032,
+            "z_m": 1.161,
+            "heading_deg": -96.9
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 181,
+        "after_observation": 181,
+        "motions": []
+      },
+      "motions": [
+        {
+          "round": 28,
+          "method": "forward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 170,
+          "after_observation": 171,
+          "displacement_cm": 6.0033324079214365,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        },
+        {
+          "round": 28,
+          "method": "turn",
+          "params": {
+            "angleDeg": 3.816373740784229,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 171,
+          "after_observation": 172,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.060000000000002274
+        },
+        {
+          "round": 28,
+          "method": "forward",
+          "params": {
+            "distanceCm": 5.520350230382924,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 172,
+          "after_observation": 173,
+          "displacement_cm": 5.532630477449238,
+          "odometry_distance_delta_cm": 5.5,
+          "sim_elapsed_s": 0.5999999999999943
+        },
+        {
+          "round": 28,
+          "method": "grab",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 173,
+          "after_observation": 174,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.9000000000000057
+        },
+        {
+          "round": 28,
+          "method": "forward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 20
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 174,
+          "after_observation": 175,
+          "displacement_cm": 6.029925372672517,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.9599999999999937
+        },
+        {
+          "round": 28,
+          "method": "grab",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 175,
+          "after_observation": 176,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.7600000000000051
+        },
+        {
+          "round": 28,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 176,
+          "after_observation": 177,
+          "displacement_cm": 6.029925372672517,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        },
+        {
+          "round": 28,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 177,
+          "after_observation": 178,
+          "displacement_cm": 6.0299253726725395,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        },
+        {
+          "round": 28,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 178,
+          "after_observation": 179,
+          "displacement_cm": 6.0299253726725395,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        },
+        {
+          "round": 28,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 179,
+          "after_observation": 180,
+          "displacement_cm": 5.9304300012730895,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        },
+        {
+          "round": 28,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 180,
+          "after_observation": 181,
+          "displacement_cm": 6.0299253726725395,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000006
+        }
+      ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "before": {
+            "observation": 173,
+            "round": 28,
+            "frame_id": 173,
+            "tick": 5626,
+            "sim_s": 112.52,
+            "odometry": {
+              "forwardCm": 110.1,
+              "rightCm": -176.2,
+              "headingDeg": -84.3,
+              "distanceCm": 610.2,
+              "tick": 5626
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "after": {
+            "observation": 174,
+            "round": 28,
+            "frame_id": 174,
+            "tick": 5671,
+            "sim_s": 113.42,
+            "odometry": {
+              "forwardCm": 110.1,
+              "rightCm": -176.2,
+              "headingDeg": -84.3,
+              "distanceCm": 610.2,
+              "tick": 5671
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "fresh_detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9281764038570618,
+            "bbox": {
+              "x": 240.0,
+              "y": 256.0,
+              "w": 172.0,
+              "h": 164.0
+            },
+            "frame_id": "173",
+            "fed_to_world_model": false,
+            "track_id": "target_031",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 19,
+            "raw_bearing_deg": 0.83,
+            "distance_cm": 26.136496790421,
+            "bearing_deg": 0.6662792384797734,
+            "position_m": {
+              "x": -1.501643056383103,
+              "z": 1.1239326919055905
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "remembered_distance_cm_recomputed": 22.007732473862323,
+          "alignment_pass": true,
+          "holding": false
+        },
+        {
+          "attempt": 2,
+          "before": {
+            "observation": 175,
+            "round": 28,
+            "frame_id": 175,
+            "tick": 5719,
+            "sim_s": 114.38,
+            "odometry": {
+              "forwardCm": 110.7,
+              "rightCm": -170.2,
+              "headingDeg": -84.3,
+              "distanceCm": 616.2,
+              "tick": 5719
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "after": {
+            "observation": 176,
+            "round": 28,
+            "frame_id": 176,
+            "tick": 5757,
+            "sim_s": 115.14,
+            "odometry": {
+              "forwardCm": 110.7,
+              "rightCm": -170.2,
+              "headingDeg": -84.3,
+              "distanceCm": 616.2,
+              "tick": 5757
+            },
+            "holding": true,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "fresh_detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9225963193433073,
+            "bbox": {
+              "x": 156.0,
+              "y": 314.0,
+              "w": 364.0,
+              "h": 166.0
+            },
+            "frame_id": "175",
+            "fed_to_world_model": false,
+            "track_id": "target_031",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 12,
+            "raw_bearing_deg": 2.48,
+            "distance_cm": 19.01194031463208,
+            "bearing_deg": 1.8076626686839683,
+            "position_m": {
+              "x": -1.5123191326956824,
+              "z": 1.1199056588903904
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "remembered_distance_cm_recomputed": 16.008596810466642,
+          "alignment_pass": true,
+          "holding": true
+        }
+      ],
+      "grab_count": 2,
+      "forward_fresh_clearance": [
+        {
+          "before_observation": 170,
+          "front_clearance_cm": 21.7,
+          "request_cm": 6,
+          "pass": true
+        },
+        {
+          "before_observation": 172,
+          "front_clearance_cm": 15.7,
+          "request_cm": 5.520350230382924,
+          "pass": true
+        },
+        {
+          "before_observation": 174,
+          "front_clearance_cm": 10.1,
+          "request_cm": 6,
+          "pass": true
+        }
+      ],
+      "old_position_witness": {
+        "original_position_m": {
+          "x": -1.5419427136083064,
+          "z": 1.1039697760914982
+        },
+        "same_category_detections": [],
+        "matches_within_0_15m": 0,
+        "holding": true,
+        "backward_commands_cm": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "net_retreat_cm": 30.050124791754186,
+        "distance_counter_retreat_cm": 30.0,
+        "witness_raw_object_state_before_lifecycle_mark": "LOST",
+        "final_post_mark_state": "HELD"
+      }
+    },
+    {
+      "round": 41,
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "object_id": "target_031",
+      "success": true,
+      "reason": "ball_observed_in_storage",
+      "initial_observation": {
+        "observation": 288,
+        "round": 41,
+        "frame_id": 288,
+        "tick": 11600,
+        "sim_s": 232.0,
+        "odometry": {
+          "forwardCm": 29.1,
+          "rightCm": 101,
+          "headingDeg": -174.3,
+          "distanceCm": 1483.5,
+          "tick": 11600
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 137.5
+          },
+          {
+            "angleDeg": -21.6
+          },
+          {
+            "angleDeg": -98.2
+          }
+        ]
+      },
+      "initial_object": {
+        "id": "target_031",
+        "category": "red-ball",
+        "position_m": {
+          "x": -1.5419427136083064,
+          "z": 1.1039697760914982
+        },
+        "confidence": 0.0,
+        "state": "HELD",
+        "distance_cm": 267.830757576063,
+        "bearing_deg": 113.37026516226575,
+        "hit_count": 4,
+        "source": "virtual-cv",
+        "last_seen_s": 114.38,
+        "hit_poses": [
+          {
+            "frame_id": "89",
+            "simulation_time_s": 58.66,
+            "x_m": -1.895,
+            "z_m": 0.325,
+            "heading_deg": -21.8
+          },
+          {
+            "frame_id": "123",
+            "simulation_time_s": 80.12,
+            "x_m": -2.206,
+            "z_m": 1.218,
+            "heading_deg": -116.69999999999999
+          },
+          {
+            "frame_id": "137",
+            "simulation_time_s": 86.62,
+            "x_m": -2.22,
+            "z_m": 1.374,
+            "heading_deg": -101.6
+          },
+          {
+            "frame_id": "146",
+            "simulation_time_s": 94.0,
+            "x_m": -2.032,
+            "z_m": 1.161,
+            "heading_deg": -96.9
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "witness_observation": {
+        "observation": 294,
+        "round": 41,
+        "frame_id": 294,
+        "tick": 11857,
+        "sim_s": 237.14,
+        "odometry": {
+          "forwardCm": 38.3,
+          "rightCm": 101,
+          "headingDeg": -177.6,
+          "distanceCm": 1524.3,
+          "tick": 11857
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": false,
+        "exits": []
+      },
+      "final_observation": {
+        "observation": 295,
+        "round": 41,
+        "frame_id": 295,
+        "tick": 11857,
+        "sim_s": 237.14,
+        "odometry": {
+          "forwardCm": 38.3,
+          "rightCm": 101,
+          "headingDeg": -177.6,
+          "distanceCm": 1524.3,
+          "tick": 11857
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": false,
+        "exits": []
+      },
+      "final_object": {
+        "id": "target_031",
+        "category": "red-ball",
+        "position_m": {
+          "x": 1.0305423846706816,
+          "z": -0.061244257995067386
+        },
+        "confidence": 0.0,
+        "state": "DELIVERED",
+        "distance_cm": 44.47189565664435,
+        "bearing_deg": -0.24753926699270323,
+        "hit_count": 4,
+        "source": "virtual-cv",
+        "last_seen_s": 237.14,
+        "hit_poses": [
+          {
+            "frame_id": "89",
+            "simulation_time_s": 58.66,
+            "x_m": -1.895,
+            "z_m": 0.325,
+            "heading_deg": -21.8
+          },
+          {
+            "frame_id": "123",
+            "simulation_time_s": 80.12,
+            "x_m": -2.206,
+            "z_m": 1.218,
+            "heading_deg": -116.69999999999999
+          },
+          {
+            "frame_id": "137",
+            "simulation_time_s": 86.62,
+            "x_m": -2.22,
+            "z_m": 1.374,
+            "heading_deg": -101.6
+          },
+          {
+            "frame_id": "146",
+            "simulation_time_s": 94.0,
+            "x_m": -2.032,
+            "z_m": 1.161,
+            "heading_deg": -96.9
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "delivered"
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 294,
+        "after_observation": 294,
+        "motions": []
+      },
+      "motions": [
+        {
+          "round": 41,
+          "method": "forward",
+          "params": {
+            "distanceCm": 7,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 288,
+          "after_observation": 289,
+          "displacement_cm": 7.034912934784628,
+          "odometry_distance_delta_cm": 7.0,
+          "sim_elapsed_s": 0.7599999999999909
+        },
+        {
+          "round": 41,
+          "method": "turn",
+          "params": {
+            "angleDeg": -3.239505449981806,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 289,
+          "after_observation": 290,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.060000000000002274
+        },
+        {
+          "round": 41,
+          "method": "forward",
+          "params": {
+            "distanceCm": 7,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 290,
+          "after_observation": 291,
+          "displacement_cm": 7.006425622241344,
+          "odometry_distance_delta_cm": 7.0,
+          "sim_elapsed_s": 0.7600000000000193
+        },
+        {
+          "round": 41,
+          "method": "forward",
+          "params": {
+            "distanceCm": 1.8541597079886536,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 291,
+          "after_observation": 292,
+          "displacement_cm": 1.799999999999999,
+          "odometry_distance_delta_cm": 1.7999999999999545,
+          "sim_elapsed_s": 0.19999999999998863
+        },
+        {
+          "round": 41,
+          "method": "release",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 292,
+          "after_observation": 293,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.6800000000000068
+        },
+        {
+          "round": 41,
+          "method": "backward",
+          "params": {
+            "distanceCm": 25,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 293,
+          "after_observation": 294,
+          "displacement_cm": 25.019992006393604,
+          "odometry_distance_delta_cm": 25.0,
+          "sim_elapsed_s": 2.6799999999999784
+        }
+      ],
+      "release_aim": {
+        "mode": "observed_storage_center_ground_point",
+        "source_frame": 288,
+        "source_region": {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 159.0,
+            "y": 252.0,
+            "w": 365.0,
+            "h": 90.0
+          },
+          "frame_id": "288",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_058",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 33.88653029999333,
+          "bearing_deg": 2.565124559474206,
+          "position_m": {
+            "x": 1.0285313924577026,
+            "z": -0.04735821413232337
+          }
+        },
+        "occupied_boxes": [
+          {
+            "x": 384.0,
+            "y": 144.0,
+            "w": 23.0,
+            "h": 50.0
+          },
+          {
+            "x": 537.0,
+            "y": 228.0,
+            "w": 35.0,
+            "h": 30.0
+          },
+          {
+            "x": 376.0,
+            "y": 210.0,
+            "w": 23.0,
+            "h": 30.0
+          },
+          {
+            "x": 625.0,
+            "y": 212.0,
+            "w": 15.0,
+            "h": 30.0
+          }
+        ],
+        "pixel": {
+          "u": 341.5,
+          "v": 297.0
+        },
+        "position_m": {
+          "x": 1.0285313924577026,
+          "z": -0.047358214132323384
+        },
+        "last_alignment": {
+          "frame_id": 292,
+          "distance_cm": 18.055987943690138,
+          "bearing_deg": -0.3082142900920246,
+          "basis": "fixed_observed_ground_point_and_current_odometry"
+        }
+      },
+      "aim_source_observation": {
+        "observation": 288,
+        "round": 41,
+        "frame_id": 288,
+        "tick": 11600,
+        "sim_s": 232.0,
+        "odometry": {
+          "forwardCm": 29.1,
+          "rightCm": 101,
+          "headingDeg": -174.3,
+          "distanceCm": 1483.5,
+          "tick": 11600
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 137.5
+          },
+          {
+            "angleDeg": -21.6
+          },
+          {
+            "angleDeg": -98.2
+          }
+        ]
+      },
+      "pixel_candidates_recomputed": [
+        {
+          "pixel": {
+            "u": 341.5,
+            "v": 297.0
+          },
+          "expanded_occupancy_indexes": [],
+          "selected": true
+        }
+      ],
+      "alignment_recomputed": {
+        "observation": {
+          "observation": 292,
+          "round": 41,
+          "frame_id": 292,
+          "tick": 11689,
+          "sim_s": 233.78,
+          "odometry": {
+            "forwardCm": 13.3,
+            "rightCm": 102,
+            "headingDeg": -177.6,
+            "distanceCm": 1499.3,
+            "tick": 11689
+          },
+          "holding": true,
+          "onRoad": false,
+          "atNode": false,
+          "exits": []
+        },
+        "distance_cm": 18.055987943690138,
+        "bearing_deg": -0.3082142900920246,
+        "original_19cm_3deg_pass": true,
+        "projection_limit": "The logged calibration-derived ground point is used; camera calibration is outside these five inputs, so projection itself is not independently rerun."
+      },
+      "release_boundary": {
+        "frame_id": 293,
+        "simulation_time_s": 234.46,
+        "preexisting_ball_ids": [
+          "target_025",
+          "target_056"
+        ]
+      },
+      "release_observation": {
+        "observation": 293,
+        "round": 41,
+        "frame_id": 293,
+        "tick": 11723,
+        "sim_s": 234.46,
+        "odometry": {
+          "forwardCm": 13.3,
+          "rightCm": 102,
+          "headingDeg": -177.6,
+          "distanceCm": 1499.3,
+          "tick": 11723
+        },
+        "holding": false,
+        "onRoad": false,
+        "atNode": false,
+        "exits": []
+      },
+      "preexisting_ids_match_pre_release_table": true,
+      "post_red_detections": [
+        {
+          "category": "red-ball",
+          "source": "virtual-cv",
+          "confidence": 0.9292037037037036,
+          "bbox": {
+            "x": 282.0,
+            "y": 210.0,
+            "w": 72.0,
+            "h": 60.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": false,
+          "track_id": null,
+          "method": "virtual-cv-published-width-formula+M5",
+          "raw_distance_cm": 37,
+          "raw_bearing_deg": -0.28,
+          "distance_cm": 44.47189565664434,
+          "bearing_deg": -0.24753926699271192,
+          "position_m": {
+            "x": 1.0305423846706816,
+            "z": -0.061244257995067386
+          },
+          "reason": "outside_demo_memory_window"
+        }
+      ],
+      "post_green_detections": [
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 182.0,
+            "y": 239.0,
+            "w": 269.0,
+            "h": 49.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_077",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 45.962498977836894,
+          "bearing_deg": -0.43361973296544737,
+          "position_m": {
+            "x": 1.0327219455506702,
+            "z": -0.07606300702535179
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 262.0,
+            "y": 239.0,
+            "w": 21.0,
+            "h": 3.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_065",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 62.591324540172955,
+          "bearing_deg": -6.019254926437205,
+          "position_m": {
+            "x": 1.1016433863928754,
+            "z": -0.23616789362803048
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 251.0,
+            "y": 241.0,
+            "w": 8.0,
+            "h": 1.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_072",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 61.91140477428807,
+          "bearing_deg": -8.201286911333781,
+          "position_m": {
+            "x": 1.123900533760434,
+            "z": -0.22554652453338545
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 283.0,
+            "y": 242.0,
+            "w": 1.0,
+            "h": 1.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_066",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 60.538857020088734,
+          "bearing_deg": -4.62165027947924,
+          "position_m": {
+            "x": 1.0840053545283577,
+            "z": -0.2178481741929544
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 228.0,
+            "y": 244.0,
+            "w": 1.0,
+            "h": 1.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_070",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 59.743740234569685,
+          "bearing_deg": -11.430155054901336,
+          "position_m": {
+            "x": 1.1528141474333211,
+            "z": -0.19711685806781015
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 223.0,
+            "y": 245.0,
+            "w": 1.0,
+            "h": 1.0
+          },
+          "frame_id": "294",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_074",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 59.00351714386031,
+          "bearing_deg": -12.023549781156389,
+          "position_m": {
+            "x": 1.1569706656659418,
+            "z": -0.1884377717374762
+          }
+        }
+      ],
+      "all_pair_checks": [
+        {
+          "ball_index": 0,
+          "zone_index": 0,
+          "ellipse_q": 0.0705117149995101,
+          "complete_region_and_ellipse_pass": true,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": true
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 1,
+          "ellipse_q": 405.5555555555556,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 2,
+          "ellipse_q": 3497.0625,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 3,
+          "ellipse_q": 7786.0,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 4,
+          "ellipse_q": 34642.0,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 5,
+          "ellipse_q": 38122.0,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        }
+      ],
+      "unique_new_witness_count": 1,
+      "placement": {
+        "ball_track_id": null,
+        "ball_category": "red-ball",
+        "ball_position_m": {
+          "x": 1.0305423846706816,
+          "z": -0.061244257995067386
+        },
+        "ball_bbox": {
+          "x": 282.0,
+          "y": 210.0,
+          "w": 72.0,
+          "h": 60.0
+        },
+        "storage_bbox": {
+          "x": 182.0,
+          "y": 239.0,
+          "w": 269.0,
+          "h": 49.0
+        },
+        "frame_id": 294
+      },
+      "placement_exactly_matches_current_frame": true,
+      "nearfield_untracked_witness": true,
+      "excluded_delivered_detections": [],
+      "reobservation_used": false
+    },
+    {
+      "round": 101,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_111"
+        }
+      },
+      "object_id": "target_111",
+      "success": true,
+      "reason": "grasp_observed",
+      "initial_observation": {
+        "observation": 653,
+        "round": 101,
+        "frame_id": 653,
+        "tick": 23931,
+        "sim_s": 478.62,
+        "odometry": {
+          "forwardCm": 152.7,
+          "rightCm": -9,
+          "headingDeg": 87.4,
+          "distanceCm": 2921.4,
+          "tick": 23931
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 91.9
+          },
+          {
+            "angleDeg": 2.6
+          },
+          {
+            "angleDeg": -94.5
+          },
+          {
+            "angleDeg": -177.4
+          }
+        ]
+      },
+      "initial_object": {
+        "id": "target_111",
+        "category": "red-ball",
+        "position_m": {
+          "x": -0.3914258234795904,
+          "z": 1.536221383752075
+        },
+        "confidence": 0.9317980477508081,
+        "state": "CONFIRMED",
+        "distance_cm": 30.156684330120285,
+        "bearing_deg": -0.847722675146116,
+        "hit_count": 7,
+        "source": "virtual-cv",
+        "last_seen_s": 478.62,
+        "hit_poses": [
+          {
+            "frame_id": "551",
+            "simulation_time_s": 413.48,
+            "x_m": -0.003,
+            "z_m": 1.115,
+            "heading_deg": 45.7
+          },
+          {
+            "frame_id": "596",
+            "simulation_time_s": 443.68,
+            "x_m": 0.45,
+            "z_m": 2.124,
+            "heading_deg": 110.6
+          },
+          {
+            "frame_id": "604",
+            "simulation_time_s": 449.44,
+            "x_m": 0.307,
+            "z_m": 2.053,
+            "heading_deg": 126.90000000000002
+          },
+          {
+            "frame_id": "607",
+            "simulation_time_s": 450.86,
+            "x_m": 0.152,
+            "z_m": 1.9269999999999998,
+            "heading_deg": 139.1
+          },
+          {
+            "frame_id": "646",
+            "simulation_time_s": 474.04,
+            "x_m": 0.41,
+            "z_m": 1.515,
+            "heading_deg": 91.0
+          },
+          {
+            "frame_id": "647",
+            "simulation_time_s": 475.34,
+            "x_m": 0.21,
+            "z_m": 1.514,
+            "heading_deg": 90.0
+          },
+          {
+            "frame_id": "650",
+            "simulation_time_s": 477.54,
+            "x_m": 0.01,
+            "z_m": 1.5230000000000001,
+            "heading_deg": 87.4
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "witness_observation": {
+        "observation": 664,
+        "round": 101,
+        "frame_id": 664,
+        "tick": 24270,
+        "sim_s": 485.4,
+        "odometry": {
+          "forwardCm": 153.7,
+          "rightCm": 6.8,
+          "headingDeg": 93.5,
+          "distanceCm": 2965.6,
+          "tick": 24270
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 176.5
+          },
+          {
+            "angleDeg": 85.8
+          },
+          {
+            "angleDeg": -3.5
+          },
+          {
+            "angleDeg": -100.7
+          }
+        ]
+      },
+      "final_observation": {
+        "observation": 665,
+        "round": 101,
+        "frame_id": 665,
+        "tick": 24270,
+        "sim_s": 485.4,
+        "odometry": {
+          "forwardCm": 153.7,
+          "rightCm": 6.8,
+          "headingDeg": 93.5,
+          "distanceCm": 2965.6,
+          "tick": 24270
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 176.5
+          },
+          {
+            "angleDeg": 85.8
+          },
+          {
+            "angleDeg": -3.5
+          },
+          {
+            "angleDeg": -100.7
+          }
+        ]
+      },
+      "final_object": {
+        "id": "target_111",
+        "category": "red-ball",
+        "position_m": {
+          "x": -0.3914258234795904,
+          "z": 1.536221383752075
+        },
+        "confidence": 0.0,
+        "state": "HELD",
+        "distance_cm": 45.942648326273186,
+        "bearing_deg": 3.402897530187829,
+        "hit_count": 7,
+        "source": "virtual-cv",
+        "last_seen_s": 481.44,
+        "hit_poses": [
+          {
+            "frame_id": "551",
+            "simulation_time_s": 413.48,
+            "x_m": -0.003,
+            "z_m": 1.115,
+            "heading_deg": 45.7
+          },
+          {
+            "frame_id": "596",
+            "simulation_time_s": 443.68,
+            "x_m": 0.45,
+            "z_m": 2.124,
+            "heading_deg": 110.6
+          },
+          {
+            "frame_id": "604",
+            "simulation_time_s": 449.44,
+            "x_m": 0.307,
+            "z_m": 2.053,
+            "heading_deg": 126.90000000000002
+          },
+          {
+            "frame_id": "607",
+            "simulation_time_s": 450.86,
+            "x_m": 0.152,
+            "z_m": 1.9269999999999998,
+            "heading_deg": 139.1
+          },
+          {
+            "frame_id": "646",
+            "simulation_time_s": 474.04,
+            "x_m": 0.41,
+            "z_m": 1.515,
+            "heading_deg": 91.0
+          },
+          {
+            "frame_id": "647",
+            "simulation_time_s": 475.34,
+            "x_m": 0.21,
+            "z_m": 1.514,
+            "heading_deg": 90.0
+          },
+          {
+            "frame_id": "650",
+            "simulation_time_s": 477.54,
+            "x_m": 0.01,
+            "z_m": 1.5230000000000001,
+            "heading_deg": 87.4
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 664,
+        "after_observation": 664,
+        "motions": []
+      },
+      "motions": [
+        {
+          "round": 101,
+          "method": "turn",
+          "params": {
+            "angleDeg": 6.12591029733133,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 653,
+          "after_observation": 654,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.07999999999998408
+        },
+        {
+          "round": 101,
+          "method": "forward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 654,
+          "after_observation": 655,
+          "displacement_cm": 6.013318551349163,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6399999999999864
+        },
+        {
+          "round": 101,
+          "method": "forward",
+          "params": {
+            "distanceCm": 2.178757873620796,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 655,
+          "after_observation": 656,
+          "displacement_cm": 2.1023796041628673,
+          "odometry_distance_delta_cm": 2.199999999999818,
+          "sim_elapsed_s": 0.2400000000000091
+        },
+        {
+          "round": 101,
+          "method": "grab",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 656,
+          "after_observation": 657,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.9000000000000341
+        },
+        {
+          "round": 101,
+          "method": "forward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 20
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 657,
+          "after_observation": 658,
+          "displacement_cm": 6.013318551349163,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.9599999999999795
+        },
+        {
+          "round": 101,
+          "method": "grab",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 658,
+          "after_observation": 659,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.7599999999999909
+        },
+        {
+          "round": 101,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 659,
+          "after_observation": 660,
+          "displacement_cm": 6.013318551349163,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6399999999999864
+        },
+        {
+          "round": 101,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 660,
+          "after_observation": 661,
+          "displacement_cm": 6.013318551349166,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6400000000000432
+        },
+        {
+          "round": 101,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 661,
+          "after_observation": 662,
+          "displacement_cm": 5.9076221950967716,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6399999999999864
+        },
+        {
+          "round": 101,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 662,
+          "after_observation": 663,
+          "displacement_cm": 6.0133185513491645,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6399999999999864
+        },
+        {
+          "round": 101,
+          "method": "backward",
+          "params": {
+            "distanceCm": 6,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 663,
+          "after_observation": 664,
+          "displacement_cm": 6.013318551349163,
+          "odometry_distance_delta_cm": 6.0,
+          "sim_elapsed_s": 0.6399999999999864
+        }
+      ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "before": {
+            "observation": 656,
+            "round": 101,
+            "frame_id": 656,
+            "tick": 23979,
+            "sim_s": 479.58,
+            "odometry": {
+              "forwardCm": 152.2,
+              "rightCm": -17.1,
+              "headingDeg": 93.5,
+              "distanceCm": 2929.6,
+              "tick": 23979
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "after": {
+            "observation": 657,
+            "round": 101,
+            "frame_id": 657,
+            "tick": 24024,
+            "sim_s": 480.48,
+            "odometry": {
+              "forwardCm": 152.2,
+              "rightCm": -17.1,
+              "headingDeg": 93.5,
+              "distanceCm": 2929.6,
+              "tick": 24024
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "fresh_detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9320793818054092,
+            "bbox": {
+              "x": 250.0,
+              "y": 250.0,
+              "w": 156.0,
+              "h": 146.0
+            },
+            "frame_id": "656",
+            "fed_to_world_model": false,
+            "track_id": "target_111",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 20,
+            "raw_bearing_deg": 1.1,
+            "distance_cm": 27.156585607796973,
+            "bearing_deg": 0.8911764663454169,
+            "position_m": {
+              "x": -0.44228439763658256,
+              "z": 1.5096391834283849
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "remembered_distance_cm_recomputed": 22.08841130830357,
+          "alignment_pass": true,
+          "holding": false
+        },
+        {
+          "attempt": 2,
+          "before": {
+            "observation": 658,
+            "round": 101,
+            "frame_id": 658,
+            "tick": 24072,
+            "sim_s": 481.44,
+            "odometry": {
+              "forwardCm": 151.8,
+              "rightCm": -23.1,
+              "headingDeg": 93.5,
+              "distanceCm": 2935.6,
+              "tick": 24072
+            },
+            "holding": false,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "after": {
+            "observation": 659,
+            "round": 101,
+            "frame_id": 659,
+            "tick": 24110,
+            "sim_s": 482.2,
+            "odometry": {
+              "forwardCm": 151.8,
+              "rightCm": -23.1,
+              "headingDeg": 93.5,
+              "distanceCm": 2935.6,
+              "tick": 24110
+            },
+            "holding": true,
+            "onRoad": true,
+            "atNode": false,
+            "exits": []
+          },
+          "fresh_detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9274496644295301,
+            "bbox": {
+              "x": 188.0,
+              "y": 296.0,
+              "w": 298.0,
+              "h": 184.0
+            },
+            "frame_id": "658",
+            "fed_to_world_model": false,
+            "track_id": "target_111",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 13,
+            "raw_bearing_deg": 2.34,
+            "distance_cm": 20.030559158802713,
+            "bearing_deg": 1.7378597207542834,
+            "position_m": {
+              "x": -0.4312108666048999,
+              "z": 1.511840542658276
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "remembered_distance_cm_recomputed": 16.145731220649335,
+          "alignment_pass": true,
+          "holding": true
+        }
+      ],
+      "grab_count": 2,
+      "forward_fresh_clearance": [
+        {
+          "before_observation": 654,
+          "front_clearance_cm": 19.5,
+          "request_cm": 6,
+          "pass": true
+        },
+        {
+          "before_observation": 655,
+          "front_clearance_cm": 13.5,
+          "request_cm": 2.178757873620796,
+          "pass": true
+        },
+        {
+          "before_observation": 657,
+          "front_clearance_cm": 11.3,
+          "request_cm": 6,
+          "pass": true
+        }
+      ],
+      "old_position_witness": {
+        "original_position_m": {
+          "x": -0.3914258234795904,
+          "z": 1.536221383752075
+        },
+        "same_category_detections": [],
+        "matches_within_0_15m": 0,
+        "holding": true,
+        "backward_commands_cm": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "net_retreat_cm": 29.96030707452779,
+        "distance_counter_retreat_cm": 30.0,
+        "witness_raw_object_state_before_lifecycle_mark": "LOST",
+        "final_post_mark_state": "HELD"
+      }
+    },
+    {
+      "round": 105,
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "object_id": "target_111",
+      "success": true,
+      "reason": "ball_observed_in_storage",
+      "initial_observation": {
+        "observation": 717,
+        "round": 105,
+        "frame_id": 717,
+        "tick": 28092,
+        "sim_s": 561.84,
+        "odometry": {
+          "forwardCm": 19.1,
+          "rightCm": 74.7,
+          "headingDeg": -131.5,
+          "distanceCm": 3581.6,
+          "tick": 28092
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 94.6
+          },
+          {
+            "angleDeg": -64.4
+          },
+          {
+            "angleDeg": -141
+          }
+        ]
+      },
+      "initial_object": {
+        "id": "target_111",
+        "category": "red-ball",
+        "position_m": {
+          "x": -0.3914258234795904,
+          "z": 1.536221383752075
+        },
+        "confidence": 0.0,
+        "state": "HELD",
+        "distance_cm": 176.22808876195165,
+        "bearing_deg": -171.74036852626224,
+        "hit_count": 7,
+        "source": "virtual-cv",
+        "last_seen_s": 481.44,
+        "hit_poses": [
+          {
+            "frame_id": "551",
+            "simulation_time_s": 413.48,
+            "x_m": -0.003,
+            "z_m": 1.115,
+            "heading_deg": 45.7
+          },
+          {
+            "frame_id": "596",
+            "simulation_time_s": 443.68,
+            "x_m": 0.45,
+            "z_m": 2.124,
+            "heading_deg": 110.6
+          },
+          {
+            "frame_id": "604",
+            "simulation_time_s": 449.44,
+            "x_m": 0.307,
+            "z_m": 2.053,
+            "heading_deg": 126.90000000000002
+          },
+          {
+            "frame_id": "607",
+            "simulation_time_s": 450.86,
+            "x_m": 0.152,
+            "z_m": 1.9269999999999998,
+            "heading_deg": 139.1
+          },
+          {
+            "frame_id": "646",
+            "simulation_time_s": 474.04,
+            "x_m": 0.41,
+            "z_m": 1.515,
+            "heading_deg": 91.0
+          },
+          {
+            "frame_id": "647",
+            "simulation_time_s": 475.34,
+            "x_m": 0.21,
+            "z_m": 1.514,
+            "heading_deg": 90.0
+          },
+          {
+            "frame_id": "650",
+            "simulation_time_s": 477.54,
+            "x_m": 0.01,
+            "z_m": 1.5230000000000001,
+            "heading_deg": 87.4
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "pending"
+      },
+      "witness_observation": {
+        "observation": 723,
+        "round": 105,
+        "frame_id": 723,
+        "tick": 28377,
+        "sim_s": 567.54,
+        "odometry": {
+          "forwardCm": 22.7,
+          "rightCm": 71.8,
+          "headingDeg": -140,
+          "distanceCm": 3626.9,
+          "tick": 28377
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": false,
+        "exits": []
+      },
+      "final_observation": {
+        "observation": 724,
+        "round": 105,
+        "frame_id": 724,
+        "tick": 28377,
+        "sim_s": 567.54,
+        "odometry": {
+          "forwardCm": 22.7,
+          "rightCm": 71.8,
+          "headingDeg": -140,
+          "distanceCm": 3626.9,
+          "tick": 28377
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": false,
+        "exits": []
+      },
+      "final_object": {
+        "id": "target_111",
+        "category": "red-ball",
+        "position_m": {
+          "x": 0.9645688275624887,
+          "z": -0.06684928606933815
+        },
+        "confidence": 0.0,
+        "state": "DELIVERED",
+        "distance_cm": 38.359300000000005,
+        "bearing_deg": 0.0,
+        "hit_count": 7,
+        "source": "virtual-cv",
+        "last_seen_s": 567.54,
+        "hit_poses": [
+          {
+            "frame_id": "551",
+            "simulation_time_s": 413.48,
+            "x_m": -0.003,
+            "z_m": 1.115,
+            "heading_deg": 45.7
+          },
+          {
+            "frame_id": "596",
+            "simulation_time_s": 443.68,
+            "x_m": 0.45,
+            "z_m": 2.124,
+            "heading_deg": 110.6
+          },
+          {
+            "frame_id": "604",
+            "simulation_time_s": 449.44,
+            "x_m": 0.307,
+            "z_m": 2.053,
+            "heading_deg": 126.90000000000002
+          },
+          {
+            "frame_id": "607",
+            "simulation_time_s": 450.86,
+            "x_m": 0.152,
+            "z_m": 1.9269999999999998,
+            "heading_deg": 139.1
+          },
+          {
+            "frame_id": "646",
+            "simulation_time_s": 474.04,
+            "x_m": 0.41,
+            "z_m": 1.515,
+            "heading_deg": 91.0
+          },
+          {
+            "frame_id": "647",
+            "simulation_time_s": 475.34,
+            "x_m": 0.21,
+            "z_m": 1.514,
+            "heading_deg": 90.0
+          },
+          {
+            "frame_id": "650",
+            "simulation_time_s": 477.54,
+            "x_m": 0.01,
+            "z_m": 1.5230000000000001,
+            "heading_deg": 87.4
+          }
+        ],
+        "ever_confirmed": true,
+        "completion_classification": "delivered"
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 723,
+        "after_observation": 723,
+        "motions": []
+      },
+      "motions": [
+        {
+          "round": 105,
+          "method": "turn",
+          "params": {
+            "angleDeg": -8.513832997073735,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 717,
+          "after_observation": 718,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.12000000000000455
+        },
+        {
+          "round": 105,
+          "method": "forward",
+          "params": {
+            "distanceCm": 7,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 718,
+          "after_observation": 719,
+          "displacement_cm": 7.029224708315993,
+          "odometry_distance_delta_cm": 7.0,
+          "sim_elapsed_s": 0.7599999999999909
+        },
+        {
+          "round": 105,
+          "method": "forward",
+          "params": {
+            "distanceCm": 7,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 719,
+          "after_observation": 720,
+          "displacement_cm": 6.95269731830748,
+          "odometry_distance_delta_cm": 7.0,
+          "sim_elapsed_s": 0.7599999999999909
+        },
+        {
+          "round": 105,
+          "method": "forward",
+          "params": {
+            "distanceCm": 6.380960412339011,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 720,
+          "after_observation": 721,
+          "displacement_cm": 6.389053137985311,
+          "odometry_distance_delta_cm": 6.300000000000182,
+          "sim_elapsed_s": 0.6999999999999318
+        },
+        {
+          "round": 105,
+          "method": "release",
+          "params": {},
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 721,
+          "after_observation": 722,
+          "displacement_cm": 0.0,
+          "odometry_distance_delta_cm": 0.0,
+          "sim_elapsed_s": 0.6800000000000637
+        },
+        {
+          "round": 105,
+          "method": "backward",
+          "params": {
+            "distanceCm": 25,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 722,
+          "after_observation": 723,
+          "displacement_cm": 24.992798962901293,
+          "odometry_distance_delta_cm": 25.0,
+          "sim_elapsed_s": 2.67999999999995
+        }
+      ],
+      "release_aim": {
+        "mode": "observed_free_ground_point",
+        "source_frame": 717,
+        "source_region": {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 147.0,
+            "y": 247.0,
+            "w": 325.0,
+            "h": 72.0
+          },
+          "frame_id": "717",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_077",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 37.949322522084955,
+          "bearing_deg": -1.2727103225036647,
+          "position_m": {
+            "x": 1.036738718566139,
+            "z": -0.05408484847532721
+          }
+        },
+        "occupied_boxes": [
+          {
+            "x": 214.0,
+            "y": 216.0,
+            "w": 100.0,
+            "h": 74.0
+          },
+          {
+            "x": 504.0,
+            "y": 128.0,
+            "w": 55.0,
+            "h": 70.0
+          },
+          {
+            "x": 213.0,
+            "y": 196.0,
+            "w": 98.0,
+            "h": 30.0
+          },
+          {
+            "x": 396.0,
+            "y": 106.0,
+            "w": 40.0,
+            "h": 60.0
+          },
+          {
+            "x": 498.0,
+            "y": 220.0,
+            "w": 52.0,
+            "h": 30.0
+          }
+        ],
+        "pixel": {
+          "u": 390.75,
+          "v": 283.0
+        },
+        "position_m": {
+          "x": 0.9935198007258171,
+          "z": -0.10293494869487282
+        },
+        "last_alignment": {
+          "frame_id": 721,
+          "distance_cm": 17.991907745203036,
+          "bearing_deg": 0.05400154039105587,
+          "basis": "fixed_observed_ground_point_and_current_odometry"
+        }
+      },
+      "aim_source_observation": {
+        "observation": 717,
+        "round": 105,
+        "frame_id": 717,
+        "tick": 28092,
+        "sim_s": 561.84,
+        "odometry": {
+          "forwardCm": 19.1,
+          "rightCm": 74.7,
+          "headingDeg": -131.5,
+          "distanceCm": 3581.6,
+          "tick": 28092
+        },
+        "holding": true,
+        "onRoad": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 94.6
+          },
+          {
+            "angleDeg": -64.4
+          },
+          {
+            "angleDeg": -141
+          }
+        ]
+      },
+      "pixel_candidates_recomputed": [
+        {
+          "pixel": {
+            "u": 228.25,
+            "v": 283.0
+          },
+          "expanded_occupancy_indexes": [
+            0
+          ],
+          "selected": false
+        },
+        {
+          "pixel": {
+            "u": 390.75,
+            "v": 283.0
+          },
+          "expanded_occupancy_indexes": [],
+          "selected": true
+        }
+      ],
+      "alignment_recomputed": {
+        "observation": {
+          "observation": 721,
+          "round": 105,
+          "frame_id": 721,
+          "tick": 28209,
+          "sim_s": 564.18,
+          "odometry": {
+            "forwardCm": 3.5,
+            "rightCm": 87.8,
+            "headingDeg": -140,
+            "distanceCm": 3601.9,
+            "tick": 28209
+          },
+          "holding": true,
+          "onRoad": true,
+          "atNode": false,
+          "exits": []
+        },
+        "distance_cm": 17.991907745203036,
+        "bearing_deg": 0.05400154039105587,
+        "original_19cm_3deg_pass": true,
+        "projection_limit": "The logged calibration-derived ground point is used; camera calibration is outside these five inputs, so projection itself is not independently rerun."
+      },
+      "release_boundary": {
+        "frame_id": 722,
+        "simulation_time_s": 564.86,
+        "preexisting_ball_ids": [
+          "target_025",
+          "target_031",
+          "target_056",
+          "target_094",
+          "target_098",
+          "target_102",
+          "target_105",
+          "target_107"
+        ]
+      },
+      "release_observation": {
+        "observation": 722,
+        "round": 105,
+        "frame_id": 722,
+        "tick": 28243,
+        "sim_s": 564.86,
+        "odometry": {
+          "forwardCm": 3.5,
+          "rightCm": 87.8,
+          "headingDeg": -140,
+          "distanceCm": 3601.9,
+          "tick": 28243
+        },
+        "holding": false,
+        "onRoad": true,
+        "atNode": false,
+        "exits": []
+      },
+      "preexisting_ids_match_pre_release_table": true,
+      "post_red_detections": [
+        {
+          "category": "red-ball",
+          "source": "virtual-cv",
+          "confidence": 0.9148913043478261,
+          "bbox": {
+            "x": 160.0,
+            "y": 212.0,
+            "w": 92.0,
+            "h": 64.0
+          },
+          "frame_id": "723",
+          "fed_to_world_model": false,
+          "track_id": "target_031",
+          "method": "virtual-cv-published-width-formula+M5",
+          "raw_distance_cm": 31,
+          "raw_bearing_deg": -15.34,
+          "distance_cm": 39.36590842918953,
+          "bearing_deg": -13.354459570552956,
+          "position_m": {
+            "x": 1.033849738202212,
+            "z": -0.007960459488671495
+          },
+          "reason": "matches_verified_placement",
+          "known_delivered_object_id": "target_031",
+          "delivered_match_distance_m": 0.05338634442114129
+        },
+        {
+          "category": "red-ball",
+          "source": "virtual-cv",
+          "confidence": 0.9145161290322581,
+          "bbox": {
+            "x": 276.0,
+            "y": 210.0,
+            "w": 88.0,
+            "h": 62.0
+          },
+          "frame_id": "723",
+          "fed_to_world_model": false,
+          "track_id": null,
+          "method": "virtual-cv-published-width-formula+M5",
+          "raw_distance_cm": 31,
+          "raw_bearing_deg": 0.0,
+          "distance_cm": 38.359300000000005,
+          "bearing_deg": 0.0,
+          "position_m": {
+            "x": 0.9645688275624887,
+            "z": -0.06684928606933815
+          },
+          "reason": "outside_demo_memory_window"
+        }
+      ],
+      "post_green_detections": [
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 96.0,
+            "y": 248.0,
+            "w": 290.0,
+            "h": 48.0
+          },
+          "frame_id": "723",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_077",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 42.63696244897409,
+          "bearing_deg": -9.603801282277058,
+          "position_m": {
+            "x": 1.042715135161398,
+            "z": -0.049317096258334504
+          }
+        },
+        {
+          "category": "storage-zone",
+          "source": "storage-ground-pixels",
+          "confidence": 1.0,
+          "bbox": {
+            "x": 275.0,
+            "y": 241.0,
+            "w": 1.0,
+            "h": 1.0
+          },
+          "frame_id": "723",
+          "fed_to_world_model": true,
+          "track_id": "storage-zone_070",
+          "method": "visible-ground-region-bbox-centre",
+          "distance_cm": 61.57581306568653,
+          "bearing_deg": -5.635150257021382,
+          "position_m": {
+            "x": 1.1582065836683502,
+            "z": -0.2035534103512327
+          }
+        }
+      ],
+      "all_pair_checks": [
+        {
+          "ball_index": 0,
+          "zone_index": 0,
+          "ellipse_q": 0.08604174924032237,
+          "complete_region_and_ellipse_pass": true,
+          "known_delivered_excluded": true,
+          "preexisting_track_excluded": true,
+          "eligible": false
+        },
+        {
+          "ball_index": 0,
+          "zone_index": 1,
+          "ellipse_q": 24082.0,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": true,
+          "preexisting_track_excluded": true,
+          "eligible": false
+        },
+        {
+          "ball_index": 1,
+          "zone_index": 0,
+          "ellipse_q": 0.2968370986920333,
+          "complete_region_and_ellipse_pass": true,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": true
+        },
+        {
+          "ball_index": 1,
+          "zone_index": 1,
+          "ellipse_q": 11642.0,
+          "complete_region_and_ellipse_pass": false,
+          "known_delivered_excluded": false,
+          "preexisting_track_excluded": false,
+          "eligible": false
+        }
+      ],
+      "unique_new_witness_count": 1,
+      "placement": {
+        "ball_track_id": null,
+        "ball_category": "red-ball",
+        "ball_position_m": {
+          "x": 0.9645688275624887,
+          "z": -0.06684928606933815
+        },
+        "ball_bbox": {
+          "x": 276.0,
+          "y": 210.0,
+          "w": 88.0,
+          "h": 62.0
+        },
+        "storage_bbox": {
+          "x": 96.0,
+          "y": 248.0,
+          "w": 290.0,
+          "h": 48.0
+        },
+        "frame_id": 723
+      },
+      "placement_exactly_matches_current_frame": true,
+      "nearfield_untracked_witness": true,
+      "excluded_delivered_detections": [
+        {
+          "category": "red-ball",
+          "source": "virtual-cv",
+          "confidence": 0.9148913043478261,
+          "bbox": {
+            "x": 160.0,
+            "y": 212.0,
+            "w": 92.0,
+            "h": 64.0
+          },
+          "frame_id": "723",
+          "fed_to_world_model": false,
+          "track_id": "target_031",
+          "method": "virtual-cv-published-width-formula+M5",
+          "raw_distance_cm": 31,
+          "raw_bearing_deg": -15.34,
+          "distance_cm": 39.36590842918953,
+          "bearing_deg": -13.354459570552956,
+          "position_m": {
+            "x": 1.033849738202212,
+            "z": -0.007960459488671495
+          },
+          "reason": "matches_verified_placement",
+          "known_delivered_object_id": "target_031",
+          "delivered_match_distance_m": 0.05338634442114129
+        }
+      ],
+      "reobservation_used": false
+    }
+  ],
+  "reference_coverage": {
+    "see": "public-execution-audit.json",
+    "same_tick_observations_checked": 1376,
+    "action_results_checked": 200,
+    "motion_references_checked": 976,
+    "all_pass": true
+  },
+  "limitations": [
+    "No truth-derived identity, physical delivered count or WM position error is claimed.",
+    "Pixel/holding witnesses verify the frozen observation-side gates; they cannot resolve official evaluator global identity ambiguity.",
+    "Old-position absence is limited to the recorded camera view."
+  ]
+}

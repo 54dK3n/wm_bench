@@ -1,8 +1,12 @@
 # WorldModel + 单动作大模型自主小车
 
-最新状态：[第十九局](../artifacts/autonomous-brain/map05-run-19/FAILURE_ANALYSIS.md)已完整归档，**整体FAIL，实际有效交付1/2，第二球仍持有，未自主done**。冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`；163轮、173次模型调用、1022次观测、691.66仿真秒，模型请求累计2679.6163993769987秒，另有2秒重试等待。11次explore在零进展且新观测无节点/出口时自报到达，评测方正常停止；末轮NOT_RUNNING是外停错误，不是墙钟超时或模型终止。
+[第二十局](../artifacts/autonomous-brain/map05-run-20/FAILURE_ANALYSIS.md)已结束：**整体FAIL，实际有效交付2/2**。200轮、216次模型调用、1376次观测，仿真1077.68秒；模型耗时2591.529288086秒，另有1秒重试等待。两次原生交付分别在234.04秒和564.44秒，终态都在存放区且未持有；白名单外调用为0。结束原因是round_limit，未自主done；末态仍有13个未探索出口和一个待确认红球假设，没有外部停止、墙钟超时或未恢复模型错误。
 
-第二十局已在`artifacts/autonomous-brain/map05-run-20`启动，生产内容冻结于`6ee4abf464504eb297242df98dc9fadaaf7debfa`，启动时HEAD为仅更新文档的`44247e0`，正式200轮/1200仿真秒上限保持，结果待验。actions v19的140轮原记录仿真诊断已完成：前139轮结果及前926条观测完全一致，到原故障点后仅依据公开传感新增转向和4cm前进请求，新观测真实出现节点与三个出口，定向恢复PASS。诊断整体因140轮上限仍为FAIL，不作正式成功门票。done旧条件未修改，用户对完成范围的澄清仍待答复；十布局未开始。
+原评测器v4的全局身份绑定有歧义：4次抓放unverifiable，WM误差0有效/96未匹配，均值和RMSE为null；不能解释成零误差。[另列的时间前缀诊断](../artifacts/autonomous-brain/run20-binding-review-20260926/REPORT.md)使用每次动作当时全部已有观测，4次抓放均match；首次标签冲突前94个有效样本，平均误差5.091221cm、RMSE5.709667cm，另2个持物后样本仍排除。该诊断不替代原全局结果或正式FAIL。
+
+此前状态：[第十九局](../artifacts/autonomous-brain/map05-run-19/FAILURE_ANALYSIS.md)已完整归档，**整体FAIL，实际有效交付1/2，第二球仍持有，未自主done**。冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`；163轮、173次模型调用、1022次观测、691.66仿真秒，模型请求累计2679.6163993769987秒，另有2秒重试等待。11次explore在零进展且新观测无节点/出口时自报到达，评测方正常停止；末轮NOT_RUNNING是外停错误，不是墙钟超时或模型终止。
+
+第二十局已完整结束，生产内容冻结于`6ee4abf464504eb297242df98dc9fadaaf7debfa`，启动时HEAD为仅更新文档的`44247e0`，正式200轮/1200仿真秒上限保持；没有自主done，整体FAIL。actions v19的140轮原记录仿真诊断已完成：前139轮结果及前926条观测完全一致，到原故障点后仅依据公开传感新增转向和4cm前进请求，新观测真实出现节点与三个出口，定向恢复PASS。诊断整体因140轮上限仍为FAIL，不作正式成功门票。done旧条件未修改，用户对完成范围的澄清仍待答复；十布局未开始。
 
 driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容，[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存。此前第十八局独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。
 
@@ -87,12 +91,12 @@ actions v19纠正执行器`stoppedBy=junction`与新观测不一致时的到达�
 
 driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。driver v6沿用v5的分块导出：每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
 
-独立评测预备命令（第二十局正在运行；待该局结束并完整导出后，使用兼容driver v6的评测器v4）：
+第二十局已使用兼容driver v6的评测器v4完成独立评测。复算时使用尚不存在的新输出目录：
 
 ```sh
 python3 tools/evaluate_autonomous_brain.py \
   --input artifacts/autonomous-brain/map05-run-20/map-05-run-1 \
-  --out artifacts/autonomous-brain/map05-run-20/report
+  --out artifacts/autonomous-brain/map05-run-20/recomputed-report
 ```
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
