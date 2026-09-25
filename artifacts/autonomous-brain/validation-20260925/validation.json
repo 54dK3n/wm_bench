@@ -1,0 +1,37 @@
+{
+  "version": "autonomous-brain-validation/v1",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_brain_actions.py",
+        "tests/test_brain_perception.py",
+        "tests/test_brain_llm.py",
+        "tests/test_brain_evaluation.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-20260925/check-01.txt",
+      "sha256": "5a3e0f23fd1eb20a57c6f6d1cf9f811b9ad3e846fffbc2fbf0e0bb0765f9ac4c"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/verify_worldmodel_vendor.py"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-20260925/check-02.txt",
+      "sha256": "4ed5cf09b8a7589fdc4ba0001c5895826be31369d24ba4b8db3599b057caa2ea"
+    }
+  ],
+  "all_pass": true,
+  "configuration_present": {
+    "LLM_BASE_URL": false,
+    "LLM_API_KEY": false,
+    "LLM_MODEL": false
+  },
+  "real_model_executed": false,
+  "task_acceptance_executed": false
+}

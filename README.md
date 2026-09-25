@@ -2,11 +2,17 @@
 
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
-当前执行 **v4 自主观测闭环**：平台只提供传感器和执行器，大脑在平台外运行。旧五阶段、比赛计分和比赛专用规则已作废，旧程序与结果仅作历史参考。2026-09-25 已修复阶段 1 的 `virtual-cv` 检测适配并保留来源；新增内容验收发现应见漏检，当前阶段门禁仍为 **FAIL / STOP**。旧空检测下的「record 确定性」和「经桥 observe」通过结论作废；后续阶段未实施或验收，尚无 v4 map-05 成功局。
+当前执行 **WorldModel + 外部单动作大模型自主小车**：平台只提供传感器和执行器，大脑每轮观测、决策、行动、再观测。按最新范围，octos 编排、技能契约和逐条确定性门禁暂缓。平台的桥检测一致性与四类非空门禁已通过；外部大脑、M5 感知、模型记录回放和独立评测已实现，真实桥的假模型联调已通过。正式模型运行仍缺少 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，**尚无本轮 map-05 成功局，十布局未运行**。
+
+旧 v4 严格验收的 FAIL、空检测验收作废结论及全部历史证据保留原样；本轮新的够用门禁不改写旧结果。
 
 ## 阅读入口
 
-- [当前 v4 执行状态](docs/NEXT_WORK_STATE.md)
+- [当前执行状态](docs/NEXT_WORK_STATE.md)
+- [本轮交付报告](artifacts/autonomous-brain/REPORT.md)
+- [外部大脑运行与回放](docs/AUTONOMOUS_BRAIN.md)
+- [新运行的平台够用门禁](artifacts/autonomous-brain/fresh-map05-gate-20260925/REPORT.md)
+- [历史长路线的只读复算](artifacts/autonomous-brain/platform-gate-20260925/REPORT.md)
 - [v4 平台实现与阶段门禁](docs/V4_AUTONOMOUS_LOOP.md)
 - [阶段 1 恢复验收报告](artifacts/inloop/v4/stage-1/restore-20260925/REPORT.md)
 - [内容验收口径与复算](docs/V4_STAGE1_ACCEPTANCE_RULES.md)
@@ -24,8 +30,9 @@ WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流
 
 | 路径 | 内容 |
 |---|---|
+| `autonomous_brain/` | 当前外部大脑：单动作模型决策、WorldModel、传感器闭环动作 |
 | `programs/src/` | 按模块组织的唯一运行源码；固定顺序拼接构建 |
-| `programs/world_model_opt2.py` | 当前唯一生成程序；历史生成程序位于 artifacts |
+| `programs/world_model_opt2.py` | 历史 Pyodide 路线的生成程序；不作为当前外部大脑 |
 | `programs/tests/` | 当前模块及明确冻结的历史回归测试 |
 | `tools/` | 构建、驱动、预检、评测、诊断和报告工具 |
 | `vendor/wm_kit_opt2/` | WorldModel 源码快照，按普通文件管理，不是子模块 |

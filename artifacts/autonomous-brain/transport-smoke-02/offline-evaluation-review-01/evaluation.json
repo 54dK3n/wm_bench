@@ -1,0 +1,238 @@
+{
+  "version": "autonomous-brain-offline-evaluation/v1",
+  "evaluation_only": true,
+  "run_directory": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1",
+  "map": "map-05",
+  "success": false,
+  "failures": [
+    "no_active_delivery_event:guangyang-target-1",
+    "final_position_outside_storage:guangyang-target-1",
+    "no_active_delivery_event:guangyang-target-2",
+    "final_position_outside_storage:guangyang-target-2",
+    "brain_did_not_finish_with_observed_done",
+    "execution_or_controller_error"
+  ],
+  "delivery": {
+    "failures": [
+      "no_active_delivery_event:guangyang-target-1",
+      "final_position_outside_storage:guangyang-target-1",
+      "no_active_delivery_event:guangyang-target-2",
+      "final_position_outside_storage:guangyang-target-2",
+      "brain_did_not_finish_with_observed_done",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "delivered_target_ids": [],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 309,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 22.812830983681092,
+        "position_world": [
+          10.0849,
+          1.251
+        ],
+        "events": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 309,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 16.819687483719786,
+        "position_world": [
+          0.5097,
+          4.4324
+        ],
+        "events": []
+      }
+    ],
+    "rounds": 3,
+    "round_records": 3,
+    "max_rounds": 5,
+    "simulation_seconds": 6.18,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "metrics": {
+    "rounds": 3,
+    "llm_calls": 4,
+    "llm_total_elapsed_s": 0.003998832000000174,
+    "simulation_seconds": 6.18,
+    "observations": 10,
+    "failed_actions": 1,
+    "bridge_calls": 46,
+    "nonwhitelist_brain_requests": 0
+  },
+  "brain_status": "failed",
+  "brain_reason": "LLMOutputError: LLM output invalid after one repair; see transcript",
+  "failed_actions": [
+    {
+      "round": 3,
+      "action": null,
+      "simulation_seconds": 6.18,
+      "result": {
+        "success": false,
+        "reason": "LLM output invalid after one repair; see transcript",
+        "error_type": "LLMOutputError"
+      }
+    }
+  ],
+  "perception": {
+    "matching_method": "same-frame class + projected truth centre inside exact bbox, unique both ways; WM identities require consistent bbox-to-track associations",
+    "matching_limitation": "geometric correspondence does not independently prove occlusion visibility; partial boxes excluding the centre remain unmatched; no nearest-distance fallback",
+    "coordinate_convention": "initial robot right/forward metres; right=[cos(h0),-sin(h0)], forward=[-sin(h0),-cos(h0)]",
+    "error_sample_definition": "one sample per logged CONFIRMED red track per observation with unique identity and active exact-frame truth; repeated estimates count as repeated samples",
+    "position_error": {
+      "count": 0,
+      "mean_cm": null,
+      "rmse_cm": null,
+      "max_cm": null
+    },
+    "position_samples": [],
+    "unmatched_confirmed_samples": [],
+    "unmatched_confirmed_count": 0,
+    "ambiguous_track_ids": {},
+    "track_truth_bindings": {},
+    "binding_evidence": [],
+    "raw_red_match_counts": {
+      "unique": 1
+    },
+    "matching_issues": [],
+    "timeline": [
+      {
+        "truth_id": "guangyang-target-1",
+        "wm_track_ids": [],
+        "first_raw_seen": {
+          "observation_index": 5,
+          "round": 2,
+          "frame_id": "5",
+          "tick": 138,
+          "simulation_seconds": 2.76,
+          "detection_index": 0,
+          "category": "red-ball",
+          "bbox": {
+            "x": 548,
+            "y": 188,
+            "w": 20,
+            "h": 12
+          },
+          "candidates": [
+            {
+              "truth_id": "guangyang-target-1",
+              "projection": {
+                "u": 558.4765479149339,
+                "v": 194.26820679191553,
+                "depth_world": 12.074038911532847
+              }
+            }
+          ],
+          "status": "unique",
+          "truth_id": "guangyang-target-1"
+        },
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "wm_track_ids": [],
+        "first_raw_seen": null,
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      }
+    ]
+  },
+  "inputs": {
+    "record.json": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/record.json.gz",
+      "sha256": "1037cabbd0f0bb76b20b202a62bfa7f6c5c08d5c276b58a1f4482c16eb119e24",
+      "bytes": 2356240,
+      "expanded_sha256": "88ef767d8540eb67fb67d1461aeab47dcbdc691bd437d49e8d838e54724ba4fa"
+    },
+    "captures.json": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/captures.json.gz",
+      "sha256": "90fd4a84a009df360f9254003c344deda85d5a201e96e663b58efe3dd01ff2d8",
+      "bytes": 1129,
+      "expanded_sha256": "0ede4c309dbef4d8845e0c1f9ac4c912f5dd8a75bddb513f6e8e06511c582c2b"
+    },
+    "brain/summary.json": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/brain/summary.json",
+      "sha256": "01d9a91774b348c274d3e9c8b0a4c122eb1994060e1679121c293e5b536dbddd",
+      "bytes": 7347,
+      "expanded_sha256": "01d9a91774b348c274d3e9c8b0a4c122eb1994060e1679121c293e5b536dbddd"
+    },
+    "brain/rounds.jsonl": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "0d73c53a89eb44753c064bd95979ac0e4d09dd910bbdec742b55e685ed1e6b93",
+      "bytes": 18095,
+      "expanded_sha256": "0d73c53a89eb44753c064bd95979ac0e4d09dd910bbdec742b55e685ed1e6b93"
+    },
+    "brain/observations.jsonl": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/brain/observations.jsonl",
+      "sha256": "9482b239f2f2cf46fccb042e9a4adbe46f3313220fed4985670cf978e0dbfcbf",
+      "bytes": 46284,
+      "expanded_sha256": "9482b239f2f2cf46fccb042e9a4adbe46f3313220fed4985670cf978e0dbfcbf"
+    },
+    "brain/llm.jsonl": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/brain/llm.jsonl",
+      "sha256": "51b020592a56c1836f5e4b178078a600d44480c86b0fa38dd0f61852206b6fef",
+      "bytes": 17849,
+      "expanded_sha256": "51b020592a56c1836f5e4b178078a600d44480c86b0fa38dd0f61852206b6fef"
+    },
+    "brain/bridge-calls.jsonl": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "436eec4cc4641af169d99aee7f20f0dde329227d3bef1274cad811eff8de7c89",
+      "bytes": 19874,
+      "expanded_sha256": "436eec4cc4641af169d99aee7f20f0dde329227d3bef1274cad811eff8de7c89"
+    },
+    "evaluation.json": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/evaluation.json",
+      "sha256": "24c957b18573f4a549fd3184125385e73fda569e7fdbd9900649d3544c7df294",
+      "bytes": 10401,
+      "expanded_sha256": "24c957b18573f4a549fd3184125385e73fda569e7fdbd9900649d3544c7df294"
+    },
+    "evidence.json": {
+      "path": "artifacts/autonomous-brain/transport-smoke-02/map-05-run-1/evidence.json",
+      "sha256": "9c3baec602d0ad428c27685615ff4e2a30933a400c049c8953e9cc95d381ad0e",
+      "bytes": 1201,
+      "expanded_sha256": "9c3baec602d0ad428c27685615ff4e2a30933a400c049c8953e9cc95d381ad0e"
+    }
+  },
+  "evaluator_sha256": "6ed620a9c93858b5d0906b79268bcadb6428bf08a6d92311308ca52475c831b4",
+  "rules": {
+    "truth_only_in_evaluator": true,
+    "success_recomputed_from_record": true,
+    "determinism_is_not_a_gate": true,
+    "position_error_is_report_only": true,
+    "limits": "reaching configured round/time cap fails; caps never exceed 200 rounds or 1200 seconds"
+  }
+}

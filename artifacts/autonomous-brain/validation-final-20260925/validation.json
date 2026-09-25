@@ -1,0 +1,120 @@
+{
+  "version": "autonomous-brain-validation/v2",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_brain_actions.py",
+        "tests/test_brain_perception.py",
+        "tests/test_brain_llm.py",
+        "tests/test_brain_evaluation.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-01.txt",
+      "sha256": "07b6126423cdbb588da728b3e7efbb627cbf9514d26f6a28cd62a0b7464ae49d"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/verify_worldmodel_vendor.py"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-02.txt",
+      "sha256": "4ed5cf09b8a7589fdc4ba0001c5895826be31369d24ba4b8db3599b057caa2ea"
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tools/autonomous_brain_driver.js"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-03.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "node",
+        "tools/fresh_map05_platform_gate.js",
+        "--inputs",
+        "artifacts/autonomous-brain/transport-smoke-02,artifacts/autonomous-brain/transport-smoke-03",
+        "--out",
+        "artifacts/autonomous-brain/fresh-map05-gate-20260925",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-04.txt",
+      "sha256": "31f38ceadc81966d8ab02cdbd14ac4988210715719c43c375d021b1ccaad0e53"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/smoke_external_brain.py",
+        "--out",
+        "artifacts/autonomous-brain/transport-smoke-03",
+        "--verify-only"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-05.txt",
+      "sha256": "d20a7ec0c5c8703da1b7e84ee09e29dfdf9d609405d838c3a69c1646dddbf6fb"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/validation-final-20260925/check-06.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "all_pass": true,
+  "configuration_present": {
+    "LLM_BASE_URL": false,
+    "LLM_API_KEY": false,
+    "LLM_MODEL": false
+  },
+  "real_model_executed": false,
+  "task_acceptance_executed": false,
+  "world_model_main_verified_remote": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
+  "world_model_remote_verification_command": [
+    "git",
+    "ls-remote",
+    "https://github.com/54dK3n/WorldModel.git",
+    "refs/heads/main"
+  ],
+  "brain_sources": {
+    "autonomous_brain/__init__.py": {
+      "version": "autonomous-brain/v1",
+      "sha256": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9"
+    },
+    "autonomous_brain/actions.py": {
+      "version": "autonomous-brain-actions/v3",
+      "sha256": "05c8ebcf4567b3c3658c9d9f4193596b661630bba2693900b87836b708282c3d"
+    },
+    "autonomous_brain/bridge.py": {
+      "version": "autonomous-brain-bridge/v1",
+      "sha256": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9"
+    },
+    "autonomous_brain/llm.py": {
+      "version": "autonomous-brain-llm/v2",
+      "sha256": "bbb0ce75eafd354bcfed97c033bc1df7dd7849184528df28786200ac344e3d7d"
+    },
+    "autonomous_brain/navigation.py": {
+      "version": "autonomous-brain-navigation/v1",
+      "sha256": "51a6fb96c64db25682365600e17b3f6f207acb409dabaeacb871771da2313a01"
+    },
+    "autonomous_brain/perception.py": {
+      "version": "autonomous-brain-perception/v4",
+      "sha256": "da4e1eaf4e9718db3ace90a0ddaae43d4232c444c5b4d4e1b683ff8bdda9d572"
+    },
+    "autonomous_brain/run.py": {
+      "version": null,
+      "sha256": "f7158c6d73829808ec4d3b5c07341611a720a43007599701e930c61eb8979aac"
+    }
+  }
+}

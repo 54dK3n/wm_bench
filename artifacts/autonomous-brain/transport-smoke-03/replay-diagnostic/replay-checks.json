@@ -1,0 +1,64 @@
+{
+  "schema": "external-brain-offline-replay-smoke/v1",
+  "diagnostic": true,
+  "real_model_used": false,
+  "task_acceptance": false,
+  "fixture_model": "diagnostic-stub",
+  "networking": "urllib.request.urlopen patched to raise; zero calls",
+  "rows": [
+    {
+      "round": 1,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "exact_match": true
+    },
+    {
+      "round": 2,
+      "expected_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "exact_match": true
+    },
+    {
+      "round": 3,
+      "expected_action": null,
+      "actual_action": null,
+      "expected_error": {
+        "type": "LLMOutputError",
+        "message": "LLM output invalid after one repair; see transcript"
+      },
+      "actual_error": {
+        "type": "LLMOutputError",
+        "message": "LLM output invalid after one repair; see transcript"
+      },
+      "exact_match": true
+    }
+  ],
+  "recorded_calls": 4,
+  "replayed_calls": 4,
+  "all_records_consumed": true,
+  "full_records_equal_except_mode": true,
+  "recorded_elapsed_s_replayed": 0.005664751000000745,
+  "source_sha256": {
+    "tool": "ec56692d39cc4f1f51296ebcccceed3d81e4f0b4e7103ed001eaedb324f83225",
+    "llm_client": "bbb0ce75eafd354bcfed97c033bc1df7dd7849184528df28786200ac344e3d7d",
+    "rounds": "aa11b84065ddec35720e2a3ff1e1873bb59e9ea4bba59fbe04f25e4e0e1b72b8",
+    "original_llm": "2dd5c4fd3f9d58e63de0c90e5de111e9dc426fc9397cbd96cbfbfbc0b19b62fa"
+  },
+  "allPass": true
+}

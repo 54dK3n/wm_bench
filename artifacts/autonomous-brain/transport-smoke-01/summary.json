@@ -1,0 +1,100 @@
+{
+  "schema": "wm-autonomous-brain-driver/v1",
+  "status": "failed",
+  "maps": [
+    "map-05"
+  ],
+  "runsPerMap": 1,
+  "maxRounds": 5,
+  "maxSimulationSeconds": 1200,
+  "task": "把地图上的红球都送到绿色存放区",
+  "platformGatePass": true,
+  "trials": [
+    {
+      "map": "map-05",
+      "run": 1,
+      "directory": "map-05-run-1",
+      "success": false,
+      "maxRounds": 5,
+      "maxSimulationSeconds": 1200,
+      "backendVersion": "robot-backend-v4-stage1-r2",
+      "process": {
+        "code": 1,
+        "signal": null,
+        "spawnError": null,
+        "interrupted": null,
+        "wallSeconds": 6.243,
+        "invocation": {
+          "module": "autonomous_brain.run",
+          "output": "artifacts/autonomous-brain/transport-smoke-01/map-05-run-1/brain",
+          "replay": null
+        },
+        "capabilityPassed": {
+          "schema": "autonomous-brain-robot-config/v1",
+          "origin": "<local robot bridge>",
+          "bridge_id": "<limited robot capability>",
+          "client_token": "<not recorded>",
+          "task": "把地图上的红球都送到绿色存放区",
+          "simulation_step_ms": 20,
+          "max_rounds": 5,
+          "max_simulation_seconds": 1200
+        }
+      },
+      "stopError": "Error: TypeError: unsupported run end reason: brain_finished\n    at CompetitionSession.finish (http://127.0.0.1:63282/competition-core.js?v=20260827-002:6833:52)\n    at Object.stop (http://127.0.0.1:63282/robot-backend-runtime.js?v=robot-backend-v4-stage1-r2:228:24)\n    at evaluate (tools/autonomous_brain_driver.js:333:44)\n    at async main (tools/autonomous_brain_driver.js:373:30)",
+      "pageErrors": []
+    }
+  ],
+  "map05SuccessBeforeRun": false,
+  "error": "Error: backend stop failed; aborting remaining trials\n    at main (tools/autonomous_brain_driver.js:407:36)",
+  "map05Passed": false,
+  "sourceManifestAfterRun": {
+    "version": "wm-autonomous-brain-driver/v1",
+    "driver": {
+      "file": "tools/autonomous_brain_driver.js",
+      "sha256": "f0249a777e295af86548426e96da7a5cc53449bb3b6b88bb8cb0f0a796fcc532"
+    },
+    "platform": {
+      "competition-core.js": "2b9c86e56043b0c6c61023ac263b43e9de7e2223144786fdd561741e70dc57e8",
+      "robot-record.js": "1b43cb787b0a05307526e849d440215266e06140590fb506abfacaa50bbd0950",
+      "robot-backend-runtime.js": "806bdae1f52bf34b680e9cb3c525446a199bda9fc768b919e1f0d12145348789",
+      "robot-bridge-contract.js": "95d79275fb64a4418307cb24082a4458906468e43904f7a2092f1cd774cb9534",
+      "backend/robot-bridge.js": "3c3d93599d94763e5dfb1d36f52937d5c366705df744b3e064d1f2f4e7501a54",
+      "server.js": "03886877a5369ba397163144dd43c1d1e7392f1c96f0f30299b4f6fec6d0dbc7",
+      "app.js": "55acd2843d202f83c83549d4a2640f1d995358bc654546732cbaca500ae28c83",
+      "vision.js": "62274a407a689c8e48ab869eae43de5da0b4717a66e47b7bb7951ce20d654da2",
+      "vision-pixel-core.js": "7627c0429e338f481948bdcb6ab59af901ad6ed0cee8001ef38d51dfa063c614",
+      "python-worker.js": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4",
+      "storage-region-pixels.js": "08638b4165941ff7ed6cc22602343f8c5155498b07132124d62969c902ede2e2",
+      "robot-camera-detector.js": "462cc714748b3ff921db105aab14a528c8918ae2567688a95bbb4dc285feee12",
+      "index.html": "e61b3b7f467a16abe82b0b312ff6bdd877f830955e181b8e79394dfdeab0f102",
+      "tests/robot-checkpoint-clock.test.js": "3894613b8bb45472743d7206ab79c41a59f3f45e0aaf28d495bb94c4dc531e92"
+    },
+    "brain": {
+      "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+      "autonomous_brain/actions.py": "57e6b9115ac6c8eda5a94024d89e5af8604e1d2eaed9a339231d1fa835b8bd49",
+      "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "autonomous_brain/llm.py": "d6e4e2af2ed7b48ba8f95e243736cd84f09c31e4c226091754e877721ee89bc0",
+      "autonomous_brain/navigation.py": "51a6fb96c64db25682365600e17b3f6f207acb409dabaeacb871771da2313a01",
+      "autonomous_brain/perception.py": "47ffd1542094c3cf43d94f4292c25036f9670d7a1022b03cfc1ff7a10afe2967",
+      "autonomous_brain/run.py": "f7158c6d73829808ec4d3b5c07341611a720a43007599701e930c61eb8979aac"
+    },
+    "evaluatorCaptureSha256": "a4b0552e8e162c9d0d90ed2414e69a733dec83accefedbf247904fb6ebe161f5",
+    "platformGate": "artifacts/autonomous-brain/platform-gate-20260925/gate.json",
+    "publicMethods": [
+      "observe",
+      "camera_parameters",
+      "odometry",
+      "local_road",
+      "holding",
+      "grab",
+      "release",
+      "forward",
+      "backward",
+      "turn",
+      "follow_road",
+      "take_exit"
+    ]
+  },
+  "sourcesUnchanged": true,
+  "success": false
+}

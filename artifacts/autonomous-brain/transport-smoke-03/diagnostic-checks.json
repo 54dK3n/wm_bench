@@ -1,0 +1,157 @@
+{
+  "schema": "external-brain-transport-smoke/v1",
+  "diagnostic": true,
+  "real_model_used": false,
+  "task_acceptance": false,
+  "intended_outcome": "two actions, one invalid-JSON repair, then expected failure with complete export",
+  "transport_checks_passed": true,
+  "checks": [
+    {
+      "check": "record_compressed_and_expanded_sha256",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "samples_compressed_and_expanded_sha256",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "sensorAudit_compressed_and_expanded_sha256",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "captures_compressed_and_expanded_sha256",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "exactly_two_actions",
+      "passed": true,
+      "detail": [
+        "explore",
+        "look_around"
+      ]
+    },
+    {
+      "check": "exactly_four_fake_model_responses",
+      "passed": true,
+      "detail": 4
+    },
+    {
+      "check": "llm_logged_all_four_calls",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "one_repair_on_third_decision",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "invalid_json_stops_before_third_action",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "brain_reports_expected_failure",
+      "passed": true,
+      "detail": "LLMOutputError: LLM output invalid after one repair; see transcript"
+    },
+    {
+      "check": "fixture_is_loopback_only",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "json_mode_temperature_zero",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "real_camera_observations_nonempty",
+      "passed": true,
+      "detail": {
+        "total": 10,
+        "nonempty": 10
+      }
+    },
+    {
+      "check": "only_whitelisted_bridge_requests",
+      "passed": true,
+      "detail": [
+        "camera_parameters",
+        "holding",
+        "local_road",
+        "observe",
+        "odometry",
+        "take_exit",
+        "turn"
+      ]
+    },
+    {
+      "check": "no_rejected_bridge_calls",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "complete_platform_record",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "simulation_advanced_under_limit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "platform_hard_limit_1200_seconds",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "driver_export_complete_without_infrastructure_error",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "source_frozen_during_run",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "driver_reports_task_failure_as_expected",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "bridge_matches_internal_detector_each_observation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "truth_captures_and_native_frames_cover_observations",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "actions": [
+    "explore",
+    "look_around"
+  ],
+  "rounds": 3,
+  "fake_model_responses": 4,
+  "observations": 10,
+  "nonempty_observations": 10,
+  "detection_counts": {
+    "blue-ball": 3,
+    "obstacle": 34,
+    "red-ball": 1,
+    "storage-zone": 2
+  },
+  "simulation_seconds": 6.18,
+  "brain_stop_reason": "LLMOutputError: LLM output invalid after one repair; see transcript",
+  "driver_returncode": 1,
+  "model": "diagnostic-stub"
+}

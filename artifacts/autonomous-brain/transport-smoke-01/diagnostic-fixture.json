@@ -1,0 +1,162 @@
+{
+  "schema": "external-brain-transport-smoke/v1",
+  "diagnostic": true,
+  "real_model_used": false,
+  "task_acceptance": false,
+  "bind_host": "127.0.0.1",
+  "model": "diagnostic-stub",
+  "requests": [
+    {
+      "index": 1,
+      "request": {
+        "messages": [
+          {
+            "content": "你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{\"action\":\"动作名\",\"params\":{}}，不加说明、代码块或额外字段。\n动作：explore 的 params 为 {} 或 {\"exit_angle\":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {\"object_id\":\"物体表中的 id\"}。\nexplore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。\n按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。",
+            "role": "system"
+          },
+          {
+            "content": "{\"junction_history\":[{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":0,\"visits\":0}],\"id\":\"junction-1\",\"position_m\":{\"x\":0.0,\"z\":0.0}}],\"objects\":[],\"observed_junction_count\":1,\"recent_actions\":[],\"robot\":{\"at_junction\":false,\"at_node\":true,\"exit_angles\":[0],\"exits\":[{\"angle_deg\":0,\"blocked\":false,\"completed\":false,\"heading_deg\":0,\"visits\":0}],\"front_clearance_cm\":240.4,\"held_object_id\":null,\"holding\":false,\"on_road\":true,\"pending_grasp_object_id\":null,\"pose\":{\"forward_cm\":0,\"heading_deg\":0,\"right_cm\":0}},\"round\":1,\"simulation_seconds\":0.0,\"task\":\"把地图上的红球都送到绿色存放区\",\"unexplored_exit_count\":1}",
+            "role": "user"
+          }
+        ],
+        "model": "diagnostic-stub",
+        "response_format": {
+          "type": "json_object"
+        },
+        "temperature": 0
+      },
+      "response": {
+        "id": "diagnostic-1",
+        "object": "chat.completion",
+        "model": "diagnostic-stub",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"action\":\"explore\",\"params\":{}}"
+            },
+            "finish_reason": "stop"
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "request": {
+        "messages": [
+          {
+            "content": "你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{\"action\":\"动作名\",\"params\":{}}，不加说明、代码块或额外字段。\n动作：explore 的 params 为 {} 或 {\"exit_angle\":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {\"object_id\":\"物体表中的 id\"}。\nexplore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。\n按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。",
+            "role": "system"
+          },
+          {
+            "content": "{\"junction_history\":[{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":0,\"visits\":1}],\"id\":\"junction-1\",\"position_m\":{\"x\":0.0,\"z\":0.0}},{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":0.8,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"id\":\"junction-2\",\"position_m\":{\"x\":0.0,\"z\":0.25}}],\"objects\":[],\"observed_junction_count\":2,\"recent_actions\":[{\"action\":{\"action\":\"explore\",\"params\":{}},\"after_observation\":3,\"reason\":\"next_junction_observed\",\"round\":1,\"success\":true}],\"robot\":{\"at_junction\":true,\"at_node\":true,\"exit_angles\":[90,0.8,-90,-180],\"exits\":[{\"angle_deg\":90,\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"angle_deg\":0.8,\"blocked\":false,\"completed\":false,\"heading_deg\":0.8000000000000114,\"visits\":0},{\"angle_deg\":-90,\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"angle_deg\":-180,\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"front_clearance_cm\":215.4,\"held_object_id\":null,\"holding\":false,\"on_road\":true,\"pending_grasp_object_id\":null,\"pose\":{\"forward_cm\":25,\"heading_deg\":0,\"right_cm\":0}},\"round\":2,\"simulation_seconds\":1.62,\"task\":\"把地图上的红球都送到绿色存放区\",\"unexplored_exit_count\":5}",
+            "role": "user"
+          }
+        ],
+        "model": "diagnostic-stub",
+        "response_format": {
+          "type": "json_object"
+        },
+        "temperature": 0
+      },
+      "response": {
+        "id": "diagnostic-2",
+        "object": "chat.completion",
+        "model": "diagnostic-stub",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"action\":\"look_around\",\"params\":{}}"
+            },
+            "finish_reason": "stop"
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "request": {
+        "messages": [
+          {
+            "content": "你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{\"action\":\"动作名\",\"params\":{}}，不加说明、代码块或额外字段。\n动作：explore 的 params 为 {} 或 {\"exit_angle\":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {\"object_id\":\"物体表中的 id\"}。\nexplore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。\n按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。",
+            "role": "system"
+          },
+          {
+            "content": "{\"junction_history\":[{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":0,\"visits\":1}],\"id\":\"junction-1\",\"position_m\":{\"x\":0.0,\"z\":0.0}},{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":0.8,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"id\":\"junction-2\",\"position_m\":{\"x\":0.0,\"z\":0.25}}],\"objects\":[{\"bearing_deg\":-63.0,\"category\":\"obstacle\",\"confidence\":0.769,\"distance_cm\":90.8,\"hit_count\":1,\"id\":\"obstacle_001\",\"position_m\":{\"x\":-0.809,\"z\":0.662},\"status\":\"TENTATIVE\"},{\"bearing_deg\":179.5,\"category\":\"blue-ball\",\"confidence\":0.86,\"distance_cm\":64.8,\"hit_count\":1,\"id\":\"distractor_002\",\"position_m\":{\"x\":0.006,\"z\":-0.398},\"status\":\"TENTATIVE\"},{\"bearing_deg\":148.6,\"category\":\"obstacle\",\"confidence\":0.772,\"distance_cm\":70.9,\"hit_count\":1,\"id\":\"obstacle_003\",\"position_m\":{\"x\":0.369,\"z\":-0.355},\"status\":\"TENTATIVE\"},{\"bearing_deg\":106.6,\"category\":\"storage-zone\",\"confidence\":0.998,\"distance_cm\":123.6,\"hit_count\":1,\"id\":\"storage-zone_004\",\"position_m\":{\"x\":1.185,\"z\":-0.104},\"status\":\"TENTATIVE\"},{\"bearing_deg\":109.3,\"category\":\"storage-zone\",\"confidence\":0.998,\"distance_cm\":139.0,\"hit_count\":1,\"id\":\"storage-zone_005\",\"position_m\":{\"x\":1.312,\"z\":-0.208},\"status\":\"TENTATIVE\"}],\"observed_junction_count\":2,\"recent_actions\":[{\"action\":{\"action\":\"explore\",\"params\":{}},\"after_observation\":3,\"reason\":\"next_junction_observed\",\"round\":1,\"success\":true},{\"action\":{\"action\":\"look_around\",\"params\":{}},\"after_observation\":9,\"reason\":\"four_views_observed\",\"round\":2,\"success\":true}],\"robot\":{\"at_junction\":true,\"at_node\":true,\"exit_angles\":[90,0.8,-90,-180],\"exits\":[{\"angle_deg\":90,\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"angle_deg\":0.8,\"blocked\":false,\"completed\":false,\"heading_deg\":0.8000000000000114,\"visits\":0},{\"angle_deg\":-90,\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"angle_deg\":-180,\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"front_clearance_cm\":215.4,\"held_object_id\":null,\"holding\":false,\"on_road\":true,\"pending_grasp_object_id\":null,\"pose\":{\"forward_cm\":25,\"heading_deg\":0,\"right_cm\":0}},\"round\":3,\"simulation_seconds\":6.18,\"task\":\"把地图上的红球都送到绿色存放区\",\"unexplored_exit_count\":5}",
+            "role": "user"
+          }
+        ],
+        "model": "diagnostic-stub",
+        "response_format": {
+          "type": "json_object"
+        },
+        "temperature": 0
+      },
+      "response": {
+        "id": "diagnostic-3",
+        "object": "chat.completion",
+        "model": "diagnostic-stub",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "INVALID_JSON_DIAGNOSTIC_FIRST"
+            },
+            "finish_reason": "stop"
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "request": {
+        "messages": [
+          {
+            "content": "你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{\"action\":\"动作名\",\"params\":{}}，不加说明、代码块或额外字段。\n动作：explore 的 params 为 {} 或 {\"exit_angle\":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {\"object_id\":\"物体表中的 id\"}。\nexplore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。\n按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。",
+            "role": "system"
+          },
+          {
+            "content": "{\"junction_history\":[{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":0,\"visits\":1}],\"id\":\"junction-1\",\"position_m\":{\"x\":0.0,\"z\":0.0}},{\"exits\":[{\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":0.8,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"id\":\"junction-2\",\"position_m\":{\"x\":0.0,\"z\":0.25}}],\"objects\":[{\"bearing_deg\":-63.0,\"category\":\"obstacle\",\"confidence\":0.769,\"distance_cm\":90.8,\"hit_count\":1,\"id\":\"obstacle_001\",\"position_m\":{\"x\":-0.809,\"z\":0.662},\"status\":\"TENTATIVE\"},{\"bearing_deg\":179.5,\"category\":\"blue-ball\",\"confidence\":0.86,\"distance_cm\":64.8,\"hit_count\":1,\"id\":\"distractor_002\",\"position_m\":{\"x\":0.006,\"z\":-0.398},\"status\":\"TENTATIVE\"},{\"bearing_deg\":148.6,\"category\":\"obstacle\",\"confidence\":0.772,\"distance_cm\":70.9,\"hit_count\":1,\"id\":\"obstacle_003\",\"position_m\":{\"x\":0.369,\"z\":-0.355},\"status\":\"TENTATIVE\"},{\"bearing_deg\":106.6,\"category\":\"storage-zone\",\"confidence\":0.998,\"distance_cm\":123.6,\"hit_count\":1,\"id\":\"storage-zone_004\",\"position_m\":{\"x\":1.185,\"z\":-0.104},\"status\":\"TENTATIVE\"},{\"bearing_deg\":109.3,\"category\":\"storage-zone\",\"confidence\":0.998,\"distance_cm\":139.0,\"hit_count\":1,\"id\":\"storage-zone_005\",\"position_m\":{\"x\":1.312,\"z\":-0.208},\"status\":\"TENTATIVE\"}],\"observed_junction_count\":2,\"recent_actions\":[{\"action\":{\"action\":\"explore\",\"params\":{}},\"after_observation\":3,\"reason\":\"next_junction_observed\",\"round\":1,\"success\":true},{\"action\":{\"action\":\"look_around\",\"params\":{}},\"after_observation\":9,\"reason\":\"four_views_observed\",\"round\":2,\"success\":true}],\"robot\":{\"at_junction\":true,\"at_node\":true,\"exit_angles\":[90,0.8,-90,-180],\"exits\":[{\"angle_deg\":90,\"blocked\":false,\"completed\":false,\"heading_deg\":90,\"visits\":0},{\"angle_deg\":0.8,\"blocked\":false,\"completed\":false,\"heading_deg\":0.8000000000000114,\"visits\":0},{\"angle_deg\":-90,\"blocked\":false,\"completed\":false,\"heading_deg\":-90,\"visits\":0},{\"angle_deg\":-180,\"blocked\":false,\"completed\":false,\"heading_deg\":-180,\"visits\":0}],\"front_clearance_cm\":215.4,\"held_object_id\":null,\"holding\":false,\"on_road\":true,\"pending_grasp_object_id\":null,\"pose\":{\"forward_cm\":25,\"heading_deg\":0,\"right_cm\":0}},\"round\":3,\"simulation_seconds\":6.18,\"task\":\"把地图上的红球都送到绿色存放区\",\"unexplored_exit_count\":5}",
+            "role": "user"
+          },
+          {
+            "content": "INVALID_JSON_DIAGNOSTIC_FIRST",
+            "role": "assistant"
+          },
+          {
+            "content": "上一个输出不合法：Completion is not a strict JSON object。仅修复为一个合法动作 JSON；遵守给定状态及 action/params 契约。",
+            "role": "user"
+          }
+        ],
+        "model": "diagnostic-stub",
+        "response_format": {
+          "type": "json_object"
+        },
+        "temperature": 0
+      },
+      "response": {
+        "id": "diagnostic-4",
+        "object": "chat.completion",
+        "model": "diagnostic-stub",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "INVALID_JSON_DIAGNOSTIC_REPAIR"
+            },
+            "finish_reason": "stop"
+          }
+        ]
+      }
+    }
+  ],
+  "tool_sha256": "71233c0ba42e72942b60f0c1e6f33c56fbebea5d9c530722e76c30c85305d259",
+  "driver_sha256": "f0249a777e295af86548426e96da7a5cc53449bb3b6b88bb8cb0f0a796fcc532",
+  "driver_returncode": 1,
+  "wall_elapsed_seconds": 46.977285667000004
+}
