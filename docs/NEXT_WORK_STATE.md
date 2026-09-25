@@ -8,6 +8,7 @@
 - 当前配置已完成：Kimi 密钥只保存于 Git 忽略的 `.env.local`，鉴权通过；driver 自动加载，无需手工 export。原温度 0 的探测被服务拒绝后，用户已明确允许 K2.6 非思考模式、固定温度 0.6；新参数真实 JSON 输出验证通过。完整无密钥证据见 [Kimi 接入报告](../artifacts/autonomous-brain/kimi-setup-20260925/REPORT.md)。尚无本轮 map-05 成功局，未运行十布局。
 - 正式首局已结束并明确 FAIL：40 轮、40 次模型调用、0 抓取、0 送达，导航受阻后盲退导致离路；[完整失败证据](../artifacts/autonomous-brain/map05-run-01/FAILURE_ANALYSIS.md)保留。已修复恢复动作、近路口判定、直接节点间行驶的出口登记，并明确模型必须选择当前相对出口。确认和抓放门槛不变；163 项 Python 与 3 项 Node 检查通过。
 - 第二局也已 FAIL：第 8 轮模型请求超时，未生成该轮动作；此前近路口修复实测通过，0 抓取和送达。见[第二局证据](../artifacts/autonomous-brain/map05-run-02/FAILURE_ANALYSIS.md)。计划只增加网络等待时间后新建第三局；模型、温度、确认/抓放门槛和任务上限不变。下一步收集新局结果，按 [运行说明](AUTONOMOUS_BRAIN.md) 用独立真值/record 评测。不能把配置成功、鉴权成功或诊断结果当成正式任务成功。只有正式 map-05 成功后才能跑十布局。此前交付与检查见 [报告](../artifacts/autonomous-brain/REPORT.md)。
+- Run 03 is active in `artifacts/autonomous-brain/map05-run-03`, frozen source commit `fd68988`. LLM v5 uses a 180-second transport timeout; Actions v5 retains a road-compatible candidate viewing direction and stops on new confirmation. See `artifacts/autonomous-brain/scan-followup-fix-20260925/REPORT.md`. Confirmation, grasp/place gates and task limits are unchanged.
 
 ## 历史状态：v4 严格阶段验收
 
