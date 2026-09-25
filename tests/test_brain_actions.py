@@ -112,6 +112,138 @@ class ActionEvidenceTests(unittest.TestCase):
         self.assertFalse(ball_inside_region({"x": 145, "y": 210, "w": 10, "h": 15}, dict(zone, x=0)))
 
 
+class ExploreRecoveryTests(unittest.TestCase):
+    def scripted_runtime(self, steps, *, on_road=True, pose=None):
+        snapshot = {"observation_index": 1, "observation": {"frameId": 1},
+                    "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0,
+                                 **(pose or {})},
+                    "holding": {"holding": False},
+                    "road": {"onRoad": on_road, "atNode": False, "exits": []},
+                    "perception": {"detections": []}}
+        moves, remaining, pending = [], copy.deepcopy(steps), []
+        roads = RoadMemory()
+        roads.update(snapshot["odometry"], snapshot["road"])
+        runtime = SimpleNamespace(snapshot=snapshot, round=1, roads=roads,
+            perception=SimpleNamespace(objects=lambda: []),
+            bridge=SimpleNamespace(seconds=0, max_seconds=1200),
+            motion_log=SimpleNamespace(write=lambda row: None))
+
+        def call(method, params):
+            self.assertTrue(remaining, f"unexpected motion: {method}")
+            step = remaining.pop(0)
+            self.assertEqual(method, step["method"])
+            if "params" in step:
+                self.assertEqual(params, step["params"])
+            moves.append((method, params))
+            pending.append(step)
+            return step.get("result", {})
+
+        def observe():
+            if pending:
+                step = pending.pop(0)
+                snapshot["odometry"].update(step.get("odometry", {}))
+                snapshot["road"].update(step.get("road", {}))
+            snapshot["observation_index"] += 1
+            snapshot["observation"]["frameId"] += 1
+            snapshot["odometry"]["tick"] += 1
+            roads.update(snapshot["odometry"], snapshot["road"])
+
+        runtime.bridge.call, runtime.observe = call, observe
+        return runtime, moves, remaining
+
+    def test_near_junction_ends_exploration_before_second_motion(self):
+        for stopped_by in ("junction", "max_distance"):
+            with self.subTest(stopped_by=stopped_by):
+                runtime, moves, remaining = self.scripted_runtime([{
+                    "method": "follow_road",
+                    "result": {"accepted": True, "stoppedBy": stopped_by, "distanceCm": 6.4},
+                    "odometry": {"forwardCm": 6.4},
+                    "road": {"atNode": True, "exits": [{"angleDeg": 180}, {"angleDeg": 90}]},
+                }])
+                result = Actions(runtime).explore()
+                self.assertTrue(result["success"])
+                self.assertEqual(result["reason"], "next_junction_observed")
+                self.assertEqual(len(moves), 1)
+                self.assertEqual(remaining, [])
+                self.assertEqual(runtime.roads.blocked, [])
+
+    def test_zero_distance_junction_is_not_a_blockage(self):
+        for at_node in (False, True):
+            with self.subTest(at_node=at_node):
+                runtime, moves, _ = self.scripted_runtime([{
+                    "method": "follow_road",
+                    "result": {"accepted": True, "stoppedBy": "junction", "distanceCm": 0},
+                    "road": {"atNode": at_node},
+                }])
+                result = Actions(runtime).explore()
+                self.assertTrue(result["success"])
+                self.assertEqual(result["reason"], "next_junction_observed")
+                self.assertEqual(len(moves), 1)
+                self.assertEqual(runtime.roads.blocked, [])
+
+    def test_blocked_curved_road_turns_and_follows_road_to_junction(self):
+        runtime, moves, remaining = self.scripted_runtime([
+            {"method": "follow_road",
+             "result": {"accepted": True, "stoppedBy": "front_clearance", "distanceCm": 2.8},
+             "odometry": {"rightCm": -154}},
+            {"method": "turn", "params": {"angleDeg": -180, "speed": 50},
+             "odometry": {"headingDeg": 90}},
+            {"method": "follow_road", "params": {"distanceCm": 20, "speed": 30},
+             "result": {"accepted": True, "stoppedBy": "max_distance", "distanceCm": 20},
+             "odometry": {"rightCm": -173, "forwardCm": -19, "headingDeg": 65}},
+            {"method": "follow_road", "params": {"distanceCm": 20, "speed": 30},
+             "result": {"accepted": True, "stoppedBy": "junction", "distanceCm": 15},
+             "odometry": {"rightCm": -184, "forwardCm": -9, "headingDeg": 40},
+             "road": {"atNode": True, "exits": [{"angleDeg": 180}, {"angleDeg": 0}]}},
+        ], pose={"rightCm": -156.8, "forwardCm": -22.4, "headingDeg": -90})
+        result = Actions(runtime).explore()
+        self.assertFalse(result["success"])
+        self.assertEqual(result["reason"], "road_blocked_returned_to_junction")
+        self.assertEqual(result["evidence"]["actuator_result"]["stoppedBy"], "front_clearance")
+        self.assertEqual(result["evidence"]["recovery_steps"], 2)
+        self.assertEqual([method for method, _ in moves], ["follow_road", "turn", "follow_road", "follow_road"])
+        self.assertEqual(runtime.snapshot["observation_index"], 5)
+        self.assertTrue(runtime.snapshot["road"]["onRoad"])
+        self.assertTrue(runtime.snapshot["road"]["atNode"])
+        self.assertEqual(remaining, [])
+
+    def test_already_off_road_does_not_move(self):
+        runtime, moves, _ = self.scripted_runtime([], on_road=False)
+        result = Actions(runtime).execute({"action": "explore", "params": {}})
+        self.assertFalse(result["success"])
+        self.assertEqual(result["reason"], "not_on_observed_road")
+        self.assertEqual(moves, [])
+        self.assertEqual(runtime.snapshot["observation_index"], 2)
+
+    def test_off_road_motion_result_cannot_trigger_blind_recovery(self):
+        for on_road in (False, True):
+            with self.subTest(on_road=on_road):
+                runtime, moves, _ = self.scripted_runtime([{
+                    "method": "follow_road",
+                    "result": {"accepted": False, "stoppedBy": "off_road", "distanceCm": 0},
+                    "road": {"onRoad": on_road},
+                }])
+                result = Actions(runtime).explore()
+                self.assertFalse(result["success"])
+                self.assertEqual(result["reason"], "not_on_observed_road")
+                self.assertEqual(len(moves), 1)
+
+    def test_recovery_stops_immediately_if_road_is_lost(self):
+        runtime, moves, remaining = self.scripted_runtime([
+            {"method": "follow_road",
+             "result": {"accepted": True, "stoppedBy": "front_clearance", "distanceCm": 0}},
+            {"method": "turn", "odometry": {"headingDeg": 180}},
+            {"method": "follow_road",
+             "result": {"accepted": True, "stoppedBy": "max_distance", "distanceCm": 20},
+             "odometry": {"forwardCm": -20}, "road": {"onRoad": False}},
+        ])
+        result = Actions(runtime).explore()
+        self.assertFalse(result["success"])
+        self.assertEqual(result["reason"], "blocked_road_return_left_road")
+        self.assertEqual([method for method, _ in moves], ["follow_road", "turn", "follow_road"])
+        self.assertEqual(remaining, [])
+
+
 class RoadMemoryTests(unittest.TestCase):
     def test_attempted_exit_is_not_completed_exploration(self):
         roads = RoadMemory()

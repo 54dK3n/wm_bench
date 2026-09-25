@@ -20,11 +20,12 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v3"
-SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", VERSION}
+VERSION = "autonomous-brain-llm/v4"
+SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", "autonomous-brain-llm/v3", VERSION}
 SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
+只有 robot.at_node 为 true 且 robot.exit_angles 非空时才能给 explore 提供 exit_angle，并且必须原样选择 robot.exit_angles 中的一个数值。其他位置的 explore 必须使用空 params {}。junction_history 中的 heading_deg 是历史绝对朝向，不是当前可选相对出口，禁止把它填入 exit_angle。
 explore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。
 按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
@@ -180,6 +181,7 @@ class LLMClient:
         self._terminal = False
         self._base_url = ""
         self._api_key = ""
+        self.system_prompt = SYSTEM_PROMPT
         if replay_path is not None:
             if Path(log_path).resolve() == Path(replay_path).resolve():
                 raise ReplayError("Replay source and destination must differ")
@@ -198,6 +200,12 @@ class LLMClient:
                 raise ReplayError("Replay is missing its request object")
             first_request = self._replay[0]["request"]
             self.model = model or first_request.get("model")
+            messages = first_request.get("messages")
+            if (not isinstance(messages, list) or not messages or not isinstance(messages[0], dict)
+                    or messages[0].get("role") != "system"
+                    or not isinstance(messages[0].get("content"), str)):
+                raise ReplayError("Replay is missing its recorded system prompt")
+            self.system_prompt = messages[0]["content"]
             # Preserve the recorded int/float representation for exact hashes,
             # including the integer zero emitted by v1/v2 clients.
             self.temperature = first_request.get("temperature")
@@ -353,7 +361,7 @@ class LLMClient:
         if self._terminal:
             raise RuntimeError("LLM client stopped after an error; start a new run")
         prepared = _prepare_state(state)
-        messages = [{"role": "system", "content": SYSTEM_PROMPT},
+        messages = [{"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": _canonical(prepared)}]
         self.decision_count += 1
         try:

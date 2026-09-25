@@ -6,7 +6,7 @@ import math
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v3"
+VERSION = "autonomous-brain-actions/v4"
 
 
 def ball_inside_region(ball, region):
@@ -86,10 +86,44 @@ class Actions:
         new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before]
         return self.result(True, "four_views_observed", new_object_ids=new)
 
+    def return_from_blocked_road(self, blocked_result):
+        """Turn back and follow the observed road, including its bends."""
+        self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
+                                     "tick": self.s["odometry"]["tick"],
+                                     "reason": blocked_result.get("stoppedBy")})
+        self.r.roads.mark_blocked()
+        if not self.s["road"]["onRoad"] or blocked_result.get("stoppedBy") == "off_road":
+            return self.result(False, "not_on_observed_road", actuator_result=blocked_result)
+        if self.s["road"].get("atNode"):
+            return self.result(False, "road_blocked_at_junction", actuator_result=blocked_result)
+        self.turn(180)
+        for step in range(45):
+            if not self.s["road"]["onRoad"]:
+                return self.result(False, "blocked_road_return_left_road", actuator_result=blocked_result)
+            if self.s["road"].get("atNode"):
+                return self.result(False, "road_blocked_returned_to_junction",
+                                   actuator_result=blocked_result, recovery_steps=step)
+            before = position(self.s["odometry"])
+            result = self.move("follow_road", {"distanceCm": 20, "speed": 30})
+            if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+                return self.result(False, "blocked_road_return_left_road",
+                                   actuator_result=blocked_result, recovery_result=result)
+            if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+                return self.result(False, "road_blocked_returned_to_junction",
+                                   actuator_result=blocked_result, recovery_result=result,
+                                   recovery_steps=step + 1)
+            moved = distance(before, position(self.s["odometry"])) * 100
+            if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+                return self.result(False, "blocked_road_return_blocked",
+                                   actuator_result=blocked_result, recovery_result=result)
+        return self.result(False, "blocked_road_return_incomplete", actuator_result=blocked_result)
+
     def explore(self, exit_angle=None):
         before_ids = {o["id"] for o in self.r.perception.objects()}
         start = position(self.s["odometry"])
         road, odo = self.s["road"], self.s["odometry"]
+        if not road["onRoad"]:
+            return self.result(False, "not_on_observed_road")
         if exit_angle is not None and not road.get("atNode"):
             return self.result(False, "exit_angle_requires_a_current_junction")
         if road.get("atNode") and road["exits"]:
@@ -102,31 +136,31 @@ class Actions:
                     return self.result(False, "requested_exit_not_observed", available_exits=exits)
             self.r.roads.chosen(odo, chosen["angle_deg"])
             result = self.move("take_exit", {"angleDeg": chosen["angle_deg"], "speed": 50})
+            if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+                return self.return_from_blocked_road(result)
+            if result.get("stoppedBy") == "junction" or (
+                    self.s["road"].get("atNode") and result.get("distanceCm", 0) >= 0.2):
+                return self.result(True, "next_junction_observed")
             if result.get("distanceCm", 0) < 0.2:
                 self.r.roads.mark_blocked()
                 return self.result(False, "selected_exit_blocked", actuator_result=result)
+            if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+                return self.return_from_blocked_road(result)
         for step in range(12):
             new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
             if new:
                 return self.result(True, "new_objects_observed", new_object_ids=new)
-            if distance(start, position(self.s["odometry"])) >= 0.15 and self.s["road"].get("atNode"):
-                return self.result(True, "next_junction_observed")
             before = position(self.s["odometry"])
             result = self.move("follow_road", {"distanceCm": 20, "speed": 50})
+            if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+                return self.return_from_blocked_road(result)
+            # A nearby junction can be less than one step away, or the road
+            # follower can report it without moving. Neither is an obstacle.
+            if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+                return self.result(True, "next_junction_observed")
             moved = distance(before, position(self.s["odometry"])) * 100
-            if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:
-                # Observation decides whether to stop at a newly found target.
-                new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
-                if new:
-                    return self.result(True, "new_object_at_blocked_road", new_object_ids=new)
-                self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
-                                             "tick": self.s["odometry"]["tick"], "reason": result.get("stoppedBy")})
-                self.r.roads.mark_blocked()
-                # Back away while still looking at a nearby unconfirmed object;
-                # those translated views may supply the missing confirmation.
-                for _ in range(3):
-                    self.move("backward", {"distanceCm": 16, "speed": 30})
-                return self.result(False, "road_blocked_backed_away_for_observation", actuator_result=result)
+            if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+                return self.return_from_blocked_road(result)
         return self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100)
 
     def go_to(self, object_id):

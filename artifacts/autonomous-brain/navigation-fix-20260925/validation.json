@@ -1,0 +1,115 @@
+{
+  "schema": "autonomous-brain-navigation-fix-validation/v1",
+  "created_at_utc": "2026-09-25T05:49:20.432348+00:00",
+  "scope": "Post-first-run fixes and regression validation; not task acceptance.",
+  "versions": {
+    "autonomous_brain/actions.py": "autonomous-brain-actions/v4",
+    "autonomous_brain/navigation.py": "autonomous-brain-navigation/v2",
+    "autonomous_brain/llm.py": "autonomous-brain-llm/v4"
+  },
+  "source_and_test_sha256": {
+    "autonomous_brain/actions.py": "dc4b697f76b40afee7396090a86638b0ccbebed9e68d7ff8b227055812d80bc3",
+    "autonomous_brain/navigation.py": "6d19436fbee9583849889fef9d946308e530e2e8ad63cfd70cbef725a17afaec",
+    "autonomous_brain/llm.py": "df8327e9807cae33b87d32ee4753963e3e15c248ee50feb2f5f236cb36dd1f16",
+    "tests/test_brain_actions.py": "69bda79dc54a8031c5748c054b3db7ecc8bd22d66015b05997e206aa9e664d9b",
+    "tests/test_brain_navigation.py": "890310e731acd3e5f28d5b570a37325b141d151bf39b33aaf583905efaebbf76",
+    "tests/test_brain_llm.py": "bad7b1b175e3a353183ac31261a50bb8826412c377613cb928b25fb097404d5e"
+  },
+  "first_run": {
+    "directory": "artifacts/autonomous-brain/map05-run-01/map-05-run-1",
+    "offline_report": "artifacts/autonomous-brain/map05-run-01/report/REPORT.md",
+    "evaluation": "artifacts/autonomous-brain/map05-run-01/map-05-run-1/evaluation.json",
+    "brain_summary": "artifacts/autonomous-brain/map05-run-01/map-05-run-1/brain/summary.json",
+    "verdict": "FAIL",
+    "task_success": false,
+    "rounds": 40,
+    "llm_calls": 40,
+    "simulation_seconds": 100.88,
+    "observations": 176,
+    "failed_actions": 17,
+    "valid_deliveries": 0,
+    "brain_status": "failed",
+    "brain_reason": "BridgeError: odometry: NOT_RUNNING",
+    "success_claim_permitted": false
+  },
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_brain_actions.py",
+        "tests/test_brain_perception.py",
+        "tests/test_brain_llm.py",
+        "tests/test_brain_evaluation.py",
+        "tests/test_brain_navigation.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "163 passed in 0.24s",
+      "passed": 163,
+      "execution_provenance": "Executed by the parent task immediately before this report; exact summary relayed to this report writer. Not rerun here.",
+      "stdout_file": null
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "tools/tests/test_autonomous_brain_config.js"
+      ],
+      "exit_code": 0,
+      "summary": "tests 3; pass 3; fail 0; duration_ms 42.451333",
+      "passed": 3,
+      "failed": 0,
+      "duration_ms": 42.451333,
+      "execution_provenance": "Executed by the parent task immediately before this report; exact summary relayed to this report writer. Not rerun here.",
+      "stdout_file": null
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "execution_provenance": "Executed by the parent task immediately before this report and reported as exit 0. Not rerun here.",
+      "stdout_file": null
+    }
+  ],
+  "regression_checks_passed": true,
+  "guardrail_verification": {
+    "verification_performed_by": "This report writer, using read-only source comparison.",
+    "method": "Compare unchanged modules against first-run recorded SHA256; compare protected action function ASTs against git HEAD.",
+    "modules_identical_to_first_run": {
+      "autonomous_brain/perception.py": true,
+      "autonomous_brain/bridge.py": true,
+      "autonomous_brain/run.py": true
+    },
+    "action_functions_identical_to_head": {
+      "ball_inside_region": true,
+      "Actions.go_to": true,
+      "Actions.pick": true,
+      "Actions.place": true,
+      "Actions.done": true
+    },
+    "changed_action_functions": [
+      "Actions.return_from_blocked_road",
+      "Actions.explore"
+    ],
+    "confirmation_thresholds_changed": false,
+    "grasp_or_placement_gates_changed": false,
+    "environment_file_read": false,
+    "brain_or_driver_sources_modified_by_report_writer": false
+  },
+  "second_run": {
+    "status_at_assignment": "RUNNING",
+    "brain_and_driver_sources_frozen": true,
+    "verdict_in_this_report": "NOT_EVALUATED"
+  },
+  "limitations": [
+    "The first real run ended after 40 rounds with zero valid deliveries and remains FAIL.",
+    "Passing unit and regression tests does not establish real task completion.",
+    "No separate stdout files were saved for the parent-executed regression checks.",
+    "Offline evaluation results were inspected only for documentation; no truth, map, or road identifiers were added to brain inputs or logic."
+  ]
+}

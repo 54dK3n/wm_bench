@@ -1,0 +1,19 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "reason": "off_road_recovery_regression",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 5044,
+    "errors": []
+  },
+  "evidence": [
+    "map-05-run-1/brain/rounds.jsonl: rounds 24 and 25",
+    "map-05-run-1/brain/observations.jsonl: observations 95-103"
+  ],
+  "timestamp": "2026-09-25T05:38:03.259Z"
+}

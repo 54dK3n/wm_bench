@@ -73,7 +73,17 @@ node tools/autonomous_brain_driver.js \
   --out artifacts/autonomous-brain/map05-replay-01
 ```
 
-输入状态不匹配时停止并报告，不伪造对应输出。本轮不要求逐条 record 确定性作为门禁。
+全仿真调试必须使用原局冻结源码；输入状态不匹配时停止并报告，不伪造对应输出。本轮不要求逐条 record 确定性作为门禁。
+
+仅复核已保存的状态与模型决策，不运行机器人、禁止网络和环境读取：
+
+```sh
+python3 tools/replay_brain_llm.py \
+  --input artifacts/autonomous-brain/map05-run-01/map-05-run-1/brain \
+  --out artifacts/autonomous-brain/map05-llm-replay-new
+```
+
+它要求调用记录全部耗尽、除 `mode` 外完整记录相同；动作执行失败不会被误计为模型输出失败。这项核验不代表全仿真复跑或任务成功。
 
 只有 map-05 正式成功后，才可凭保存的成功局运行十布局：
 

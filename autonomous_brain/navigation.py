@@ -4,7 +4,7 @@ from __future__ import annotations
 import heapq
 import math
 
-VERSION = "autonomous-brain-navigation/v1"
+VERSION = "autonomous-brain-navigation/v2"
 
 
 def wrap(angle):
@@ -36,6 +36,13 @@ class RoadMemory:
 
     def update(self, odo, road):
         p = position(odo)
+        if self.active_exit:
+            previous = self.active_exit["last_position"]
+            if distance(p, previous) > 1e-6:
+                # Keep the final observed movement direction through stationary
+                # observations/turns, including when both endpoints are nodes.
+                self.active_exit["reverse_heading"] = heading_to(p, previous)
+                self.active_exit["last_position"] = p
         if road["onRoad"]:
             choices = [(distance(p, vertex), i) for i, vertex in enumerate(self.vertices)]
             closest = min(choices, default=(math.inf, None))
@@ -64,21 +71,24 @@ class RoadMemory:
                 heading = wrap(odo["headingDeg"] + raw["angleDeg"])
                 if not any(abs(wrap(e["heading_deg"] - heading)) < 15 for e in node["exits"]):
                     node["exits"].append({"heading_deg": heading, "visits": 0, "completed": False, "blocked": False})
-            if self.active_exit and self.active_exit["departed"]:
+            if self.active_exit:
                 origin = self.active_exit["node"]
-                if node["id"] != origin["id"]:
+                # A sensor step can cross the whole segment without observing
+                # atNode=False. Distinct odometry positions establish arrival.
+                if distance(node["position"], origin["position"]) >= 0.15:
                     self.active_exit["exit"]["completed"] = True
                     # The reverse exit was traversed too; its bearing comes
                     # from the actual final odometry segment, not a map ID.
-                    incoming = self.active_exit["last_position"]
-                    reverse = heading_to(p, incoming)
-                    candidate = min(node["exits"], key=lambda e: abs(wrap(e["heading_deg"] - reverse)))
-                    if abs(wrap(candidate["heading_deg"] - reverse)) < 45:
-                        candidate["completed"] = True
-                self.active_exit = None
+                    reverse = self.active_exit["reverse_heading"]
+                    if reverse is not None:
+                        candidate = min(node["exits"], key=lambda e: abs(wrap(e["heading_deg"] - reverse)))
+                        if abs(wrap(candidate["heading_deg"] - reverse)) < 45:
+                            candidate["completed"] = True
+                    self.active_exit = None
+                elif self.active_exit["departed"]:
+                    self.active_exit = None
         elif self.active_exit:
             self.active_exit["departed"] = True
-            self.active_exit["last_position"] = p
 
     def current_node(self, odo):
         p = position(odo)
@@ -107,7 +117,7 @@ class RoadMemory:
                 exit["visits"] += 1
                 exit["blocked"] |= blocked
                 self.active_exit = {"node": node, "exit": exit, "departed": False,
-                                    "last_position": position(odo)}
+                                    "last_position": position(odo), "reverse_heading": None}
 
     def mark_blocked(self):
         if self.active_exit:

@@ -1,0 +1,210 @@
+{
+  "version": "autonomous-brain-offline-evaluation/v1",
+  "evaluation_only": true,
+  "run_directory": "artifacts/autonomous-brain/map05-run-02/map-05-run-1",
+  "map": "map-05",
+  "success": false,
+  "failures": [
+    "no_active_delivery_event:guangyang-target-1",
+    "final_position_outside_storage:guangyang-target-1",
+    "no_active_delivery_event:guangyang-target-2",
+    "final_position_outside_storage:guangyang-target-2",
+    "brain_did_not_finish_with_observed_done",
+    "execution_or_controller_error"
+  ],
+  "delivery": {
+    "failures": [
+      "no_active_delivery_event:guangyang-target-1",
+      "final_position_outside_storage:guangyang-target-1",
+      "no_active_delivery_event:guangyang-target-2",
+      "final_position_outside_storage:guangyang-target-2",
+      "brain_did_not_finish_with_observed_done",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "delivered_target_ids": [],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 872,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 22.812830983681092,
+        "position_world": [
+          10.0849,
+          1.251
+        ],
+        "events": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 872,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 16.819687483719786,
+        "position_world": [
+          0.5097,
+          4.4324
+        ],
+        "events": []
+      }
+    ],
+    "rounds": 8,
+    "round_records": 8,
+    "max_rounds": 200,
+    "simulation_seconds": 17.44,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "metrics": {
+    "rounds": 8,
+    "llm_calls": 8,
+    "llm_total_elapsed_s": 162.621408749,
+    "simulation_seconds": 17.44,
+    "observations": 29,
+    "failed_actions": 1,
+    "bridge_calls": 131,
+    "nonwhitelist_brain_requests": 0
+  },
+  "brain_status": "failed",
+  "brain_reason": "LLMRequestError: LLM request failed: timeout; see transcript",
+  "failed_actions": [
+    {
+      "round": 8,
+      "action": null,
+      "simulation_seconds": 17.44,
+      "result": {
+        "success": false,
+        "reason": "LLM request failed: timeout; see transcript",
+        "error_type": "LLMRequestError"
+      }
+    }
+  ],
+  "perception": {
+    "matching_method": "same-frame class + projected truth centre inside exact bbox, unique both ways; WM identities require consistent bbox-to-track associations",
+    "matching_limitation": "geometric correspondence does not independently prove occlusion visibility; partial boxes excluding the centre remain unmatched; no nearest-distance fallback",
+    "coordinate_convention": "initial robot right/forward metres; right=[cos(h0),-sin(h0)], forward=[-sin(h0),-cos(h0)]",
+    "error_sample_definition": "one sample per logged CONFIRMED red track per observation with unique identity and active exact-frame truth; repeated estimates count as repeated samples",
+    "position_error": {
+      "count": 0,
+      "mean_cm": null,
+      "rmse_cm": null,
+      "max_cm": null
+    },
+    "position_samples": [],
+    "unmatched_confirmed_samples": [],
+    "unmatched_confirmed_count": 0,
+    "ambiguous_track_ids": {},
+    "track_truth_bindings": {},
+    "binding_evidence": [],
+    "raw_red_match_counts": {},
+    "matching_issues": [],
+    "timeline": [
+      {
+        "truth_id": "guangyang-target-1",
+        "wm_track_ids": [],
+        "first_raw_seen": null,
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "wm_track_ids": [],
+        "first_raw_seen": null,
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      }
+    ]
+  },
+  "inputs": {
+    "record.json": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/record.json.gz",
+      "sha256": "17c084cc0b11ac63425fd006f58d596b72609f57cae07b13a7f331cec3cb9487",
+      "bytes": 7344019,
+      "expanded_sha256": "ea9e22f233cce22c8137dd77acfffb5e5c5e3238df6830f2e0736bff62e1de98"
+    },
+    "captures.json": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/captures.json.gz",
+      "sha256": "ff2bc80caa5c7bb1e3eed5244d88006df86f14878c22ef4b2842a9dbfdf8ed3f",
+      "bytes": 2236,
+      "expanded_sha256": "c15675869f7bf32c4805c9426ebaa73703cc7c00998f0ec782008124b9d1e9d7"
+    },
+    "brain/summary.json": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/brain/summary.json",
+      "sha256": "c078412075e490afb8fe9ff6d8282d860b3322bab1a5ee35afaf1bb5089e8191",
+      "bytes": 17421,
+      "expanded_sha256": "c078412075e490afb8fe9ff6d8282d860b3322bab1a5ee35afaf1bb5089e8191"
+    },
+    "brain/rounds.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "8c33a08f8a8b5fda1face9275a08d2942abf7948f2fda7fad986eaaf813957c2",
+      "bytes": 69154,
+      "expanded_sha256": "8c33a08f8a8b5fda1face9275a08d2942abf7948f2fda7fad986eaaf813957c2"
+    },
+    "brain/observations.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/brain/observations.jsonl",
+      "sha256": "285a5a59453113baf2c1e8ff75736639449676d3d26ae54cd79a0e9006f06877",
+      "bytes": 219386,
+      "expanded_sha256": "285a5a59453113baf2c1e8ff75736639449676d3d26ae54cd79a0e9006f06877"
+    },
+    "brain/llm.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/brain/llm.jsonl",
+      "sha256": "1b683ba20b48b40a6173137ead044642f4bb07d78bbe11ddbef17dd5df808ed2",
+      "bytes": 46646,
+      "expanded_sha256": "1b683ba20b48b40a6173137ead044642f4bb07d78bbe11ddbef17dd5df808ed2"
+    },
+    "brain/bridge-calls.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "2d1f824f3123e1cf97601d1c706158b49a8fc5179354676c8419c38c72e4d691",
+      "bytes": 59277,
+      "expanded_sha256": "2d1f824f3123e1cf97601d1c706158b49a8fc5179354676c8419c38c72e4d691"
+    },
+    "evaluation.json": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/evaluation.json",
+      "sha256": "ef8c472dac33f824fb27c2d6ce5d383a594c5e2f92d35efe5d158fa77ad2966c",
+      "bytes": 21268,
+      "expanded_sha256": "ef8c472dac33f824fb27c2d6ce5d383a594c5e2f92d35efe5d158fa77ad2966c"
+    },
+    "evidence.json": {
+      "path": "artifacts/autonomous-brain/map05-run-02/map-05-run-1/evidence.json",
+      "sha256": "0e8742dd55db5eea1df34758f9360b780669b0d3385f03033725c20d116c5fc7",
+      "bytes": 1204,
+      "expanded_sha256": "0e8742dd55db5eea1df34758f9360b780669b0d3385f03033725c20d116c5fc7"
+    }
+  },
+  "evaluator_sha256": "6ed620a9c93858b5d0906b79268bcadb6428bf08a6d92311308ca52475c831b4",
+  "rules": {
+    "truth_only_in_evaluator": true,
+    "success_recomputed_from_record": true,
+    "determinism_is_not_a_gate": true,
+    "position_error_is_report_only": true,
+    "limits": "reaching configured round/time cap fails; caps never exceed 200 rounds or 1200 seconds"
+  }
+}

@@ -5,8 +5,9 @@
 - 平台够用门禁：PASS。新跑的 map-05 固定动作诊断有逐条一致的桥检测，四类均非空，见 [新运行报告](../artifacts/autonomous-brain/fresh-map05-gate-20260925/REPORT.md)。短路线没有进入指定应见距离窗，因此另保留 [历史长路线只读复算](../artifacts/autonomous-brain/platform-gate-20260925/REPORT.md)；应见召回与两次检测一致性均只报告。
 - 外部大脑已实现于 `autonomous_brain/`，WorldModel 使用官方 main 的锁定版本和显式 `max_range_m=0.9`，沿用 M5。
 - 真实平台与外部大脑的假模型传输联调、非法 JSON 停止和不联网模型回放均通过。它们不是正式模型或双球任务验收。
-- 当前配置已完成：Kimi 密钥只保存于 Git 忽略的 `.env.local`，鉴权通过；driver 自动加载，无需手工 export。原温度 0 的探测被服务拒绝后，用户已明确允许 K2.6 非思考模式、固定温度 0.6；新参数真实 JSON 输出验证通过，正式 map-05 已启动。完整无密钥证据见 [Kimi 接入报告](../artifacts/autonomous-brain/kimi-setup-20260925/REPORT.md)。尚无本轮 map-05 成功局，未运行十布局。
-- 下一步：收集已启动的正式 map-05 结果，按 [运行说明](AUTONOMOUS_BRAIN.md) 新建 map-05 证据目录运行，并用独立真值/record 评测。不能把配置成功、鉴权成功或诊断结果当成正式任务成功。只有正式 map-05 成功后才能跑十布局。此前交付与检查见 [报告](../artifacts/autonomous-brain/REPORT.md)。
+- 当前配置已完成：Kimi 密钥只保存于 Git 忽略的 `.env.local`，鉴权通过；driver 自动加载，无需手工 export。原温度 0 的探测被服务拒绝后，用户已明确允许 K2.6 非思考模式、固定温度 0.6；新参数真实 JSON 输出验证通过。完整无密钥证据见 [Kimi 接入报告](../artifacts/autonomous-brain/kimi-setup-20260925/REPORT.md)。尚无本轮 map-05 成功局，未运行十布局。
+- 正式首局已结束并明确 FAIL：40 轮、40 次模型调用、0 抓取、0 送达，导航受阻后盲退导致离路；[完整失败证据](../artifacts/autonomous-brain/map05-run-01/FAILURE_ANALYSIS.md)保留。已修复恢复动作、近路口判定、直接节点间行驶的出口登记，并明确模型必须选择当前相对出口。确认和抓放门槛不变；163 项 Python 与 3 项 Node 检查通过。
+- 当前第二局：`artifacts/autonomous-brain/map05-run-02`，运行中脑与 driver 源码冻结。下一步收集结果，按 [运行说明](AUTONOMOUS_BRAIN.md) 用独立真值/record 评测。不能把配置成功、鉴权成功或诊断结果当成正式任务成功。只有正式 map-05 成功后才能跑十布局。此前交付与检查见 [报告](../artifacts/autonomous-brain/REPORT.md)。
 
 ## 历史状态：v4 严格阶段验收
 

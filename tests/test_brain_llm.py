@@ -40,6 +40,20 @@ def records(path):
     return [json.loads(line) for line in Path(path).read_text().splitlines()]
 
 
+def test_replay_restores_recorded_prompt_after_live_prompt_revision(tmp_path, state, monkeypatch):
+    import autonomous_brain.llm as module
+    source = tmp_path / "old-prompt.jsonl"
+    with patch("urllib.request.urlopen", return_value=response('{"action":"explore","params":{}}')):
+        with LLMClient(source) as live:
+            expected = live.decide(state)
+    monkeypatch.setattr(module, "SYSTEM_PROMPT", "A revised live prompt")
+    with patch("urllib.request.urlopen", side_effect=AssertionError("replay must not network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=source) as replay:
+            assert replay.decide(state) == expected
+            replay.assert_replay_consumed()
+    assert records(tmp_path / "replay.jsonl")[0]["request"] == records(source)[0]["request"]
+
+
 def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, state):
     state["recent_actions"] = [{"round": value} for value in range(8)]
     raw = '{"action":"go_to","params":{"object_id":"wm-1"}}'
@@ -62,7 +76,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v3"
+            assert saved["version"] == "autonomous-brain-llm/v4"
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
             assert saved["response_model"] == "served-model"
