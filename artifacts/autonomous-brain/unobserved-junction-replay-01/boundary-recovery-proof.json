@@ -1,0 +1,507 @@
+{
+  "schema": "unobserved-junction-boundary-recovery-proof/v1",
+  "targeted_recovery_status": "PASS",
+  "formal_completion_claim": false,
+  "scope": "Round140 public sensor and motion evidence only. This local recovery does not establish whole-task completion or physical delivery.",
+  "frozen_source": {
+    "commit_provided_for_this_diagnostic": "6ee4abf464504eb297242df98dc9fadaaf7debfa",
+    "expected_actions_sha256": "3523f12417091c254155290343d4c64a608d4df0b8d0c15b3d1bb981cdb1ce48",
+    "child_summary_actions_sha256": "3523f12417091c254155290343d4c64a608d4df0b8d0c15b3d1bb981cdb1ce48",
+    "matches_expected": true,
+    "child_summary_source_sha256": {
+      "__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+      "actions.py": "3523f12417091c254155290343d4c64a608d4df0b8d0c15b3d1bb981cdb1ce48",
+      "bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "llm.py": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab",
+      "navigation.py": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+      "perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+      "run.py": "f78d85c03bc09ea9385e4e00501a7d13f0136b978f67d94a69c4aeb6539f1436"
+    }
+  },
+  "prefix_proof_file": "artifacts/autonomous-brain/unobserved-junction-replay-01/prefix-replay-proof.json",
+  "input_references": [
+    {
+      "path": "artifacts/autonomous-brain/unobserved-junction-replay-01/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "98aa5eb4d612d6f510d7ff16f19f3e1aa42cac81d02c9414fe2dbac6109f3356",
+      "bytes": 9249756,
+      "records": 140,
+      "hash_scope": "whole completed brain file",
+      "inclusive_end": null
+    },
+    {
+      "path": "artifacts/autonomous-brain/unobserved-junction-replay-01/map-05-run-1/brain/llm.jsonl",
+      "sha256": "a60dfc1c3d01c13bf66c62ea0a98efc2a2d44408d3a441ae18cbc4c631574ce4",
+      "bytes": 5962241,
+      "records": 150,
+      "hash_scope": "whole completed brain file",
+      "inclusive_end": null
+    },
+    {
+      "path": "artifacts/autonomous-brain/unobserved-junction-replay-01/map-05-run-1/brain/observations.jsonl",
+      "sha256": "76e951da0d459cf070d77ba65a33a82dd0bc8720d7365825aa8b2c7338166043",
+      "bytes": 55775276,
+      "records": 929,
+      "hash_scope": "whole completed brain file",
+      "inclusive_end": null
+    },
+    {
+      "path": "artifacts/autonomous-brain/unobserved-junction-replay-01/map-05-run-1/brain/motions.jsonl",
+      "sha256": "afd7d850318345237ada6a2d59b5c05c79f93220bd3ddb7e6e6003ff2a85f64c",
+      "bytes": 110771,
+      "records": 649,
+      "hash_scope": "whole completed brain file",
+      "inclusive_end": null
+    },
+    {
+      "path": "artifacts/autonomous-brain/unobserved-junction-replay-01/map-05-run-1/brain/summary.json",
+      "sha256": "a6a96d252c6403a9eeadb4182f86981c703ebc054f3593377994823c3d976ffb",
+      "bytes": 315894,
+      "hash_scope": "whole completed brain file"
+    }
+  ],
+  "original_round140_result": {
+    "success": true,
+    "reason": "next_junction_observed",
+    "evidence": {
+      "after_observation": 926,
+      "frame_id": 926,
+      "tick": 33423,
+      "holding": true,
+      "before_observation": 925,
+      "final_observation": 927
+    }
+  },
+  "new_round140_result": {
+    "success": true,
+    "reason": "next_junction_observed",
+    "evidence": {
+      "after_observation": 928,
+      "frame_id": 928,
+      "tick": 33475,
+      "holding": true,
+      "junction_recovery": {
+        "trigger_observation": 926,
+        "actuator_result": {
+          "accepted": true,
+          "stoppedBy": "junction",
+          "distanceCm": 0,
+          "elapsedTicks": 0
+        },
+        "method": "observed_local_tangent_and_bounded_forward",
+        "requested_budget_cm": 20,
+        "steps": [
+          {
+            "method": "turn",
+            "params": {
+              "angleDeg": -47.599999999999994,
+              "speed": 50
+            },
+            "before": {
+              "forwardCm": 31.9,
+              "rightCm": 103.3,
+              "headingDeg": -171,
+              "distanceCm": 4258.2,
+              "tick": 33423
+            },
+            "after": {
+              "forwardCm": 31.9,
+              "rightCm": 103.3,
+              "headingDeg": 141.4,
+              "distanceCm": 4258.2,
+              "tick": 33453
+            },
+            "before_observation": 926,
+            "after_observation": 927,
+            "actuator_result": {
+              "completed": true
+            },
+            "measured_cm": 0.0,
+            "heading_change_deg": -47.60000000000002
+          },
+          {
+            "method": "forward",
+            "params": {
+              "distanceCm": 4,
+              "speed": 30
+            },
+            "before": {
+              "forwardCm": 31.9,
+              "rightCm": 103.3,
+              "headingDeg": 141.4,
+              "distanceCm": 4258.2,
+              "tick": 33453
+            },
+            "after": {
+              "forwardCm": 28.8,
+              "rightCm": 100.8,
+              "headingDeg": 141.4,
+              "distanceCm": 4262.2,
+              "tick": 33475
+            },
+            "before_observation": 927,
+            "after_observation": 928,
+            "actuator_result": {
+              "completed": true
+            },
+            "measured_cm": 3.9824615503479683,
+            "heading_change_deg": 0.0,
+            "along_cm": 3.982412456271802,
+            "across_cm": 0.019774431247951085
+          }
+        ],
+        "road_clearance": {
+          "requested_cm": 4,
+          "permitted_cm": 4,
+          "heading_error_deg": 0,
+          "side": "rightClearanceCm",
+          "side_clearance_cm": 18.3,
+          "front_clearance_cm": 103,
+          "predicted_lateral_cm": 0.0
+        },
+        "reason": "road_node_observed",
+        "after_observation": 928
+      },
+      "before_observation": 925,
+      "final_observation": 929
+    }
+  },
+  "public_snapshots": [
+    {
+      "observation_index": 925,
+      "round": 140,
+      "simulation_seconds": 668.46,
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": -171,
+        "distanceCm": 4258.2,
+        "tick": 33423
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": -47.6,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 28.4,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33423
+      },
+      "holding": {
+        "holding": true
+      }
+    },
+    {
+      "observation_index": 926,
+      "round": 140,
+      "simulation_seconds": 668.46,
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": -171,
+        "distanceCm": 4258.2,
+        "tick": 33423
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": -47.6,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 28.4,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33423
+      },
+      "holding": {
+        "holding": true
+      }
+    },
+    {
+      "observation_index": 927,
+      "round": 140,
+      "simulation_seconds": 669.06,
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": 141.4,
+        "distanceCm": 4258.2,
+        "tick": 33453
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 103,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33453
+      },
+      "holding": {
+        "holding": true
+      }
+    },
+    {
+      "observation_index": 928,
+      "round": 140,
+      "simulation_seconds": 669.5,
+      "odometry": {
+        "forwardCm": 28.8,
+        "rightCm": 100.8,
+        "headingDeg": 141.4,
+        "distanceCm": 4262.2,
+        "tick": 33475
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 0,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 99,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 22.7
+          },
+          {
+            "angleDeg": -53.9
+          },
+          {
+            "angleDeg": -178.3
+          }
+        ],
+        "tick": 33475
+      },
+      "holding": {
+        "holding": true
+      }
+    },
+    {
+      "observation_index": 929,
+      "round": 140,
+      "simulation_seconds": 669.5,
+      "odometry": {
+        "forwardCm": 28.8,
+        "rightCm": 100.8,
+        "headingDeg": 141.4,
+        "distanceCm": 4262.2,
+        "tick": 33475
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 0,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 99,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 22.7
+          },
+          {
+            "angleDeg": -53.9
+          },
+          {
+            "angleDeg": -178.3
+          }
+        ],
+        "tick": 33475
+      },
+      "holding": {
+        "holding": true
+      }
+    }
+  ],
+  "round140_motions": [
+    {
+      "round": 140,
+      "method": "follow_road",
+      "params": {
+        "distanceCm": 20,
+        "speed": 50
+      },
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "junction",
+        "distanceCm": 0,
+        "elapsedTicks": 0
+      },
+      "before_observation": 925,
+      "after_observation": 926
+    },
+    {
+      "round": 140,
+      "method": "turn",
+      "params": {
+        "angleDeg": -47.599999999999994,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 926,
+      "after_observation": 927
+    },
+    {
+      "round": 140,
+      "method": "forward",
+      "params": {
+        "distanceCm": 4,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 927,
+      "after_observation": 928
+    }
+  ],
+  "recomputed_motion_metrics": [
+    {
+      "method": "follow_road",
+      "before_observation": 925,
+      "after_observation": 926,
+      "requested": {
+        "distanceCm": 20,
+        "speed": 50
+      },
+      "measured_displacement_cm": 0.0,
+      "delta_right_cm": 0.0,
+      "delta_forward_cm": 0.0,
+      "along_cm": 0.0,
+      "across_cm": -0.0,
+      "heading_change_deg": 0,
+      "odometry_cumulative_distance_change_cm": 0.0,
+      "elapsed_ticks": 0,
+      "simulation_delta_s": 0.0
+    },
+    {
+      "method": "turn",
+      "before_observation": 926,
+      "after_observation": 927,
+      "requested": {
+        "angleDeg": -47.599999999999994,
+        "speed": 50
+      },
+      "measured_displacement_cm": 0.0,
+      "delta_right_cm": 0.0,
+      "delta_forward_cm": 0.0,
+      "along_cm": 0.0,
+      "across_cm": -0.0,
+      "heading_change_deg": -47.60000000000002,
+      "odometry_cumulative_distance_change_cm": 0.0,
+      "elapsed_ticks": 30,
+      "simulation_delta_s": 0.599999999999909
+    },
+    {
+      "method": "forward",
+      "before_observation": 927,
+      "after_observation": 928,
+      "requested": {
+        "distanceCm": 4,
+        "speed": 30
+      },
+      "measured_displacement_cm": 3.9824615503479683,
+      "delta_right_cm": -2.5,
+      "delta_forward_cm": -3.099999999999998,
+      "along_cm": 3.982412456271802,
+      "across_cm": 0.019774431247951085,
+      "heading_change_deg": 0.0,
+      "odometry_cumulative_distance_change_cm": 4.0,
+      "elapsed_ticks": 22,
+      "simulation_delta_s": 0.44000000000005457
+    }
+  ],
+  "formulas": {
+    "displacement_cm": "hypot(after.rightCm/100-before.rightCm/100, after.forwardCm/100-before.forwardCm/100)*100",
+    "heading_change_deg": "((after.headingDeg-before.headingDeg+180)%360)-180",
+    "along_cm": "-sin(radians(before.headingDeg))*delta_right_cm + cos(radians(before.headingDeg))*delta_forward_cm",
+    "across_cm": "cos(radians(before.headingDeg))*delta_right_cm + sin(radians(before.headingDeg))*delta_forward_cm",
+    "freshness": "Strictly greater observation index, different camera frameId, and increased tick for each actual added movement."
+  },
+  "budget": {
+    "declared_max_requested_cm": 20,
+    "actual_forward_request_count": 1,
+    "actual_forward_requested_cm": 4,
+    "actual_measured_forward_displacement_cm": 3.9824615503479683,
+    "actual_odometry_path_distance_change_cm": 4.0,
+    "post_turn_clearance_evidence": {
+      "requested_cm": 4,
+      "permitted_cm": 4,
+      "heading_error_deg": 0,
+      "side": "rightClearanceCm",
+      "side_clearance_cm": 18.3,
+      "front_clearance_cm": 103,
+      "predicted_lateral_cm": 0.0
+    },
+    "limit_interpretation": "At most 5 requests of at most 4 cm; requested total at most20 cm. Actual position measurements retain existing 0.2 cm per-step rounding tolerance."
+  },
+  "checks": {
+    "same_original_zero_progress_trigger": true,
+    "trigger926_on_road_but_not_node": true,
+    "turn_matches_trigger_heading_error": true,
+    "turn_has_zero_translation": true,
+    "post_turn927_is_fresh": true,
+    "post_turn_road_is_aligned": true,
+    "post_turn_front_clearance_is_103cm": true,
+    "forward_requests_within_declared_budget": true,
+    "at_most_five_forward_requests": true,
+    "each_forward_request_at_most_4cm": true,
+    "forward_recomputed_displacement_matches_logged_evidence": true,
+    "forward_follows_observed_heading": true,
+    "forward_within_existing_measurement_tolerance": true,
+    "node928_observed_on_road": true,
+    "junction928_has_three_fresh_exits": true,
+    "holding_preserved_through_recovery": true,
+    "final929_repeats928_physical_state_and_objects": true,
+    "success_evidence_points_to_verified928": true
+  },
+  "recovery_added_simulation_seconds": 1.0399999999999636,
+  "recovery_added_ticks": 52,
+  "final_exit_angles_deg": [
+    22.7,
+    -53.9,
+    -178.3
+  ],
+  "no_new_model_api_evidence": [
+    "Every consumed record is mode=replay.",
+    "All original response bytes, requests, errors, retry metadata and elapsed_s values are retained except mode.",
+    "The 150 llm_calls and 2268.6844635429993 elapsed seconds are replayed record accounting, not evidence of 150 new paid calls."
+  ],
+  "overall_run_status": {
+    "brain_status": "failed",
+    "brain_reason": "round_limit",
+    "rounds": 140,
+    "llm_record_count": 150,
+    "observations": 929,
+    "simulation_seconds": 669.5,
+    "diagnostic_limits": {
+      "max_rounds": 140,
+      "max_simulation_seconds": 1200
+    },
+    "red_delivered_ids": [
+      "target_034"
+    ],
+    "held_object_id": "target_136",
+    "red_memory_states": {
+      "LOST": 11,
+      "DELIVERED": 1,
+      "HELD": 1,
+      "TENTATIVE": 1
+    },
+    "scope": "Brain observation identities only; no physical identity or truth result asserted.",
+    "overall_diagnostic_run_pass": false,
+    "formal_run_vote": false
+  },
+  "conclusion": "The previously false-positive boundary stop is followed by a measured tangent turn and one bounded forward move, then a real observed node. Targeted recovery PASS. Brain still ends failed/round_limit at the diagnostic 140-round cap, with target_034 observed DELIVERED and target_136 HELD; this is not a formal PASS vote."
+}

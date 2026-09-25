@@ -2,7 +2,7 @@
 
 最新状态：[第十九局](../artifacts/autonomous-brain/map05-run-19/FAILURE_ANALYSIS.md)已完整归档，**整体FAIL，实际有效交付1/2，第二球仍持有，未自主done**。冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`；163轮、173次模型调用、1022次观测、691.66仿真秒，模型请求累计2679.6163993769987秒，另有2秒重试等待。11次explore在零进展且新观测无节点/出口时自报到达，评测方正常停止；末轮NOT_RUNNING是外停错误，不是墙钟超时或模型终止。
 
-下一正式局目录为`artifacts/autonomous-brain/map05-run-20`，尚未启动。actions v19的140轮原记录仿真诊断正在`unobserved-junction-replay-01/`运行，没有新Kimi请求，尚待验证；没有新正式成功局或十布局运行。done旧条件未修改，用户对完成范围的澄清仍待答复。
+第二十局已在`artifacts/autonomous-brain/map05-run-20`启动，生产内容冻结于`6ee4abf464504eb297242df98dc9fadaaf7debfa`，启动时HEAD为仅更新文档的`44247e0`，正式200轮/1200仿真秒上限保持，结果待验。actions v19的140轮原记录仿真诊断已完成：前139轮结果及前926条观测完全一致，到原故障点后仅依据公开传感新增转向和4cm前进请求，新观测真实出现节点与三个出口，定向恢复PASS。诊断整体因140轮上限仍为FAIL，不作正式成功门票。done旧条件未修改，用户对完成范围的澄清仍待答复；十布局未开始。
 
 driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容，[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存。此前第十八局独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。
 
@@ -22,7 +22,7 @@ driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为尚未启动的第二十局预备命令；仅在前置诊断核验通过后按既定条件执行，输出目录必须不存在：
+driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第二十局实际启动命令，前置定向诊断已通过；重跑须改用尚不存在的新输出目录：
 
 ```sh
 node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-20
@@ -73,7 +73,7 @@ actions v18把固定地面瞄准点扩展到首次放置：当前完整、面积
 
 actions v19纠正执行器`stoppedBy=junction`与新观测不一致时的到达误判：成功必须来自新观测`onRoad=true / atNode=true`，take_exit还须实际位移至少0.2cm。仅执行器报告junction不构成到达或阻挡记账。此时先按公开`headingErrorDeg`对准道路切线，再以新道路方向、净空和里程计授权恢复，最多请求五次、每次不超过4cm、总请求不超过20cm。每次转向和短步后须新编号/新帧观测；无进展、几何缺失、异常运动、离路、净空不足或预算耗尽即失败。受阻返程也须真实节点观测才可声称已返回。
 
-原道路、确认、抓放、done及200轮/1200秒门槛保持。新增38项回归通过（冻结v18基线36失败/2通过），完整671项brain测试通过；见[修复验证](../artifacts/autonomous-brain/unobserved-junction-fix-20260926/REPORT.md)和[公共输入只读反例](../artifacts/autonomous-brain/unobserved-junction-review-20260926/REPORT.md)。原Run19决策1–140的150条调用按完整原字节用于正在进行的严格仿真诊断，无新模型请求；第140轮改动后的后续旧状态不得继续套用。该诊断尚待验证，140轮诊断上限不能作为正式成功门票。
+原道路、确认、抓放、done及200轮/1200秒门槛保持。新增38项回归通过（冻结v18基线36失败/2通过），完整671项brain测试通过；见[修复验证](../artifacts/autonomous-brain/unobserved-junction-fix-20260926/REPORT.md)和[公共输入只读反例](../artifacts/autonomous-brain/unobserved-junction-review-20260926/REPORT.md)。原Run19决策1–140的150条调用按完整原字节完成严格仿真诊断，无新模型请求；140个状态和动作、150条调用除mode外完全相同。第140轮恢复实际移动3.9824615503479683cm，观测928确认真实节点与三个出口，定向PASS。整体因140轮诊断上限仍FAIL，不作为正式成功门票；第140轮改动后的后续旧状态不得继续套用。证据见`unobserved-junction-replay-01/prefix-replay-proof.json`及`boundary-recovery-proof.json`。
 
 ## 日志与复算
 
@@ -87,7 +87,7 @@ actions v19纠正执行器`stoppedBy=junction`与新观测不一致时的到达�
 
 driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。driver v6沿用v5的分块导出：每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
 
-独立评测预备命令（第二十局尚未启动；待该局结束并完整导出后，使用兼容driver v6的评测器v4）：
+独立评测预备命令（第二十局正在运行；待该局结束并完整导出后，使用兼容driver v6的评测器v4）：
 
 ```sh
 python3 tools/evaluate_autonomous_brain.py \
