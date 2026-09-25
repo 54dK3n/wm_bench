@@ -1,10 +1,10 @@
 # WorldModel + 单动作大模型自主小车
 
-最新状态：第十八局已结束，独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容。[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存；下一正式目录为`artifacts/autonomous-brain/map05-run-19`。下文此前“第十八局运行中”的状态由本段替代。
+最新状态：第十九局正在正式运行，目录`artifacts/autonomous-brain/map05-run-19`，冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`，结果尚待验收。driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容，[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存。最近完成的第十八局独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
-平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十八局正在使用冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`正式运行，结果尚待验收。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
+平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十九局使用上述冻结提交正式运行；第十八局冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`的完整证据与FAIL结论保留。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
 
 此前第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
 
@@ -18,10 +18,10 @@
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
+driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第十九局的启动命令，后续新局需另选不存在的输出目录：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-18
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-19
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
@@ -77,14 +77,14 @@ actions v18把固定地面瞄准点扩展到首次放置：当前完整、面积
 - `motions.jsonl`、`bridge-calls.jsonl`：小动作及执行前后观测引用、HTTP 往返。
 - `summary.json`：轮数、调用次数和耗时、仿真用时、轨迹时间线、最终状态、源码摘要。
 
-driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。Driver v5 每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
+driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。driver v6沿用v5的分块导出：每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
 
-独立评测：
+独立评测（第十九局结束并完整导出后，使用兼容driver v6的评测器v4）：
 
 ```sh
 python3 tools/evaluate_autonomous_brain.py \
-  --input artifacts/autonomous-brain/map05-run-01/map-05-run-1 \
-  --out artifacts/autonomous-brain/map05-run-01/report
+  --input artifacts/autonomous-brain/map05-run-19/map-05-run-1 \
+  --out artifacts/autonomous-brain/map05-run-19/report
 ```
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
@@ -111,7 +111,7 @@ python3 tools/replay_brain_llm.py \
 
 它要求调用记录全部耗尽、除 `mode` 外完整记录相同；动作执行失败不会被误计为模型输出失败。这项核验不代表全仿真复跑或任务成功。
 
-只有 map-05 正式成功、独立v3评测通过且确认正式200轮/1200秒配置与完整来源后，才可凭保存的成功局运行十布局。门票为该正式局原始trial的`evaluation.json`，同目录必须有`evidence.json`；不是独立报告目录的同名文件。每个布局使用独立driver目录，避免后续导出失败影响先前完整局的来源核验：
+只有 map-05 正式成功、独立评测通过（driver v6使用兼容评测器v4）且确认正式200轮/1200秒配置与完整来源后，才可凭保存的成功局运行十布局。门票为该正式局原始trial的`evaluation.json`，同目录必须有`evidence.json`；不是独立报告目录的同名文件。每个布局使用独立driver目录，避免后续导出失败影响先前完整局的来源核验：
 
 ```sh
 brain_proof='<已通过独立评测的正式局>/map-05-run-1/evaluation.json'
