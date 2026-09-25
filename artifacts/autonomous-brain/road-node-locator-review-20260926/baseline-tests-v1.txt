@@ -1,0 +1,47 @@
+FFF........                                                              [100%]
+=================================== FAILURES ===================================
+____ test_current_node_uses_the_nearer_run14_anchor_despite_insertion_order ____
+
+    def test_current_node_uses_the_nearer_run14_anchor_despite_insertion_order():
+        memory, earlier, nearer, current, observed = overlapping_run14_anchors()
+        # A synthetic extra sensor exit makes update's destination observable;
+        # the original three angles and geometric/angle thresholds are unchanged.
+        observed = copy.deepcopy(observed)
+        observed["exits"].append({"angleDeg": 84.3})  # absolute0deg
+        memory.update(current, observed)
+        assert exit_at(nearer, 0)["visits"] == 0
+        assert not any(abs(e["heading_deg"]) < 1e-6 for e in earlier["exits"])
+>       assert memory.current_node(current) is nearer
+E       AssertionError: assert {'exits': [{'blocked': False, 'completed': False, 'heading_deg': 60.5, 'visits': 0}, {'blocked': True, 'completed': Fa...'completed': False, 'heading_deg': -149.10000000000002, 'visits': 0}], 'id': 'junction-1', 'position': (-2.093, 1.168)} is {'exits': [{'blocked': False, 'completed': False, 'heading_deg': -149.10000000000002, 'visits': 0}, {'blocked': False,...e, 'completed': False, 'heading_deg': 0.0, 'visits': 0}], 'id': 'junction-2', 'position': (-1.8769999999999998, 1.093)}
+E        +  where {'exits': [{'blocked': False, 'completed': False, 'heading_deg': 60.5, 'visits': 0}, {'blocked': True, 'completed': Fa...'completed': False, 'heading_deg': -149.10000000000002, 'visits': 0}], 'id': 'junction-1', 'position': (-2.093, 1.168)} = current_node({'forwardCm': 107.7, 'headingDeg': -84.3, 'rightCm': -200.1})
+E        +    where current_node = <autonomous_brain.navigation.RoadMemory object at 0x107e9e430>.current_node
+
+artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py:60: AssertionError
+__ test_current_exit_state_comes_from_the_node_receiving_current_observations __
+
+    def test_current_exit_state_comes_from_the_node_receiving_current_observations():
+        memory, earlier, nearer, current, observed = overlapping_run14_anchors()
+        assert exit_at(earlier, -68.8)["blocked"] is True
+        assert exit_at(nearer, -68.8)["blocked"] is False
+        seen = next(e for e in memory.exits(current, observed) if e["angle_deg"] == 15.5)
+>       assert seen["visits"] == 0
+E       assert 1 == 0
+
+artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py:68: AssertionError
+__ test_chosen_after_run14_stationary_alignment_updates_the_same_nearest_node __
+
+    def test_chosen_after_run14_stationary_alignment_updates_the_same_nearest_node():
+        memory, earlier, nearer, _, _ = overlapping_run14_anchors()
+        aligned = odometry(-200.1, 107.7, -68.8)  # observation164
+        memory.update(aligned, road(129.3, 0, -80.3))
+        before_earlier = copy.deepcopy(earlier)
+        memory.chosen(aligned, 0)
+>       assert memory.active_exit["node"] is nearer
+E       AssertionError: assert {'exits': [{'blocked': False, 'completed': False, 'heading_deg': 60.5, 'visits': 0}, {'blocked': True, 'completed': Fa...'completed': False, 'heading_deg': -149.10000000000002, 'visits': 0}], 'id': 'junction-1', 'position': (-2.093, 1.168)} is {'exits': [{'blocked': False, 'completed': False, 'heading_deg': -149.10000000000002, 'visits': 0}, {'blocked': False,... False, 'heading_deg': -68.80000000000001, 'visits': 0}], 'id': 'junction-2', 'position': (-1.8769999999999998, 1.093)}
+
+artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py:79: AssertionError
+=========================== short test summary info ============================
+FAILED artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py::test_current_node_uses_the_nearer_run14_anchor_despite_insertion_order
+FAILED artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py::test_current_exit_state_comes_from_the_node_receiving_current_observations
+FAILED artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py::test_chosen_after_run14_stationary_alignment_updates_the_same_nearest_node
+3 failed, 8 passed in 0.06s

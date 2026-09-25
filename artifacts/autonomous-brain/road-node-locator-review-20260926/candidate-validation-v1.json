@@ -1,0 +1,47 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-c",
+    "import importlib.util,sys,pytest,autonomous_brain; s=importlib.util.spec_from_file_location('autonomous_brain.navigation',sys.argv[1]); m=importlib.util.module_from_spec(s); sys.modules['autonomous_brain.navigation']=m; s.loader.exec_module(m); raise SystemExit(pytest.main(['-q','-s','-p','no:cacheprovider',*sys.argv[2:]]))",
+    "artifacts/autonomous-brain/road-node-locator-review-20260926/candidate/navigation.py",
+    "artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py",
+    "artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_run14_sensor_locator.py"
+  ],
+  "cwd": ".",
+  "exit_code": 0,
+  "candidate_version": "autonomous-brain-navigation/v4-candidate",
+  "candidate_path": "artifacts/autonomous-brain/road-node-locator-review-20260926/candidate/navigation.py",
+  "candidate_sha256_before": "cc9b9689ed422125835a9e339a81ea5217094045b7f7bb714b3408009f059041",
+  "candidate_sha256_after": "cc9b9689ed422125835a9e339a81ea5217094045b7f7bb714b3408009f059041",
+  "tests_sha256": {
+    "artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_brain_road_node_locator.py": "fac263813b5492e500e444e4e2de1e0cc3b19ce7faa61224a05478185d1a96c9",
+    "artifacts/autonomous-brain/road-node-locator-review-20260926/proposed_tests/test_run14_sensor_locator.py": "cd8d97efb878fdc57845c9fd6ea64e84b7f3f73d81c84adc7d10bd3a2984dc34"
+  },
+  "production_source_sha256_before": {
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "1ba48fc350821b82b2c20dc5f0cc17354984b663309181876720716c9979e7eb",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/llm.py": "ffac80ec63d8217622445b61c4a5f137380bec9662aebad13e087ce308d6b3e1",
+    "autonomous_brain/navigation.py": "a7f26802bbb847137bddac74a8cb6d1c9dc645d82a61fb13dab18f1ed7ab9cf1",
+    "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+    "autonomous_brain/run.py": "0bdc0991b14629edf814330ebe647f88981987220baf56de4c9cea9c5b908e39"
+  },
+  "production_source_sha256_after": {
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "1ba48fc350821b82b2c20dc5f0cc17354984b663309181876720716c9979e7eb",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/llm.py": "ffac80ec63d8217622445b61c4a5f137380bec9662aebad13e087ce308d6b3e1",
+    "autonomous_brain/navigation.py": "a7f26802bbb847137bddac74a8cb6d1c9dc645d82a61fb13dab18f1ed7ab9cf1",
+    "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+    "autonomous_brain/run.py": "0bdc0991b14629edf814330ebe647f88981987220baf56de4c9cea9c5b908e39"
+  },
+  "production_sources_unchanged": true,
+  "default_tests_unchanged": true,
+  "default_test_file_count": 27,
+  "default_tests_digest_before": "e02a7be1cb3cad6f8dc0c1ac4550802b9a50a2502ab51998841546d004ba0c91",
+  "default_tests_digest_after": "e02a7be1cb3cad6f8dc0c1ac4550802b9a50a2502ab51998841546d004ba0c91",
+  "production_navigation_equals_baseline_snapshot": true,
+  "candidate_connected_to_running_trial": false,
+  "default_locator_test_file_exists": false
+}
