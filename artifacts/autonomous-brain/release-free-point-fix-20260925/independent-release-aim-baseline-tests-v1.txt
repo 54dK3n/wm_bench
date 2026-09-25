@@ -1,0 +1,463 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF..                                     [100%]
+=================================== FAILURES ===================================
+__ test_occupied_left_and_right_pixels_choose_mirrored_free_quarters[238-350] __
+
+old_x = 238, expected_u = 350
+
+    @pytest.mark.parametrize("old_x,expected_u", [(238, 350), (338, 250)])
+    def test_occupied_left_and_right_pixels_choose_mirrored_free_quarters(old_x, expected_u):
+        runtime, calls = aim_runtime([region(), occupied(x=old_x)])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:48: AttributeError
+__ test_occupied_left_and_right_pixels_choose_mirrored_free_quarters[338-250] __
+
+old_x = 338, expected_u = 250
+
+    @pytest.mark.parametrize("old_x,expected_u", [(238, 350), (338, 250)])
+    def test_occupied_left_and_right_pixels_choose_mirrored_free_quarters(old_x, expected_u):
+        runtime, calls = aim_runtime([region(), occupied(x=old_x)])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:48: AttributeError
+__________ test_symmetric_free_quarters_choose_left_deterministically __________
+
+    def test_symmetric_free_quarters_choose_left_deterministically():
+        runtime, calls = aim_runtime([region(), occupied(x=295, y=245, w=10, h=10)])
+>       assert not Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:59: AttributeError
+____ test_both_free_quarters_choose_the_one_farther_from_observed_occupancy ____
+
+    def test_both_free_quarters_choose_the_one_farther_from_observed_occupancy():
+        runtime, calls = aim_runtime([region(), occupied(x=270, y=245, w=10, h=10)])
+>       assert not Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:65: AttributeError
+______ test_other_public_occupants_can_block_the_other_quarter[blue-ball] ______
+
+category = 'blue-ball'
+
+    @pytest.mark.parametrize("category", ["blue-ball", "obstacle"])
+    def test_other_public_occupants_can_block_the_other_quarter(category):
+        runtime, calls = aim_runtime([region(), occupied(),
+                                     occupied(x=338, category=category, delivered=False)])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:73: AttributeError
+______ test_other_public_occupants_can_block_the_other_quarter[obstacle] _______
+
+category = 'obstacle'
+
+    @pytest.mark.parametrize("category", ["blue-ball", "obstacle"])
+    def test_other_public_occupants_can_block_the_other_quarter(category):
+        runtime, calls = aim_runtime([region(), occupied(),
+                                     occupied(x=338, category=category, delivered=False)])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:73: AttributeError
+___ test_half_size_expansion_blocks_candidates_on_occupied_margin_boundaries ___
+
+    def test_half_size_expansion_blocks_candidates_on_occupied_margin_boundaries():
+        runtime, calls = aim_runtime([region(), occupied(x=260, y=240, w=20, h=20),
+            occupied(x=360, y=240, w=20, h=20, category="blue-ball", delivered=False)])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:81: AttributeError
+__________ test_only_unique_largest_complete_green_component_is_used ___________
+
+    def test_only_unique_largest_complete_green_component_is_used():
+        small = region(x=420, y=310, w=2, h=1)
+        runtime, calls = aim_runtime([small, occupied(), region()])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:88: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions0] _
+
+regions = []
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions1] _
+
+regions = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 0, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions2] _
+
+regions = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions3] _
+
+regions = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 440, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions4] _
+
+regions = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 380}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions5] _
+
+regions = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_...': 100.0, 'w': 200.0, 'x': 410, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=0)],
+        [region(x=440)], [region(y=380)], [region(), region(x=410)]])
+    def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(regions):
+        runtime, calls = aim_runtime([*regions, occupied()])
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:98: AttributeError
+_ test_invalid_ground_projection_is_a_failure_not_a_release_location[projection0] _
+
+projection = ValueError('above ground horizon')
+
+    @pytest.mark.parametrize("projection", [ValueError("above ground horizon"),
+        (math.nan, .18), (.04, math.inf), (.04, -.18), (.04, 0)])
+    def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
+        runtime, calls = aim_runtime([region(), occupied()], projection=projection)
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:106: AttributeError
+_ test_invalid_ground_projection_is_a_failure_not_a_release_location[projection1] _
+
+projection = (nan, 0.18)
+
+    @pytest.mark.parametrize("projection", [ValueError("above ground horizon"),
+        (math.nan, .18), (.04, math.inf), (.04, -.18), (.04, 0)])
+    def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
+        runtime, calls = aim_runtime([region(), occupied()], projection=projection)
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:106: AttributeError
+_ test_invalid_ground_projection_is_a_failure_not_a_release_location[projection2] _
+
+projection = (0.04, inf)
+
+    @pytest.mark.parametrize("projection", [ValueError("above ground horizon"),
+        (math.nan, .18), (.04, math.inf), (.04, -.18), (.04, 0)])
+    def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
+        runtime, calls = aim_runtime([region(), occupied()], projection=projection)
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:106: AttributeError
+_ test_invalid_ground_projection_is_a_failure_not_a_release_location[projection3] _
+
+projection = (0.04, -0.18)
+
+    @pytest.mark.parametrize("projection", [ValueError("above ground horizon"),
+        (math.nan, .18), (.04, math.inf), (.04, -.18), (.04, 0)])
+    def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
+        runtime, calls = aim_runtime([region(), occupied()], projection=projection)
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:106: AttributeError
+_ test_invalid_ground_projection_is_a_failure_not_a_release_location[projection4] _
+
+projection = (0.04, 0)
+
+    @pytest.mark.parametrize("projection", [ValueError("above ground horizon"),
+        (math.nan, .18), (.04, math.inf), (.04, -.18), (.04, 0)])
+    def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
+        runtime, calls = aim_runtime([region(), occupied()], projection=projection)
+>       assert Actions(runtime).choose_release_aim().get("error")
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:106: AttributeError
+_ test_local_projection_uses_left_positive_heading_and_public_odometry[0-expected0] _
+
+heading = 0, expected = {'x': 0.34, 'z': 0.58}
+
+    @pytest.mark.parametrize("heading,expected", [
+        (0, {"x": .34, "z": .58}), (90, {"x": .12, "z": .44}),
+        (-90, {"x": .48, "z": .36}),
+    ])
+    def test_local_projection_uses_left_positive_heading_and_public_odometry(heading, expected):
+        runtime, calls = aim_runtime([region(), occupied()], right=30, forward=40, heading=heading)
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:116: AttributeError
+_ test_local_projection_uses_left_positive_heading_and_public_odometry[90-expected1] _
+
+heading = 90, expected = {'x': 0.12, 'z': 0.44}
+
+    @pytest.mark.parametrize("heading,expected", [
+        (0, {"x": .34, "z": .58}), (90, {"x": .12, "z": .44}),
+        (-90, {"x": .48, "z": .36}),
+    ])
+    def test_local_projection_uses_left_positive_heading_and_public_odometry(heading, expected):
+        runtime, calls = aim_runtime([region(), occupied()], right=30, forward=40, heading=heading)
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:116: AttributeError
+_ test_local_projection_uses_left_positive_heading_and_public_odometry[-90-expected2] _
+
+heading = -90, expected = {'x': 0.48, 'z': 0.36}
+
+    @pytest.mark.parametrize("heading,expected", [
+        (0, {"x": .34, "z": .58}), (90, {"x": .12, "z": .44}),
+        (-90, {"x": .48, "z": .36}),
+    ])
+    def test_local_projection_uses_left_positive_heading_and_public_odometry(heading, expected):
+        runtime, calls = aim_runtime([region(), occupied()], right=30, forward=40, heading=heading)
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:116: AttributeError
+_ test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections0] _
+
+detections = []
+
+    @pytest.mark.parametrize("detections", [[], [region()],
+        [region(), occupied(delivered=False)],
+        [region(), occupied(category="blue-ball")]])
+    def test_no_current_delivered_red_leaves_original_place_aim_unchanged(detections):
+        runtime, calls = aim_runtime(detections)
+>       assert Actions(runtime).choose_release_aim() is None
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:127: AttributeError
+_ test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections1] _
+
+detections = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}]
+
+    @pytest.mark.parametrize("detections", [[], [region()],
+        [region(), occupied(delivered=False)],
+        [region(), occupied(category="blue-ball")]])
+    def test_no_current_delivered_red_leaves_original_place_aim_unchanged(detections):
+        runtime, calls = aim_runtime(detections)
+>       assert Actions(runtime).choose_release_aim() is None
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:127: AttributeError
+_ test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections2] _
+
+detections = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_cm': 18.0, ...}, {'bbox': {'h': 24.0, 'w': 24.0, 'x': 238.0, 'y': 235.0}, 'category': 'red-ball', 'frame_id': '17'}]
+
+    @pytest.mark.parametrize("detections", [[], [region()],
+        [region(), occupied(delivered=False)],
+        [region(), occupied(category="blue-ball")]])
+    def test_no_current_delivered_red_leaves_original_place_aim_unchanged(detections):
+        runtime, calls = aim_runtime(detections)
+>       assert Actions(runtime).choose_release_aim() is None
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:127: AttributeError
+_ test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections3] _
+
+detections = [{'bbox': {'h': 100.0, 'w': 200.0, 'x': 200.0, 'y': 200.0}, 'bearing_deg': 0.0, 'category': 'storage-zone', 'distance_....0, 'w': 24.0, 'x': 238.0, 'y': 235.0}, 'category': 'blue-ball', 'frame_id': '17', 'known_delivered_object_id': 'old'}]
+
+    @pytest.mark.parametrize("detections", [[], [region()],
+        [region(), occupied(delivered=False)],
+        [region(), occupied(category="blue-ball")]])
+    def test_no_current_delivered_red_leaves_original_place_aim_unchanged(detections):
+        runtime, calls = aim_runtime(detections)
+>       assert Actions(runtime).choose_release_aim() is None
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:127: AttributeError
+___________ test_aim_evidence_is_detached_from_later_sensor_mutation ___________
+
+    def test_aim_evidence_is_detached_from_later_sensor_mutation():
+        runtime, _ = aim_runtime([region(), occupied()])
+>       result = Actions(runtime).choose_release_aim()
+E       AttributeError: 'Actions' object has no attribute 'choose_release_aim'
+
+tests/test_brain_release_aim.py:133: AttributeError
+_ test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_gate _
+
+    def test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_gate():
+        f = aimed_place_runtime()
+        result = Actions(f.runtime).place()
+        assert result["success"] is True
+>       assert len(f.projections) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...ate_witnesses': 1}], projections=[], before_release=[{'rightCm': 0.0, 'forwardCm': 0.0, 'headingDeg': 0.0, 'tick': 0}]).projections
+
+tests/test_brain_release_aim.py:181: AssertionError
+________ test_losing_current_green_during_aim_approach_keeps_ball_held _________
+
+    def test_losing_current_green_during_aim_approach_keeps_ball_held():
+        f = aimed_place_runtime(lose_green=True)
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:200: AssertionError
+__________ test_invalid_projection_fails_before_any_motion_or_release __________
+
+    def test_invalid_projection_fails_before_any_motion_or_release():
+        f = aimed_place_runtime(projection=ValueError("no observed ground"))
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:209: AssertionError
+__ test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[clipped] __
+
+failure = 'clipped'
+
+    @pytest.mark.parametrize("failure", ["clipped", "tied", "occupied"])
+    def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
+        f = aimed_place_runtime()
+        detections = f.runtime.snapshot["perception"]["detections"]
+        if failure == "clipped":
+            detections[0]["bbox"]["x"] = 0
+        elif failure == "tied":
+            detections.append(region(x=410))
+        else:
+            detections.append(occupied(x=338, category="blue-ball", delivered=False))
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:225: AssertionError
+___ test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[tied] ____
+
+failure = 'tied'
+
+    @pytest.mark.parametrize("failure", ["clipped", "tied", "occupied"])
+    def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
+        f = aimed_place_runtime()
+        detections = f.runtime.snapshot["perception"]["detections"]
+        if failure == "clipped":
+            detections[0]["bbox"]["x"] = 0
+        elif failure == "tied":
+            detections.append(region(x=410))
+        else:
+            detections.append(occupied(x=338, category="blue-ball", delivered=False))
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:225: AssertionError
+_ test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[occupied] __
+
+failure = 'occupied'
+
+    @pytest.mark.parametrize("failure", ["clipped", "tied", "occupied"])
+    def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
+        f = aimed_place_runtime()
+        detections = f.runtime.snapshot["perception"]["detections"]
+        if failure == "clipped":
+            detections[0]["bbox"]["x"] = 0
+        elif failure == "tied":
+            detections.append(region(x=410))
+        else:
+            detections.append(occupied(x=338, category="blue-ball", delivered=False))
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:225: AssertionError
+____ test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release _____
+
+    def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release():
+        f = aimed_place_runtime(projection=(.04, .60))
+        original_call = f.runtime.bridge.call
+    
+        def partial_translation(method, params):
+            before = copy.deepcopy(f.runtime.snapshot["odometry"])
+            result = original_call(method, params)
+            if method == "forward":
+                # The actuator claims completion but the observed displacement is
+                # just 1 cm. Requested distance cannot consume the remaining gap.
+                theta = math.radians(before["headingDeg"])
+                f.runtime.snapshot["odometry"].update(
+                    rightCm=before["rightCm"] - math.sin(theta),
+                    forwardCm=before["forwardCm"] + math.cos(theta))
+            return result
+    
+        f.runtime.bridge.call = partial_translation
+        result = Actions(f.runtime).place()
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_release_aim.py:250: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_release_aim.py::test_occupied_left_and_right_pixels_choose_mirrored_free_quarters[238-350]
+FAILED tests/test_brain_release_aim.py::test_occupied_left_and_right_pixels_choose_mirrored_free_quarters[338-250]
+FAILED tests/test_brain_release_aim.py::test_symmetric_free_quarters_choose_left_deterministically
+FAILED tests/test_brain_release_aim.py::test_both_free_quarters_choose_the_one_farther_from_observed_occupancy
+FAILED tests/test_brain_release_aim.py::test_other_public_occupants_can_block_the_other_quarter[blue-ball]
+FAILED tests/test_brain_release_aim.py::test_other_public_occupants_can_block_the_other_quarter[obstacle]
+FAILED tests/test_brain_release_aim.py::test_half_size_expansion_blocks_candidates_on_occupied_margin_boundaries
+FAILED tests/test_brain_release_aim.py::test_only_unique_largest_complete_green_component_is_used
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions0]
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions1]
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions2]
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions3]
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions4]
+FAILED tests/test_brain_release_aim.py::test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point[regions5]
+FAILED tests/test_brain_release_aim.py::test_invalid_ground_projection_is_a_failure_not_a_release_location[projection0]
+FAILED tests/test_brain_release_aim.py::test_invalid_ground_projection_is_a_failure_not_a_release_location[projection1]
+FAILED tests/test_brain_release_aim.py::test_invalid_ground_projection_is_a_failure_not_a_release_location[projection2]
+FAILED tests/test_brain_release_aim.py::test_invalid_ground_projection_is_a_failure_not_a_release_location[projection3]
+FAILED tests/test_brain_release_aim.py::test_invalid_ground_projection_is_a_failure_not_a_release_location[projection4]
+FAILED tests/test_brain_release_aim.py::test_local_projection_uses_left_positive_heading_and_public_odometry[0-expected0]
+FAILED tests/test_brain_release_aim.py::test_local_projection_uses_left_positive_heading_and_public_odometry[90-expected1]
+FAILED tests/test_brain_release_aim.py::test_local_projection_uses_left_positive_heading_and_public_odometry[-90-expected2]
+FAILED tests/test_brain_release_aim.py::test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections0]
+FAILED tests/test_brain_release_aim.py::test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections1]
+FAILED tests/test_brain_release_aim.py::test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections2]
+FAILED tests/test_brain_release_aim.py::test_no_current_delivered_red_leaves_original_place_aim_unchanged[detections3]
+FAILED tests/test_brain_release_aim.py::test_aim_evidence_is_detached_from_later_sensor_mutation
+FAILED tests/test_brain_release_aim.py::test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_gate
+FAILED tests/test_brain_release_aim.py::test_losing_current_green_during_aim_approach_keeps_ball_held
+FAILED tests/test_brain_release_aim.py::test_invalid_projection_fails_before_any_motion_or_release
+FAILED tests/test_brain_release_aim.py::test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[clipped]
+FAILED tests/test_brain_release_aim.py::test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[tied]
+FAILED tests/test_brain_release_aim.py::test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion[occupied]
+FAILED tests/test_brain_release_aim.py::test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release
+34 failed, 2 passed in 0.13s

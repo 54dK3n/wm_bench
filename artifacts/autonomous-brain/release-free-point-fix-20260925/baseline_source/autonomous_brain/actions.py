@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v17"
+VERSION = "autonomous-brain-actions/v16"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -1001,63 +1001,9 @@ class Actions:
                 return finish("independent_ball_witness_observed")
         return finish("bounded_viewpoints_without_unique_witness")
 
-    def choose_release_aim(self):
-        """Aim beside observed delivered balls using only current image space.
-
-        This chooses a manipulation target, not a delivery witness. The chosen
-        ground point stays fixed as the green box changes through occlusion.
-        """
-        detections = self.s["perception"]["detections"]
-        if not any(d["category"] == "red-ball" and d.get("known_delivered_object_id") for d in detections):
-            return None
-        evidence = {"mode": "observed_free_ground_point", "source_frame": self.s["observation"]["frameId"]}
-        zones = [d for d in detections if d["category"] == "storage-zone"
-                 and d["bbox"]["x"] > 0 and d["bbox"]["y"] > 0
-                 and d["bbox"]["x"] + d["bbox"]["w"] < 640
-                 and d["bbox"]["y"] + d["bbox"]["h"] < 480
-                 and d["bbox"]["w"] >= 3 and d["bbox"]["h"] >= 3]
-        zones.sort(key=lambda d: d["bbox"]["w"] * d["bbox"]["h"], reverse=True)
-        if not zones or (len(zones) > 1 and zones[0]["bbox"]["w"] * zones[0]["bbox"]["h"]
-                         == zones[1]["bbox"]["w"] * zones[1]["bbox"]["h"]):
-            return dict(evidence, error="complete_storage_region_not_unique")
-        zone = zones[0]
-        evidence["source_region"] = copy.deepcopy(zone)
-        occupied = [copy.deepcopy(d["bbox"]) for d in detections
-                    if d["category"] in {"red-ball", "blue-ball", "obstacle"}]
-        evidence["occupied_boxes"] = occupied
-        box = zone["bbox"]
-        candidates = []
-        for fraction in (.25, .75):
-            u, v = box["x"] + box["w"] * fraction, box["y"] + box["h"] / 2
-            # Reserve another half observed box on each side. This margin
-            # comes from the current image extent, not a simulator snap radius.
-            if any(b["x"] - b["w"] / 2 <= u <= b["x"] + 1.5 * b["w"]
-                   and b["y"] - b["h"] / 2 <= v <= b["y"] + 1.5 * b["h"] for b in occupied):
-                continue
-            score = min(math.hypot((u - b["x"] - b["w"] / 2) / b["w"],
-                                   (v - b["y"] - b["h"] / 2) / b["h"]) for b in occupied)
-            candidates.append((score, u, v))
-        if not candidates:
-            return dict(evidence, error="storage_free_point_not_observed")
-        _, u, v = max(candidates, key=lambda candidate: (candidate[0], -candidate[1]))
-        evidence["pixel"] = {"u": u, "v": v}
-        try:
-            local_x, local_z = self.r.perception.ground_camera.project_pixel_to_ground(u, v)
-            if (not all(type(value) in (int, float) and math.isfinite(value) for value in (local_x, local_z))
-                    or local_z <= 0):
-                raise ValueError("nonfinite ground projection")
-            odo = self.s["odometry"]
-            theta = math.radians(odo["headingDeg"])
-            evidence["position_m"] = {"x": odo["rightCm"] / 100 + math.cos(theta) * local_x - math.sin(theta) * local_z,
-                                      "z": odo["forwardCm"] / 100 + math.sin(theta) * local_x + math.cos(theta) * local_z}
-        except (AttributeError, ValueError, TypeError, OverflowError):
-            return dict(evidence, error="storage_free_point_projection_invalid")
-        return evidence
-
     def place(self):
         trajectory = []
         recovery = None
-        release_aim = None
 
         def place_move(method, params):
             before = dict(self.s["odometry"])
@@ -1087,8 +1033,6 @@ class Actions:
             # return cannot revoke an observed delivery or establish one.
             if recovery is None:
                 recovery = self.return_place_path(trajectory)
-            if release_aim is not None:
-                evidence["release_aim"] = copy.deepcopy(release_aim)
             return self.result(success, reason, place_trajectory=trajectory,
                                road_return=recovery, **evidence)
         if self.r.pending_grasp and self.s["holding"]["holding"]:
@@ -1107,9 +1051,6 @@ class Actions:
         if not self.s["holding"]["holding"] or object_id is None:
             return finish(False, "no_observation_confirmed_held_object")
         category = self.r.perception.get_object(object_id)["category"]
-        release_aim = self.choose_release_aim()
-        if release_aim is not None and release_aim.get("error"):
-            return finish(False, release_aim["error"])
         blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
         for translations in range(9):
             # Turning does not spend the eight-translation budget. Three
@@ -1120,16 +1061,6 @@ class Actions:
                 if not regions:
                     return finish(False, "storage_region_not_observed")
                 region = min(regions, key=lambda d: d["distance_cm"])
-                if release_aim is not None:
-                    point = release_aim["position_m"]
-                    target = (point["x"], point["z"])
-                    region = dict(region, distance_cm=distance(position(self.s["odometry"]), target) * 100,
-                                  bearing_deg=wrap(self.s["odometry"]["headingDeg"]
-                                                   - heading_to(position(self.s["odometry"]), target)))
-                    release_aim["last_alignment"] = {
-                        "frame_id": self.s["observation"]["frameId"],
-                        "distance_cm": region["distance_cm"], "bearing_deg": region["bearing_deg"],
-                        "basis": "fixed_observed_ground_point_and_current_odometry"}
                 if region["distance_cm"] > 65:
                     return finish(False, "storage_region_too_far", distance_cm=region["distance_cm"])
                 if abs(region["bearing_deg"]) <= 3:

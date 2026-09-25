@@ -2,6 +2,10 @@
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
+最新正式[第十四局](../artifacts/autonomous-brain/map05-run-14/FAILURE_ANALYSIS.md)整体仍为**FAIL，实际有效交付2/2**：77轮、93次模型调用、580次观测、427条motion，模型请求累计3216.9288148789988秒，仿真455.90秒。target_029共2次grab，target_115跨两次pick共6次；两次release由原生事件和最终区内位置核验有效。r75第二次place的红框被识别为旧已送达球，零合格见证使target_115保留RELEASED_UNVERIFIED；这是1次独立Judge假阴性。其他抓放对照为2次一致、2次身份歧义无法核验、0次假阳性。最终未成功done，仍有34个未探索出口，评测方停止后r77收到NOT_RUNNING。15次动作失败和这1次外部停止错误分列；12次传输错误、4次状态校验错误均恢复。两球物理送达不能替代自主完成，十布局仍未开始。
+
+本局77轮/93调用严格离线转录回放、8文件冻结源码证明、4份gzip及envelope校验均通过；超限原record采用50MiB原始字节分片并完成逐字节恢复核验。全部历史结论保留，当前交付状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)。下一正式运行使用新目录`artifacts/autonomous-brain/map05-run-15`。
+
 ## 平台入口
 
 [新运行的够用门禁](../artifacts/autonomous-brain/fresh-map05-gate-20260925/REPORT.md) 使用两次固定 explore、look_around 脚本，经外部大脑和真实机器人桥执行。逐条桥检测一致性和四类非空均通过；模型端是固定诊断桩，不是正式任务验收。短路线的指定距离窗应见数为零，不能用它评价召回；[历史长路线复算](../artifacts/autonomous-brain/platform-gate-20260925/REPORT.md) 另保留非零应见统计。召回率和两次检测比较只报告，全部旧日志不变。
@@ -15,7 +19,7 @@
 driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-01
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-15
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
@@ -45,7 +49,15 @@ Perception v7保留曾确认的LOST身份与新轨迹的独立历史。新红球
 
 [感知离线复放](../artifacts/autonomous-brain/perception-replay/v4-map05-run1/REPORT.md) 核对了全部红蓝球读数，并明确列出旧日志缺少同 tick 里程计而无法喂给 WorldModel 的帧；没有用真值补齐输入。长期未重见的轨迹仍按上游配置衰减，不能绕过 CONFIRMED 前置条件。 从未确认且已归档的 LOST 红球可按完整历史标记为退役假设，保留原轨迹与证据；它不表示真实球不存在或已送达。已确认 LOST、持物、释放未验证及历史缺失的对象仍待处理。
 
-pick 使用 holding 和原位置再次观测；持物但身份不明时保留待核验状态。place 需空夹爪和新球相对绿色检测框的包含证据；旧的已送达球不能充当新球证据。当前相机只给绿色区域 bbox，框内椭圆检查是几何估计，并非逐像素掩码证明；遮挡仍可能导致判定错误。落点歧义或证据不足报失败，未验证释放会保留未解决状态，当前没有完整恢复路径。动作程序的推断须由独立 record/真值评测核对，不能把动作自报成功当任务成功；抓放流程尚未取得本轮真实任务成功证据。
+pick 使用 holding 和原位置再次观测；持物但身份不明时保留待核验状态。place 需空夹爪和新球相对绿色检测框的包含证据；旧的已送达球不能充当新球证据。当前相机只给绿色区域 bbox，框内椭圆检查是几何估计，并非逐像素掩码证明；遮挡仍可能导致判定错误。动作程序的推断须由独立record/真值评测核对，不能把动作自报成功或两球物理送达当作完整自主任务成功。
+
+actions v16增加同次place内的有限复观测：仅在释放后夹爪为空、合格见证数为0、且非空红检测全部属于旧已送达身份时，先按原放置轨迹归路；归路成功且onRoad后，最多尝试2个各16cm的沿路视点。每个视点最多4次前进，每步请求不超过4cm，转向后的新观测和每步新的道路方向、出口与净空证据授权下一步；受阻、离路或里程计运动不符时停止。已观察绿色区域的唯一最大完整分量仅用于瞄准相机，其记忆位置不参与交付判定。
+
+复观测成功必须在同一新帧中仍识别原先那些已送达球，并额外得到唯一新球/完整绿色区域像素见证；旧球消失后出现一个未知框不够。沿用原夹爪、像素内椭圆、预存身份排除、释放帧/时间和身份校验，不降低M5有效窗口、三位置确认或CONFIRMED前置条件。两个视点仍无独立见证或其他证据不足时，place失败并保留RELEASED_UNVERIFIED；这不是跨轮任意恢复全部未验证释放的接口。完整日志保存初始判断和各视点证据；runtime v8在最近动作紧凑状态中保留最终判断、复观测原因及视点数、旧球重见身份和归路依据，供下一次模型决策读取。
+
+v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-reobservation-replay-01/DIAGNOSTIC.md)已完成，90条原调用全部输入匹配、无新模型调用，但仅完成一个15.940812099cm视点，仍只识别旧球，诊断FAIL。离线堆叠分析不能作为脑的状态输入或补判依据。
+
+当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；新严格仿真诊断待跑，正式下一局为map05-run-15。
 
 ## 日志与复算
 

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-c",
+    "import importlib.util,sys,pytest,autonomous_brain; s=importlib.util.spec_from_file_location('autonomous_brain.actions',sys.argv[1]); m=importlib.util.module_from_spec(s); sys.modules['autonomous_brain.actions']=m; s.loader.exec_module(m); raise SystemExit(pytest.main(['-q','-p','no:cacheprovider',sys.argv[2]]))",
+    "artifacts/autonomous-brain/release-free-point-fix-20260925/baseline_source/autonomous_brain/actions.py",
+    "tests/test_brain_release_aim.py"
+  ],
+  "cwd": ".",
+  "test_file": "tests/test_brain_release_aim.py",
+  "baseline_actions_path": "artifacts/autonomous-brain/release-free-point-fix-20260925/baseline_source/autonomous_brain/actions.py",
+  "test_source_sha256": "92780bdd7f60cf328548bfbbe9eac2bfc665b2152528c0175e26d7f359aab86d",
+  "actions_source_sha256": "84688935cd2ee2fe50b6ee665e8e90d3808ac8d89a72663e1f8b5e78de54ed03",
+  "exit_code": 1,
+  "stdout_path": "artifacts/autonomous-brain/release-free-point-fix-20260925/independent-release-aim-baseline-tests-v1.txt"
+}
