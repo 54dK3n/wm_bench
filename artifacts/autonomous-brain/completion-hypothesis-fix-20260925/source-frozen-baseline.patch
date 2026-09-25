@@ -1,0 +1,184 @@
+--- a/autonomous_brain/perception.py
++++ b/autonomous_brain/perception.py
+@@ -23,7 +23,7 @@
+ from .actions import ball_inside_region
+ 
+ 
+-VERSION = "autonomous-brain-perception/v5"
++VERSION = "autonomous-brain-perception/v6"
+ RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
+              "fit": "M5-calib-range-20260923"}
+ PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
+@@ -319,7 +319,7 @@
+ 
+     def _row(self, track: Any) -> dict[str, Any]:
+         local_x, local_z = self.pose.to_local(track.x, track.z)
+-        return {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
++        row = {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
+                 "position_m": {"x": track.x, "z": track.z},
+                 "confidence": track.confidence,
+                 "state": self._lifecycle.get(track.obj_id, track.state.value.upper()),
+@@ -328,6 +328,31 @@
+                 "hit_count": track.hit_count, "source": track.source,
+                 "last_seen_s": track.last_seen,
+                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
++        if row["category"] == "red-ball":
++            times = self._times.get(track.obj_id, {})
++            known_confirmation_history = "confirmed_s" in times
++            row["ever_confirmed"] = (times["confirmed_s"] is not None
++                                     if known_confirmation_history else None)
++            row["completion_classification"] = ("delivered" if row["state"] == "DELIVERED"
++                                                else "pending")
++            # Archival without any confirmation closes an uncertain hypothesis,
++            # not a physical object. Preserve its LOST state and all raw history.
++            # Unknown history and any manipulation lifecycle remain obligations.
++            if (track.state == ObjectState.LOST
++                    and self.wm.get_archived(track.obj_id) is track
++                    and known_confirmation_history and times["confirmed_s"] is None
++                    and isinstance(times.get("first_seen_frame_id"), str)
++                    and bool(times["first_seen_frame_id"])
++                    and track.obj_id not in self._lifecycle):
++                row["completion_classification"] = "retired_unconfirmed_hypothesis"
++                row["retirement_evidence"] = {
++                    "reason": "archived_without_confirmation", "archived": True,
++                    "confirmed_s": None, "first_seen_s": track.first_seen,
++                    "last_seen_s": track.last_seen, "last_updated_s": track.last_updated,
++                    "first_seen_frame_id": times["first_seen_frame_id"],
++                    "last_frame_id": track.last_frame_id,
++                    "hit_count": track.hit_count, "confidence": track.confidence}
++        return row
+ 
+     def objects(self) -> list[dict[str, Any]]:
+         """Keep lost history, but count a verified release alias only once."""
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,7 +7,32 @@
+ from .bridge import SimulationLimit
+ from .navigation import distance, heading_to, position, wrap
+ 
+-VERSION = "autonomous-brain-actions/v12"
++VERSION = "autonomous-brain-actions/v13"
++
++RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
++                              "last_seen_s", "last_updated_s", "first_seen_frame_id",
++                              "last_frame_id", "hit_count", "confidence")
++
++
++def completion_evidence(objects):
++    """Classify current red obligations without changing tracking or history."""
++    pending, retired = [], []
++    for row in objects:
++        if row["category"] != "red-ball" or row["state"] == "DELIVERED":
++            continue
++        basis = row.get("retirement_evidence")
++        if (row["state"] == "LOST" and row.get("ever_confirmed") is False
++                and row.get("completion_classification") == "retired_unconfirmed_hypothesis"
++                and isinstance(basis, dict)
++                and all(key in basis for key in RETIREMENT_EVIDENCE_FIELDS)
++                and basis["reason"] == "archived_without_confirmation"
++                and basis["archived"] is True and basis["confirmed_s"] is None):
++            retired.append({"object_id": row["id"],
++                            **{key: basis[key] for key in RETIREMENT_EVIDENCE_FIELDS}})
++        else:
++            # Legacy rows or incomplete history must never silently retire.
++            pending.append(row["id"])
++    return {"pending_objects": pending, "retired_unconfirmed_hypotheses": retired}
+ 
+ 
+ def road_translation_limit(road, method, requested_cm):
+@@ -794,12 +819,12 @@
+                            object_id=object_id, **evidence)
+ 
+     def done(self):
+-        rows = self.r.perception.objects()
+-        pending = [o["id"] for o in rows if o["category"] == "red-ball" and o["state"] != "DELIVERED"]
+-        if self.s["holding"]["holding"] or pending or not self.r.roads.nodes or self.r.roads.unexplored():
+-            return self.result(False, "completion_not_supported_by_observations", pending_objects=pending,
++        completion = completion_evidence(self.r.perception.objects())
++        if (self.s["holding"]["holding"] or completion["pending_objects"]
++                or not self.r.roads.nodes or self.r.roads.unexplored()):
++            return self.result(False, "completion_not_supported_by_observations", **completion,
+                                unexplored_exits=self.r.roads.unexplored())
+-        return self.result(True, "explored_roads_and_observed_targets_completed")
++        return self.result(True, "explored_roads_and_observed_targets_completed", **completion)
+ 
+     def execute(self, action):
+         before = self.s["observation_index"]
+--- a/autonomous_brain/run.py
++++ b/autonomous_brain/run.py
+@@ -16,13 +16,13 @@
+ sys.path.insert(0, str(WM_ROOT))
+ 
+ from . import VERSION
+-from .actions import Actions
++from .actions import Actions, RETIREMENT_EVIDENCE_FIELDS, completion_evidence
+ from .bridge import JsonLog, RobotBridge, SimulationLimit
+ from .llm import LLMClient
+ from .navigation import RoadMemory
+ from .perception import Perception
+ 
+-RUNTIME_VERSION = "autonomous-brain-runtime/v5"
++RUNTIME_VERSION = "autonomous-brain-runtime/v6"
+ 
+ 
+ def dump(path, value):
+@@ -61,6 +61,12 @@
+                             "heading_change_deg", "motion_observation",
+                             "candidate_witnesses", "recovery_steps", "unexplored_exits"))
+     detection(raw, evidence)
++    if isinstance(raw.get("pending_objects"), list):
++        evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
++    if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):
++        evidence["retired_unconfirmed_hypotheses"] = [
++            fields(item, ("object_id", *RETIREMENT_EVIDENCE_FIELDS))
++            for item in raw["retired_unconfirmed_hypotheses"] if isinstance(item, dict)]
+     for name in ("actuator_result", "recovery_result"):
+         if isinstance(raw.get(name), dict):
+             names = (("stoppedBy", "return_error_cm", "reversed_cm")
+@@ -141,12 +147,16 @@
+ 
+     def state(self):
+         objects = []
+-        for row in self.perception.objects():
++        rows = self.perception.objects()
++        for row in rows:
+             objects.append({"id": row["id"], "category": row["category"],
+                             "position_m": {k: round(v, 3) for k, v in row["position_m"].items()},
+                             "confidence": round(row["confidence"], 3), "status": row["state"],
+                             "distance_cm": round(row["distance_cm"], 1),
+                             "bearing_deg": round(row["bearing_deg"], 1), "hit_count": row["hit_count"]})
++            for key in ("completion_classification", "ever_confirmed"):
++                if key in row:
++                    objects[-1][key] = row[key]
+         odo, road = self.snapshot["odometry"], self.snapshot["road"]
+         return {"task": self.config["task"], "round": self.round,
+                 "simulation_seconds": self.bridge.seconds,
+@@ -161,6 +171,7 @@
+                                        "negative": "right", "zero": "forward"},
+                     "object_bearing_to_relative_turn": "negate"},
+                 "objects": objects,
++                "completion": completion_evidence(rows),
+                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
+                                     "heading_deg": odo["headingDeg"]},
+                           "holding": self.snapshot["holding"]["holding"],
+--- a/autonomous_brain/llm.py
++++ b/autonomous_brain/llm.py
+@@ -20,8 +20,8 @@
+ import urllib.request
+ 
+ 
+-VERSION = "autonomous-brain-llm/v9"
+-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 10)}
++VERSION = "autonomous-brain-llm/v10"
++SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 11)}
+ RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
+                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
+ RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
+@@ -32,6 +32,7 @@
+ 坐标约定见 coordinate_convention：位置使用初始里程计坐标系，x/right_cm 向右、z/forward_cm 向前。objects 中的 bearing_deg 相对当前车头，右为正、左为负，0°为正前方；robot.pose.heading_deg 和 junction_history 中的 heading_deg 是绝对朝向，左为正、右为负，0°为初始前方。robot.exit_angles 和 exits 中的 angle_deg 相对当前车头，也以左为正、右为负。朝向物体所需的相对转角为 -bearing_deg，不能直接把物体 bearing_deg 的符号当作出口角度；仍只能选择当前实际观测到的出口。
+ explore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。
+ 按任务选择物体。未持物且已有 CONFIRMED 的任务目标时，优先搬运该目标，不必等探索完所有路段；先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标。目标在身后也可交给 go_to 沿已记录道路导航。只有当前没有可处理的已确认任务目标，或其最近导航失败尚需寻找可达路线时，才继续探索和换位确认；不为与任务无关的球或障碍延迟已有目标的搬运。有持物时，依据当前 objects 中自己的 distance_cm，优先选择最近的 CONFIRMED 存放区，并结合 recent_actions 中对应物体的导航失败及观测证据判断是否可处理；先 go_to 再 place，不要只因另一个存放区先被确认就反复选择更远的区域。若某物体最近 go_to 返回 known_route_exhausted_needs_exploration，而此后没有换位或新增道路/视觉证据，不要机械重复同一已耗尽路线；可先 look_around 重获近处区域的观测、选择另一个已确认存放区，或根据现有出口探索可达路线。具体选择仍由你依据本轮状态决定。搬运完已知目标后继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
++completion 中的 retired_unconfirmed_hypotheses 保留已归档且从未确认的 LOST 红球假设及依据，objects 的 retired_unconfirmed_hypothesis 分类只表示该历史假设不再阻止完成，不代表已送达，也不代表物体不存在；当前 TENTATIVE/STALE/CONFIRMED、曾确认的 LOST、HELD 和 RELEASED_UNVERIFIED 红球仍是 pending_objects，后续新检测仍须正常确认和处理。
+ 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
+ 
+ 

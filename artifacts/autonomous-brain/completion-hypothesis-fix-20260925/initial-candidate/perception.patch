@@ -1,0 +1,50 @@
+--- a/autonomous_brain/perception.py
++++ b/autonomous_brain/perception.py
+@@ -23,7 +23,7 @@
+ from .actions import ball_inside_region
+ 
+ 
+-VERSION = "autonomous-brain-perception/v5"
++VERSION = "autonomous-brain-perception/v6"
+ RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
+              "fit": "M5-calib-range-20260923"}
+ PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
+@@ -319,7 +319,7 @@
+ 
+     def _row(self, track: Any) -> dict[str, Any]:
+         local_x, local_z = self.pose.to_local(track.x, track.z)
+-        return {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
++        row = {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
+                 "position_m": {"x": track.x, "z": track.z},
+                 "confidence": track.confidence,
+                 "state": self._lifecycle.get(track.obj_id, track.state.value.upper()),
+@@ -328,6 +328,29 @@
+                 "hit_count": track.hit_count, "source": track.source,
+                 "last_seen_s": track.last_seen,
+                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
++        if row["category"] == "red-ball":
++            times = self._times.get(track.obj_id, {})
++            known_confirmation_history = "confirmed_s" in times
++            row["ever_confirmed"] = (times["confirmed_s"] is not None
++                                     if known_confirmation_history else None)
++            row["completion_classification"] = ("delivered" if row["state"] == "DELIVERED"
++                                                else "pending")
++            # Archival without any confirmation closes an uncertain hypothesis,
++            # not a physical object. Preserve its LOST state and all raw history.
++            # Unknown history and any manipulation lifecycle remain obligations.
++            if (track.state == ObjectState.LOST
++                    and self.wm.get_archived(track.obj_id) is track
++                    and known_confirmation_history and times["confirmed_s"] is None
++                    and track.obj_id not in self._lifecycle):
++                row["completion_classification"] = "retired_unconfirmed_hypothesis"
++                row["retirement_evidence"] = {
++                    "reason": "archived_without_confirmation", "archived": True,
++                    "confirmed_s": None, "first_seen_s": track.first_seen,
++                    "last_seen_s": track.last_seen, "last_updated_s": track.last_updated,
++                    "first_seen_frame_id": times["first_seen_frame_id"],
++                    "last_frame_id": track.last_frame_id,
++                    "hit_count": track.hit_count, "confidence": track.confidence}
++        return row
+ 
+     def objects(self) -> list[dict[str, Any]]:
+         """Keep lost history, but count a verified release alias only once."""

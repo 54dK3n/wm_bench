@@ -1,0 +1,368 @@
+{"shadow": "../../../../private/tmp/wm-completion-shadow-0tmdhfxm", "modules": ["../../../../private/tmp/wm-completion-shadow-0tmdhfxm/autonomous_brain/actions.py", "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/autonomous_brain/perception.py", "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/autonomous_brain/run.py", "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/autonomous_brain/llm.py"], "network": "socket connect/create_connection forbidden; urllib mocked by tests"}
+FFFFFFFFFFFFFFFFFF.                                                      [100%]
+=================================== FAILURES ===================================
+___ test_never_confirmed_archived_hypothesis_retires_without_erasing_history ___
+
+    def test_never_confirmed_archived_hypothesis_retires_without_erasing_history():
+        perception, object_id, original_observation = retired_hypothesis()
+        before = raw_state(perception)
+        row = perception.get_object(object_id)
+        retirement = expected_retirement(perception, object_id)
+        assert row["state"] == "LOST"
+>       assert row["ever_confirmed"] is False
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:84: KeyError
+__ test_every_active_red_identity_remains_a_completion_obligation[tentative] ___
+
+state = 'TENTATIVE', ever_confirmed = False
+
+    @pytest.mark.parametrize("state, ever_confirmed", [
+        ("TENTATIVE", False), ("STALE", False), ("CONFIRMED", True), ("STALE", True),
+    ], ids=["tentative", "unconfirmed_stale", "confirmed", "previously_confirmed_stale"])
+    def test_every_active_red_identity_remains_a_completion_obligation(state, ever_confirmed):
+        if ever_confirmed:
+            perception, object_id = confirmed_red()
+            next_frame, elapsed = 4, 2.3
+        else:
+            perception = Perception(CAMERA)
+            observe(perception, 1)
+            object_id = perception.objects()[0]["id"]
+            next_frame, elapsed = 2, 2.1
+        if state == "STALE":
+            observe(perception, next_frame, items=[], time=elapsed)
+        row = perception.get_object(object_id)
+        assert row["state"] == state
+        assert object_id in {track.obj_id for track in perception.wm.get_scene()}
+>       assert row["ever_confirmed"] is ever_confirmed
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:118: KeyError
+_ test_every_active_red_identity_remains_a_completion_obligation[unconfirmed_stale] _
+
+state = 'STALE', ever_confirmed = False
+
+    @pytest.mark.parametrize("state, ever_confirmed", [
+        ("TENTATIVE", False), ("STALE", False), ("CONFIRMED", True), ("STALE", True),
+    ], ids=["tentative", "unconfirmed_stale", "confirmed", "previously_confirmed_stale"])
+    def test_every_active_red_identity_remains_a_completion_obligation(state, ever_confirmed):
+        if ever_confirmed:
+            perception, object_id = confirmed_red()
+            next_frame, elapsed = 4, 2.3
+        else:
+            perception = Perception(CAMERA)
+            observe(perception, 1)
+            object_id = perception.objects()[0]["id"]
+            next_frame, elapsed = 2, 2.1
+        if state == "STALE":
+            observe(perception, next_frame, items=[], time=elapsed)
+        row = perception.get_object(object_id)
+        assert row["state"] == state
+        assert object_id in {track.obj_id for track in perception.wm.get_scene()}
+>       assert row["ever_confirmed"] is ever_confirmed
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:118: KeyError
+__ test_every_active_red_identity_remains_a_completion_obligation[confirmed] ___
+
+state = 'CONFIRMED', ever_confirmed = True
+
+    @pytest.mark.parametrize("state, ever_confirmed", [
+        ("TENTATIVE", False), ("STALE", False), ("CONFIRMED", True), ("STALE", True),
+    ], ids=["tentative", "unconfirmed_stale", "confirmed", "previously_confirmed_stale"])
+    def test_every_active_red_identity_remains_a_completion_obligation(state, ever_confirmed):
+        if ever_confirmed:
+            perception, object_id = confirmed_red()
+            next_frame, elapsed = 4, 2.3
+        else:
+            perception = Perception(CAMERA)
+            observe(perception, 1)
+            object_id = perception.objects()[0]["id"]
+            next_frame, elapsed = 2, 2.1
+        if state == "STALE":
+            observe(perception, next_frame, items=[], time=elapsed)
+        row = perception.get_object(object_id)
+        assert row["state"] == state
+        assert object_id in {track.obj_id for track in perception.wm.get_scene()}
+>       assert row["ever_confirmed"] is ever_confirmed
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:118: KeyError
+_ test_every_active_red_identity_remains_a_completion_obligation[previously_confirmed_stale] _
+
+state = 'STALE', ever_confirmed = True
+
+    @pytest.mark.parametrize("state, ever_confirmed", [
+        ("TENTATIVE", False), ("STALE", False), ("CONFIRMED", True), ("STALE", True),
+    ], ids=["tentative", "unconfirmed_stale", "confirmed", "previously_confirmed_stale"])
+    def test_every_active_red_identity_remains_a_completion_obligation(state, ever_confirmed):
+        if ever_confirmed:
+            perception, object_id = confirmed_red()
+            next_frame, elapsed = 4, 2.3
+        else:
+            perception = Perception(CAMERA)
+            observe(perception, 1)
+            object_id = perception.objects()[0]["id"]
+            next_frame, elapsed = 2, 2.1
+        if state == "STALE":
+            observe(perception, next_frame, items=[], time=elapsed)
+        row = perception.get_object(object_id)
+        assert row["state"] == state
+        assert object_id in {track.obj_id for track in perception.wm.get_scene()}
+>       assert row["ever_confirmed"] is ever_confirmed
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:118: KeyError
+____ test_ever_confirmed_lost_red_remains_pending_after_real_archive_decay _____
+
+    def test_ever_confirmed_lost_red_remains_pending_after_real_archive_decay():
+        perception, object_id = confirmed_red()
+        observe(perception, 4, items=[], time=20)
+        row = perception.get_object(object_id)
+        assert row["state"] == "LOST"
+        assert perception.wm.get_archived(object_id) is not None
+>       assert row["ever_confirmed"] is True
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:133: KeyError
+_______ test_manipulated_but_not_delivered_identity_stays_pending[held] ________
+
+unverified_release = False
+
+    @pytest.mark.parametrize("unverified_release", [False, True], ids=["held", "released_unverified"])
+    def test_manipulated_but_not_delivered_identity_stays_pending(unverified_release):
+        perception, object_id = confirmed_red()
+        observe(perception, 4, items=[], time=.4)
+        assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
+            simulation_time_s=.4, evidence={"holding": True, "post_observation": 4})
+        if unverified_release:
+            observe(perception, 5, items=[], time=.5)
+            assert perception.mark_release_unverified(object_id, simulation_time_s=.5,
+                evidence={"holding": False, "post_observation": 5})
+        row = perception.get_object(object_id)
+        assert row["state"] == ("RELEASED_UNVERIFIED" if unverified_release else "HELD")
+        assert perception.wm.get_archived(object_id) is not None
+>       assert row["ever_confirmed"] is True
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:155: KeyError
+_ test_manipulated_but_not_delivered_identity_stays_pending[released_unverified] _
+
+unverified_release = True
+
+    @pytest.mark.parametrize("unverified_release", [False, True], ids=["held", "released_unverified"])
+    def test_manipulated_but_not_delivered_identity_stays_pending(unverified_release):
+        perception, object_id = confirmed_red()
+        observe(perception, 4, items=[], time=.4)
+        assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
+            simulation_time_s=.4, evidence={"holding": True, "post_observation": 4})
+        if unverified_release:
+            observe(perception, 5, items=[], time=.5)
+            assert perception.mark_release_unverified(object_id, simulation_time_s=.5,
+                evidence={"holding": False, "post_observation": 5})
+        row = perception.get_object(object_id)
+        assert row["state"] == ("RELEASED_UNVERIFIED" if unverified_release else "HELD")
+        assert perception.wm.get_archived(object_id) is not None
+>       assert row["ever_confirmed"] is True
+E       KeyError: 'ever_confirmed'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:155: KeyError
+_ test_new_observation_near_retired_hypothesis_creates_active_pending_identity[same_observed_position] _
+
+bearing = 0
+
+    @pytest.mark.parametrize("bearing", [0, 5], ids=["same_observed_position", "nearby_observed_position"])
+    def test_new_observation_near_retired_hypothesis_creates_active_pending_identity(bearing):
+        perception, old_id, _ = retired_hypothesis()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old_id)))
+        evidence = observe(perception, 3, time=20.1, items=[ball(80, bearing=bearing)])
+        detection = evidence["detections"][0]
+        new_id = detection["track_id"]
+        assert detection["fed_to_world_model"] is True
+        assert not detection.get("known_delivered_object_id")
+        assert new_id is not None and new_id != old_id
+        assert vars(perception.wm.get_archived(old_id)) == old_track
+        rows = {row["id"]: row for row in perception.objects()}
+        assert set(rows) == {old_id, new_id}
+        assert rows[old_id]["state"] == "LOST"
+>       assert rows[old_id]["completion_classification"] == "retired_unconfirmed_hypothesis"
+E       KeyError: 'completion_classification'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:178: KeyError
+_ test_new_observation_near_retired_hypothesis_creates_active_pending_identity[nearby_observed_position] _
+
+bearing = 5
+
+    @pytest.mark.parametrize("bearing", [0, 5], ids=["same_observed_position", "nearby_observed_position"])
+    def test_new_observation_near_retired_hypothesis_creates_active_pending_identity(bearing):
+        perception, old_id, _ = retired_hypothesis()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old_id)))
+        evidence = observe(perception, 3, time=20.1, items=[ball(80, bearing=bearing)])
+        detection = evidence["detections"][0]
+        new_id = detection["track_id"]
+        assert detection["fed_to_world_model"] is True
+        assert not detection.get("known_delivered_object_id")
+        assert new_id is not None and new_id != old_id
+        assert vars(perception.wm.get_archived(old_id)) == old_track
+        rows = {row["id"]: row for row in perception.objects()}
+        assert set(rows) == {old_id, new_id}
+        assert rows[old_id]["state"] == "LOST"
+>       assert rows[old_id]["completion_classification"] == "retired_unconfirmed_hypothesis"
+E       KeyError: 'completion_classification'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:178: KeyError
+_ test_sensor_verified_delivery_allows_done_with_only_archived_unconfirmed_hypothesis _
+
+    def test_sensor_verified_delivery_allows_done_with_only_archived_unconfirmed_hypothesis():
+        perception, retired_id, _ = retired_hypothesis()
+        archived_before = copy.deepcopy(vars(perception.wm.get_archived(retired_id)))
+        for frame, forward in enumerate((0, 16, 32), 3):
+            observed = observe(perception, frame, forward, right=200,
+                               time=20 + (frame - 2) / 10)
+        object_id = observed["detections"][0]["track_id"]
+        assert object_id != retired_id and perception.confirmed(object_id) is not None
+        observe(perception, 6, 32, right=200, time=20.4, items=[])
+        assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
+            simulation_time_s=20.4, evidence={"holding": True, "post_observation": 6})
+        preexisting = [row["id"] for row in perception.objects()
+                       if row["category"] == "red-ball" and row["id"] != object_id]
+        zone = {"category": "storage-zone", "source": "storage-ground-pixels", "confidence": 1,
+                "bbox": {"x": 240, "y": 230, "w": 160, "h": 100}}
+        released = observe(perception, 7, right=200, time=21, items=[ball(60), zone])
+        witness, storage = released["detections"]
+        assert witness["track_id"] not in {retired_id, object_id}
+        evidence = {"holding": False, "candidate_witnesses": 1,
+            "release_observation": {"frame_id": "7", "simulation_time_s": 21,
+                                    "preexisting_ball_ids": preexisting},
+            "placement": {"ball_track_id": witness["track_id"], "ball_category": "red-ball",
+                          "ball_position_m": copy.deepcopy(witness["position_m"]), "frame_id": "7",
+                          "ball_bbox": copy.deepcopy(witness["bbox"]),
+                          "storage_bbox": copy.deepcopy(storage["bbox"])}}
+        assert perception.mark_delivered(object_id, holding=False, ball_in_storage=True,
+            simulation_time_s=21, evidence=evidence)
+        rows = {row["id"]: row for row in perception.objects() if row["category"] == "red-ball"}
+        assert set(rows) == {retired_id, object_id}
+        assert rows[object_id]["state"] == "DELIVERED"
+>       assert rows[object_id]["completion_classification"] == "delivered"
+E       KeyError: 'completion_classification'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:218: KeyError
+_ test_completion_queries_are_repeatable_read_only_and_return_detached_evidence _
+
+    def test_completion_queries_are_repeatable_read_only_and_return_detached_evidence():
+        perception, object_id, _ = retired_hypothesis()
+        before = raw_state(perception)
+>       expected = action_module.completion_evidence(perception.objects())
+E       AttributeError: module 'autonomous_brain.actions' has no attribute 'completion_evidence'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:233: AttributeError
+____ test_rows_without_confirmation_metadata_remain_conservatively_pending _____
+
+    def test_rows_without_confirmation_metadata_remain_conservatively_pending():
+        rows = [{"id": "legacy-lost", "category": "red-ball", "state": "LOST"},
+                {"id": "legacy-blue", "category": "blue-ball", "state": "LOST"}]
+        original = copy.deepcopy(rows)
+>       result = action_module.completion_evidence(rows)
+E       AttributeError: module 'autonomous_brain.actions' has no attribute 'completion_evidence'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:251: AttributeError
+_ test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[holding] _
+
+gate = 'holding'
+
+    @pytest.mark.parametrize("gate", ["holding", "missing_roads", "unexplored_exit"])
+    def test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates(gate):
+        perception, object_id, _ = retired_hypothesis()
+        outcome = done(perception, holding=gate == "holding", nodes=gate != "missing_roads",
+                       unexplored=1 if gate == "unexplored_exit" else 0)
+        assert outcome["success"] is False
+>       assert outcome["evidence"]["pending_objects"] == []
+E       AssertionError: assert ['target_001'] == []
+E         
+E         Left contains one more item: 'target_001'
+E         Use -v to get more diff
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:263: AssertionError
+_ test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[missing_roads] _
+
+gate = 'missing_roads'
+
+    @pytest.mark.parametrize("gate", ["holding", "missing_roads", "unexplored_exit"])
+    def test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates(gate):
+        perception, object_id, _ = retired_hypothesis()
+        outcome = done(perception, holding=gate == "holding", nodes=gate != "missing_roads",
+                       unexplored=1 if gate == "unexplored_exit" else 0)
+        assert outcome["success"] is False
+>       assert outcome["evidence"]["pending_objects"] == []
+E       AssertionError: assert ['target_001'] == []
+E         
+E         Left contains one more item: 'target_001'
+E         Use -v to get more diff
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:263: AssertionError
+_ test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[unexplored_exit] _
+
+gate = 'unexplored_exit'
+
+    @pytest.mark.parametrize("gate", ["holding", "missing_roads", "unexplored_exit"])
+    def test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates(gate):
+        perception, object_id, _ = retired_hypothesis()
+        outcome = done(perception, holding=gate == "holding", nodes=gate != "missing_roads",
+                       unexplored=1 if gate == "unexplored_exit" else 0)
+        assert outcome["success"] is False
+>       assert outcome["evidence"]["pending_objects"] == []
+E       AssertionError: assert ['target_001'] == []
+E         
+E         Left contains one more item: 'target_001'
+E         Use -v to get more diff
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py:263: AssertionError
+_ test_retirement_basis_reaches_done_evidence_and_next_state_without_rewriting_lost _
+
+    def test_retirement_basis_reaches_done_evidence_and_next_state_without_rewriting_lost():
+        runtime = runtime_with_retired_history()
+        original = copy.deepcopy(runtime.perception.timeline())
+        outcome = Actions(runtime).done()
+>       assert outcome["success"] is True
+E       assert False is True
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py:41: AssertionError
+_ test_live_prompt_carries_explicit_retirement_semantics_and_unchanged_sensor_state _
+
+tmp_path = PosixPath('../../../../private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-116/test_live_prompt_carries_expli0')
+
+    def test_live_prompt_carries_explicit_retirement_semantics_and_unchanged_sensor_state(tmp_path):
+        state = runtime_with_retired_history().state()
+        fake = {"LLM_BASE_URL": "https://model.invalid/v1", "LLM_API_KEY": "offline-fixture",
+                "LLM_MODEL": "offline-model"}
+        with patch.dict("os.environ", fake, clear=True), \
+                patch("urllib.request.urlopen", return_value=response('{"action":"done","params":{}}')) as send:
+            with LLMClient(tmp_path / "request.jsonl") as client:
+                assert client.decide(state) == {"action": "done", "params": {}}
+        request = json.loads(send.call_args.args[0].data)
+        assert json.loads(request["messages"][1]["content"]) == state
+        prompt = request["messages"][0]["content"]
+>       assert "retired_unconfirmed_hypothesis" in prompt
+E       assert 'retired_unconfirmed_hypothesis' in '你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代...查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。'
+
+../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py:74: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_never_confirmed_archived_hypothesis_retires_without_erasing_history
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_every_active_red_identity_remains_a_completion_obligation[tentative]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_every_active_red_identity_remains_a_completion_obligation[unconfirmed_stale]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_every_active_red_identity_remains_a_completion_obligation[confirmed]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_every_active_red_identity_remains_a_completion_obligation[previously_confirmed_stale]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_ever_confirmed_lost_red_remains_pending_after_real_archive_decay
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_manipulated_but_not_delivered_identity_stays_pending[held]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_manipulated_but_not_delivered_identity_stays_pending[released_unverified]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_new_observation_near_retired_hypothesis_creates_active_pending_identity[same_observed_position]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_new_observation_near_retired_hypothesis_creates_active_pending_identity[nearby_observed_position]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_sensor_verified_delivery_allows_done_with_only_archived_unconfirmed_hypothesis
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_completion_queries_are_repeatable_read_only_and_return_detached_evidence
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_rows_without_confirmation_metadata_remain_conservatively_pending
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[holding]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[missing_roads]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py::test_retired_hypothesis_does_not_bypass_gripper_or_exploration_gates[unexplored_exit]
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py::test_retirement_basis_reaches_done_evidence_and_next_state_without_rewriting_lost
+FAILED ../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py::test_live_prompt_carries_explicit_retirement_semantics_and_unchanged_sensor_state
+18 failed, 1 passed in 0.14s

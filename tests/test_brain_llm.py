@@ -104,7 +104,7 @@ def test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with
     assert json.loads(request["messages"][1]["content"]) == state
 
 
-@pytest.mark.parametrize("number", range(1, 9))
+@pytest.mark.parametrize("number", range(1, 10))
 def test_legacy_repair_replay_keeps_original_prompt_and_state_without_convention(tmp_path, state, number):
     legacy_prompt = f"历史提示/v{number}：只按该轮记录的对象和出口选择一个动作。"
     path = tmp_path / "legacy-repair.jsonl"
@@ -157,7 +157,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v9"
+            assert saved["version"] == "autonomous-brain-llm/v10"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
@@ -816,7 +816,7 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
                                      "autonomous-brain-llm/v3", "autonomous-brain-llm/v4",
                                      "autonomous-brain-llm/v5", "autonomous-brain-llm/v6",
-                                     "autonomous-brain-llm/v7", "autonomous-brain-llm/v8"])
+                                     "autonomous-brain-llm/v7", "autonomous-brain-llm/v8", "autonomous-brain-llm/v9"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"

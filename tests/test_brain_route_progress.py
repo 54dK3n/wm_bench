@@ -31,6 +31,7 @@ class SensorRuntime:
         self.detection = None
         self.round = 1
         self.motions, self.selected_exits, self.motion_records = [], [], []
+        self.selected_headings = []
         self.route_calls = []
         self._route, self._actuator = route, actuator
         self.perception = SimpleNamespace(
@@ -38,8 +39,10 @@ class SensorRuntime:
             get_object=lambda oid: self.target if oid == "zone-1" else None,
             visible=lambda oid: self.detection if oid == "zone-1" else None,
         )
-        self.roads = SimpleNamespace(route_to=self.route_to,
-                                     chosen=lambda odo, angle: self.selected_exits.append(angle))
+        def chosen(odo, angle):
+            self.selected_exits.append(angle)
+            self.selected_headings.append(wrap(odo["headingDeg"] + angle))
+        self.roads = SimpleNamespace(route_to=self.route_to, chosen=chosen)
         self.bridge = SimpleNamespace(seconds=0, max_seconds=1200, call=self.call)
         self.motion_log = SimpleNamespace(write=self.motion_records.append)
 
@@ -59,6 +62,8 @@ class SensorRuntime:
         if method == "turn":
             odo = self.snapshot["odometry"]
             odo["headingDeg"] = wrap(odo["headingDeg"] + params["angleDeg"])
+            for entry in self.snapshot["road"]["exits"]:
+                entry["angleDeg"] = wrap(entry["angleDeg"] - params["angleDeg"])
             return {"accepted": True, "completed": True}
         if self._actuator:
             return self._actuator(self, method, params)
@@ -83,7 +88,7 @@ def test_intermediate_junction_keeps_the_unfinished_next_waypoint():
 
     def actuator(runtime, method, params):
         assert method == "take_exit"
-        if len(runtime.motions) == 1:
+        if len(runtime.selected_exits) == 1:
             runtime.set_pose(*c, -156.6, exits=(171.6, 66.6, -25.7))
             return {"accepted": True, "distanceCm": 31.3, "stoppedBy": "junction"}
         # Stop after the second decision so a wrong selected exit is exposed
@@ -93,8 +98,9 @@ def test_intermediate_junction_keeps_the_unfinished_next_waypoint():
     runtime = SensorRuntime(goal=(1.477, -.307), pose=(*a, 30.5),
                             exits=(59.5, -41.8, -180), route=(a, b), actuator=actuator)
     Actions(runtime).go_to("zone-1")
-    assert runtime.selected_exits == [-180, -25.7], (
+    assert runtime.selected_headings == pytest.approx([-149.5, 177.7]), (
         "The second exit must continue toward B; 171.6 degrees returns to A")
+    assert runtime.selected_exits == pytest.approx([0, 0])
 
 
 @pytest.mark.parametrize("route", [(), ((0, 0),)], ids=["no-known-route", "only-start-vertex"])
@@ -170,7 +176,8 @@ def test_one_motion_cannot_consume_overshot_waypoints_in_reverse_route_order():
     runtime = SensorRuntime(goal=(1, 1), exits=(0, -180),
                             route=((0, 0), (0, .18), (0, .05), (1, .05)), actuator=actuator)
     Actions(runtime).go_to("zone-1")
-    assert runtime.selected_exits == [0, -180]
+    assert runtime.selected_headings == [0, -180]
+    assert runtime.selected_exits == [0, 0]
 
 
 def test_normal_route_progress_still_reaches_a_fresh_visual_standoff():

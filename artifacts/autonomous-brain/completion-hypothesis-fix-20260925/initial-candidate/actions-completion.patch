@@ -1,0 +1,52 @@
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -8,6 +8,31 @@
+ from .navigation import distance, heading_to, position, wrap
+ 
+ VERSION = "autonomous-brain-actions/v13"
++
++RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
++                              "last_seen_s", "last_updated_s", "first_seen_frame_id",
++                              "last_frame_id", "hit_count", "confidence")
++
++
++def completion_evidence(objects):
++    """Classify current red obligations without changing tracking or history."""
++    pending, retired = [], []
++    for row in objects:
++        if row["category"] != "red-ball" or row["state"] == "DELIVERED":
++            continue
++        basis = row.get("retirement_evidence")
++        if (row["state"] == "LOST" and row.get("ever_confirmed") is False
++                and row.get("completion_classification") == "retired_unconfirmed_hypothesis"
++                and isinstance(basis, dict)
++                and all(key in basis for key in RETIREMENT_EVIDENCE_FIELDS)
++                and basis["reason"] == "archived_without_confirmation"
++                and basis["archived"] is True and basis["confirmed_s"] is None):
++            retired.append({"object_id": row["id"],
++                            **{key: basis[key] for key in RETIREMENT_EVIDENCE_FIELDS}})
++        else:
++            # Legacy rows or incomplete history must never silently retire.
++            pending.append(row["id"])
++    return {"pending_objects": pending, "retired_unconfirmed_hypotheses": retired}
+ 
+ 
+ def road_translation_limit(road, method, requested_cm):
+@@ -794,12 +819,12 @@
+                            object_id=object_id, **evidence)
+ 
+     def done(self):
+-        rows = self.r.perception.objects()
+-        pending = [o["id"] for o in rows if o["category"] == "red-ball" and o["state"] != "DELIVERED"]
+-        if self.s["holding"]["holding"] or pending or not self.r.roads.nodes or self.r.roads.unexplored():
+-            return self.result(False, "completion_not_supported_by_observations", pending_objects=pending,
++        completion = completion_evidence(self.r.perception.objects())
++        if (self.s["holding"]["holding"] or completion["pending_objects"]
++                or not self.r.roads.nodes or self.r.roads.unexplored()):
++            return self.result(False, "completion_not_supported_by_observations", **completion,
+                                unexplored_exits=self.r.roads.unexplored())
+-        return self.result(True, "explored_roads_and_observed_targets_completed")
++        return self.result(True, "explored_roads_and_observed_targets_completed", **completion)
+ 
+     def execute(self, action):
+         before = self.s["observation_index"]

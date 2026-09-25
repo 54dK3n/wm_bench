@@ -1,0 +1,142 @@
+{
+  "scope": "offline_candidate_only",
+  "task_acceptance": false,
+  "path_note": "Command paths are equivalent repository-relative spellings; stdout paths normalized to repository-relative spellings, results unchanged.",
+  "runs": [
+    {
+      "name": "new regression baseline",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py"
+      ],
+      "source": "unchanged 27d3a4e copy, before implementation",
+      "exit_code": 1,
+      "result": "18 failed, 1 passed in 0.14s",
+      "stdout": "baseline-tests.txt"
+    },
+    {
+      "name": "scoped baseline",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_completion_state.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_perception.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_delivery_identity.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_actions.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_state_evidence.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline/tests/test_brain_llm.py"
+      ],
+      "source": "unchanged 27d3a4e copy; only version assertions use baseline versions",
+      "exit_code": 1,
+      "result": "18 failed, 250 passed in 0.38s",
+      "stdout": "baseline-scoped-tests.txt"
+    },
+    {
+      "name": "initial candidate new regression",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py"
+      ],
+      "exit_code": 0,
+      "result": "19 passed in 0.08s",
+      "stdout": "shadow-completion-tests.txt"
+    },
+    {
+      "name": "initial candidate scoped",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_perception.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_delivery_identity.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_actions.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_state_evidence.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_llm.py"
+      ],
+      "exit_code": 0,
+      "result": "268 passed in 0.33s",
+      "stdout": "shadow-scoped-tests.txt"
+    },
+    {
+      "name": "real v9 transcript replay",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/replay_shadow_v9.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/v9-offline-replay"
+      ],
+      "exit_code": 0,
+      "result": "77 rounds; 89 calls; full records equal except mode; no environment/network/sleep attempts",
+      "stdout": "v9-replay-stdout.txt"
+    },
+    {
+      "name": "current working tree merge check",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/actions-completion.patch",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/perception.patch",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run.patch",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/llm.patch",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/tests.patch"
+      ],
+      "exit_code": 0,
+      "stdout": ""
+    },
+    {
+      "name": "frozen baseline combined patch check",
+      "cwd": "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/baseline",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/source-frozen-baseline.patch"
+      ],
+      "exit_code": 0,
+      "stdout": ""
+    },
+    {
+      "name": "final candidate new regression",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py"
+      ],
+      "exit_code": 0,
+      "result": "22 passed in 0.09s",
+      "stdout": "final-completion-tests.txt"
+    },
+    {
+      "name": "final candidate scoped",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/completion-hypothesis-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_hypotheses.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_completion_state.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_perception.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_delivery_identity.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_actions.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_state_evidence.py",
+        "../../../../private/tmp/wm-completion-shadow-0tmdhfxm/tests/test_brain_llm.py"
+      ],
+      "exit_code": 0,
+      "result": "271 passed in 0.33s",
+      "stdout": "final-scoped-tests.txt"
+    }
+  ]
+}

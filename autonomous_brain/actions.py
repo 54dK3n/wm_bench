@@ -7,7 +7,32 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v12"
+VERSION = "autonomous-brain-actions/v13"
+
+RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                              "last_seen_s", "last_updated_s", "first_seen_frame_id",
+                              "last_frame_id", "hit_count", "confidence")
+
+
+def completion_evidence(objects):
+    """Classify current red obligations without changing tracking or history."""
+    pending, retired = [], []
+    for row in objects:
+        if row["category"] != "red-ball" or row["state"] == "DELIVERED":
+            continue
+        basis = row.get("retirement_evidence")
+        if (row["state"] == "LOST" and row.get("ever_confirmed") is False
+                and row.get("completion_classification") == "retired_unconfirmed_hypothesis"
+                and isinstance(basis, dict)
+                and all(key in basis for key in RETIREMENT_EVIDENCE_FIELDS)
+                and basis["reason"] == "archived_without_confirmation"
+                and basis["archived"] is True and basis["confirmed_s"] is None):
+            retired.append({"object_id": row["id"],
+                            **{key: basis[key] for key in RETIREMENT_EVIDENCE_FIELDS}})
+        else:
+            # Legacy rows or incomplete history must never silently retire.
+            pending.append(row["id"])
+    return {"pending_objects": pending, "retired_unconfirmed_hypotheses": retired}
 
 
 def road_translation_limit(road, method, requested_cm):
@@ -195,6 +220,34 @@ class Actions:
                                    actuator_result=blocked_result, recovery_result=result)
         return self.result(False, "blocked_road_return_incomplete", actuator_result=blocked_result)
 
+    def take_observed_exit(self, angle):
+        """Face a sensed exit, then reacquire that direction before driving.
+
+        The road actuator can stop for clearance before changing heading.
+        An obstruction in the old viewing direction must not prevent looking
+        down the selected exit. All correspondence uses relative angles and
+        odometry; no platform road identifiers enter this controller.
+        """
+        start_observation = self.s["observation_index"]
+        wanted_heading = wrap(self.s["odometry"]["headingDeg"] + angle)
+        self.turn(angle)
+        road, odo = self.s["road"], self.s["odometry"]
+        evidence = {"before_observation": start_observation,
+                    "after_observation": self.s["observation_index"],
+                    "wanted_heading_deg": wanted_heading}
+        if not road["onRoad"] or not road.get("atNode"):
+            return {"selection_error": "exit_junction_not_reobserved", **evidence}
+        relative = wrap(wanted_heading - odo["headingDeg"])
+        matches = [entry for entry in road.get("exits", [])
+                   if abs(wrap(entry["angleDeg"] - relative)) <= 5]
+        if len(matches) != 1:
+            return {"selection_error": "selected_exit_not_uniquely_reobserved",
+                    "observed_exit_angles": [entry["angleDeg"] for entry in road.get("exits", [])],
+                    **evidence}
+        fresh_angle = matches[0]["angleDeg"]
+        self.r.roads.chosen(odo, fresh_angle)
+        return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+
     def explore(self, exit_angle=None):
         before_ids = {o["id"] for o in self.r.perception.objects()}
         before_confirmed = {o["id"] for o in self.r.perception.objects() if o["state"] == "CONFIRMED"}
@@ -212,9 +265,12 @@ class Actions:
                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
                     return self.result(False, "requested_exit_not_observed", available_exits=exits)
-            self.r.roads.chosen(odo, chosen["angle_deg"])
-            result = self.move("take_exit", {"angleDeg": chosen["angle_deg"], "speed": 50})
+            result = self.take_observed_exit(chosen["angle_deg"])
+            if result.get("selection_error"):
+                return self.result(False, result["selection_error"], exit_selection=result)
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+                return self.return_from_blocked_road(result)
+            if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
                 return self.return_from_blocked_road(result)
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
@@ -225,8 +281,6 @@ class Actions:
             if result.get("distanceCm", 0) < 0.2:
                 self.r.roads.mark_blocked()
                 return self.result(False, "selected_exit_blocked", actuator_result=result)
-            if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
-                return self.return_from_blocked_road(result)
         for step in range(12):
             new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
             if new:
@@ -236,6 +290,8 @@ class Actions:
             result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
                 return self.return_from_blocked_road(result)
+            if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+                return self.return_from_blocked_road(result)
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
@@ -244,7 +300,7 @@ class Actions:
             if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
                 return self.result(True, "next_junction_observed")
             moved = distance(before, position(self.s["odometry"])) * 100
-            if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+            if moved < 0.2:
                 return self.return_from_blocked_road(result)
         return self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100)
 
@@ -405,8 +461,9 @@ class Actions:
             if waypoint is not None and road.get("atNode") and road["exits"] and remaining > 60:
                 candidates = road["exits"]
                 chosen = min(candidates, key=lambda e: abs(wrap(e["angleDeg"] - relative)))
-                self.r.roads.chosen(odo, chosen["angleDeg"])
-                result = self.move("take_exit", {"angleDeg": chosen["angleDeg"], "speed": 50})
+                result = self.take_observed_exit(chosen["angleDeg"])
+                if result.get("selection_error"):
+                    return self.result(False, result["selection_error"], exit_selection=result)
             elif remaining <= 65 and abs(bearing) <= 40:
                 # Final short approach is bounded by the remembered standoff,
                 # observed road clearance, and a new camera reading each step.
@@ -794,12 +851,12 @@ class Actions:
                            object_id=object_id, **evidence)
 
     def done(self):
-        rows = self.r.perception.objects()
-        pending = [o["id"] for o in rows if o["category"] == "red-ball" and o["state"] != "DELIVERED"]
-        if self.s["holding"]["holding"] or pending or not self.r.roads.nodes or self.r.roads.unexplored():
-            return self.result(False, "completion_not_supported_by_observations", pending_objects=pending,
+        completion = completion_evidence(self.r.perception.objects())
+        if (self.s["holding"]["holding"] or completion["pending_objects"]
+                or not self.r.roads.nodes or self.r.roads.unexplored()):
+            return self.result(False, "completion_not_supported_by_observations", **completion,
                                unexplored_exits=self.r.roads.unexplored())
-        return self.result(True, "explored_roads_and_observed_targets_completed")
+        return self.result(True, "explored_roads_and_observed_targets_completed", **completion)
 
     def execute(self, action):
         before = self.s["observation_index"]

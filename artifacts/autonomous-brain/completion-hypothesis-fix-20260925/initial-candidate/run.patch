@@ -1,0 +1,57 @@
+--- a/autonomous_brain/run.py
++++ b/autonomous_brain/run.py
+@@ -16,13 +16,13 @@
+ sys.path.insert(0, str(WM_ROOT))
+ 
+ from . import VERSION
+-from .actions import Actions
++from .actions import Actions, RETIREMENT_EVIDENCE_FIELDS, completion_evidence
+ from .bridge import JsonLog, RobotBridge, SimulationLimit
+ from .llm import LLMClient
+ from .navigation import RoadMemory
+ from .perception import Perception
+ 
+-RUNTIME_VERSION = "autonomous-brain-runtime/v5"
++RUNTIME_VERSION = "autonomous-brain-runtime/v6"
+ 
+ 
+ def dump(path, value):
+@@ -61,6 +61,12 @@
+                             "heading_change_deg", "motion_observation",
+                             "candidate_witnesses", "recovery_steps", "unexplored_exits"))
+     detection(raw, evidence)
++    if isinstance(raw.get("pending_objects"), list):
++        evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
++    if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):
++        evidence["retired_unconfirmed_hypotheses"] = [
++            fields(item, ("object_id", *RETIREMENT_EVIDENCE_FIELDS))
++            for item in raw["retired_unconfirmed_hypotheses"] if isinstance(item, dict)]
+     for name in ("actuator_result", "recovery_result"):
+         if isinstance(raw.get(name), dict):
+             names = (("stoppedBy", "return_error_cm", "reversed_cm")
+@@ -141,12 +147,16 @@
+ 
+     def state(self):
+         objects = []
+-        for row in self.perception.objects():
++        rows = self.perception.objects()
++        for row in rows:
+             objects.append({"id": row["id"], "category": row["category"],
+                             "position_m": {k: round(v, 3) for k, v in row["position_m"].items()},
+                             "confidence": round(row["confidence"], 3), "status": row["state"],
+                             "distance_cm": round(row["distance_cm"], 1),
+                             "bearing_deg": round(row["bearing_deg"], 1), "hit_count": row["hit_count"]})
++            for key in ("completion_classification", "ever_confirmed"):
++                if key in row:
++                    objects[-1][key] = row[key]
+         odo, road = self.snapshot["odometry"], self.snapshot["road"]
+         return {"task": self.config["task"], "round": self.round,
+                 "simulation_seconds": self.bridge.seconds,
+@@ -161,6 +171,7 @@
+                                        "negative": "right", "zero": "forward"},
+                     "object_bearing_to_relative_turn": "negate"},
+                 "objects": objects,
++                "completion": completion_evidence(rows),
+                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
+                                     "heading_deg": odo["headingDeg"]},
+                           "holding": self.snapshot["holding"]["holding"],

@@ -1,0 +1,248 @@
+FFFFFFFFFFFF.F.F.                                                        [100%]
+=================================== FAILURES ===================================
+_ test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit[explore] _
+
+caller = 'explore'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    def test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit(caller):
+        runtime, calls, events, logs = exit_runtime()
+        result = run_action(runtime, caller)
+    
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_exit_alignment.py:125: AssertionError
+_ test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit[go_to] _
+
+caller = 'go_to'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    def test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit(caller):
+        runtime, calls, events, logs = exit_runtime()
+        result = run_action(runtime, caller)
+    
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_exit_alignment.py:125: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[missing-explore] _
+
+caller = 'explore', fresh_exit_mode = 'missing'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[missing-go_to] _
+
+caller = 'go_to', fresh_exit_mode = 'missing'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[ambiguous-explore] _
+
+caller = 'explore', fresh_exit_mode = 'ambiguous'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[ambiguous-go_to] _
+
+caller = 'go_to', fresh_exit_mode = 'ambiguous'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[outside_gate-explore] _
+
+caller = 'explore', fresh_exit_mode = 'outside_gate'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+_ test_fresh_exit_must_uniquely_match_original_absolute_heading[outside_gate-go_to] _
+
+caller = 'go_to', fresh_exit_mode = 'outside_gate'
+
+    @pytest.mark.parametrize("caller", ["explore", "go_to"])
+    @pytest.mark.parametrize("fresh_exit_mode", ["missing", "ambiguous", "outside_gate"])
+    def test_fresh_exit_must_uniquely_match_original_absolute_heading(caller, fresh_exit_mode):
+        runtime, calls, events, _ = exit_runtime(fresh_exit_mode=fresh_exit_mode)
+        result = run_action(runtime, caller)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:143: AssertionError
+____ test_fresh_road_and_node_are_required_after_exit_alignment[road_lost] _____
+
+fresh_state = {'fresh_on_road': False}
+
+    @pytest.mark.parametrize("fresh_state", [{"fresh_on_road": False}, {"fresh_at_node": False}],
+                             ids=["road_lost", "node_lost"])
+    def test_fresh_road_and_node_are_required_after_exit_alignment(fresh_state):
+        runtime, calls, events, _ = exit_runtime(**fresh_state)
+        result = Actions(runtime).explore(-147.2)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:154: AssertionError
+____ test_fresh_road_and_node_are_required_after_exit_alignment[node_lost] _____
+
+fresh_state = {'fresh_at_node': False}
+
+    @pytest.mark.parametrize("fresh_state", [{"fresh_on_road": False}, {"fresh_at_node": False}],
+                             ids=["road_lost", "node_lost"])
+    def test_fresh_road_and_node_are_required_after_exit_alignment(fresh_state):
+        runtime, calls, events, _ = exit_runtime(**fresh_state)
+        result = Actions(runtime).explore(-147.2)
+    
+        assert result["success"] is False
+>       assert [row["method"] for row in calls] == ["turn"]
+E       AssertionError: assert ['take_exit'] == ['turn']
+E         
+E         At index 0 diff: 'take_exit' != 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_exit_alignment.py:154: AssertionError
+_ test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[front_clearance] _
+
+stopped_by = 'front_clearance'
+
+    @pytest.mark.parametrize("stopped_by", ["front_clearance", "collision", "off_road", "wrong_way"])
+    def test_run10_short_blocked_exit_cannot_report_same_node_as_arrival(stopped_by):
+        blocked = {"accepted": True, "stoppedBy": stopped_by,
+                   "distanceCm": 8.7, "elapsedTicks": 70}
+        runtime, calls, _, _ = exit_runtime(start_pose=(99.8, 5.5, 169.6),
+            selected_angle=-102, turn_residual=0, blocked_result=blocked)
+        result = Actions(runtime).explore(-102)
+    
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_exit_alignment.py:166: AssertionError
+_ test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[collision] __
+
+stopped_by = 'collision'
+
+    @pytest.mark.parametrize("stopped_by", ["front_clearance", "collision", "off_road", "wrong_way"])
+    def test_run10_short_blocked_exit_cannot_report_same_node_as_arrival(stopped_by):
+        blocked = {"accepted": True, "stoppedBy": stopped_by,
+                   "distanceCm": 8.7, "elapsedTicks": 70}
+        runtime, calls, _, _ = exit_runtime(start_pose=(99.8, 5.5, 169.6),
+            selected_angle=-102, turn_residual=0, blocked_result=blocked)
+        result = Actions(runtime).explore(-102)
+    
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_exit_alignment.py:166: AssertionError
+_ test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[wrong_way] __
+
+stopped_by = 'wrong_way'
+
+    @pytest.mark.parametrize("stopped_by", ["front_clearance", "collision", "off_road", "wrong_way"])
+    def test_run10_short_blocked_exit_cannot_report_same_node_as_arrival(stopped_by):
+        blocked = {"accepted": True, "stoppedBy": stopped_by,
+                   "distanceCm": 8.7, "elapsedTicks": 70}
+        runtime, calls, _, _ = exit_runtime(start_pose=(99.8, 5.5, 169.6),
+            selected_angle=-102, turn_residual=0, blocked_result=blocked)
+        result = Actions(runtime).explore(-102)
+    
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_exit_alignment.py:166: AssertionError
+_______ test_blocked_follow_road_with_fresh_node_still_reports_blockage ________
+
+    def test_blocked_follow_road_with_fresh_node_still_reports_blockage():
+        blocked = {"accepted": True, "stoppedBy": "front_clearance",
+                   "distanceCm": 8.7, "elapsedTicks": 70}
+        runtime, calls, _, _ = exit_runtime(initial_at_node=False, blocked_result=blocked)
+        result = Actions(runtime).explore()
+    
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_exit_alignment.py:189: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_exit_alignment.py::test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit[explore]
+FAILED tests/test_brain_exit_alignment.py::test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit[go_to]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[missing-explore]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[missing-go_to]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[ambiguous-explore]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[ambiguous-go_to]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[outside_gate-explore]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_exit_must_uniquely_match_original_absolute_heading[outside_gate-go_to]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_road_and_node_are_required_after_exit_alignment[road_lost]
+FAILED tests/test_brain_exit_alignment.py::test_fresh_road_and_node_are_required_after_exit_alignment[node_lost]
+FAILED tests/test_brain_exit_alignment.py::test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[front_clearance]
+FAILED tests/test_brain_exit_alignment.py::test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[collision]
+FAILED tests/test_brain_exit_alignment.py::test_run10_short_blocked_exit_cannot_report_same_node_as_arrival[wrong_way]
+FAILED tests/test_brain_exit_alignment.py::test_blocked_follow_road_with_fresh_node_still_reports_blockage
+14 failed, 3 passed in 0.06s

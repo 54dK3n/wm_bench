@@ -70,6 +70,12 @@ def fake_runtime(objects, *, on_road=True, at_node=False, exits=(), route=(),
 
     def call(method, params):
         motions.append((method, copy.deepcopy(params)))
+        if method == "turn" and actuator is None:
+            angle = params["angleDeg"]
+            snapshot["odometry"]["headingDeg"] = (snapshot["odometry"]["headingDeg"] + angle + 180) % 360 - 180
+            for entry in snapshot["road"]["exits"]:
+                entry["angleDeg"] = (entry["angleDeg"] - angle + 180) % 360 - 180
+            return {"completed": True}
         return actuator(runtime, method, params) if actuator else {
             "accepted": True, "distanceCm": 0, "stoppedBy": "front_clearance"}
 
@@ -91,8 +97,10 @@ def test_go_to_takes_exit_to_next_recorded_waypoint_before_later_bend():
     Actions(runtime).go_to("red-1")
     # The fake actuator stops at the first selected exit, keeping this test
     # about route selection rather than simulating an entire road traversal.
-    assert runtime.motions == [("take_exit", {"angleDeg": -90, "speed": 50})]
-    assert runtime.selected_exits == [-90]
+    assert runtime.motions == [("turn", {"angleDeg": -90, "speed": 50}),
+                               ("take_exit", {"angleDeg": 0, "speed": 50})]
+    assert runtime.selected_exits == [0]
+    assert runtime.snapshot["odometry"]["headingDeg"] == -90
 
 
 def test_go_to_does_not_reverse_when_current_sensor_reports_off_road():

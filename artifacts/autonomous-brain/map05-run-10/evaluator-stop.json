@@ -1,0 +1,22 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "timestamp": "2026-09-25T09:56:28.043Z",
+  "reason": "Repeated take_exit commands stopped at front_clearance with zero distance before changing heading; a previous blocked 8.7cm move was mislabeled next_junction_observed because atNode stayed true. Preserve the frozen trial before correcting exit alignment and result precedence.",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "source_commit": "27d3a4eb3eed854d8101c837bbaf3aafa2e09f18",
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 11449,
+    "errors": []
+  },
+  "evidence": [
+    "map-05-run-1/brain/rounds.jsonl: rounds 43-52",
+    "map-05-run-1/brain/observations.jsonl: observations 239-276",
+    "map-05-run-1/brain/motions.jsonl: rounds 43-52"
+  ],
+  "note": "First ball passed observed pick/place. This does not establish two-ball success or prove every physical route blocked: reverse-facing scan observations reported clear road. Independent evaluation follows export."
+}
