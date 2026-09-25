@@ -1,0 +1,533 @@
+{
+  "schema": "autonomous-brain-offline-llm-replay/v1",
+  "scope": "offline_llm_transcript_replay",
+  "task_acceptance": false,
+  "full_simulation_replayed": false,
+  "live_model_called": false,
+  "source_brain_directory": "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain",
+  "original_run": {
+    "status": "failed",
+    "reason": "LLMRequestError: LLM request failed: HTTPError HTTP 502; see transcript",
+    "rounds": 14,
+    "llm_calls": 17
+  },
+  "original_llm_client_sha256": "4c40163733e172f1a0459455c529d6f1d6812281da1ce84023b12cfa94141cdb",
+  "rows": [
+    {
+      "round": 1,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 1,
+      "recorded_call_count": 1,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 2,
+          "frame_id": 2,
+          "tick": 81,
+          "holding": false,
+          "before_observation": 1,
+          "final_observation": 3
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 2,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 2,
+      "recorded_call_count": 2,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_observed",
+        "evidence": {
+          "after_observation": 6,
+          "frame_id": 6,
+          "tick": 284,
+          "holding": false,
+          "new_object_ids": [
+            "obstacle_001",
+            "distractor_002",
+            "obstacle_003",
+            "obstacle_004"
+          ],
+          "before_observation": 4,
+          "final_observation": 7
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 3,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 3,
+      "recorded_call_count": 3,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_observed",
+        "evidence": {
+          "after_observation": 9,
+          "frame_id": 9,
+          "tick": 336,
+          "holding": false,
+          "new_object_ids": [
+            "distractor_005",
+            "obstacle_006"
+          ],
+          "before_observation": 8,
+          "final_observation": 10
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 4,
+      "expected_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 4,
+      "recorded_call_count": 4,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "full_circle_views_observed",
+        "evidence": {
+          "after_observation": 19,
+          "frame_id": 19,
+          "tick": 568,
+          "holding": false,
+          "new_object_ids": [
+            "storage-zone_007",
+            "distractor_008",
+            "obstacle_009"
+          ],
+          "reobservation_candidate": null,
+          "final_heading_deg": 90,
+          "before_observation": 11,
+          "final_observation": 20
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 5,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 5,
+      "recorded_call_count": 5,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_confirmed",
+        "evidence": {
+          "after_observation": 22,
+          "frame_id": 22,
+          "tick": 620,
+          "holding": false,
+          "newly_confirmed_object_ids": [
+            "distractor_002"
+          ],
+          "before_observation": 21,
+          "final_observation": 23
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 6,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 6,
+      "recorded_call_count": 6,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_observed",
+        "evidence": {
+          "after_observation": 25,
+          "frame_id": 25,
+          "tick": 672,
+          "holding": false,
+          "new_object_ids": [
+            "obstacle_010",
+            "obstacle_011",
+            "obstacle_012"
+          ],
+          "before_observation": 24,
+          "final_observation": 26
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 7,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 7,
+      "recorded_call_count": 7,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 28,
+          "frame_id": 28,
+          "tick": 731,
+          "holding": false,
+          "before_observation": 27,
+          "final_observation": 29
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 8,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 8,
+      "recorded_call_count": 8,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_observed",
+        "evidence": {
+          "after_observation": 32,
+          "frame_id": 32,
+          "tick": 981,
+          "holding": false,
+          "new_object_ids": [
+            "obstacle_013",
+            "obstacle_014"
+          ],
+          "before_observation": 30,
+          "final_observation": 33
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 9,
+      "expected_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 9,
+      "recorded_call_count": 9,
+      "recorded_execution_result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 40,
+          "frame_id": 40,
+          "tick": 1477,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 13.8,
+            "elapsedTicks": 58
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 3.2,
+            "elapsedTicks": 21
+          },
+          "recovery_steps": 3,
+          "before_observation": 34,
+          "final_observation": 41
+        }
+      },
+      "execution_failed_after_llm_success": true,
+      "exact_match": true
+    },
+    {
+      "round": 10,
+      "expected_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 10,
+      "recorded_call_count": 10,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "full_circle_views_observed",
+        "evidence": {
+          "after_observation": 50,
+          "frame_id": 50,
+          "tick": 1709,
+          "holding": false,
+          "new_object_ids": [
+            "distractor_020",
+            "obstacle_021",
+            "obstacle_022",
+            "obstacle_023"
+          ],
+          "reobservation_candidate": null,
+          "final_heading_deg": -16.7,
+          "before_observation": 42,
+          "final_observation": 51
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 11,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.6
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.6
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 11,
+      "recorded_call_count": 11,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 54,
+          "frame_id": 54,
+          "tick": 1890,
+          "holding": false,
+          "before_observation": 52,
+          "final_observation": 55
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 12,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 59.5
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 59.5
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 12,
+      "recorded_call_count": 12,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "new_objects_confirmed",
+        "evidence": {
+          "after_observation": 58,
+          "frame_id": 58,
+          "tick": 2067,
+          "holding": false,
+          "newly_confirmed_object_ids": [
+            "obstacle_010"
+          ],
+          "before_observation": 56,
+          "final_observation": 59
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 13,
+      "expected_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "actual_action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 13,
+      "recorded_call_count": 13,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "full_circle_views_observed",
+        "evidence": {
+          "after_observation": 68,
+          "frame_id": 68,
+          "tick": 2299,
+          "holding": false,
+          "new_object_ids": [
+            "storage-zone_026",
+            "obstacle_027",
+            "obstacle_028",
+            "obstacle_029",
+            "obstacle_030",
+            "obstacle_031",
+            "obstacle_032",
+            "obstacle_033"
+          ],
+          "reobservation_candidate": null,
+          "final_heading_deg": 90,
+          "before_observation": 60,
+          "final_observation": 69
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 14,
+      "expected_action": null,
+      "actual_action": null,
+      "expected_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: HTTPError HTTP 502; see transcript"
+      },
+      "actual_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: HTTPError HTTP 502; see transcript"
+      },
+      "replayed_call_count": 17,
+      "recorded_call_count": 17,
+      "recorded_execution_result": {
+        "success": false,
+        "reason": "LLM request failed: HTTPError HTTP 502; see transcript",
+        "error_type": "LLMRequestError"
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    }
+  ],
+  "recorded_rounds": 14,
+  "replayed_rounds": 14,
+  "recorded_calls": 17,
+  "replayed_calls": 17,
+  "all_records_consumed": true,
+  "full_records_equal_except_mode": true,
+  "mismatched_record_indexes": [],
+  "replay_error": null,
+  "recorded_elapsed_s_replayed": 326.578321878,
+  "network_calls": 0,
+  "blocked_network_entry_points": {
+    "urllib.request.urlopen": 0,
+    "urllib.request.OpenerDirector.open": 0,
+    "http.client.HTTPConnection.request": 0,
+    "http.client.HTTPConnection.connect": 0,
+    "http.client.HTTPSConnection.connect": 0,
+    "socket.create_connection": 0,
+    "socket.socket.connect": 0,
+    "socket.socket.connect_ex": 0,
+    "socket.socket.sendto": 0,
+    "socket.getaddrinfo": 0
+  },
+  "environment_access_attempts": 0,
+  "source_sha256": {
+    "rounds": "335e8f10d16f46a41027edcbc460adb41181ac4bcdf5c05c2dfd7a832f0a17ed",
+    "original_llm": "df99c39cc5c0e215b2cb6294f2ffa67c4bd326555a5547d640572c87bdeb7b57",
+    "original_summary": "ab8a0ad5161d3a1c2e6cbd015cfa00e2bff49074095f570ce72b4229d0410e39",
+    "tool": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+    "llm_client": "4c40163733e172f1a0459455c529d6f1d6812281da1ce84023b12cfa94141cdb"
+  },
+  "source_evidence_unchanged": true,
+  "allPass": true
+}

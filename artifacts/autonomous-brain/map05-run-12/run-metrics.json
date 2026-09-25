@@ -1,0 +1,300 @@
+{
+  "schema": "autonomous-brain-run-metrics/v2",
+  "run": "map05-run-12",
+  "source_commit": "885c24f8d2b58870fe42c42d434610f9dab96a27",
+  "archive_status": "complete",
+  "evaluation_version": "autonomous-brain-offline-evaluation/v3",
+  "task_success": false,
+  "rounds": 14,
+  "llm_calls": 17,
+  "llm_total_elapsed_s": 326.578321878,
+  "simulation_seconds": 45.98,
+  "observations": 70,
+  "failed_rounds": 2,
+  "failed_actions": 1,
+  "execution_failures": 1,
+  "external_stop_failures": 0,
+  "bridge_calls": 324,
+  "nonwhitelist_brain_requests": 0,
+  "brain_wall_elapsed_s": 361.237445333,
+  "driver_process_wall_seconds": 361.366,
+  "motions": 43,
+  "action_counts": {
+    "explore": 10,
+    "look_around": 3,
+    "no_action": 1
+  },
+  "transport_error_count": 3,
+  "transport_errors": [
+    {
+      "call_index": 15,
+      "decision_index": 14,
+      "attempt": 2,
+      "elapsed_s": 39.92497412499998,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      },
+      "transport_retry_index": 0,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 0
+    },
+    {
+      "call_index": 16,
+      "decision_index": 14,
+      "attempt": 2,
+      "elapsed_s": 64.85401545899998,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "transport_retry_index": 1,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 1
+    },
+    {
+      "call_index": 17,
+      "decision_index": 14,
+      "attempt": 2,
+      "elapsed_s": 67.24782983299997,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "transport_retry_index": 2,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 2
+    }
+  ],
+  "validation_error_count": 1,
+  "validation_errors": [
+    {
+      "call_index": 14,
+      "decision_index": 14,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_024\"}}",
+      "elapsed_s": 19.744593624999993,
+      "validation_error": "go_to requires a CONFIRMED object"
+    }
+  ],
+  "terminal_decision": {
+    "round": 14,
+    "action": null,
+    "error_type": "LLMRequestError",
+    "reason": "LLM request failed: HTTPError HTTP 502; see transcript",
+    "validation_repair_request_transport_exhausted": true,
+    "transport_attempts": 3,
+    "transport_retries": 2,
+    "simulation_seconds_unchanged_during_failed_decision": true
+  },
+  "failed_round_details": [
+    {
+      "round": 9,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 29.54,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 40,
+          "frame_id": 40,
+          "tick": 1477,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 13.8,
+            "elapsedTicks": 58
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 3.2,
+            "elapsedTicks": 21
+          },
+          "recovery_steps": 3,
+          "before_observation": 34,
+          "final_observation": 41
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 14,
+      "action": null,
+      "simulation_seconds": 45.98,
+      "result": {
+        "success": false,
+        "reason": "LLM request failed: HTTPError HTTP 502; see transcript",
+        "error_type": "LLMRequestError"
+      },
+      "failure_kind": "execution_error"
+    }
+  ],
+  "external_stop": {
+    "recorded": false,
+    "version": null,
+    "reason": null,
+    "classified_failures": 0
+  },
+  "export_complete": true,
+  "export_failures": [],
+  "controller_errors": [],
+  "record_complete": true,
+  "record_end_tick": 2299,
+  "final_sample_tick": 2299,
+  "final_sample_is_terminal": true,
+  "native_event_counts": {
+    "run_started": 1,
+    "run_finished": 1
+  },
+  "grab_calls": 0,
+  "release_calls": 0,
+  "independently_valid_deliveries": 0,
+  "expected_target_count": 2,
+  "truth_target_timelines": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_024"
+      ],
+      "first_raw_seen": {
+        "observation_index": 5,
+        "round": 2,
+        "frame_id": "5",
+        "tick": 138,
+        "simulation_seconds": 2.76,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 548,
+          "y": 188,
+          "w": 20,
+          "h": 12
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 558.4765479149339,
+              "v": 194.26820679191553,
+              "depth_world": 12.074038911532847
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": null,
+      "first_logged_wm_presence": {
+        "observation_index": 53,
+        "round": 11,
+        "frame_id": "53",
+        "tick": 1729,
+        "simulation_seconds": 34.58,
+        "track_id": "target_024",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_024",
+          "category": "red-ball",
+          "first_seen_s": 34.58,
+          "first_seen_round": 11,
+          "first_seen_frame_id": "53",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "53",
+              "simulation_time_s": 34.58,
+              "x_m": -1.09,
+              "z_m": 0.121,
+              "heading_deg": 14.900000000000002
+            },
+            {
+              "frame_id": "66",
+              "simulation_time_s": 44.82,
+              "x_m": -1.4580000000000002,
+              "z_m": 0.552,
+              "heading_deg": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [],
+      "first_raw_seen": null,
+      "first_confirmed": null,
+      "first_logged_wm_presence": null,
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": []
+    }
+  ],
+  "position_error": {
+    "count": 0,
+    "mean_cm": null,
+    "rmse_cm": null,
+    "max_cm": null
+  },
+  "raw_red_match_counts": {
+    "unique": 5,
+    "unmatched": 2
+  },
+  "judge_counts": {
+    "match": 0,
+    "false_positive": 0,
+    "false_negative": 0,
+    "unverifiable": 0,
+    "not_evaluated": 14,
+    "eligible_actions": 0
+  },
+  "final_state": {
+    "completion": {
+      "pending_objects": [
+        "target_024"
+      ],
+      "retired_unconfirmed_hypotheses": []
+    },
+    "unexplored_exit_count": 7,
+    "observed_junction_count": 5
+  },
+  "limits": {
+    "max_rounds": 200,
+    "max_simulation_seconds": 1200,
+    "cap_reached": false
+  },
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 14,
+    "replayed_calls": 17,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/summary.json": "ab8a0ad5161d3a1c2e6cbd015cfa00e2bff49074095f570ce72b4229d0410e39",
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/rounds.jsonl": "335e8f10d16f46a41027edcbc460adb41181ac4bcdf5c05c2dfd7a832f0a17ed",
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/observations.jsonl": "66fda4222d1d2f41de8cfddbc6530764f67065c8c38f1c6d19651d5aee9ba839",
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/motions.jsonl": "dcfb55dc6098be19191909fa7f7e8288b6d9f8a82aee297d8ec1447710bcabb9",
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/llm.jsonl": "df99c39cc5c0e215b2cb6294f2ffa67c4bd326555a5547d640572c87bdeb7b57",
+    "artifacts/autonomous-brain/map05-run-12/map-05-run-1/brain/bridge-calls.jsonl": "b02319f6677c0a166856bf0e108a0f0766dc607c10e8e942b683dbb8f7f53f1a",
+    "artifacts/autonomous-brain/map05-run-12/summary.json": "815df4af41e4e5b23d2452cef4e0880adbe0c55fde5bf5ae295736184febd4ba",
+    "artifacts/autonomous-brain/map05-run-12/report/evaluation.json": "46532f0bf9ce6bc0edf0190ea4cebba279f06f132c4ca272b72e62ffa1500c65",
+    "artifacts/autonomous-brain/map05-run-12/llm-replay/replay-checks.json": "903270d745ab97605001a053b74009d487233e54a0e76a1b739f986dd4fe7314",
+    "artifacts/autonomous-brain/map05-run-12/source-commit.json": "642508be7c391e644107bc5ed551cebad7aa5589346bd0f0fddb43b47d0e5772",
+    "artifacts/autonomous-brain/map05-run-12/archive-integrity.json": "803e26e0702e073fd38301eab84c282857a2095f79ecac1c53cc38bed3ab6101"
+  }
+}
