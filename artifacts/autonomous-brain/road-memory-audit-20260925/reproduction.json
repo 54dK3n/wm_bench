@@ -1,0 +1,540 @@
+{
+  "schema": "sensor-only-road-memory-reproduction/v1",
+  "scope": "Frozen source and recorded public odometry/local_road/brain state; no simulator, network, truth or layout",
+  "source_commit": "913474816dbd6271d223cf0cf79366ff668b1e42",
+  "source_file": "autonomous_brain/navigation.py",
+  "source_sha256": "6d19436fbee9583849889fef9d946308e530e2e8ad63cfd70cbef725a17afaec",
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-11/map-05-run-1/brain/rounds.jsonl": "80ec1bfdba46f6ea6f90650f30e7e75f2d823a2e30f74ccec88a636d607a0f66",
+    "artifacts/autonomous-brain/map05-run-11/map-05-run-1/brain/observations.jsonl": "4da098a3797ccc12ce789eb2a09e8cece295fdb3188cd0eadd5c2c298b0a24d1",
+    "artifacts/autonomous-brain/map05-run-11/map-05-run-1/brain/motions.jsonl": "f358405bca410d56808eaf17e3bae587b16b91d5907211e88acb6aa5931bf86e"
+  },
+  "input_round_limit": 77,
+  "replay_operations": [
+    "nodes <- state76.junction_history",
+    "chosen(obs409.odometry, 0)",
+    "update(obs410.odometry, obs410.road)"
+  ],
+  "full_replayed_junction_history_equals_state77": true,
+  "reverse_heading_deg": -52.50195682849894,
+  "current_observed_absolute_headings_deg": [
+    -149.5,
+    90,
+    -11.300000000000011
+  ],
+  "historical_completed_heading_deg": -90,
+  "historical_heading_error_to_reverse_deg": 37.49804317150105,
+  "historical_heading_min_error_to_current_exit_deg": 59.5,
+  "current_heading_errors_to_reverse_deg": [
+    96.99804317150105,
+    142.50195682849892,
+    41.201956828498936
+  ],
+  "unexplored_before_replay": 24,
+  "unexplored_after_replay": 25,
+  "transitions": [
+    {
+      "from_state_round": 75,
+      "to_state_round": 76,
+      "node_count_before": 26,
+      "node_count_after": 27,
+      "unexplored_before": 22,
+      "unexplored_after": 24,
+      "changed_nodes": [
+        {
+          "before": {
+            "id": "junction-26",
+            "position_m": {
+              "x": -1.06,
+              "z": 0.928
+            },
+            "exits": [
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 169.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 9,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          "after": {
+            "id": "junction-26",
+            "position_m": {
+              "x": -1.06,
+              "z": 0.928
+            },
+            "exits": [
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": false,
+                "blocked": true
+              },
+              {
+                "heading_deg": 169.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 9,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          }
+        },
+        {
+          "before": null,
+          "after": {
+            "id": "junction-27",
+            "position_m": {
+              "x": -0.894,
+              "z": 0.865
+            },
+            "exits": [
+              {
+                "heading_deg": 169.2,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 9,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "from_state_round": 76,
+      "to_state_round": 77,
+      "node_count_before": 27,
+      "node_count_after": 27,
+      "unexplored_before": 24,
+      "unexplored_after": 25,
+      "changed_nodes": [
+        {
+          "before": {
+            "id": "junction-19",
+            "position_m": {
+              "x": -1.079,
+              "z": 0.756
+            },
+            "exits": [
+              {
+                "heading_deg": 8.9,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90.0,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 169.2,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          "after": {
+            "id": "junction-19",
+            "position_m": {
+              "x": -1.079,
+              "z": 0.756
+            },
+            "exits": [
+              {
+                "heading_deg": 8.9,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90.0,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 169.2,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.5,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -11.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          }
+        },
+        {
+          "before": {
+            "id": "junction-27",
+            "position_m": {
+              "x": -0.894,
+              "z": 0.865
+            },
+            "exits": [
+              {
+                "heading_deg": 169.2,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 9,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          "after": {
+            "id": "junction-27",
+            "position_m": {
+              "x": -0.894,
+              "z": 0.865
+            },
+            "exits": [
+              {
+                "heading_deg": 169.2,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 9,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "observation_index": 389,
+      "round": 72,
+      "simulation_seconds": 343.84,
+      "odometry": {
+        "forwardCm": 92.8,
+        "rightCm": -106,
+        "headingDeg": -171,
+        "distanceCm": 2239.9,
+        "tick": 17192
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.9,
+        "rightClearanceCm": 8.9,
+        "frontClearanceCm": 143.1,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 81
+          },
+          {
+            "angleDeg": -19.7
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 17192
+      }
+    },
+    {
+      "observation_index": 391,
+      "round": 72,
+      "simulation_seconds": 347.92,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -80,
+        "headingDeg": -90,
+        "distanceCm": 2271.3,
+        "tick": 17396
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 22.8,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17396
+      }
+    },
+    {
+      "observation_index": 402,
+      "round": 75,
+      "simulation_seconds": 353.78,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -60,
+        "headingDeg": -90,
+        "distanceCm": 2291.3,
+        "tick": 17689
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 2.8,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17689
+      }
+    },
+    {
+      "observation_index": 403,
+      "round": 75,
+      "simulation_seconds": 353.94,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -57.5,
+        "headingDeg": -90,
+        "distanceCm": 2293.8,
+        "tick": 17697
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 0.3,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17697
+      }
+    },
+    {
+      "observation_index": 404,
+      "round": 75,
+      "simulation_seconds": 356.2,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -57.5,
+        "headingDeg": 90,
+        "distanceCm": 2293.8,
+        "tick": 17810
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 218.1,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17810
+      }
+    },
+    {
+      "observation_index": 405,
+      "round": 75,
+      "simulation_seconds": 358.34,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -77.5,
+        "headingDeg": 90,
+        "distanceCm": 2313.8,
+        "tick": 17917
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 198.1,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17917
+      }
+    },
+    {
+      "observation_index": 406,
+      "round": 75,
+      "simulation_seconds": 359.62,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -89.4,
+        "headingDeg": 90,
+        "distanceCm": 2325.7,
+        "tick": 17981
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 186.2,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 79.2
+          },
+          {
+            "angleDeg": -81
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 17981
+      }
+    },
+    {
+      "observation_index": 409,
+      "round": 76,
+      "simulation_seconds": 360.62,
+      "odometry": {
+        "forwardCm": 86.5,
+        "rightCm": -89.4,
+        "headingDeg": 169.2,
+        "distanceCm": 2325.7,
+        "tick": 18031
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": -79.2,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 137.5,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 100.8
+          },
+          {
+            "angleDeg": 0
+          },
+          {
+            "angleDeg": -160.2
+          }
+        ],
+        "tick": 18031
+      }
+    },
+    {
+      "observation_index": 410,
+      "round": 76,
+      "simulation_seconds": 364.48,
+      "odometry": {
+        "forwardCm": 65.4,
+        "rightCm": -116.9,
+        "headingDeg": 135,
+        "distanceCm": 2366.3,
+        "tick": 18224
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.9,
+        "rightClearanceCm": 8.9,
+        "frontClearanceCm": 161.1,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 75.5
+          },
+          {
+            "angleDeg": -45
+          },
+          {
+            "angleDeg": -146.3
+          }
+        ],
+        "tick": 18224
+      }
+    }
+  ],
+  "source_locations": {
+    "node_selection": "navigation.py:65-73",
+    "reverse_completion": "navigation.py:78-86"
+  },
+  "limitations": [
+    "Similar exit signatures and out/back odometry support observation-location fragmentation; they do not prove physical node identity.",
+    "Historical reverse completion is reproduced exactly, but this does not prove the sole cause of Run11 incompletion.",
+    "No source changes or navigation fix are included."
+  ]
+}

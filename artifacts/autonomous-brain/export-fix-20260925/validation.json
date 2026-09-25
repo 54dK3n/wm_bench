@@ -1,0 +1,33 @@
+{
+  "scope": "offline_driver_export_tests",
+  "real_model_called": false,
+  "runs": [
+    {
+      "command": [
+        "node",
+        "--check",
+        "tools/autonomous_brain_driver.js"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "tools/tests/test_autonomous_brain_export.js",
+        "tools/tests/test_autonomous_brain_config.js"
+      ],
+      "exit_code": 0,
+      "stdout": "final-node-tests-v2.txt",
+      "tests": 13,
+      "pass": 13,
+      "fail": 0,
+      "duration_ms": 1848.45275
+    }
+  ],
+  "earlier_logs_preserved": [
+    "node-tests.txt",
+    "final-node-tests.txt"
+  ],
+  "real_browser_stress": "coordinated by root after source freeze; not claimed complete here"
+}

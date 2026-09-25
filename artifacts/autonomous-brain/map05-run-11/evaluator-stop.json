@@ -1,0 +1,24 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "timestamp": "2026-09-25T10:55:09.451Z",
+  "reason": "Controlled stop after an offline sensor-only reproduction proved that the four 90-degree endpoint scan omits bearing sectors admitted by the camera/perception contract. Run11 has one observation-verified placement and no second confirmed pickup at the stop request; this does not establish that the scan gap uniquely caused its incomplete task.",
+  "task_success": false,
+  "source_changed": false,
+  "source_commit": "913474816dbd6271d223cf0cf79366ff668b1e42",
+  "method": "Runtime.evaluate",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 18918,
+    "errors": []
+  },
+  "brain_evidence": [
+    "map-05-run-1/brain/rounds.jsonl",
+    "map-05-run-1/brain/observations.jsonl"
+  ],
+  "offline_reproduction": "artifacts/autonomous-brain/scan-coverage-fix-20260925/",
+  "raw_response_file": "artifacts/autonomous-brain/map05-run-11/evaluator-stop-cdp.json",
+  "raw_response_sha256": "c602097506a372b05571d2d0d17925fb24bcba445d45dbfe9ea486e530d2bb33",
+  "normalization_note": "Preserved the original complete metadata bytes in evaluator-stop-cdp.json; result is the returned backend status value. Timestamp, reason and tick are unchanged."
+}

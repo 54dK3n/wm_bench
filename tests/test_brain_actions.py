@@ -264,11 +264,11 @@ class CandidateReobservationTests(ScriptedActionCase):
 
     def scan_steps(self, target, detection, *, road=None, return_to_candidate=False):
         steps = []
-        for index, heading in enumerate((-111.8, -21.8, 68.2, 158.2)):
-            step = {"method": "turn", "params": {"angleDeg": 90, "speed": 50},
+        for index, heading in enumerate((-156.8, -111.8, -66.8, -21.8, 23.2, 68.2, 113.2, 158.2)):
+            step = {"method": "turn", "params": {"angleDeg": 45, "speed": 50},
                     "odometry": {"headingDeg": heading},
-                    "road": {"headingErrorDeg": 90 if index % 2 == 0 else 0}}
-            if index == 1:
+                    "road": {"headingErrorDeg": 0 if (index + 1) % 4 == 0 else 45 if index % 2 == 0 else 90}}
+            if index == 3:
                 step.update(objects=[target], detections=[detection])
                 step["road"].update(road or {})
             steps.append(step)
@@ -285,13 +285,13 @@ class CandidateReobservationTests(ScriptedActionCase):
                     self.scan_steps(target, detection, return_to_candidate=True),
                     task=task, pose={"headingDeg": 158.2})
                 result = Actions(runtime).look_around()
-                self.assertEqual([p["angleDeg"] for _, p in moves], [90, 90, 90, 90, -180])
+                self.assertEqual([p["angleDeg"] for _, p in moves], [45] * 8 + [-180])
                 self.assertAlmostEqual(runtime.snapshot["odometry"]["headingDeg"], -21.8)
                 candidate = result["evidence"]["reobservation_candidate"]
                 self.assertEqual(candidate["object_id"], "candidate-1")
-                self.assertEqual(candidate["observation_index"], 3)
+                self.assertEqual(candidate["observation_index"], 5)
                 self.assertAlmostEqual(candidate["heading_deg"], -21.8)
-                self.assertEqual(runtime.snapshot["observation_index"], 6)
+                self.assertEqual(runtime.snapshot["observation_index"], 10)
                 self.assertEqual(runtime.snapshot["objects"][0]["hit_count"], 1)
                 self.assertEqual(remaining, [])
 
@@ -304,7 +304,7 @@ class CandidateReobservationTests(ScriptedActionCase):
                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection, road=road),
                     task="红球", pose={"headingDeg": 158.2})
                 result = Actions(runtime).look_around()
-                self.assertEqual(len(moves), 4)
+                self.assertEqual(len(moves), 8)
                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
                 self.assertEqual(runtime.snapshot["odometry"]["headingDeg"], 158.2)
 
@@ -316,7 +316,7 @@ class CandidateReobservationTests(ScriptedActionCase):
                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
                     task=task, pose={"headingDeg": 158.2})
                 result = Actions(runtime).look_around()
-                self.assertEqual(len(moves), 4)
+                self.assertEqual(len(moves), 8)
                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
 
     def test_blue_task_can_return_to_blue_candidate(self):
@@ -327,7 +327,7 @@ class CandidateReobservationTests(ScriptedActionCase):
                     self.scan_steps(target, detection, return_to_candidate=True),
                     task=task, pose={"headingDeg": 158.2})
                 result = Actions(runtime).look_around()
-                self.assertEqual(len(moves), 5)
+                self.assertEqual(len(moves), 9)
                 self.assertEqual(result["evidence"]["reobservation_candidate"]["category"], "blue-ball")
 
     def test_candidate_requires_current_eligible_tentative_track(self):
@@ -338,13 +338,13 @@ class CandidateReobservationTests(ScriptedActionCase):
                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
                     task="red", pose={"headingDeg": 158.2})
                 result = Actions(runtime).look_around()
-                self.assertEqual(len(moves), 4)
+                self.assertEqual(len(moves), 8)
                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
         target, detection = self.candidate(state="CONFIRMED")
         runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
             task="red", pose={"headingDeg": 158.2})
         self.assertIsNone(Actions(runtime).look_around()["evidence"]["reobservation_candidate"])
-        self.assertEqual(len(moves), 4)
+        self.assertEqual(len(moves), 8)
 
     def test_held_object_prioritizes_observed_storage_over_task_ball(self):
         target, detection = self.candidate()
@@ -357,7 +357,7 @@ class CandidateReobservationTests(ScriptedActionCase):
                                                  pose={"headingDeg": 158.2})
         result = Actions(runtime).look_around()
         self.assertEqual(result["evidence"]["reobservation_candidate"]["object_id"], "zone-1")
-        self.assertEqual(len(moves), 4)
+        self.assertEqual(len(moves), 8)
 
     def test_explore_uses_sixteen_cm_views_and_stops_at_new_confirmation(self):
         for category in ("red-ball", "blue-ball", "storage-zone"):
@@ -395,12 +395,15 @@ class RoadMemoryTests(unittest.TestCase):
     def test_attempted_exit_is_not_completed_exploration(self):
         roads = RoadMemory()
         odo = {"rightCm": 0, "forwardCm": 0, "headingDeg": 0}
-        roads.update(odo, {"onRoad": True, "atNode": True, "exits": [{"angleDeg": 0}]})
+        roads.update(odo, {"onRoad": True, "atNode": True, "headingErrorDeg": 0,
+                           "exits": [{"angleDeg": 0}]})
         roads.chosen(odo, 0)
         self.assertEqual(roads.unexplored(), 1)
-        roads.update(dict(odo, forwardCm=20), {"onRoad": True, "atNode": False, "exits": []})
+        roads.update(dict(odo, forwardCm=20), {"onRoad": True, "atNode": False,
+                                             "headingErrorDeg": 0, "exits": []})
         self.assertEqual(roads.unexplored(), 1)
-        roads.update(dict(odo, forwardCm=40), {"onRoad": True, "atNode": True, "exits": [{"angleDeg": 180}]})
+        roads.update(dict(odo, forwardCm=40), {"onRoad": True, "atNode": True,
+                                             "headingErrorDeg": 0, "exits": [{"angleDeg": 180}]})
         self.assertEqual(roads.unexplored(), 0)
 
     def test_direction_and_paths_are_odometry_based(self):

@@ -1,0 +1,31 @@
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,7 +7,7 @@
+ from .bridge import SimulationLimit
+ from .navigation import distance, heading_to, position, wrap
+ 
+-VERSION = "autonomous-brain-actions/v13"
++VERSION = "autonomous-brain-actions/v14"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -153,8 +153,8 @@
+             if word in task or re.search(r"\b" + english + r"\b", task, re.IGNORECASE)}
+         holding = self.s["holding"]["holding"]
+         candidates = []
+-        for _ in range(4):
+-            self.turn(90)
++        for _ in range(8):
++            self.turn(45)
+             road = self.s["road"]
+             heading_error, clearance = road.get("headingErrorDeg"), road.get("frontClearanceCm")
+             # This chooses a useful final viewing direction, not confirmation
+@@ -184,7 +184,7 @@
+             # same-position view from supplying an independent confirmation hit.
+             self.turn(wrap(chosen["heading_deg"] - self.s["odometry"]["headingDeg"]))
+         new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before]
+-        return self.result(True, "four_views_observed", new_object_ids=new,
++        return self.result(True, "full_circle_views_observed", new_object_ids=new,
+                            reobservation_candidate=chosen,
+                            final_heading_deg=self.s["odometry"]["headingDeg"])
+ 

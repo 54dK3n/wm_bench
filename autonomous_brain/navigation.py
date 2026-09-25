@@ -4,7 +4,7 @@ from __future__ import annotations
 import heapq
 import math
 
-VERSION = "autonomous-brain-navigation/v2"
+VERSION = "autonomous-brain-navigation/v3"
 
 
 def wrap(angle):
@@ -39,9 +39,21 @@ class RoadMemory:
         if self.active_exit:
             previous = self.active_exit["last_position"]
             if distance(p, previous) > 1e-6:
-                # Keep the final observed movement direction through stationary
-                # observations/turns, including when both endpoints are nodes.
-                self.active_exit["reverse_heading"] = heading_to(p, previous)
+                # The chord of a curved motion is not its arrival tangent.
+                # Public headingErrorDeg is road heading minus robot heading.
+                # Use the local tangent only when the measured displacement
+                # establishes which direction was travelled along that road.
+                reverse = heading_to(p, previous)
+                error = road.get("headingErrorDeg")
+                self.active_exit["reverse_heading"] = None
+                if (road["onRoad"] and isinstance(error, (int, float))
+                        and not isinstance(error, bool) and math.isfinite(error)):
+                    tangent = wrap(odo["headingDeg"] + error)
+                    aligned = [angle for angle in (tangent, wrap(tangent + 180))
+                               if abs(wrap(angle - reverse)) < 45]
+                    if len(aligned) == 1:
+                        self.active_exit["reverse_heading"] = aligned[0]
+                # Stationary turns/repeated frames retain this arrival evidence.
                 self.active_exit["last_position"] = p
         if road["onRoad"]:
             choices = [(distance(p, vertex), i) for i, vertex in enumerate(self.vertices)]
@@ -77,13 +89,18 @@ class RoadMemory:
                 # atNode=False. Distinct odometry positions establish arrival.
                 if distance(node["position"], origin["position"]) >= 0.15:
                     self.active_exit["exit"]["completed"] = True
-                    # The reverse exit was traversed too; its bearing comes
-                    # from the actual final odometry segment, not a map ID.
+                    # Mark only a uniquely observed current reverse exit. Old
+                    # bearings retained at a merged node are not fresh evidence.
                     reverse = self.active_exit["reverse_heading"]
-                    if reverse is not None:
-                        candidate = min(node["exits"], key=lambda e: abs(wrap(e["heading_deg"] - reverse)))
-                        if abs(wrap(candidate["heading_deg"] - reverse)) < 45:
-                            candidate["completed"] = True
+                    if reverse is not None and road["onRoad"]:
+                        current = [wrap(odo["headingDeg"] + raw["angleDeg"])
+                                   for raw in road["exits"]
+                                   if abs(wrap(odo["headingDeg"] + raw["angleDeg"] - reverse)) < 45]
+                        if len(current) == 1:
+                            saved = [e for e in node["exits"]
+                                     if abs(wrap(e["heading_deg"] - current[0])) < 15]
+                            if len(saved) == 1:
+                                saved[0]["completed"] = True
                     self.active_exit = None
                 elif self.active_exit["departed"]:
                     self.active_exit = None

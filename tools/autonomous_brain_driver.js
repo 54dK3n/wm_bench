@@ -8,10 +8,12 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const crypto = require("node:crypto");
-const {gzipSync, gunzipSync} = require("node:zlib");
+const {createGzip, gunzipSync} = require("node:zlib");
+const {Transform} = require("node:stream");
+const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v4";
+const VERSION = "wm-autonomous-brain-driver/v5";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -150,7 +152,7 @@ class Cdp {
   send(method, params = {}, sessionId, timeoutMs = 120000) {
     const id = ++this.nextId;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {this.pending.delete(id); reject(new Error(`CDP ${method} timeout`));}, timeoutMs);
+      const timer = setTimeout(() => {this.pending.delete(id); reject(Object.assign(new Error(`CDP ${method} timeout`), {code: 'CDP_TIMEOUT'}));}, timeoutMs);
       this.pending.set(id, {resolve, reject, timer});
       this.socket.send(JSON.stringify({id, method, params, ...(sessionId ? {sessionId} : {})}));
     });
@@ -203,12 +205,215 @@ function sourceManifest(platformRoot) {
     publicMethods: PUBLIC_METHODS};
 }
 
-function saveCompressed(file, value) {
-  const bytes = Buffer.from(json(value));
-  const packed = gzipSync(bytes, {level: 9});
-  fs.writeFileSync(file, packed);
-  return {file: path.basename(file), compression: 'gzip', sha256: sha(packed), bytes: packed.length,
-    expandedSha256: sha(bytes), expandedBytes: bytes.length};
+// Installed only in the evaluator's page, after the child brain has exited.
+// The platform still clones internally in stop(); this removes the additional
+// unbounded CDP returnByValue and host JSON.stringify of that complete export.
+function installChunkedEvaluationExport() {
+  const state = {phase: 'idle', value: null, error: null};
+  const streams = new Map();
+  const datasets = new Set(['record', 'samples', 'sensorAudit', 'captures', 'envelope']);
+  function status() {
+    return {phase: state.phase, error: state.error,
+      recordFrameCount: state.value?.record?.native?.visionFrames?.length ?? null,
+      captureCount: globalThis.__brainEvaluationCaptures?.length ?? null};
+  }
+  // JSON data only. Emit arrays/objects lazily, preserving property order and
+  // the usual two-space JSON encoding without constructing the complete text.
+  function* encode(value, depth = 0, ancestors = new Set()) {
+    if (value === null || typeof value === 'string' || typeof value === 'boolean'
+        || typeof value === 'number' && Number.isFinite(value)) {
+      yield JSON.stringify(value); return;
+    }
+    if (!value || typeof value !== 'object' || ancestors.has(value)) throw new Error('non-JSON export value');
+    ancestors.add(value);
+    const array = Array.isArray(value), keys = array ? null : Object.keys(value);
+    const length = array ? value.length : keys.length;
+    yield array ? '[' : '{';
+    for (let index = 0; index < length; index++) {
+      yield (index ? ',\n' : '\n') + '  '.repeat(depth + 1);
+      const key = array ? index : keys[index];
+      if (!array) yield JSON.stringify(key) + ': ';
+      yield* encode(value[key], depth + 1, ancestors);
+    }
+    if (length) yield '\n' + '  '.repeat(depth);
+    yield array ? ']' : '}';
+    ancestors.delete(value);
+  }
+  function root(name) {
+    if (!datasets.has(name)) throw new Error('unknown export dataset');
+    if (name === 'captures') {
+      if (!Array.isArray(globalThis.__brainEvaluationCaptures)) throw new Error('captures unavailable');
+      return globalThis.__brainEvaluationCaptures;
+    }
+    if (state.phase !== 'ready') throw new Error('backend export not ready: ' + state.phase);
+    const value = name === 'samples' ? state.value.record?.native?.samples : state.value[name];
+    if (value === undefined) throw new Error('export dataset unavailable: ' + name);
+    return value;
+  }
+  function open(name) {
+    if (!streams.has(name)) {
+      const value = root(name);
+      function* document() {yield* encode(value); yield '\n';}
+      streams.set(name, {iterator: document(), pending: '', exhausted: false, failed: null,
+        next: 0, characters: 0, last: null});
+    }
+    return {name, opened: true};
+  }
+  function read(name, sequence, limit) {
+    const stream = streams.get(name);
+    if (!stream || !Number.isSafeInteger(sequence) || !Number.isSafeInteger(limit)
+        || limit < 2 || limit > 65536) throw new Error('invalid export chunk request');
+    if (stream.failed) throw new Error(stream.failed);
+    // One retained response makes an uncertain transport retry idempotent.
+    if (stream.last?.sequence === sequence) return stream.last;
+    if (sequence !== stream.next || stream.last?.done) throw new Error('export chunk sequence mismatch');
+    let text = '';
+    try {while (text.length < limit) {
+      if (!stream.pending && !stream.exhausted) {
+        const next = stream.iterator.next();
+        stream.exhausted = next.done;
+        if (!next.done) stream.pending = next.value;
+      }
+      if (!stream.pending) break;
+      let take = Math.min(limit - text.length, stream.pending.length);
+      const last = stream.pending.charCodeAt(take - 1), next = stream.pending.charCodeAt(take);
+      if (last >= 0xd800 && last <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) take--;
+      if (!take) break;
+      text += stream.pending.slice(0, take);
+      stream.pending = stream.pending.slice(take);
+    }} catch (error) {stream.failed = 'export serialization failed: ' + String(error.message || error); throw error;}
+    stream.characters += text.length;
+    const done = stream.exhausted && !stream.pending;
+    stream.last = {name, sequence, text, done, characters: stream.characters};
+    stream.next++;
+    return stream.last;
+  }
+  globalThis.__brainChunkedExport = Object.freeze({status, open, read,
+    evaluateRecord(callback) {return callback(root('record'));},
+    start() {
+      if (state.phase === 'idle') {
+        state.phase = 'stopping';
+        Promise.resolve().then(() => RobotBackend.stop('finished')).then(value => {
+          state.value = value; state.phase = 'ready';
+        }, error => {state.error = String(error?.stack || error).slice(0, 8192); state.phase = 'failed';});
+      }
+      return status();
+    }});
+  return {installed: true, maxChunkCharacters: 65536};
+}
+
+async function stopForChunkedExport(evaluate, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
+  await evaluate(`(${installChunkedEvaluationExport.toString()})()`, Math.max(1, deadline - Date.now()));
+  let state = await evaluate('__brainChunkedExport.start()', Math.max(1, deadline - Date.now()));
+  while (state.phase === 'stopping') {
+    if (Date.now() >= deadline) throw new Error('backend stop deadline exceeded');
+    await delay(Math.min(100, deadline - Date.now()));
+    state = await evaluate('__brainChunkedExport.status()', Math.max(1, deadline - Date.now()));
+  }
+  if (state.phase !== 'ready') throw new Error(`backend stop failed: ${state.error || state.phase}`);
+  return state;
+}
+
+async function hashFile(file) {
+  const hash = crypto.createHash('sha256'); let bytes = 0;
+  for await (const chunk of fs.createReadStream(file)) {hash.update(chunk); bytes += chunk.length;}
+  return {sha256: hash.digest('hex'), bytes};
+}
+
+async function savePageDataset(evaluate, name, file, options = {}) {
+  const chunkCharacters = options.chunkCharacters ?? 65536;
+  const maxChunks = options.maxChunks ?? 100000;
+  const deadline = options.deadline ?? Date.now() + 600000;
+  const compressed = options.compressed !== false;
+  assert.ok(Number.isSafeInteger(chunkCharacters) && chunkCharacters >= 2 && chunkCharacters <= 65536);
+  assert.ok(Number.isSafeInteger(maxChunks) && maxChunks > 0);
+  const partial = file + '.part', progressFile = file + '.export-progress.json';
+  assert.ok(!fs.existsSync(file) && !fs.existsSync(partial) && !fs.existsSync(progressFile), 'refusing to overwrite export evidence');
+  const request = expression => {
+    if (Date.now() >= deadline) throw new Error('evidence export deadline exceeded');
+    return evaluate(expression, Math.min(options.requestTimeoutMs ?? 120000, Math.max(1, deadline - Date.now())));
+  };
+  const opened = await request(`__brainChunkedExport.open(${JSON.stringify(name)})`);
+  assert.equal(opened?.name, name); assert.equal(opened.opened, true);
+  const source = compressed ? createGzip({level: 9}) : new Transform({transform(chunk, encoding, callback) {callback(null, chunk);}});
+  const output = fs.createWriteStream(partial, {flags: 'wx'});
+  const completed = pipeline(source, output);
+  completed.catch(() => {});
+  const expanded = crypto.createHash('sha256');
+  let characters = 0, expandedBytes = 0, chunks = 0, done = false;
+  let expandedDigest = null, published = false;
+  const progress = (phase, extra = {}) => writeJson(progressFile, {
+    dataset: name, phase, complete: phase === 'complete', file: path.basename(phase === 'complete' ? file : partial),
+    chunks, characters, expandedBytes, ...extra});
+  try {
+    progress('streaming');
+    for (let sequence = 0; sequence < maxChunks; sequence++) {
+      const expression = `__brainChunkedExport.read(${JSON.stringify(name)},${sequence},${chunkCharacters})`;
+      let chunk;
+      try {chunk = await request(expression);}
+      catch (error) {
+        // No simulator call is repeated: only the page's cached same-sequence chunk.
+        if (error.code !== 'CDP_TIMEOUT' || Date.now() >= deadline) throw error;
+        chunk = await request(expression);
+      }
+      assert.equal(chunk?.name, name, 'export dataset mismatch');
+      assert.equal(chunk.sequence, sequence, 'export chunk sequence mismatch');
+      assert.equal(typeof chunk.text, 'string'); assert.equal(typeof chunk.done, 'boolean');
+      assert.ok(chunk.text.length <= chunkCharacters && (chunk.text.length || chunk.done), 'invalid export chunk length');
+      assert.equal(chunk.characters, characters + chunk.text.length, 'export character endcap mismatch');
+      // The page never splits a Unicode surrogate pair between UTF-8 writes.
+      const tail = chunk.text.charCodeAt(chunk.text.length - 1);
+      assert.ok(!(tail >= 0xd800 && tail <= 0xdbff), 'split Unicode export chunk');
+      const bytes = Buffer.from(chunk.text, 'utf8');
+      await new Promise((resolve, reject) => source.write(bytes, error => error ? reject(error) : resolve()));
+      expanded.update(bytes); expandedBytes += bytes.length; characters += chunk.text.length; chunks++;
+      progress('streaming');
+      if (chunk.done) {done = true; break;}
+    }
+    assert.ok(done, 'export chunk limit reached without endcap');
+    source.end(); await completed;
+    const packed = await hashFile(partial);
+    expandedDigest = expanded.digest('hex');
+    const evidence = {file: path.basename(file), compression: compressed ? 'gzip' : 'none', ...packed,
+      expandedSha256: expandedDigest, expandedBytes};
+    fs.renameSync(partial, file);
+    published = true;
+    progress('complete', evidence);
+    return evidence;
+  } catch (error) {
+    let finalized = false;
+    try {if (!source.destroyed && !source.writableEnded) source.end(); await completed; finalized = true;} catch (_) {}
+    const retained = published ? file : partial;
+    const saved = fs.existsSync(retained) ? await hashFile(retained).catch(() => ({})) : {};
+    const evidence = {file: path.basename(retained), compression: compressed ? 'gzip' : 'none', complete: false,
+      ...saved, gzipFinalized: compressed && finalized, payloadComplete: done && finalized,
+      chunks, characters, expandedBytes: finalized ? expandedBytes : null, acceptedExpandedBytes: expandedBytes,
+      error: String(error.message || error)};
+    if (finalized) evidence.expandedSha256 = expandedDigest ?? expanded.digest('hex');
+    try {progress('partial', evidence);} catch (_) {}
+    error.partialEvidence = evidence;
+    throw error;
+  }
+}
+
+async function persistPageExport(evaluate, directory, options = {}) {
+  const evidence = {}, failures = [], partial = {};
+  const deadline = options.deadline ?? Date.now() + 600000;
+  for (const [name, filename] of [['record', 'record.json.gz'], ['samples', 'samples.json.gz'],
+    ['sensorAudit', 'sensor-audit.json.gz'], ['captures', 'captures.json.gz'], ['envelope', 'envelope.json']]) {
+    try {evidence[name] = await savePageDataset(evaluate, name, path.join(directory, filename),
+      {...options, deadline, compressed: name !== 'envelope'});}
+    catch (error) {
+      failures.push({dataset: name, error: String(error.message || error)});
+      if (error.partialEvidence) partial[name] = error.partialEvidence;
+    }
+    writeJson(path.join(directory, 'evidence.json'), evidence);
+    writeJson(path.join(directory, 'export-status.json'), {complete: false, completedDatasets: Object.keys(evidence), failures, partial});
+  }
+  const result = {complete: failures.length === 0, completedDatasets: Object.keys(evidence), failures, partial};
+  writeJson(path.join(directory, 'export-status.json'), result);
+  return {...result, evidence};
 }
 
 function evaluateTruth(record, brainSummary = {}, capSeconds = 1200) {
@@ -346,7 +551,7 @@ async function main(argv = process.argv.slice(2)) {
   const profile = path.join(temp, 'browser'); fs.mkdirSync(profile);
   const server = createServer({dataDir: path.join(temp, 'data'), robotBridgeEnabled: true, robotBridge: {pollTimeoutMs: 1000}});
   const originalPool = new Map(server.mapConfigPools.get(TASK));
-  let browser, cdp, evaluate, sessionId;
+  let browser, cdp, evaluate, sessionId, preserveTemp = false;
   try {
     await new Promise((resolve, reject) => {server.once('error', reject); server.listen(0, '127.0.0.1', resolve);});
     const origin = `http://127.0.0.1:${server.address().port}`;
@@ -367,8 +572,8 @@ async function main(argv = process.argv.slice(2)) {
     const target = await cdp.send('Target.createTarget', {url: 'about:blank'});
     sessionId = (await cdp.send('Target.attachToTarget', {targetId: target.targetId, flatten: true})).sessionId;
     await cdp.send('Runtime.enable', {}, sessionId); await cdp.send('Page.enable', {}, sessionId);
-    evaluate = async expression => {
-      const response = await cdp.send('Runtime.evaluate', {expression, awaitPromise: true, returnByValue: true, userGesture: true}, sessionId, options.timeoutMs);
+    evaluate = async (expression, timeoutMs = options.timeoutMs) => {
+      const response = await cdp.send('Runtime.evaluate', {expression, awaitPromise: true, returnByValue: true, userGesture: true}, sessionId, timeoutMs);
       if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
       return response.result.value;
     };
@@ -409,33 +614,53 @@ async function main(argv = process.argv.slice(2)) {
         } catch (error) {trial.error = String(error.stack || error);}
         finally {
           if (started) {
-            try { exported = await evaluate("RobotBackend.stop('finished')"); }
+            try { exported = await stopForChunkedExport(evaluate, options.timeoutMs); }
             catch (error) {trial.stopError = String(error.stack || error);}
           }
         }
         // Truth and controller exports are persisted only after the brain exits.
         writeJson(path.join(directory, 'evaluation-map.json'), {map, taskId: TASK, publication,
           note: 'evaluation only; never supplied to the child brain'});
-        if (exported) {
-          const captures = await evaluate('globalThis.__brainEvaluationCaptures');
-          const evidence = {record: saveCompressed(path.join(directory, 'record.json.gz'), exported.record),
-            samples: saveCompressed(path.join(directory, 'samples.json.gz'), exported.record.native.samples),
-            sensorAudit: saveCompressed(path.join(directory, 'sensor-audit.json.gz'), exported.sensorAudit),
-            captures: saveCompressed(path.join(directory, 'captures.json.gz'), captures)};
-          writeJson(path.join(directory, 'evidence.json'), evidence);
-          writeJson(path.join(directory, 'envelope.json'), exported.envelope);
-          const brainSummaryPath = path.join(directory, 'brain/summary.json');
-          const brainSummary = fs.existsSync(brainSummaryPath) ? readJson(brainSummaryPath) : null;
-          const verdict = evaluateTruth(exported.record, brainSummary, options.maxSimulationSeconds);
-          Object.assign(trial, verdict);
-          trial.recordFrameCount = exported.record.native.visionFrames.length;
-          trial.captureCount = captures.length;
-          trial.controllerErrors = exported.envelope?.controllerErrors || [];
-          if (trial.error || trial.stopError || trial.process?.spawnError || trial.process?.interrupted || trial.process?.code !== 0
-              || trial.controllerErrors.length > 0) {
-            trial.success = false; trial.failures.push('execution_or_controller_error');
+        if (started) {
+          // Also attempt independent captures after a failed stop. Each completed
+          // dataset survives failures in later datasets; prefixes stay .part.
+          preserveTemp = true;
+          let saved;
+          try {saved = await persistPageExport(evaluate, directory, {requestTimeoutMs: options.timeoutMs});}
+          catch (error) {
+            trial.exportError = String(error.stack || error);
+            saved = {complete: false, completedDatasets: [], partial: {},
+              failures: [{dataset: 'export_controller', error: String(error.message || error)}]};
           }
-          if (brainSummary === null) { trial.success = false; trial.failures.push('brain_summary_missing'); }
+          trial.evidenceExport = {complete: saved.complete, completedDatasets: saved.completedDatasets,
+            failures: saved.failures, partial: saved.partial};
+          if (saved.complete && !trial.stopError) preserveTemp = false;
+          if (saved.complete && exported) {
+            try {
+              const brainSummaryPath = path.join(directory, 'brain/summary.json');
+              const brainSummary = fs.existsSync(brainSummaryPath) ? readJson(brainSummaryPath) : null;
+              // Judge in the evaluator page and return only its small result; do not
+              // deserialize the whole record again on the host merely to judge it.
+              const verdict = await evaluate(`((PUBLIC_METHODS)=>__brainChunkedExport.evaluateRecord(record=>
+                (${evaluateTruth.toString()})(record,{},${options.maxSimulationSeconds})))(${JSON.stringify(PUBLIC_METHODS)})`);
+              verdict.brainSummary = brainSummary;
+              Object.assign(trial, verdict);
+              trial.recordFrameCount = exported.recordFrameCount;
+              trial.captureCount = exported.captureCount;
+              trial.controllerErrors = readJson(path.join(directory, 'envelope.json')).controllerErrors || [];
+              if (trial.error || trial.stopError || trial.process?.spawnError || trial.process?.interrupted || trial.process?.code !== 0
+                  || trial.controllerErrors.length > 0) {
+                trial.success = false; trial.failures.push('execution_or_controller_error');
+            }
+              if (brainSummary === null) { trial.success = false; trial.failures.push('brain_summary_missing'); }
+            } catch (error) {
+                trial.success = false; trial.evaluationError = String(error.stack || error);
+                trial.failures = [...(trial.failures || []), 'truth_evaluation_failed'];
+            }
+          } else {
+            trial.success = false;
+            trial.failures = [...(trial.failures || []), 'evidence_export_incomplete'];
+          }
         }
         trial.pageErrors = cdp.pageErrors.slice(errorCursor);
         writeJson(path.join(directory, 'evaluation.json'), trial);
@@ -443,7 +668,7 @@ async function main(argv = process.argv.slice(2)) {
         if (map === 'map-05' && trial.success) map05Passed = true;
         writeJson(path.join(options.out, 'progress.json'), summary);
         console.error(`BRAIN ${map} run ${run}: ${trial.success ? 'PASS' : 'FAIL'} ${JSON.stringify(trial.failures || trial.error)}`);
-        if (trial.stopError) throw new Error('backend stop failed; aborting remaining trials');
+        if (trial.stopError || trial.evidenceExport?.complete === false) throw new Error('backend stop/export failed; aborting remaining trials');
       }
     }
     summary.status = 'complete';
@@ -454,6 +679,7 @@ async function main(argv = process.argv.slice(2)) {
     summary.sourcesUnchanged = json(manifest) === json(summary.sourceManifestAfterRun);
     summary.success = summary.status === 'complete' && summary.sourcesUnchanged
       && summary.trials.length === options.maps.length * options.runs && summary.trials.every(trial => trial.success);
+    if (preserveTemp) summary.preservedTempDirectory = relative(temp);
     writeJson(path.join(options.out, 'summary.json'), summary);
     cdp?.close();
     if (browser && browser.exitCode === null) {
@@ -462,11 +688,13 @@ async function main(argv = process.argv.slice(2)) {
     }
     server.closeAllConnections?.();
     await new Promise(resolve => server.close(resolve));
-    fs.rmSync(temp, {recursive: true, force: true});
+    if (!preserveTemp) fs.rmSync(temp, {recursive: true, force: true});
   }
   console.log(JSON.stringify({out: relative(options.out), status: summary.status, map05Passed, trials: summary.trials.length, success: summary.success}));
   process.exitCode = summary.success ? 0 : 1;
   return summary;
 }
-module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, parseArgs, installEvaluationCapture, evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
+module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, parseArgs, installEvaluationCapture,
+  installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
+  evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

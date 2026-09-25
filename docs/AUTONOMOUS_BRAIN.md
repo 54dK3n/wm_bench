@@ -12,7 +12,7 @@
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v4 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
+driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
 node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-01
@@ -36,12 +36,12 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 - `autonomous_brain/bridge.py`：12 个白名单方法，单个确定性 requestId 不重复执行，调用日志立即写盘。
 - `autonomous_brain/perception.py`：bbox 恢复原检测器测距、原版 M5、WorldModel 更新与动作证据归档。
 - `autonomous_brain/navigation.py`：只用里程计与当前相对出口建立道路采样点和路口记录；区分选择过的出口与已走通的路段。
-- `autonomous_brain/actions.py`：explore、look_around、go_to、pick、place、done。go_to/pick 开始前必须 CONFIRMED；抓取最多三次；每次运动后有新观测。
+- `autonomous_brain/actions.py`：explore、look_around、go_to、pick、place、done。go_to/pick 开始前必须 CONFIRMED；抓取最多三次；每次运动后有新观测。环视使用八个45°方向，原地旋转不增加独立位置命中。
 - `autonomous_brain/llm.py`：单动作 JSON 校验、完整调用输入输出、耗时和严格输入匹配的离线模型回放。
 
 红蓝球使用旧 demo 的 M5 参数和有效测距窗口，不以近距重复帧增加确认次数；静态配置要求三次独立视点，间距至少 15cm。已确认轨迹在近距被双向唯一匹配时，仅刷新看见时刻与帧信息，不修改位置、置信度、状态或命中数；实际未见和匹配歧义仍正常衰减。近距框用于视觉对准，最终接近用已确认位置与里程计控制，采用 demo 的 22cm 记忆停点及失败后 6cm 小步，最多三抓；不把 M5 的近场外推值当精确抓距。绿色地面不是旧立式标牌，使用相机内外参作地面投影。障碍条纹框经过扩框，反演位置明确标为近似。
 
-[感知离线复放](../artifacts/autonomous-brain/perception-replay/v4-map05-run1/REPORT.md) 核对了全部红蓝球读数，并明确列出旧日志缺少同 tick 里程计而无法喂给 WorldModel 的帧；没有用真值补齐输入。长期未重见的轨迹仍按上游配置衰减，不能绕过 CONFIRMED 前置条件。
+[感知离线复放](../artifacts/autonomous-brain/perception-replay/v4-map05-run1/REPORT.md) 核对了全部红蓝球读数，并明确列出旧日志缺少同 tick 里程计而无法喂给 WorldModel 的帧；没有用真值补齐输入。长期未重见的轨迹仍按上游配置衰减，不能绕过 CONFIRMED 前置条件。 从未确认且已归档的 LOST 红球可按完整历史标记为退役假设，保留原轨迹与证据；它不表示真实球不存在或已送达。已确认 LOST、持物、释放未验证及历史缺失的对象仍待处理。
 
 pick 使用 holding 和原位置再次观测；持物但身份不明时保留待核验状态。place 需空夹爪和新球相对绿色检测框的包含证据；旧的已送达球不能充当新球证据。当前相机只给绿色区域 bbox，框内椭圆检查是几何估计，并非逐像素掩码证明；遮挡仍可能导致判定错误。落点歧义或证据不足报失败，未验证释放会保留未解决状态，当前没有完整恢复路径。动作程序的推断须由独立 record/真值评测核对，不能把动作自报成功当任务成功；抓放流程尚未取得本轮真实任务成功证据。
 
@@ -55,7 +55,7 @@ pick 使用 holding 和原位置再次观测；持物但身份不明时保留待
 - `motions.jsonl`、`bridge-calls.jsonl`：小动作及执行前后观测引用、HTTP 往返。
 - `summary.json`：轮数、调用次数和耗时、仿真用时、轨迹时间线、最终状态、源码摘要。
 
-driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。
+driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。Driver v5 每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
 
 独立评测：
 

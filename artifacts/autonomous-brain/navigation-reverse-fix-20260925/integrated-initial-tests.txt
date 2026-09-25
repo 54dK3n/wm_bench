@@ -1,0 +1,28 @@
+......................F................................................. [ 16%]
+........................................................................ [ 32%]
+........................................................................ [ 48%]
+........................................................................ [ 64%]
+........................................................................ [ 80%]
+........................................................................ [ 96%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_______ RoadMemoryTests.test_attempted_exit_is_not_completed_exploration _______
+
+self = <test_brain_actions.RoadMemoryTests testMethod=test_attempted_exit_is_not_completed_exploration>
+
+    def test_attempted_exit_is_not_completed_exploration(self):
+        roads = RoadMemory()
+        odo = {"rightCm": 0, "forwardCm": 0, "headingDeg": 0}
+        roads.update(odo, {"onRoad": True, "atNode": True, "exits": [{"angleDeg": 0}]})
+        roads.chosen(odo, 0)
+        self.assertEqual(roads.unexplored(), 1)
+        roads.update(dict(odo, forwardCm=20), {"onRoad": True, "atNode": False, "exits": []})
+        self.assertEqual(roads.unexplored(), 1)
+        roads.update(dict(odo, forwardCm=40), {"onRoad": True, "atNode": True, "exits": [{"angleDeg": 180}]})
+>       self.assertEqual(roads.unexplored(), 0)
+E       AssertionError: 1 != 0
+
+tests/test_brain_actions.py:404: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_actions.py::RoadMemoryTests::test_attempted_exit_is_not_completed_exploration
+1 failed, 446 passed in 0.66s

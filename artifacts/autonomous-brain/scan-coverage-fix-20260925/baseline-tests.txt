@@ -1,0 +1,132 @@
+{"shadow": "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs", "modules": ["../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/autonomous_brain/actions.py", "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/autonomous_brain/perception.py", "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/autonomous_brain/run.py", "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/autonomous_brain/llm.py"], "network": "socket connect/create_connection forbidden; urllib mocked by tests"}
+FFFFFFF.............................................                     [100%]
+=================================== FAILURES ===================================
+_ test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[0] _
+
+initial = 0
+
+    @pytest.mark.parametrize("initial", [0, 17.3, 158.2, -179.9])
+    def test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals(initial):
+        runtime, headings, motions = scan_runtime(initial)
+        outcome = Actions(runtime).look_around()
+        endpoints = sorted((heading - initial) % 360 for heading in headings[1:])
+        gaps = [right - left for left, right in zip(endpoints, endpoints[1:] + [endpoints[0] + 360])]
+        horizontal_fov = math.degrees(2 * math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
+        admitted_width = min(horizontal_fov, 2 * 35)
+        # This maximum circular-gap bound covers every angle, not merely a sampled grid.
+>       assert max(gaps) <= admitted_width
+E       assert 90 <= 70
+E        +  where 90 = max([90, 90, 90, 90])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:60: AssertionError
+_ test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[17.3] _
+
+initial = 17.3
+
+    @pytest.mark.parametrize("initial", [0, 17.3, 158.2, -179.9])
+    def test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals(initial):
+        runtime, headings, motions = scan_runtime(initial)
+        outcome = Actions(runtime).look_around()
+        endpoints = sorted((heading - initial) % 360 for heading in headings[1:])
+        gaps = [right - left for left, right in zip(endpoints, endpoints[1:] + [endpoints[0] + 360])]
+        horizontal_fov = math.degrees(2 * math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
+        admitted_width = min(horizontal_fov, 2 * 35)
+        # This maximum circular-gap bound covers every angle, not merely a sampled grid.
+>       assert max(gaps) <= admitted_width
+E       assert 90.0 <= 70
+E        +  where 90.0 = max([90.0, 89.99999999999999, 90.0, 90.0])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:60: AssertionError
+_ test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[158.2] _
+
+initial = 158.2
+
+    @pytest.mark.parametrize("initial", [0, 17.3, 158.2, -179.9])
+    def test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals(initial):
+        runtime, headings, motions = scan_runtime(initial)
+        outcome = Actions(runtime).look_around()
+        endpoints = sorted((heading - initial) % 360 for heading in headings[1:])
+        gaps = [right - left for left, right in zip(endpoints, endpoints[1:] + [endpoints[0] + 360])]
+        horizontal_fov = math.degrees(2 * math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
+        admitted_width = min(horizontal_fov, 2 * 35)
+        # This maximum circular-gap bound covers every angle, not merely a sampled grid.
+>       assert max(gaps) <= admitted_width
+E       assert 90.0 <= 70
+E        +  where 90.0 = max([90.0, 90.0, 90.0, 90.0])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:60: AssertionError
+_ test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[-179.9] _
+
+initial = -179.9
+
+    @pytest.mark.parametrize("initial", [0, 17.3, 158.2, -179.9])
+    def test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals(initial):
+        runtime, headings, motions = scan_runtime(initial)
+        outcome = Actions(runtime).look_around()
+        endpoints = sorted((heading - initial) % 360 for heading in headings[1:])
+        gaps = [right - left for left, right in zip(endpoints, endpoints[1:] + [endpoints[0] + 360])]
+        horizontal_fov = math.degrees(2 * math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
+        admitted_width = min(horizontal_fov, 2 * 35)
+        # This maximum circular-gap bound covers every angle, not merely a sampled grid.
+>       assert max(gaps) <= admitted_width
+E       assert 90.0 <= 70
+E        +  where 90.0 = max([89.99999999999997, 90.0, 90.0, 90.0])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:60: AssertionError
+_ test_diagonal_public_detections_enter_memory_without_extra_confirmation[35.1] _
+
+target_heading = 35.1
+
+    @pytest.mark.parametrize("target_heading", [35.1, 45, 54.9])
+    def test_diagonal_public_detections_enter_memory_without_extra_confirmation(target_heading):
+        runtime, headings, _ = scan_runtime(target_heading=target_heading)
+        assert runtime.perception.objects() == []
+        outcome = Actions(runtime).look_around()
+        rows = runtime.perception.objects()
+>       assert len(rows) == 1, "a detection between old cardinal views must receive an admitted view"
+E       AssertionError: a detection between old cardinal views must receive an admitted view
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:81: AssertionError
+_ test_diagonal_public_detections_enter_memory_without_extra_confirmation[45] __
+
+target_heading = 45
+
+    @pytest.mark.parametrize("target_heading", [35.1, 45, 54.9])
+    def test_diagonal_public_detections_enter_memory_without_extra_confirmation(target_heading):
+        runtime, headings, _ = scan_runtime(target_heading=target_heading)
+        assert runtime.perception.objects() == []
+        outcome = Actions(runtime).look_around()
+        rows = runtime.perception.objects()
+>       assert len(rows) == 1, "a detection between old cardinal views must receive an admitted view"
+E       AssertionError: a detection between old cardinal views must receive an admitted view
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:81: AssertionError
+_ test_diagonal_public_detections_enter_memory_without_extra_confirmation[54.9] _
+
+target_heading = 54.9
+
+    @pytest.mark.parametrize("target_heading", [35.1, 45, 54.9])
+    def test_diagonal_public_detections_enter_memory_without_extra_confirmation(target_heading):
+        runtime, headings, _ = scan_runtime(target_heading=target_heading)
+        assert runtime.perception.objects() == []
+        outcome = Actions(runtime).look_around()
+        rows = runtime.perception.objects()
+>       assert len(rows) == 1, "a detection between old cardinal views must receive an admitted view"
+E       AssertionError: a detection between old cardinal views must receive an admitted view
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+/private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py:81: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[0]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[17.3]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[158.2]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals[-179.9]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_diagonal_public_detections_enter_memory_without_extra_confirmation[35.1]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_diagonal_public_detections_enter_memory_without_extra_confirmation[45]
+FAILED ../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py::test_diagonal_public_detections_enter_memory_without_extra_confirmation[54.9]
+7 failed, 45 passed in 0.22s

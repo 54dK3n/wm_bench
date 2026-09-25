@@ -20,7 +20,7 @@ import re
 from typing import Any
 
 
-VERSION = "autonomous-brain-offline-evaluation/v2"
+VERSION = "autonomous-brain-offline-evaluation/v3"
 ROOT = Path(__file__).resolve().parents[1]
 METHODS = {"observe", "camera_parameters", "odometry", "local_road", "holding",
            "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"}
@@ -407,7 +407,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
 
     def valid(value):
         if not isinstance(value, dict) or value.get("version") not in {
-                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 5)}:
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 6)}:
             return False
         driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
         return (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"

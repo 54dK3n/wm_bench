@@ -20,7 +20,7 @@ import threading
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "external-brain-transport-smoke/v1"
+VERSION = "external-brain-transport-smoke/v3"
 RESPONSES = ['{"action":"explore","params":{}}',
              '{"action":"look_around","params":{}}',
              'INVALID_JSON_DIAGNOSTIC_FIRST', 'INVALID_JSON_DIAGNOSTIC_REPAIR']
@@ -60,7 +60,12 @@ def verify(out, fixture, returncode):
     values = {}
     for name, entry in evidence.items():
         packed = (run / entry["file"]).read_bytes()
-        content = gzip.decompress(packed)
+        if entry.get("compression", "gzip") == "gzip":
+            content = gzip.decompress(packed)
+        elif entry["compression"] == "none":
+            content = packed
+        else:
+            raise ValueError("Unsupported diagnostic evidence encoding")
         check(f"{name}_compressed_and_expanded_sha256",
               hashlib.sha256(packed).hexdigest() == entry["sha256"] and
               hashlib.sha256(content).hexdigest() == entry["expandedSha256"])
@@ -147,9 +152,22 @@ def main(argv=None):
             payload = {"id":f"diagnostic-{index+1}","object":"chat.completion","model":"diagnostic-stub",
                        "choices":[{"index":0,"message":{"role":"assistant","content":raw},"finish_reason":"stop"}]}
             fixture["requests"].append({"index":index+1,"request":request,"response":payload})
-            encoded = json.dumps(payload).encode()
+            if request.get("stream"):
+                chunk = {"id": payload["id"], "object": "chat.completion.chunk",
+                         "model": payload["model"], "choices": [{"index": 0,
+                         "delta": payload["choices"][0]["message"], "finish_reason": None}]}
+                terminal = {"id": payload["id"], "object": "chat.completion.chunk",
+                            "model": payload["model"], "choices": [{"index": 0,
+                            "delta": {}, "finish_reason": "stop"}]}
+                encoded = ("data: " + json.dumps(chunk) + "\n\ndata: " + json.dumps(terminal)
+                           + "\n\ndata: [DONE]\n\n").encode()
+                content_type = "text/event-stream"
+            else:
+                encoded = json.dumps(payload).encode()
+                content_type = "application/json"
+            fixture["requests"][-1]["wire_response"] = encoded.decode()
             self.send_response(200)
-            self.send_header("Content-Type","application/json")
+            self.send_header("Content-Type",content_type)
             self.send_header("Content-Length",str(len(encoded)))
             self.end_headers()
             self.wfile.write(encoded)
@@ -158,7 +176,8 @@ def main(argv=None):
     thread.start()
     env = dict(os.environ)
     env.update(LLM_BASE_URL=f"http://127.0.0.1:{server.server_port}/v1",LLM_API_KEY="diagnostic-dummy-key",
-               LLM_MODEL="diagnostic-stub",WORLD_MODEL_ROOT=str(ROOT / "vendor/wm_kit_opt2"),
+               LLM_MODEL="diagnostic-stub",LLM_TEMPERATURE="0",LLM_THINKING="disabled",
+               WORLD_MODEL_ROOT=str(ROOT / "vendor/wm_kit_opt2"),
                HTTP_PROXY="",HTTPS_PROXY="",ALL_PROXY="",NO_PROXY="127.0.0.1,localhost,::1")
     cmd = ["node","tools/autonomous_brain_driver.js","--out",str(out),"--max-rounds","5",
            "--python",sys.executable,"--wall-timeout-seconds","600"]

@@ -1,0 +1,171 @@
+{
+  "schema": "wm-autonomous-brain-driver/v5",
+  "status": "running",
+  "maps": [
+    "map-05"
+  ],
+  "runsPerMap": 1,
+  "maxRounds": 50,
+  "maxSimulationSeconds": 1200,
+  "task": "把地图上的红球都送到绿色存放区",
+  "platformGatePass": true,
+  "trials": [
+    {
+      "map": "map-05",
+      "run": 1,
+      "directory": "map-05-run-1",
+      "success": false,
+      "maxRounds": 50,
+      "maxSimulationSeconds": 1200,
+      "backendVersion": "robot-backend-v4-stage1-r2",
+      "process": {
+        "code": 1,
+        "signal": null,
+        "spawnError": null,
+        "interrupted": null,
+        "wallSeconds": 6.407,
+        "invocation": {
+          "module": "autonomous_brain.run",
+          "output": "artifacts/autonomous-brain/export-stress-20260925-01/map-05-run-1/brain",
+          "replay": null
+        },
+        "capabilityPassed": {
+          "schema": "autonomous-brain-robot-config/v1",
+          "origin": "<local robot bridge>",
+          "bridge_id": "<limited robot capability>",
+          "client_token": "<not recorded>",
+          "task": "把地图上的红球都送到绿色存放区",
+          "simulation_step_ms": 20,
+          "max_rounds": 50,
+          "max_simulation_seconds": 1200
+        }
+      },
+      "evidenceExport": {
+        "complete": true,
+        "completedDatasets": [
+          "record",
+          "samples",
+          "sensorAudit",
+          "captures",
+          "envelope"
+        ],
+        "failures": [],
+        "partial": {}
+      },
+      "schema": "wm-autonomous-evaluation/v1",
+      "evaluationOnly": true,
+      "failures": [
+        "no_active_package_delivered_event:guangyang-target-1",
+        "final_position_outside_storage:guangyang-target-1",
+        "no_active_package_delivered_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "execution_or_controller_error"
+      ],
+      "expectedTargetIds": [
+        "guangyang-target-1",
+        "guangyang-target-2"
+      ],
+      "deliveredTargetIds": [],
+      "deliveryEvents": [],
+      "finalPositions": [
+        {
+          "id": "guangyang-target-1",
+          "finalSampleTick": 0,
+          "worldPosition": [
+            10.0849,
+            1.251
+          ],
+          "destination": [
+            -10.7336,
+            -8.0772
+          ],
+          "distanceWorldUnits": 22.812830983681092,
+          "radiusWorldUnits": 0.95,
+          "holding": false,
+          "finalInsideStorage": false,
+          "deliveredEventActive": false
+        },
+        {
+          "id": "guangyang-target-2",
+          "finalSampleTick": 0,
+          "worldPosition": [
+            0.5097,
+            4.4324
+          ],
+          "destination": [
+            -10.7336,
+            -8.0772
+          ],
+          "distanceWorldUnits": 16.819687483719786,
+          "radiusWorldUnits": 0.95,
+          "holding": false,
+          "finalInsideStorage": false,
+          "deliveredEventActive": false
+        }
+      ],
+      "simulationSeconds": 0,
+      "rejectedCalls": 0,
+      "nonwhitelistAcceptedCalls": 0,
+      "brainSummary": {
+        "version": "autonomous-brain/v1",
+        "runtime_version": "autonomous-brain-runtime/v6",
+        "status": "failed",
+        "reason": "LLMRequestError: LLM request failed: IncompleteStream; see transcript",
+        "task": "把地图上的红球都送到绿色存放区",
+        "rounds": 1,
+        "llm_calls": 3,
+        "llm_total_elapsed_s": 0.0037954170000000786,
+        "wall_elapsed_s": 6.320517584,
+        "simulation_seconds": 0,
+        "observations": 1,
+        "timeline": [],
+        "final_objects": [],
+        "held_object_id": null,
+        "pending_grasp": null,
+        "grab_attempts": {},
+        "action_evidence": [],
+        "junction_history": [
+          {
+            "id": "junction-1",
+            "position_m": {
+              "x": 0,
+              "z": 0
+            },
+            "exits": [
+              {
+                "heading_deg": 0,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "max_rounds": 50,
+          "max_simulation_seconds": 1200
+        },
+        "world_model": {
+          "upstream_main": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
+          "profile": "guangyang_static_world_model",
+          "max_range_m": 0.9
+        },
+        "source_sha256": {
+          "__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+          "actions.py": "767f832f8af31ee290b559ed1409b09b04b1292ed0f9dbb52b47f3e2646bc655",
+          "bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+          "llm.py": "4c40163733e172f1a0459455c529d6f1d6812281da1ce84023b12cfa94141cdb",
+          "navigation.py": "a7f26802bbb847137bddac74a8cb6d1c9dc645d82a61fb13dab18f1ed7ab9cf1",
+          "perception.py": "2bedb2c8f839b8d954366d6070e131ee5ac149d7496608250ec805a8e5a19a17",
+          "run.py": "1f49448fc03fdf06cda4e92b9005823626977b47ace62a66456bc63075aed5aa"
+        }
+      },
+      "note": "Success independently requires final truth positions and non-revoked package_delivered record events. No competition score or old strict determinism gate.",
+      "recordFrameCount": 1,
+      "captureCount": 1,
+      "controllerErrors": [],
+      "pageErrors": []
+    }
+  ],
+  "map05SuccessBeforeRun": false
+}

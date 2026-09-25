@@ -7,8 +7,8 @@ def odometry(right_cm=0, forward_cm=0, heading_deg=0):
     return {"rightCm": right_cm, "forwardCm": forward_cm, "headingDeg": heading_deg}
 
 
-def road(*angles, at_node=True):
-    return {"onRoad": True, "atNode": at_node,
+def road(*angles, at_node=True, error=0):
+    return {"onRoad": True, "atNode": at_node, "headingErrorDeg": error,
             "exits": [{"angleDeg": angle} for angle in angles]}
 
 
@@ -54,7 +54,7 @@ class RoadMemoryTraversalTests(unittest.TestCase):
         # The final motion is rightward. The origin-to-arrival chord points
         # diagonally, and the robot's current heading is different again.
         arrival = odometry(right_cm=40, forward_cm=40, heading_deg=45)
-        memory.update(arrival, road(45, 90, -45))
+        memory.update(arrival, road(45, 90, -45, error=45))
 
         self.assertEqual([exit["completed"] for exit in memory.exits(arrival, road(45, 90, -45))],
                          [True, False, False])
@@ -63,7 +63,7 @@ class RoadMemoryTraversalTests(unittest.TestCase):
     def test_stationary_arrival_observation_preserves_last_movement_direction(self):
         memory = self.start_exit()
         memory.update(odometry(forward_cm=40), road(at_node=False))
-        memory.update(odometry(right_cm=40, forward_cm=40), road(at_node=False))
+        memory.update(odometry(right_cm=40, forward_cm=40), road(at_node=False, error=-90))
 
         # A turn or a repeated frame must not replace the rightward movement
         # with an artificial zero-length segment bearing.

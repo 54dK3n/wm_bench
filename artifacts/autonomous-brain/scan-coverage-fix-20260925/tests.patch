@@ -1,0 +1,190 @@
+--- a/tests/test_brain_actions.py
++++ b/tests/test_brain_actions.py
+@@ -264,11 +264,11 @@
+ 
+     def scan_steps(self, target, detection, *, road=None, return_to_candidate=False):
+         steps = []
+-        for index, heading in enumerate((-111.8, -21.8, 68.2, 158.2)):
+-            step = {"method": "turn", "params": {"angleDeg": 90, "speed": 50},
++        for index, heading in enumerate((-156.8, -111.8, -66.8, -21.8, 23.2, 68.2, 113.2, 158.2)):
++            step = {"method": "turn", "params": {"angleDeg": 45, "speed": 50},
+                     "odometry": {"headingDeg": heading},
+-                    "road": {"headingErrorDeg": 90 if index % 2 == 0 else 0}}
+-            if index == 1:
++                    "road": {"headingErrorDeg": 0 if (index + 1) % 4 == 0 else 45 if index % 2 == 0 else 90}}
++            if index == 3:
+                 step.update(objects=[target], detections=[detection])
+                 step["road"].update(road or {})
+             steps.append(step)
+@@ -285,13 +285,13 @@
+                     self.scan_steps(target, detection, return_to_candidate=True),
+                     task=task, pose={"headingDeg": 158.2})
+                 result = Actions(runtime).look_around()
+-                self.assertEqual([p["angleDeg"] for _, p in moves], [90, 90, 90, 90, -180])
++                self.assertEqual([p["angleDeg"] for _, p in moves], [45] * 8 + [-180])
+                 self.assertAlmostEqual(runtime.snapshot["odometry"]["headingDeg"], -21.8)
+                 candidate = result["evidence"]["reobservation_candidate"]
+                 self.assertEqual(candidate["object_id"], "candidate-1")
+-                self.assertEqual(candidate["observation_index"], 3)
++                self.assertEqual(candidate["observation_index"], 5)
+                 self.assertAlmostEqual(candidate["heading_deg"], -21.8)
+-                self.assertEqual(runtime.snapshot["observation_index"], 6)
++                self.assertEqual(runtime.snapshot["observation_index"], 10)
+                 self.assertEqual(runtime.snapshot["objects"][0]["hit_count"], 1)
+                 self.assertEqual(remaining, [])
+ 
+@@ -304,7 +304,7 @@
+                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection, road=road),
+                     task="红球", pose={"headingDeg": 158.2})
+                 result = Actions(runtime).look_around()
+-                self.assertEqual(len(moves), 4)
++                self.assertEqual(len(moves), 8)
+                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
+                 self.assertEqual(runtime.snapshot["odometry"]["headingDeg"], 158.2)
+ 
+@@ -316,7 +316,7 @@
+                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+                     task=task, pose={"headingDeg": 158.2})
+                 result = Actions(runtime).look_around()
+-                self.assertEqual(len(moves), 4)
++                self.assertEqual(len(moves), 8)
+                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
+ 
+     def test_blue_task_can_return_to_blue_candidate(self):
+@@ -327,7 +327,7 @@
+                     self.scan_steps(target, detection, return_to_candidate=True),
+                     task=task, pose={"headingDeg": 158.2})
+                 result = Actions(runtime).look_around()
+-                self.assertEqual(len(moves), 5)
++                self.assertEqual(len(moves), 9)
+                 self.assertEqual(result["evidence"]["reobservation_candidate"]["category"], "blue-ball")
+ 
+     def test_candidate_requires_current_eligible_tentative_track(self):
+@@ -338,13 +338,13 @@
+                 runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+                     task="red", pose={"headingDeg": 158.2})
+                 result = Actions(runtime).look_around()
+-                self.assertEqual(len(moves), 4)
++                self.assertEqual(len(moves), 8)
+                 self.assertIsNone(result["evidence"]["reobservation_candidate"])
+         target, detection = self.candidate(state="CONFIRMED")
+         runtime, moves, _ = self.scripted_runtime(self.scan_steps(target, detection),
+             task="red", pose={"headingDeg": 158.2})
+         self.assertIsNone(Actions(runtime).look_around()["evidence"]["reobservation_candidate"])
+-        self.assertEqual(len(moves), 4)
++        self.assertEqual(len(moves), 8)
+ 
+     def test_held_object_prioritizes_observed_storage_over_task_ball(self):
+         target, detection = self.candidate()
+@@ -357,7 +357,7 @@
+                                                  pose={"headingDeg": 158.2})
+         result = Actions(runtime).look_around()
+         self.assertEqual(result["evidence"]["reobservation_candidate"]["object_id"], "zone-1")
+-        self.assertEqual(len(moves), 4)
++        self.assertEqual(len(moves), 8)
+ 
+     def test_explore_uses_sixteen_cm_views_and_stops_at_new_confirmation(self):
+         for category in ("red-ball", "blue-ball", "storage-zone"):
+--- a/tests/test_brain_scan_coverage.py
++++ b/tests/test_brain_scan_coverage.py
+@@ -0,0 +1,100 @@
++"""Offline angular coverage and unchanged independent-position confirmation."""
++import copy
++import math
++from types import SimpleNamespace
++
++import pytest
++
++from autonomous_brain.actions import Actions
++from autonomous_brain.navigation import wrap
++from autonomous_brain.perception import Perception
++from test_brain_perception import CAMERA, ball
++
++
++def scan_runtime(initial_heading=0, target_heading=None):
++    """A stationary robot with synthetic public pixel detections and odometry."""
++    perception = Perception(CAMERA)
++    headings, motions = [], []
++    runtime = SimpleNamespace(perception=perception, round=1, config={"task": "观察环境"},
++        bridge=SimpleNamespace(seconds=0, max_seconds=1200),
++        motion_log=SimpleNamespace(write=lambda row: None))
++    odometry = {"tick": 0, "forwardCm": 0, "rightCm": 0, "headingDeg": initial_heading,
++                "distanceCm": 0}
++    half_fov = math.degrees(math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
++
++    def observe():
++        odometry["tick"] += 1
++        runtime.bridge.seconds = odometry["tick"] * .02
++        bearing = wrap(odometry["headingDeg"] - target_heading) if target_heading is not None else None
++        detections = [ball(80, bearing=bearing)] if bearing is not None and abs(bearing) <= half_fov else []
++        observation = {"frameId": str(odometry["tick"]), "tick": odometry["tick"],
++                       "width": CAMERA["width"], "height": CAMERA["height"], "detections": detections}
++        evidence = perception.update(observation, odometry,
++            simulation_time_s=runtime.bridge.seconds, round_index=runtime.round)
++        runtime.snapshot = {"observation_index": odometry["tick"], "odometry": copy.deepcopy(odometry),
++            "observation": observation, "holding": {"holding": False}, "perception": evidence,
++            "objects": perception.objects(),
++            "road": {"onRoad": True, "headingErrorDeg": 0, "frontClearanceCm": 100}}
++        headings.append(odometry["headingDeg"])
++
++    def call(method, params):
++        assert method == "turn", "stationary scan must never translate"
++        motions.append((method, copy.deepcopy(params)))
++        odometry["headingDeg"] = wrap(odometry["headingDeg"] + params["angleDeg"])
++        return {"completed": True}
++
++    runtime.observe, runtime.bridge.call = observe, call
++    observe()
++    return runtime, headings, motions
++
++
++@pytest.mark.parametrize("initial", [0, 17.3, 158.2, -179.9])
++def test_observed_endpoints_cover_the_whole_admitted_circle_and_preserve_cardinals(initial):
++    runtime, headings, motions = scan_runtime(initial)
++    outcome = Actions(runtime).look_around()
++    endpoints = sorted((heading - initial) % 360 for heading in headings[1:])
++    gaps = [right - left for left, right in zip(endpoints, endpoints[1:] + [endpoints[0] + 360])]
++    horizontal_fov = math.degrees(2 * math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
++    admitted_width = min(horizontal_fov, 2 * 35)
++    # This maximum circular-gap bound covers every angle, not merely a sampled grid.
++    assert max(gaps) <= admitted_width
++    for previously_missed in (35.1, 40, 45, 50, 54.9, 125.1, 135, 144.9,
++                              215.1, 225, 234.9, 305.1, 315, 324.9):
++        assert min(abs(wrap(endpoint - previously_missed)) for endpoint in endpoints) <= 35
++    assert len(endpoints) == len(motions) == 8
++    assert gaps == pytest.approx([45] * 8)
++    for cardinal in (0, 90, 180, 270):
++        assert min(abs(wrap(endpoint - cardinal)) for endpoint in endpoints) < 1e-8
++    assert wrap(headings[-1] - initial) == pytest.approx(0, abs=1e-8)
++    assert runtime.snapshot["observation_index"] == 9
++    assert outcome["success"] is True and outcome["reason"] == "full_circle_views_observed"
++    assert outcome["evidence"]["reobservation_candidate"] is None
++    assert all(params["speed"] == 50 for _, params in motions)
++
++
++@pytest.mark.parametrize("target_heading", [35.1, 45, 54.9])
++def test_diagonal_public_detections_enter_memory_without_extra_confirmation(target_heading):
++    runtime, headings, _ = scan_runtime(target_heading=target_heading)
++    assert runtime.perception.objects() == []
++    outcome = Actions(runtime).look_around()
++    rows = runtime.perception.objects()
++    assert len(rows) == 1, "a detection between old cardinal views must receive an admitted view"
++    assert rows[0]["id"] in outcome["evidence"]["new_object_ids"]
++    assert rows[0]["category"] == "red-ball" and rows[0]["state"] == "TENTATIVE"
++    assert rows[0]["hit_count"] == 1
++    assert len(rows[0]["hit_poses"]) == 1
++    assert wrap(headings[-1]) == pytest.approx(0)
++
++
++def test_repeated_stationary_complete_scans_cannot_replace_three_distinct_positions():
++    runtime, _, _ = scan_runtime(target_heading=0)
++    object_id = runtime.perception.objects()[0]["id"]
++    for _ in range(3):
++        Actions(runtime).look_around()
++        row = runtime.perception.get_object(object_id)
++        assert row["state"] == "TENTATIVE" and row["hit_count"] == 1
++        assert len(row["hit_poses"]) == 1
++        assert runtime.perception.confirmed(object_id) is None
++    assert runtime.perception.wm.assoc_cfg.min_hit_pose_gap_m == .15
++    assert runtime.perception.wm.decay_cfg.confirm_hits == 3
++    assert runtime.perception.timeline()[0]["confirmed_s"] is None

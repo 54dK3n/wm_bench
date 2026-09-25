@@ -1,6 +1,6 @@
 {
   "schema": "autonomous-brain-live-run-index/v1",
-  "completed_trials_only": true,
+  "completed_trials_only": false,
   "ten_layouts_started": false,
   "trials": [
     {
@@ -162,6 +162,36 @@
       },
       "report": "artifacts/autonomous-brain/map05-run-10/report/REPORT.md",
       "failure_analysis": "artifacts/autonomous-brain/map05-run-10/FAILURE_ANALYSIS.md"
+    },
+    {
+      "run": "map05-run-11",
+      "success": false,
+      "rounds": 81,
+      "llm_calls": 94,
+      "llm_total_elapsed_s": 2149.2664976229994,
+      "simulation_seconds": 378.36,
+      "observations": 429,
+      "reason": "External stop: follow_road NOT_RUNNING; subsequent native export failed: CDP Runtime.evaluate timeout",
+      "archive_status": "partial_export_failed",
+      "independent_truth_verdict": null,
+      "valid_deliveries": null,
+      "observed_place_successes": 1,
+      "missing_required_exports": [
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/record.json.gz",
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/samples.json.gz",
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/captures.json.gz",
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/sensor-audit.json.gz",
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/envelope.json",
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/evidence.json"
+      ],
+      "inputs": {
+        "artifacts/autonomous-brain/map05-run-11/map-05-run-1/brain/summary.json": "4a4b77568f28ebbe7bc51175d6f593c5fe9ba2fd6239305166b98559158dcac6",
+        "artifacts/autonomous-brain/map05-run-11/report/evaluation.json": "4113670bdc24b6d4c1352215f4610a403dd0417bf7803c7fb569109c4f299ac9",
+        "artifacts/autonomous-brain/map05-run-11/summary.json": "9bec5e8113953381a27d53cee278ecb29a4f8da102e1fb80b49d49339dcfdea3"
+      },
+      "report": "artifacts/autonomous-brain/map05-run-11/report/REPORT.md",
+      "failure_analysis": "artifacts/autonomous-brain/map05-run-11/FAILURE_ANALYSIS.md"
     }
-  ]
+  ],
+  "includes_ended_trials_with_incomplete_exports": true
 }

@@ -1,0 +1,124 @@
+"""Sensor-only regressions for completion of an observed incoming road exit."""
+import math
+
+import pytest
+
+from autonomous_brain.navigation import RoadMemory
+
+
+def odo(x_cm=0, z_cm=0, heading=0):
+    return {"rightCm": x_cm, "forwardCm": z_cm, "headingDeg": heading}
+
+
+def road(*relative, at_node=True, error=0):
+    return {"onRoad": True, "atNode": at_node, "headingErrorDeg": error,
+            "exits": [{"angleDeg": value} for value in relative]}
+
+
+def saved_exit(heading, completed=False):
+    return {"heading_deg": heading, "visits": 0,
+            "completed": completed, "blocked": False}
+
+
+def completed_headings(node):
+    return {round(entry["heading_deg"], 6) for entry in node["exits"] if entry["completed"]}
+
+
+def start():
+    memory = RoadMemory()
+    memory.update(odo(), road(0))
+    memory.chosen(odo(), 0)
+    return memory
+
+
+def test_run11_r76_never_completes_the_historical_exit_absent_from_current_sensor():
+    # Exact relevant nodes from round76.state, and raw obs409 -> obs410.
+    memory = RoadMemory()
+    destination = {"id": "junction-19", "position": (-1.079, .756),
+        "exits": [saved_exit(8.9, True), saved_exit(-90), saved_exit(169.2, True)]}
+    origin = {"id": "junction-27", "position": (-.894, .865),
+        "exits": [saved_exit(169.2), saved_exit(9), saved_exit(-90)]}
+    memory.nodes = [destination, origin]
+    memory.chosen(odo(-89.4, 86.5, 169.2), 0)
+    arrival = odo(-116.9, 65.4, 135)
+    memory.update(arrival, road(75.5, -45, -146.3))
+
+    assert -90 not in completed_headings(destination)
+    assert completed_headings(destination) == {8.9, 169.2, -11.3}
+    assert completed_headings(origin) == {169.2}
+    assert len(memory.nodes) == 2  # Preserve existing node identity policy.
+
+
+def test_arrival_tangent_selects_current_exit_instead_of_curved_motion_chord():
+    memory = start()
+    # A forward road-following arc ends heading right. Its endpoint chord
+    # points diagonally; the fresh local tangent identifies the arrival side.
+    arrival = odo(30, 20, -90)
+    memory.update(arrival, road(180, -120))  # absolute +90 and +150
+    assert completed_headings(memory.nodes[-1]) == {90}
+
+
+def test_stationary_turn_does_not_replace_the_observed_arrival_tangent():
+    memory = start()
+    memory.update(odo(30, 20, -90), road(at_node=False))
+    memory.update(odo(30, 20, 0), road(at_node=False, error=-90))
+    memory.update(odo(30, 20, 0), road(90, 150, error=-90))
+    assert completed_headings(memory.nodes[-1]) == {90}
+
+
+def test_multiple_current_exits_within_original_reverse_gate_remain_uncompleted():
+    memory = start()
+    memory.update(odo(0, 40), road(150, -150))
+    assert completed_headings(memory.nodes[-1]) == set()
+    assert completed_headings(memory.nodes[0]) == {0}
+
+
+@pytest.mark.parametrize("error", [None, float("nan"), float("inf"), True, "missing"])
+def test_missing_or_invalid_arrival_tangent_does_not_establish_reverse_completion(error):
+    memory = start()
+    arrival_road = road(180, error=error)
+    if error == "missing":
+        arrival_road.pop("headingErrorDeg")
+    memory.update(odo(0, 40), arrival_road)
+    assert completed_headings(memory.nodes[-1]) == set()
+
+
+def test_lateral_displacement_incompatible_with_local_tangent_remains_uncompleted():
+    memory = start()
+    memory.update(odo(40, 0), road(90, 180))
+    assert completed_headings(memory.nodes[-1]) == set()
+
+
+def test_reverse_gate_remains_strictly_less_than_45_degrees():
+    memory = start()
+    memory.update(odo(0, 40), road(135))
+    assert completed_headings(memory.nodes[-1]) == set()
+
+
+def test_ambiguous_fresh_to_remembered_exit_identity_remains_uncompleted():
+    memory = start()
+    destination = {"id": "junction-2", "position": (0, .4),
+                   "exits": [saved_exit(170), saved_exit(-170)]}
+    memory.nodes.append(destination)
+    memory.update(odo(0, 40), road(180))
+    assert completed_headings(destination) == set()
+
+
+def test_heading_error_is_added_to_robot_heading_to_recover_arrival_tangent():
+    memory = start()
+    memory.update(odo(-30, 20, 30), road(-150, -90, error=30))
+    assert completed_headings(memory.nodes[-1]) == {-120}
+
+
+def test_backward_arrival_uses_the_actual_direction_of_translation():
+    memory = start()
+    memory.update(odo(0, -40), road(0, 180))
+    assert completed_headings(memory.nodes[-1]) == {0}
+
+
+def test_r75_seventeen_point_eight_cm_node_gap_is_not_merged_by_similar_exits():
+    memory = RoadMemory()
+    memory.update(odo(-106, 92.8, -90), road(0, -100.7, 99))
+    memory.update(odo(-89.4, 86.5, 90), road(79.2, -81, -180))
+    assert len(memory.nodes) == 2
+    assert math.dist(memory.nodes[0]["position"], memory.nodes[1]["position"]) == pytest.approx(.17755280960999406)

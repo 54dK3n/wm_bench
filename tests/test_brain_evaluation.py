@@ -316,7 +316,12 @@ def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_da
     assert any(reason.startswith("source_proof_") for reason in result["failures"])
 
 
-def test_known_source_proof_is_reported_without_reading_current_runtime(tmp_path, fixture_data):
+@pytest.mark.parametrize("driver_version", [4, 5])
+def test_known_source_proof_is_reported_without_reading_current_runtime(tmp_path, fixture_data, driver_version):
+    version = f"wm-autonomous-brain-driver/v{driver_version}"
+    fixture_data["source_manifest"]["version"] = version
+    fixture_data["driver_summary"]["schema"] = version
+    fixture_data["driver_summary"]["sourceManifestAfterRun"]["version"] = version
     result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
     assert result["source_proof"]["status"] == "verified"
     assert result["source_proof"]["recorded_before_after_equal"] is True

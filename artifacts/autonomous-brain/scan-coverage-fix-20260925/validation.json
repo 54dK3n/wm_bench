@@ -1,0 +1,50 @@
+{
+  "scope": "offline_shadow_candidate_only",
+  "task_acceptance": false,
+  "current_physical_failure_attributed_to_scan_gap": false,
+  "source_baseline": "913474816dbd6271d223cf0cf79366ff668b1e42",
+  "note": "Commands use equivalent repository-relative path spellings. Raw stdout/stderr files are retained verbatim, including interpreter traceback paths.",
+  "runs": [
+    {
+      "name": "baseline",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/scan-coverage-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_actions.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_perception.py"
+      ],
+      "source": "unchanged frozen copy with new scan regression; original test_brain_actions fixtures",
+      "exit_code": 1,
+      "result": "7 failed, 45 passed in 0.22s",
+      "raw_output": "baseline-tests.txt"
+    },
+    {
+      "name": "candidate",
+      "argv": [
+        "python3",
+        "artifacts/autonomous-brain/scan-coverage-fix-20260925/run_scoped_tests.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_scan_coverage.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_actions.py",
+        "../../../../private/tmp/wm-scan-coverage-shadow-wn7ze5bs/tests/test_brain_perception.py"
+      ],
+      "source": "Actions v14 candidate; old candidate-reobservation fixtures expanded to 45-degree steps",
+      "exit_code": 0,
+      "result": "52 passed in 0.15s",
+      "raw_output": "shadow-tests.txt"
+    }
+  ],
+  "patch_check": {
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "artifacts/autonomous-brain/scan-coverage-fix-20260925/actions.patch",
+      "artifacts/autonomous-brain/scan-coverage-fix-20260925/tests.patch"
+    ],
+    "exit_code": 0,
+    "stdout": ""
+  }
+}
