@@ -1,24 +1,140 @@
 """Small deterministic actions whose results depend on fresh observations."""
 from __future__ import annotations
 
+import copy
 import math
 import re
 
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v14"
+VERSION = "autonomous-brain-actions/v15"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
                               "last_frame_id", "hit_count", "confidence")
+REACQUISITION_EVIDENCE_FIELDS = ("association", "frame_id", "simulation_time_s",
+    "historical_position_m", "current_position_m", "distance_m", "gate_distance_m",
+    "historical_confirmed_s", "current_confirmed_s", "current_hit_poses",
+    "competing_identity_ids", "historical_candidates", "current_candidates")
+
+
+def reacquisition_chains(objects):
+    """Validate sensor binding chains without rewriting object state/history."""
+    def number(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    def identifier(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    counts, rows = {}, {}
+    for row in objects:
+        oid = row.get("id")
+        if identifier(oid):
+            counts[oid] = counts.get(oid, 0) + 1
+            rows[oid] = row
+    rows = {oid: row for oid, row in rows.items() if counts[oid] == 1}
+    bindings = {}
+    for oid, row in rows.items():
+        binding = row.get("reacquisition_binding")
+        if (row.get("category") != "red-ball" or row.get("state") != "LOST"
+                or row.get("ever_confirmed") is not True or not isinstance(binding, dict)
+                or binding.get("version") != "world-model-reacquisition/v1"
+                or binding.get("historical_object_id") != oid):
+            continue
+        successor = binding.get("current_object_id")
+        if not identifier(successor) or successor == oid or successor not in rows:
+            continue
+        current = rows[successor]
+        if (current.get("category") != row["category"] or current.get("ever_confirmed") is not True
+                or current.get("state") not in {"CONFIRMED", "STALE", "LOST", "HELD",
+                                                "RELEASED_UNVERIFIED", "DELIVERED"}):
+            continue
+        evidence = binding.get("evidence")
+        if (not isinstance(evidence, dict)
+                or any(key not in evidence for key in REACQUISITION_EVIDENCE_FIELDS)
+                or evidence["association"] != "unchanged_world_model_gate_bidirectionally_unique"
+                or not identifier(evidence["frame_id"])
+                or evidence["historical_candidates"] != [successor]
+                or evidence["current_candidates"] != [oid]):
+            continue
+        rivals = evidence["competing_identity_ids"]
+        if (not isinstance(rivals, list) or not all(identifier(value) for value in rivals)
+                or len(set(rivals)) != len(rivals) or not {oid, successor}.issubset(rivals)):
+            continue
+        times = [evidence[key] for key in ("historical_confirmed_s", "current_confirmed_s",
+                                           "simulation_time_s")]
+        if not all(number(value) and value >= 0 for value in times) or times != sorted(times):
+            continue
+        positions = [evidence[key] for key in ("historical_position_m", "current_position_m")]
+        if not all(isinstance(p, dict) and all(number(p.get(k)) for k in ("x", "z"))
+                   for p in positions):
+            continue
+        measured, gate = evidence["distance_m"], evidence["gate_distance_m"]
+        if (not number(measured) or not number(gate) or gate != .30 or not 0 <= measured <= gate
+                or not math.isclose(measured, distance(
+                    (positions[0]["x"], positions[0]["z"]),
+                    (positions[1]["x"], positions[1]["z"])), rel_tol=1e-9, abs_tol=1e-9)):
+            continue
+        poses = evidence["current_hit_poses"]
+        if (not isinstance(poses, list) or len(poses) < 3
+                or not all(isinstance(p, dict) and identifier(p.get("frame_id"))
+                    and all(number(p.get(k)) for k in ("x_m", "z_m", "heading_deg", "simulation_time_s"))
+                    and 0 <= p["simulation_time_s"] <= times[-1] for p in poses)):
+            continue
+        if (len({p["frame_id"] for p in poses}) != len(poses)
+                or any(math.hypot(a["x_m"] - b["x_m"], a["z_m"] - b["z_m"]) < .15
+                       for index, a in enumerate(poses) for b in poses[:index])):
+            continue
+        basis = copy.deepcopy({key: evidence[key] for key in REACQUISITION_EVIDENCE_FIELDS})
+        for key in ("historical_position_m", "current_position_m"):
+            basis[key] = {axis: evidence[key][axis] for axis in ("x", "z")}
+        basis["current_hit_poses"] = [{key: p[key] for key in (
+            "frame_id", "simulation_time_s", "x_m", "z_m", "heading_deg")} for p in poses]
+        bindings[oid] = {"version": binding["version"], "historical_object_id": oid,
+                         "current_object_id": successor,
+                         "evidence": basis}
+    # Contradictory claims from two historical identities cannot resolve either.
+    incoming = {}
+    for binding in bindings.values():
+        target = binding["current_object_id"]
+        incoming[target] = incoming.get(target, 0) + 1
+    bindings = {oid: binding for oid, binding in bindings.items()
+                if incoming[binding["current_object_id"]] == 1}
+    chains = {}
+    for oid in bindings:
+        seen, chain, current = set(), [], oid
+        while current not in seen:
+            seen.add(current)
+            row = rows[current]
+            if "reacquisition_binding" not in row:
+                chains[oid] = {"terminal": row, "binding_chain": chain,
+                               "current_object_id": bindings[oid]["current_object_id"]}
+                break
+            binding = bindings.get(current)
+            if binding is None:
+                break
+            if chain and (binding["evidence"]["historical_confirmed_s"]
+                          != chain[-1]["evidence"]["current_confirmed_s"]
+                          or binding["evidence"]["simulation_time_s"]
+                          < chain[-1]["evidence"]["simulation_time_s"]):
+                break
+            chain.append(copy.deepcopy(binding))
+            current = binding["current_object_id"]
+    return chains
 
 
 def completion_evidence(objects):
     """Classify current red obligations without changing tracking or history."""
-    pending, retired = [], []
+    pending, retired, resolved = [], [], []
+    chains = reacquisition_chains(objects)
     for row in objects:
         if row["category"] != "red-ball" or row["state"] == "DELIVERED":
+            continue
+        chain = chains.get(row["id"])
+        if chain is not None and chain["terminal"]["state"] == "DELIVERED":
+            resolved.append({"object_id": row["id"], "delivered_object_id": chain["terminal"]["id"],
+                             "binding_chain": chain["binding_chain"]})
             continue
         basis = row.get("retirement_evidence")
         if (row["state"] == "LOST" and row.get("ever_confirmed") is False
@@ -32,7 +148,8 @@ def completion_evidence(objects):
         else:
             # Legacy rows or incomplete history must never silently retire.
             pending.append(row["id"])
-    return {"pending_objects": pending, "retired_unconfirmed_hypotheses": retired}
+    return {"pending_objects": pending, "retired_unconfirmed_hypotheses": retired,
+            "resolved_reacquired_identities": resolved}
 
 
 def road_translation_limit(road, method, requested_cm):

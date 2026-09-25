@@ -157,7 +157,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v10"
+            assert saved["version"] == "autonomous-brain-llm/v11"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)

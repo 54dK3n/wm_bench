@@ -4,7 +4,7 @@ WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流
 
 当前执行 **WorldModel + 外部单动作大模型自主小车**：平台提供传感器和执行器，大脑每轮观测、决策、行动、再观测。octos 编排、技能契约和逐条确定性门禁暂缓。平台的桥检测一致性与四类非空门禁已通过；外部大脑、M5 感知、模型记录回放和独立评测已实现。
 
-Kimi 已配置为用户批准的 K2.6 非思考模式、温度 0.6，密钥只留在本机。前十二局均未通过双球验收，见[真实运行记录](artifacts/autonomous-brain/LIVE_RUNS.md)。第十一局保存了 81 轮、94 次模型调用和 429 次观测，但原生 record 导出超时，因此首球仅有大脑放置证据，不能声称独立真值送达。当前已修复环视方向空隙和无当前观测支持的出口记账，447 项离线测试通过；分块导出已通过500帧真实相机压力检查及14帧短流程联调，见[验证报告](artifacts/autonomous-brain/export-fix-20260925/INTEGRATION.md)。第十二局在第14轮模型传输重试耗尽，完整导出与离线回放通过，独立交付0/2；现以相同冻结源码运行 `map05-run-13`。**尚无本轮 map-05 成功局，十布局未运行**。
+Kimi 已配置为用户批准的 K2.6 非思考模式、温度 0.6，密钥只留在本机。前十三局均未通过双球验收，见[真实运行记录](artifacts/autonomous-brain/LIVE_RUNS.md)。第十三局完成58轮、69次模型调用、365次观测，独立交付0/2；源码和完整导出校验、模型离线回放通过。已确认身份归档后不能重获，使完成义务永久待处理；现加入保留历史的新确认轨迹关联，门限不变，485项离线测试通过，见[修复证据](artifacts/autonomous-brain/reacquisition-fix-20260925/REPORT.md)。下一正式运行目录为 `map05-run-14`。**尚无本轮 map-05 成功局，十布局未运行**。
 
 旧 v4 严格验收的 FAIL、空检测验收作废结论及全部历史证据保留原样；本轮新的够用门禁不改写旧结果。
 
@@ -12,7 +12,8 @@ Kimi 已配置为用户批准的 K2.6 非思考模式、温度 0.6，密钥只�
 
 - [当前执行状态](docs/NEXT_WORK_STATE.md)
 - [真实模型运行记录](artifacts/autonomous-brain/LIVE_RUNS.md)
-- [本轮交付报告](artifacts/autonomous-brain/REPORT.md)
+- [本轮交付进度](artifacts/autonomous-brain/CURRENT_REPORT.md)
+- [初版交付报告（历史）](artifacts/autonomous-brain/REPORT.md)
 - [外部大脑运行与回放](docs/AUTONOMOUS_BRAIN.md)
 - [新运行的平台够用门禁](artifacts/autonomous-brain/fresh-map05-gate-20260925/REPORT.md)
 - [历史长路线的只读复算](artifacts/autonomous-brain/platform-gate-20260925/REPORT.md)

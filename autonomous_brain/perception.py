@@ -11,7 +11,7 @@ import math
 from dataclasses import asdict
 from typing import Any, Mapping
 
-from world_model.association import associate, build_cost_matrix
+from world_model.association import associate, build_cost_matrix, gate_for
 from world_model.calibration import CameraCalibration
 from world_model.providers.guangyang import (
     guangyang_static_world_model,
@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v6"
+VERSION = "autonomous-brain-perception/v7"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -92,6 +92,7 @@ class Perception:
         self._action_evidence: list[dict[str, Any]] = []
         self._delivered_positions: dict[str, dict[str, Any]] = {}
         self._delivery_aliases: dict[str, str] = {}
+        self._reacquisitions: dict[str, dict[str, Any]] = {}
         self._observed_frames: dict[str, dict[str, Any]] = {}
         self._last_timestamp: float | None = None
         self._last_frame: str | None = None
@@ -302,6 +303,7 @@ class Perception:
                 times["confirmed_round"] = round_index
                 newly_confirmed.append(oid)
             self._history[oid] = self._row(track)
+        self._bind_reacquisitions(converted, frame_id, timestamp)
         self._last_timestamp, self._last_frame = timestamp, frame_id
         self._observed_frames[frame_id] = {"index": len(self._observed_frames),
                                           "simulation_time_s": timestamp}
@@ -317,6 +319,89 @@ class Perception:
         }
         return copy.deepcopy(self.last_evidence)
 
+    def _bind_reacquisitions(self, converted, frame_id: str, timestamp: float) -> None:
+        """Link independent confirmations without reviving or merging WM tracks.
+
+        The official static profile archives LOST IDs permanently. A new track
+        must acquire its own confirmation before it can explain an old identity.
+        Use the unchanged association gate over a complete competing snapshot;
+        even a tentative neighbour prevents a supposedly unique binding. This
+        is a data-association hypothesis, not proof of physical identity.
+        """
+        seen = {item["track_id"] for _, item in converted
+                if item["fed_to_world_model"] and item["track_id"] is not None}
+        # An already bound ancestor belongs to its successor's hypothesis chain.
+        # All other history, including never-confirmed archives and manipulated
+        # objects, remains in the competition graph (but cannot be a source).
+        tracks = [track for oid in self._history if oid not in self._reacquisitions
+                  and oid not in self._delivery_aliases
+                  if (track := self.wm.get_object(oid, include_lost=True)) is not None]
+        detections = [Detection(class_name=track.name, x=track.x, z=track.z,
+                                confidence=track.confidence, timestamp=timestamp,
+                                frame_id=frame_id, source=track.source)
+                      for track in tracks]
+        costs = build_cost_matrix(tracks, detections, self.wm.aliases,
+                                  self.wm.assoc_cfg, now=timestamp)
+        # Determine every candidate against this one frozen snapshot. Do not
+        # remove a competitor after accepting an earlier pair in the batch.
+        neighbours = {track.obj_id: [other.obj_id for j, other in enumerate(tracks)
+                                    if j != i and math.isfinite(costs[i][j])]
+                      for i, track in enumerate(tracks)}
+        existing_successors = {binding["current_object_id"]
+                               for binding in self._reacquisitions.values()}
+        planned = []
+        for old in tracks:
+            old_id = old.obj_id
+            old_time = self._times.get(old_id, {})
+            if (WM_TO_PUBLIC.get(old.name) != "red-ball"
+                    or self.wm.get_archived(old_id) is not old
+                    or old.state != ObjectState.LOST
+                    or old_time.get("confirmed_s") is None
+                    or old_id in self._lifecycle
+                    or len(neighbours[old_id]) != 1):
+                continue
+            current_id = neighbours[old_id][0]
+            current = next(track for track in tracks if track.obj_id == current_id)
+            current_time = self._times.get(current_id, {})
+            poses = self._accepted_poses.get(current_id, [])
+            required_hits = self.wm.decay_cfg.confirm_hits
+            gap = self.wm.assoc_cfg.min_hit_pose_gap_m
+            if (neighbours[current_id] != [old_id]
+                    or current_id in existing_successors or current_id not in seen
+                    or current_id in self._lifecycle
+                    or current.state != ObjectState.CONFIRMED
+                    or current_time.get("confirmed_s") is None
+                    or current.first_seen <= old.last_seen
+                    or current.hit_count < required_hits or len(poses) < required_hits
+                    or any(math.hypot(a["x_m"] - b["x_m"], a["z_m"] - b["z_m"]) < gap
+                           for index, a in enumerate(poses) for b in poses[:index])):
+                continue
+            binding = {
+                "version": "world-model-reacquisition/v1",
+                "historical_object_id": old_id, "current_object_id": current_id,
+                "evidence": {
+                    "association": "unchanged_world_model_gate_bidirectionally_unique",
+                    "frame_id": frame_id, "simulation_time_s": timestamp,
+                    "historical_position_m": {"x": old.x, "z": old.z},
+                    "current_position_m": {"x": current.x, "z": current.z},
+                    "distance_m": math.hypot(old.x - current.x, old.z - current.z),
+                    "gate_distance_m": gate_for(old, timestamp, self.wm.assoc_cfg),
+                    "historical_confirmed_s": old_time["confirmed_s"],
+                    "current_confirmed_s": current_time["confirmed_s"],
+                    "current_hit_poses": copy.deepcopy(poses),
+                    "competing_identity_ids": [track.obj_id for track in tracks],
+                    "historical_candidates": list(neighbours[old_id]),
+                    "current_candidates": list(neighbours[current_id]),
+                },
+            }
+            planned.append(binding)
+        for binding in planned:
+            self._reacquisitions[binding["historical_object_id"]] = binding
+
+    def reacquisition_bindings(self) -> list[dict[str, Any]]:
+        """Return detached evidence; neither query nor binding changes WM IDs."""
+        return copy.deepcopy(list(self._reacquisitions.values()))
+
     def _row(self, track: Any) -> dict[str, Any]:
         local_x, local_z = self.pose.to_local(track.x, track.z)
         row = {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
@@ -328,6 +413,8 @@ class Perception:
                 "hit_count": track.hit_count, "source": track.source,
                 "last_seen_s": track.last_seen,
                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
+        if track.obj_id in self._reacquisitions:
+            row["reacquisition_binding"] = copy.deepcopy(self._reacquisitions[track.obj_id])
         if row["category"] == "red-ball":
             times = self._times.get(track.obj_id, {})
             known_confirmation_history = "confirmed_s" in times

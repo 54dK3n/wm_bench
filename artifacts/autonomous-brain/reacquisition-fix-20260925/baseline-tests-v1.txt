@@ -1,0 +1,221 @@
+FFFFF..FF...........FF..F...                                             [100%]
+=================================== FAILURES ===================================
+_______ test_out_of_window_sighting_never_revives_or_binds_archive[25-0] _______
+
+reading = 25, bearing = 0
+
+    @pytest.mark.parametrize("reading,bearing", [(25, 0), (39, 0), (40, 36), (90, 0)])
+    def test_out_of_window_sighting_never_revives_or_binds_archive(reading, bearing):
+        perception, (old,) = archived_confirmed()
+        original = copy.deepcopy(perception.get_object(old))
+        evidence = observe(perception, 5, 55, time=6.1,
+                           items=[ball(reading, bearing=bearing)])
+        assert evidence["detections"][0]["fed_to_world_model"] is False
+>       assert perception.get_object(old) == original
+E       AssertionError: assert {'bearing_deg...54123295, ...} == {'bearing_deg...54123295, ...}
+E         
+E         Omitting 12 identical items, use -vv to show
+E         Differing items:
+E         {'distance_cm': 32.976400000000005} != {'distance_cm': 55.97640000000001}
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:114: AssertionError
+_______ test_out_of_window_sighting_never_revives_or_binds_archive[39-0] _______
+
+reading = 39, bearing = 0
+
+    @pytest.mark.parametrize("reading,bearing", [(25, 0), (39, 0), (40, 36), (90, 0)])
+    def test_out_of_window_sighting_never_revives_or_binds_archive(reading, bearing):
+        perception, (old,) = archived_confirmed()
+        original = copy.deepcopy(perception.get_object(old))
+        evidence = observe(perception, 5, 55, time=6.1,
+                           items=[ball(reading, bearing=bearing)])
+        assert evidence["detections"][0]["fed_to_world_model"] is False
+>       assert perception.get_object(old) == original
+E       AssertionError: assert {'bearing_deg...54123295, ...} == {'bearing_deg...54123295, ...}
+E         
+E         Omitting 12 identical items, use -vv to show
+E         Differing items:
+E         {'distance_cm': 32.976400000000005} != {'distance_cm': 55.97640000000001}
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:114: AssertionError
+______ test_out_of_window_sighting_never_revives_or_binds_archive[40-36] _______
+
+reading = 40, bearing = 36
+
+    @pytest.mark.parametrize("reading,bearing", [(25, 0), (39, 0), (40, 36), (90, 0)])
+    def test_out_of_window_sighting_never_revives_or_binds_archive(reading, bearing):
+        perception, (old,) = archived_confirmed()
+        original = copy.deepcopy(perception.get_object(old))
+>       evidence = observe(perception, 5, 55, time=6.1,
+                           items=[ball(reading, bearing=bearing)])
+
+tests/test_brain_reacquisition.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_brain_perception.py:36: in observe
+    return perception.update(observation, odometry,
+autonomous_brain/perception.py:198: in update
+    converted = [self._convert(item, frame_id, timestamp)
+autonomous_brain/perception.py:198: in <listcomp>
+    converted = [self._convert(item, frame_id, timestamp)
+autonomous_brain/perception.py:117: in _convert
+    x, y, w, h = self._bbox(item)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <autonomous_brain.perception.Perception object at 0x1062767c0>
+item = {'bbox': {'h': 81.61822241163532, 'w': 81.61822241163532, 'x': 581.2089461617389, 'y': 245}, 'category': 'red-ball', 'confidence': 0.92, 'source': 'virtual-cv'}
+
+    def _bbox(self, item: Mapping[str, Any]) -> tuple[float, float, float, float]:
+        box = item["bbox"]
+        x, y, w, h = (_number(box[key], f"bbox.{key}") for key in ("x", "y", "w", "h"))
+        if w <= 0 or h <= 0 or x < 0 or y < 0:
+            raise ValueError("bbox must have positive extent inside the source frame")
+        if x + w > self.camera["width"] or y + h > self.camera["height"]:
+>           raise ValueError("bbox extends outside the source frame")
+E           ValueError: bbox extends outside the source frame
+
+autonomous_brain/perception.py:105: ValueError
+_______ test_out_of_window_sighting_never_revives_or_binds_archive[90-0] _______
+
+reading = 90, bearing = 0
+
+    @pytest.mark.parametrize("reading,bearing", [(25, 0), (39, 0), (40, 36), (90, 0)])
+    def test_out_of_window_sighting_never_revives_or_binds_archive(reading, bearing):
+        perception, (old,) = archived_confirmed()
+        original = copy.deepcopy(perception.get_object(old))
+        evidence = observe(perception, 5, 55, time=6.1,
+                           items=[ball(reading, bearing=bearing)])
+        assert evidence["detections"][0]["fed_to_world_model"] is False
+>       assert perception.get_object(old) == original
+E       AssertionError: assert {'bearing_deg...54123295, ...} == {'bearing_deg...54123295, ...}
+E         
+E         Omitting 12 identical items, use -vv to show
+E         Differing items:
+E         {'distance_cm': 32.976400000000005} != {'distance_cm': 55.97640000000001}
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:114: AssertionError
+_ test_only_new_third_independent_confirmation_can_bind_without_rewriting_history _
+
+    def test_only_new_third_independent_confirmation_can_bind_without_rewriting_history():
+        perception, (old,) = archived_confirmed()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old)))
+        old_timeline = timeline(perception, old)
+        for frame, forward in ((5, 0), (6, 16)):
+            observed = observe(perception, frame, forward, time=6 + (frame - 4) / 10)
+            new = observed["detections"][0]["track_id"]
+            assert new != old
+            assert perception.get_object(new)["hit_count"] == frame - 4
+            assert perception.get_object(new)["state"] == "TENTATIVE"
+            assert bindings(perception) == []
+            assert pending(perception) == {old, new}
+        observe(perception, 7, 32, time=6.3)
+        assert perception.get_object(new)["state"] == "CONFIRMED"
+>       assert pairs(perception) == {(old, new)}
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:133: AssertionError
+__________ test_reacquisition_keeps_original_thirty_cm_gate[29-True] ___________
+
+right = 29, expected = True
+
+    @pytest.mark.parametrize("right,expected", [(29, True), (30, True), (31, False)])
+    def test_reacquisition_keeps_original_thirty_cm_gate(right, expected):
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1, right=right)
+>       assert pairs(perception) == ({(old, new)} if expected else set())
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:174: AssertionError
+__________ test_reacquisition_keeps_original_thirty_cm_gate[30-True] ___________
+
+right = 30, expected = True
+
+    @pytest.mark.parametrize("right,expected", [(29, True), (30, True), (31, False)])
+    def test_reacquisition_keeps_original_thirty_cm_gate(right, expected):
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1, right=right)
+>       assert pairs(perception) == ({(old, new)} if expected else set())
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:174: AssertionError
+___ test_binding_queries_are_detached_and_do_not_create_observation_evidence ___
+
+    def test_binding_queries_are_detached_and_do_not_create_observation_evidence():
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1)
+>       assert pairs(perception) == {(old, new)}
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:231: AssertionError
+__ test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending ___
+
+    def test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending():
+        perception, (old,) = archived_confirmed()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old)))
+        old_timeline = timeline(perception, old)
+        (new,) = confirm(perception, first_frame=5, first_time=6.1)
+        assert pending(perception) == {old, new}
+        sensor_deliver(perception, new)
+        assert perception.get_object(new)["state"] == "DELIVERED"
+        assert perception.get_object(old)["state"] == "LOST"
+        assert vars(perception.wm.get_archived(old)) == old_track
+        assert timeline(perception, old)["confirmed_s"] == old_timeline["confirmed_s"]
+        assert timeline(perception, old)["accepted_hit_poses"] == old_timeline["accepted_hit_poses"]
+        assert timeline(perception, old)["delivered_s"] is None
+        assert timeline(perception, new)["picked_s"] == 6.4
+        assert timeline(perception, new)["delivered_s"] == 7
+>       assert pending(perception) == set()
+E       AssertionError: assert {'target_001'} == set()
+E         
+E         Extra items in the left set:
+E         'target_001'
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:257: AssertionError
+_ test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery _
+
+    def test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery():
+        perception, (first,) = archived_confirmed()
+        (second,) = confirm(perception, first_frame=5, first_time=6.1)
+        observe(perception, 8, 32, time=12, items=[])
+        assert perception.get_object(second)["state"] == "LOST"
+        (third,) = confirm(perception, first_frame=9, first_time=12.1)
+>       assert pairs(perception) == {(first, second), (second, third)}
+E       AssertionError: assert set() == {('target_001...'target_003')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         ('target_002', 'target_003')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:297: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_reacquisition.py::test_out_of_window_sighting_never_revives_or_binds_archive[25-0]
+FAILED tests/test_brain_reacquisition.py::test_out_of_window_sighting_never_revives_or_binds_archive[39-0]
+FAILED tests/test_brain_reacquisition.py::test_out_of_window_sighting_never_revives_or_binds_archive[40-36]
+FAILED tests/test_brain_reacquisition.py::test_out_of_window_sighting_never_revives_or_binds_archive[90-0]
+FAILED tests/test_brain_reacquisition.py::test_only_new_third_independent_confirmation_can_bind_without_rewriting_history
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_keeps_original_thirty_cm_gate[29-True]
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_keeps_original_thirty_cm_gate[30-True]
+FAILED tests/test_brain_reacquisition.py::test_binding_queries_are_detached_and_do_not_create_observation_evidence
+FAILED tests/test_brain_reacquisition.py::test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery
+10 failed, 18 passed in 0.17s

@@ -1,0 +1,879 @@
+{
+  "schema": "autonomous-brain-run-metrics/v2",
+  "run": "map05-run-13",
+  "source_commit": "885c24f8d2b58870fe42c42d434610f9dab96a27",
+  "archive_status": "complete",
+  "evaluation_version": "autonomous-brain-offline-evaluation/v3",
+  "task_success": false,
+  "rounds": 58,
+  "llm_calls": 69,
+  "llm_total_elapsed_s": 1497.3446953300001,
+  "simulation_seconds": 246.08,
+  "observations": 365,
+  "failed_rounds": 7,
+  "failed_actions": 6,
+  "execution_failures": 0,
+  "external_stop_failures": 1,
+  "bridge_calls": 1712,
+  "nonwhitelist_brain_requests": 0,
+  "brain_wall_elapsed_s": 1678.4929227090001,
+  "driver_process_wall_seconds": 1678.595,
+  "motions": 250,
+  "action_counts": {
+    "explore": 35,
+    "look_around": 22,
+    "go_to": 1
+  },
+  "transport_error_count": 4,
+  "transport_errors": [
+    {
+      "call_index": 19,
+      "decision_index": 16,
+      "attempt": 1,
+      "elapsed_s": 31.88604783300002,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      },
+      "transport_retry_index": 0,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 0
+    },
+    {
+      "call_index": 30,
+      "decision_index": 25,
+      "attempt": 1,
+      "elapsed_s": 63.81348766700006,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "transport_retry_index": 0,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 0
+    },
+    {
+      "call_index": 61,
+      "decision_index": 53,
+      "attempt": 1,
+      "elapsed_s": 63.01966195900013,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "transport_retry_index": 0,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 0
+    },
+    {
+      "call_index": 64,
+      "decision_index": 54,
+      "attempt": 1,
+      "elapsed_s": 70.6770280830001,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "transport_retry_index": 0,
+      "transport_retry_limit": 2,
+      "transport_retry_delay_s": 0
+    }
+  ],
+  "validation_error_count": 7,
+  "validation_errors": [
+    {
+      "call_index": 12,
+      "decision_index": 12,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_019\"}}",
+      "elapsed_s": 18.135725417000003,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 15,
+      "decision_index": 14,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_019\"}}",
+      "elapsed_s": 7.624380292000012,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 17,
+      "decision_index": 15,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_019\"}}",
+      "elapsed_s": 5.00803216700001,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 20,
+      "decision_index": 16,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_019\"}}",
+      "elapsed_s": 41.337819957999955,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 32,
+      "decision_index": 26,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_041\"}}",
+      "elapsed_s": 19.857234250000033,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 56,
+      "decision_index": 49,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_047\"}}",
+      "elapsed_s": 15.696841124999992,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 62,
+      "decision_index": 53,
+      "attempt": 1,
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_077\"}}",
+      "elapsed_s": 57.562704624999924,
+      "validation_error": "go_to requires a CONFIRMED object"
+    }
+  ],
+  "all_decisions_eventually_returned_actions": true,
+  "failed_round_details": [
+    {
+      "round": 13,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 48.1,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 80,
+          "frame_id": 80,
+          "tick": 2405,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 13.8,
+            "elapsedTicks": 58
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 3.2,
+            "elapsedTicks": 21
+          },
+          "recovery_steps": 3,
+          "before_observation": 74,
+          "final_observation": 81
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 21,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 80.96,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 131,
+          "frame_id": 131,
+          "tick": 4048,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 2.2,
+            "elapsedTicks": 7
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 11.6,
+            "elapsedTicks": 122
+          },
+          "recovery_steps": 1,
+          "before_observation": 128,
+          "final_observation": 132
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 22,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 178.8
+        }
+      },
+      "simulation_seconds": 92.94,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 138,
+          "frame_id": 138,
+          "tick": 4647,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 2.2,
+            "elapsedTicks": 7
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 11.6,
+            "elapsedTicks": 122
+          },
+          "recovery_steps": 1,
+          "before_observation": 133,
+          "final_observation": 139
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 41,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.7
+        }
+      },
+      "simulation_seconds": 175.32,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 255,
+          "frame_id": 255,
+          "tick": 8766,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 7.8,
+            "elapsedTicks": 25
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 17.2,
+            "elapsedTicks": 92
+          },
+          "recovery_steps": 1,
+          "before_observation": 250,
+          "final_observation": 256
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 44,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_047"
+        }
+      },
+      "simulation_seconds": 190.06,
+      "result": {
+        "success": false,
+        "reason": "final_approach_requires_road_reposition",
+        "evidence": {
+          "after_observation": 275,
+          "frame_id": 275,
+          "tick": 9503,
+          "holding": false,
+          "road_clearance": {
+            "requested_cm": 10,
+            "permitted_cm": 0.0,
+            "heading_error_deg": 88.2,
+            "side": "rightClearanceCm",
+            "side_clearance_cm": 0.1,
+            "front_clearance_cm": 145.5,
+            "predicted_lateral_cm": 0.0
+          },
+          "before_observation": 270,
+          "final_observation": 276
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 46,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 202.74,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 290,
+          "frame_id": 290,
+          "tick": 10137,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 16.3,
+            "elapsedTicks": 137
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 17.5,
+            "elapsedTicks": 152
+          },
+          "recovery_steps": 1,
+          "before_observation": 287,
+          "final_observation": 291
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 58,
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "simulation_seconds": 246.08,
+      "result": {
+        "success": false,
+        "reason": "turn: NOT_RUNNING",
+        "error_type": "BridgeError"
+      },
+      "failure_kind": "external_stop"
+    }
+  ],
+  "external_stop": {
+    "recorded": true,
+    "version": "evaluator-requested-stop/v1",
+    "reason": "Confirmed target_047 became archived LOST at observation 293. Frozen runtime cannot associate archived identities again, and completion permanently retains ever-confirmed LOST as pending. A sensor-only offline reproduction confirms that a newly independent three-position CONFIRMED track at the same position does not resolve the old obligation. Stop this failed trial before repairing identity reacquisition; no claim of physical target identity or delivery.",
+    "classified_failures": 1
+  },
+  "stop_requested_tick": 12304,
+  "brain_terminal_reason": "BridgeError: turn: NOT_RUNNING",
+  "export_complete": true,
+  "export_failures": [],
+  "controller_error_count": 1,
+  "controller_error_classification": "One NOT_RUNNING at tick12304 after recorded evaluator stop; native export itself completed.",
+  "record_complete": true,
+  "record_end_tick": 12304,
+  "final_sample_tick": 12304,
+  "final_sample_is_terminal": true,
+  "native_event_counts": {
+    "run_started": 1,
+    "run_finished": 1
+  },
+  "grab_calls": 0,
+  "release_calls": 0,
+  "independently_valid_deliveries": 0,
+  "expected_target_count": 2,
+  "truth_target_timelines": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_019",
+        "target_035",
+        "target_045"
+      ],
+      "first_raw_seen": {
+        "observation_index": 5,
+        "round": 2,
+        "frame_id": "5",
+        "tick": 138,
+        "simulation_seconds": 2.76,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 548,
+          "y": 188,
+          "w": 20,
+          "h": 12
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 558.4765479149339,
+              "v": 194.26820679191553,
+              "depth_world": 12.074038911532847
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": null,
+      "first_logged_wm_presence": {
+        "observation_index": 34,
+        "round": 7,
+        "frame_id": "34",
+        "tick": 875,
+        "simulation_seconds": 17.5,
+        "track_id": "target_019",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_019",
+          "category": "red-ball",
+          "first_seen_s": 17.5,
+          "first_seen_round": 7,
+          "first_seen_frame_id": "34",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "34",
+              "simulation_time_s": 17.5,
+              "x_m": -0.73,
+              "z_m": 0.27399999999999997,
+              "heading_deg": 45.0
+            },
+            {
+              "frame_id": "93",
+              "simulation_time_s": 53.14,
+              "x_m": -1.09,
+              "z_m": 0.121,
+              "heading_deg": 14.900000000000002
+            }
+          ]
+        },
+        {
+          "object_id": "target_035",
+          "category": "red-ball",
+          "first_seen_s": 68.74,
+          "first_seen_round": 19,
+          "first_seen_frame_id": "115",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "115",
+              "simulation_time_s": 68.74,
+              "x_m": -1.169,
+              "z_m": 1.077,
+              "heading_deg": 91.3
+            }
+          ]
+        },
+        {
+          "object_id": "target_045",
+          "category": "red-ball",
+          "first_seen_s": 105.92,
+          "first_seen_round": 26,
+          "first_seen_frame_id": "160",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "160",
+              "simulation_time_s": 105.92,
+              "x_m": -1.173,
+              "z_m": 1.521,
+              "heading_deg": 110.8
+            },
+            {
+              "frame_id": "193",
+              "simulation_time_s": 127.22,
+              "x_m": -0.8,
+              "z_m": 0.865,
+              "heading_deg": 45.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [
+        "target_047",
+        "target_077"
+      ],
+      "first_raw_seen": {
+        "observation_index": 102,
+        "round": 16,
+        "frame_id": "102",
+        "tick": 2992,
+        "simulation_seconds": 59.84,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 136,
+          "y": 190,
+          "w": 28,
+          "h": 16
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-2",
+            "projection": {
+              "u": 150.2536228502754,
+              "v": 198.26632739833022,
+              "depth_world": 9.1813433327518
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-2"
+      },
+      "first_confirmed": {
+        "observation_index": 263,
+        "round": 43,
+        "frame_id": "263",
+        "tick": 8983,
+        "simulation_seconds": 179.66,
+        "track_id": "target_047"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 163,
+        "round": 26,
+        "frame_id": "163",
+        "tick": 5383,
+        "simulation_seconds": 107.66,
+        "track_id": "target_047",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_047",
+          "category": "red-ball",
+          "first_seen_s": 107.66,
+          "first_seen_round": 26,
+          "first_seen_frame_id": "163",
+          "confirmed_s": 179.66,
+          "picked_s": null,
+          "delivered_s": null,
+          "confirmed_round": 43,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "163",
+              "simulation_time_s": 107.66,
+              "x_m": -1.173,
+              "z_m": 1.521,
+              "heading_deg": -114.2
+            },
+            {
+              "frame_id": "222",
+              "simulation_time_s": 155.32,
+              "x_m": -0.003,
+              "z_m": 0.524,
+              "heading_deg": 0.8
+            },
+            {
+              "frame_id": "263",
+              "simulation_time_s": 179.66,
+              "x_m": 0.25,
+              "z_m": 0.865,
+              "heading_deg": 45.0
+            }
+          ]
+        },
+        {
+          "object_id": "target_077",
+          "category": "red-ball",
+          "first_seen_s": 225.7,
+          "first_seen_round": 52,
+          "first_seen_frame_id": "328",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "328",
+              "simulation_time_s": 225.7,
+              "x_m": 0.25,
+              "z_m": 1.514,
+              "heading_deg": 90.0
+            },
+            {
+              "frame_id": "358",
+              "simulation_time_s": 243.86,
+              "x_m": -0.003,
+              "z_m": 1.264,
+              "heading_deg": 89.30000000000001
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "position_error": {
+    "count": 11,
+    "mean_cm": 13.295977278019818,
+    "rmse_cm": 13.295977278019818,
+    "max_cm": 13.295977278019816
+  },
+  "raw_red_match_counts": {
+    "unique": 71,
+    "unmatched": 41
+  },
+  "judge_counts": {
+    "match": 0,
+    "false_positive": 0,
+    "false_negative": 0,
+    "unverifiable": 0,
+    "not_evaluated": 58,
+    "eligible_actions": 0
+  },
+  "sensor_only_state_transitions": {
+    "target_047": [
+      {
+        "observation_index": 163,
+        "round": 26,
+        "simulation_seconds": 107.66,
+        "state": "TENTATIVE",
+        "hit_count": 1,
+        "confidence": 0.9242857142857143,
+        "position_m": {
+          "x": -0.25239194826083833,
+          "z": 1.5192323075858416
+        },
+        "ever_confirmed": false,
+        "completion_classification": "pending",
+        "last_seen_s": 107.66
+      },
+      {
+        "observation_index": 210,
+        "round": 34,
+        "simulation_seconds": 142.26,
+        "state": "STALE",
+        "hit_count": 1,
+        "confidence": 0.4869157671938545,
+        "position_m": {
+          "x": -0.25239194826083833,
+          "z": 1.5192323075858416
+        },
+        "ever_confirmed": false,
+        "completion_classification": "pending",
+        "last_seen_s": 112.82
+      },
+      {
+        "observation_index": 222,
+        "round": 36,
+        "simulation_seconds": 155.32,
+        "state": "TENTATIVE",
+        "hit_count": 2,
+        "confidence": 0.7831058823529411,
+        "position_m": {
+          "x": -0.2598695268195166,
+          "z": 1.440429456662567
+        },
+        "ever_confirmed": false,
+        "completion_classification": "pending",
+        "last_seen_s": 155.32
+      },
+      {
+        "observation_index": 235,
+        "round": 38,
+        "simulation_seconds": 161.02,
+        "state": "STALE",
+        "hit_count": 2,
+        "confidence": 0.4578496918604568,
+        "position_m": {
+          "x": -0.2598695268195166,
+          "z": 1.440429456662567
+        },
+        "ever_confirmed": false,
+        "completion_classification": "pending",
+        "last_seen_s": 159.96
+      },
+      {
+        "observation_index": 263,
+        "round": 43,
+        "simulation_seconds": 179.66,
+        "state": "CONFIRMED",
+        "hit_count": 3,
+        "confidence": 0.79375,
+        "position_m": {
+          "x": -0.2683131909834136,
+          "z": 1.4335290466912933
+        },
+        "ever_confirmed": true,
+        "completion_classification": "pending",
+        "last_seen_s": 179.66
+      },
+      {
+        "observation_index": 274,
+        "round": 44,
+        "simulation_seconds": 189.14,
+        "state": "STALE",
+        "hit_count": 3,
+        "confidence": 0.4333956540928068,
+        "position_m": {
+          "x": -0.2683131909834136,
+          "z": 1.4335290466912933
+        },
+        "ever_confirmed": true,
+        "completion_classification": "pending",
+        "last_seen_s": 179.66
+      },
+      {
+        "observation_index": 293,
+        "round": 47,
+        "simulation_seconds": 203.9,
+        "state": "LOST",
+        "hit_count": 3,
+        "confidence": 0.11024281917124795,
+        "position_m": {
+          "x": -0.2683131909834136,
+          "z": 1.4335290466912933
+        },
+        "ever_confirmed": true,
+        "completion_classification": "pending",
+        "last_seen_s": 179.66
+      }
+    ],
+    "target_077": [
+      {
+        "observation_index": 328,
+        "round": 52,
+        "simulation_seconds": 225.7,
+        "state": "TENTATIVE",
+        "hit_count": 1,
+        "confidence": 0.94,
+        "position_m": {
+          "x": -0.520699,
+          "z": 1.514
+        },
+        "ever_confirmed": false,
+        "completion_classification": "pending",
+        "last_seen_s": 225.7
+      }
+    ]
+  },
+  "final_sensor_only_tracks": [
+    {
+      "id": "target_047",
+      "state": "LOST",
+      "hit_count": 3,
+      "confidence": 0.11024281917124795,
+      "position_m": {
+        "x": -0.2683131909834136,
+        "z": 1.4335290466912933
+      },
+      "ever_confirmed": true,
+      "completion_classification": "pending"
+    },
+    {
+      "id": "target_077",
+      "state": "TENTATIVE",
+      "hit_count": 2,
+      "confidence": 0.7734366546498925,
+      "position_m": {
+        "x": -0.5568129422371516,
+        "z": 1.5820338036852677
+      },
+      "ever_confirmed": false,
+      "completion_classification": "pending"
+    }
+  ],
+  "identity_interpretation_limit": "Evaluator same-frame geometry bindings are not independent proof of cross-time physical identity; do not infer target_077 and target_047 are the same physical target. Actual target_077 never reached CONFIRMED; its two-hit trajectory is not the offline three-position reacquisition counterexample.",
+  "final_state": {
+    "completion": {
+      "pending_objects": [
+        "target_045",
+        "target_047",
+        "target_077"
+      ],
+      "retired_unconfirmed_hypotheses": [
+        {
+          "object_id": "target_019",
+          "reason": "archived_without_confirmation",
+          "archived": true,
+          "confirmed_s": null,
+          "first_seen_s": 17.5,
+          "last_seen_s": 53.14,
+          "last_updated_s": 61.0,
+          "first_seen_frame_id": "34",
+          "last_frame_id": "93",
+          "hit_count": 2,
+          "confidence": 0.13194726769020299
+        },
+        {
+          "object_id": "target_035",
+          "reason": "archived_without_confirmation",
+          "archived": true,
+          "confirmed_s": null,
+          "first_seen_s": 68.74,
+          "last_seen_s": 68.74,
+          "last_updated_s": 83.2,
+          "first_seen_frame_id": "115",
+          "last_frame_id": "115",
+          "hit_count": 1,
+          "confidence": 0.060264602595066
+        },
+        {
+          "object_id": "target_041",
+          "reason": "archived_without_confirmation",
+          "archived": true,
+          "confirmed_s": null,
+          "first_seen_s": 101.26,
+          "last_seen_s": 118.04,
+          "last_updated_s": 121.4,
+          "first_seen_frame_id": "149",
+          "last_frame_id": "149",
+          "hit_count": 1,
+          "confidence": 0.10903587456266237
+        }
+      ]
+    },
+    "unexplored_exit_count": 27,
+    "observed_junction_count": 18
+  },
+  "limits": {
+    "max_rounds": 200,
+    "max_simulation_seconds": 1200,
+    "cap_reached": false
+  },
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 58,
+    "replayed_calls": 69,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/summary.json": "537b6a1e80528aba92711e8598efac8a8967cb9aa96e53773d6632c31a197395",
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/rounds.jsonl": "5002ffb90b891dcb8a8384d87a94d5eb87d28629d01aa9400c915d6e08214bc4",
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/observations.jsonl": "d6821f9146abfb7ceef75f35d9b30ec32fcbbf73e36460240c4c4aa7c0c6fab1",
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/motions.jsonl": "bab5fe23a574f7a9a1877bfbfdc01a705c556d09f056e09b541e76cbd18f9947",
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/llm.jsonl": "cc5a70122c3e808b3f15df967da67b50ff42c5122cc0afbe2f5ddc196d1e522a",
+    "artifacts/autonomous-brain/map05-run-13/map-05-run-1/brain/bridge-calls.jsonl": "2ff79e6700a98f0dfe98102d9afaf200e7617813cd4659e6b3f027f802d1f4be",
+    "artifacts/autonomous-brain/map05-run-13/summary.json": "04c47e87c4f74784e1ea46504a97c7b1852b927fc9107471d0183de029209445",
+    "artifacts/autonomous-brain/map05-run-13/evaluator-stop.json": "d565afe542180d3f009e9d40bffcd6dad5c2390edce4f11be0b031ab2d76db71",
+    "artifacts/autonomous-brain/map05-run-13/evaluator-stop-cdp.json": "859b8436b3030150028b2aa59cd7842589a9b340b27fb9aeeb084158a906723c",
+    "artifacts/autonomous-brain/map05-run-13/report/evaluation.json": "eaf477519fc46b122dc8d658216242fcafcd31bd4890cbc46e5dacae30909bb9",
+    "artifacts/autonomous-brain/map05-run-13/llm-replay/replay-checks.json": "2887544fba92da500dda035eda2c84082845331aa00eeb799f3df64f45a03f0f",
+    "artifacts/autonomous-brain/map05-run-13/source-commit.json": "6801038673926484e82018c66cff863affd352780595c43653fa7c52ee2684dd",
+    "artifacts/autonomous-brain/map05-run-13/archive-integrity.json": "f469fdea958eea53e48f94eb93caa91a6362b77a4a501727b62c8a298e621e06"
+  }
+}

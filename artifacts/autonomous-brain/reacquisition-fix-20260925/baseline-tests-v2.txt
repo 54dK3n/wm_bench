@@ -1,0 +1,121 @@
+....F..FF...........FF..F...                                             [100%]
+=================================== FAILURES ===================================
+_ test_only_new_third_independent_confirmation_can_bind_without_rewriting_history _
+
+    def test_only_new_third_independent_confirmation_can_bind_without_rewriting_history():
+        perception, (old,) = archived_confirmed()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old)))
+        old_timeline = timeline(perception, old)
+        for frame, forward in ((5, 0), (6, 16)):
+            observed = observe(perception, frame, forward, time=6 + (frame - 4) / 10)
+            new = observed["detections"][0]["track_id"]
+            assert new != old
+            assert perception.get_object(new)["hit_count"] == frame - 4
+            assert perception.get_object(new)["state"] == "TENTATIVE"
+            assert bindings(perception) == []
+            assert pending(perception) == {old, new}
+        observe(perception, 7, 32, time=6.3)
+        assert perception.get_object(new)["state"] == "CONFIRMED"
+>       assert pairs(perception) == {(old, new)}
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:134: AssertionError
+__________ test_reacquisition_keeps_original_thirty_cm_gate[29-True] ___________
+
+right = 29, expected = True
+
+    @pytest.mark.parametrize("right,expected", [(29, True), (30, True), (31, False)])
+    def test_reacquisition_keeps_original_thirty_cm_gate(right, expected):
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1, right=right)
+>       assert pairs(perception) == ({(old, new)} if expected else set())
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:175: AssertionError
+__________ test_reacquisition_keeps_original_thirty_cm_gate[30-True] ___________
+
+right = 30, expected = True
+
+    @pytest.mark.parametrize("right,expected", [(29, True), (30, True), (31, False)])
+    def test_reacquisition_keeps_original_thirty_cm_gate(right, expected):
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1, right=right)
+>       assert pairs(perception) == ({(old, new)} if expected else set())
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:175: AssertionError
+___ test_binding_queries_are_detached_and_do_not_create_observation_evidence ___
+
+    def test_binding_queries_are_detached_and_do_not_create_observation_evidence():
+        perception, (old,) = archived_confirmed()
+        (new,) = confirm(perception, first_frame=5, first_time=6.1)
+>       assert pairs(perception) == {(old, new)}
+E       AssertionError: assert set() == {('target_001', 'target_002')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:232: AssertionError
+__ test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending ___
+
+    def test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending():
+        perception, (old,) = archived_confirmed()
+        old_track = copy.deepcopy(vars(perception.wm.get_archived(old)))
+        old_timeline = timeline(perception, old)
+        (new,) = confirm(perception, first_frame=5, first_time=6.1)
+        assert pending(perception) == {old, new}
+        sensor_deliver(perception, new)
+        assert perception.get_object(new)["state"] == "DELIVERED"
+        assert perception.get_object(old)["state"] == "LOST"
+        assert vars(perception.wm.get_archived(old)) == old_track
+        assert timeline(perception, old)["confirmed_s"] == old_timeline["confirmed_s"]
+        assert timeline(perception, old)["accepted_hit_poses"] == old_timeline["accepted_hit_poses"]
+        assert timeline(perception, old)["delivered_s"] is None
+        assert timeline(perception, new)["picked_s"] == 6.4
+        assert timeline(perception, new)["delivered_s"] == 7
+>       assert pending(perception) == set()
+E       AssertionError: assert {'target_001'} == set()
+E         
+E         Extra items in the left set:
+E         'target_001'
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:258: AssertionError
+_ test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery _
+
+    def test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery():
+        perception, (first,) = archived_confirmed()
+        (second,) = confirm(perception, first_frame=5, first_time=6.1)
+        observe(perception, 8, 32, time=12, items=[])
+        assert perception.get_object(second)["state"] == "LOST"
+        (third,) = confirm(perception, first_frame=9, first_time=12.1)
+>       assert pairs(perception) == {(first, second), (second, third)}
+E       AssertionError: assert set() == {('target_001...'target_003')}
+E         
+E         Extra items in the right set:
+E         ('target_001', 'target_002')
+E         ('target_002', 'target_003')
+E         Use -v to get more diff
+
+tests/test_brain_reacquisition.py:298: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_reacquisition.py::test_only_new_third_independent_confirmation_can_bind_without_rewriting_history
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_keeps_original_thirty_cm_gate[29-True]
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_keeps_original_thirty_cm_gate[30-True]
+FAILED tests/test_brain_reacquisition.py::test_binding_queries_are_detached_and_do_not_create_observation_evidence
+FAILED tests/test_brain_reacquisition.py::test_only_verified_delivery_of_reconfirmed_successor_resolves_old_pending
+FAILED tests/test_brain_reacquisition.py::test_reacquisition_chain_keeps_every_old_state_and_waits_for_terminal_delivery
+6 failed, 22 passed in 0.14s

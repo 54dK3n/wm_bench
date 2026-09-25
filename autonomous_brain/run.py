@@ -16,13 +16,13 @@ WM_ROOT = Path(os.environ.get("WORLD_MODEL_ROOT", ROOT / "vendor/wm_kit_opt2")).
 sys.path.insert(0, str(WM_ROOT))
 
 from . import VERSION
-from .actions import Actions, RETIREMENT_EVIDENCE_FIELDS, completion_evidence
+from .actions import Actions, RETIREMENT_EVIDENCE_FIELDS, completion_evidence, reacquisition_chains
 from .bridge import JsonLog, RobotBridge, SimulationLimit
 from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v6"
+RUNTIME_VERSION = "autonomous-brain-runtime/v7"
 
 
 def dump(path, value):
@@ -67,6 +67,29 @@ def compact_action_result(number, action, result, after_observation):
         evidence["retired_unconfirmed_hypotheses"] = [
             fields(item, ("object_id", *RETIREMENT_EVIDENCE_FIELDS))
             for item in raw["retired_unconfirmed_hypotheses"] if isinstance(item, dict)]
+    if isinstance(raw.get("resolved_reacquired_identities"), list):
+        evidence["resolved_reacquired_identities"] = []
+        for item in raw["resolved_reacquired_identities"]:
+            if not isinstance(item, dict):
+                continue
+            resolved = fields(item, ("object_id", "delivered_object_id"))
+            resolved["binding_chain"] = []
+            links = item.get("binding_chain")
+            for binding in links if isinstance(links, list) else []:
+                if not isinstance(binding, dict):
+                    continue
+                link = fields(binding, ("version", "historical_object_id", "current_object_id"))
+                basis = binding.get("evidence")
+                if isinstance(basis, dict):
+                    link["evidence"] = fields(basis, ("association", "frame_id", "simulation_time_s",
+                        "distance_m", "gate_distance_m", "historical_confirmed_s", "current_confirmed_s"))
+                    for name in ("historical_candidates", "current_candidates"):
+                        if isinstance(basis.get(name), list):
+                            link["evidence"][name] = [oid for oid in basis[name] if isinstance(oid, str)]
+                    if isinstance(basis.get("current_hit_poses"), list):
+                        link["evidence"]["current_hit_pose_count"] = len(basis["current_hit_poses"])
+                resolved["binding_chain"].append(link)
+            evidence["resolved_reacquired_identities"].append(resolved)
     for name in ("actuator_result", "recovery_result"):
         if isinstance(raw.get(name), dict):
             names = (("stoppedBy", "return_error_cm", "reversed_cm")
@@ -148,6 +171,7 @@ class Runtime:
     def state(self):
         objects = []
         rows = self.perception.objects()
+        chains = reacquisition_chains(rows)
         for row in rows:
             objects.append({"id": row["id"], "category": row["category"],
                             "position_m": {k: round(v, 3) for k, v in row["position_m"].items()},
@@ -157,6 +181,8 @@ class Runtime:
             for key in ("completion_classification", "ever_confirmed"):
                 if key in row:
                     objects[-1][key] = row[key]
+            if row["id"] in chains:
+                objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
         odo, road = self.snapshot["odometry"], self.snapshot["road"]
         return {"task": self.config["task"], "round": self.round,
                 "simulation_seconds": self.bridge.seconds,

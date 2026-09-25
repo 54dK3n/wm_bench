@@ -256,7 +256,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v6")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v7")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)
