@@ -1,10 +1,14 @@
 # WorldModel + 单动作大模型自主小车
 
-最新状态：第十九局正在正式运行，目录`artifacts/autonomous-brain/map05-run-19`，冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`，结果尚待验收。driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容，[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存。最近完成的第十八局独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。
+最新状态：[第十九局](../artifacts/autonomous-brain/map05-run-19/FAILURE_ANALYSIS.md)已完整归档，**整体FAIL，实际有效交付1/2，第二球仍持有，未自主done**。冻结提交`609772040d00f35e3ec6e25cfa5433894be4e5a7`；163轮、173次模型调用、1022次观测、691.66仿真秒，模型请求累计2679.6163993769987秒，另有2秒重试等待。11次explore在零进展且新观测无节点/出口时自报到达，评测方正常停止；末轮NOT_RUNNING是外停错误，不是墙钟超时或模型终止。
+
+下一正式局目录为`artifacts/autonomous-brain/map05-run-20`，尚未启动。actions v19的140轮原记录仿真诊断正在`unobserved-junction-replay-01/`运行，没有新Kimi请求，尚待验证；没有新正式成功局或十布局运行。done旧条件未修改，用户对完成范围的澄清仍待答复。
+
+driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显式正值仍可用于诊断，并写入运行元数据。200轮/1200仿真秒上限和成功判据不变。评测器v4仅增加driver v6来源格式兼容，[修复与验证](../artifacts/autonomous-brain/driver-wall-limit-fix-20260926/REPORT.md)已保存。此前第十八局独立确认实际有效交付2/2，但额外两小时墙钟限制终止进程、缺大脑摘要且未自主done，整体FAIL。
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
-平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十九局使用上述冻结提交正式运行；第十八局冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`的完整证据与FAIL结论保留。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
+平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十九局使用上述冻结提交完成正式运行，FAIL结论保留；第十八局冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`的完整证据与FAIL结论保留。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
 
 此前第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
 
@@ -18,10 +22,10 @@
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第十九局的启动命令，后续新局需另选不存在的输出目录：
+driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为尚未启动的第二十局预备命令；仅在前置诊断核验通过后按既定条件执行，输出目录必须不存在：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-19
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-20
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
@@ -63,9 +67,13 @@ actions v16增加同次place内的有限复观测：仅在释放后夹爪为空�
 
 v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-reobservation-replay-01/DIAGNOSTIC.md)已完成，90条原调用全部输入匹配、无新模型调用，但仅完成一个15.940812099cm视点，仍只识别旧球，诊断FAIL。离线堆叠分析不能作为脑的状态输入或补判依据。
 
-当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式第十五局实际交付1/2，第十六局0/2；两局均因连续模型服务错误耗尽旧重试而结束，完整导出与失败结论保留。下一正式局采用navigation v4、LLM v12/runtime v9的有限网络恢复，其余感知与动作策略不变。
+actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式第十五局实际交付1/2，第十六局0/2；两局均因连续模型服务错误耗尽旧重试而结束，完整导出与失败结论保留。后续navigation v4、LLM v12/runtime v9加入了有限网络恢复，相关历史证据保留。
 
 actions v18把固定地面瞄准点扩展到首次放置：当前完整、面积唯一最大的绿色框中心经公开相机参数和里程计投影后保持不变；中心落入当前球/障碍的既有扩展占用框则持物失败。有已送达旧球可见时保留v17左右候选规则。每步仍须新绿色检测，19cm/3°、8次平移、放后唯一新球见证均不变。全套632项brain测试通过；旧Run17的放置假阴性不回写。见[first-release-fixed-aim-fix-20260926](../artifacts/autonomous-brain/first-release-fixed-aim-fix-20260926/REPORT.md)。runtime v10另修复最后允许轮成功done误判round_limit，未增加轮数上限。
+
+actions v19纠正执行器`stoppedBy=junction`与新观测不一致时的到达误判：成功必须来自新观测`onRoad=true / atNode=true`，take_exit还须实际位移至少0.2cm。仅执行器报告junction不构成到达或阻挡记账。此时先按公开`headingErrorDeg`对准道路切线，再以新道路方向、净空和里程计授权恢复，最多请求五次、每次不超过4cm、总请求不超过20cm。每次转向和短步后须新编号/新帧观测；无进展、几何缺失、异常运动、离路、净空不足或预算耗尽即失败。受阻返程也须真实节点观测才可声称已返回。
+
+原道路、确认、抓放、done及200轮/1200秒门槛保持。新增38项回归通过（冻结v18基线36失败/2通过），完整671项brain测试通过；见[修复验证](../artifacts/autonomous-brain/unobserved-junction-fix-20260926/REPORT.md)和[公共输入只读反例](../artifacts/autonomous-brain/unobserved-junction-review-20260926/REPORT.md)。原Run19决策1–140的150条调用按完整原字节用于正在进行的严格仿真诊断，无新模型请求；第140轮改动后的后续旧状态不得继续套用。该诊断尚待验证，140轮诊断上限不能作为正式成功门票。
 
 ## 日志与复算
 
@@ -79,12 +87,12 @@ actions v18把固定地面瞄准点扩展到首次放置：当前完整、面积
 
 driver 保存 `record.json.gz`、`samples.json.gz`、`sensor-audit.json.gz` 和 `captures.json.gz`。gzip 为无损压缩，原 PNG 字节仍在 record；`evidence.json` 给出压缩前后的 SHA256。真值文件只在脑退出后落盘，不传给脑。driver v6沿用v5的分块导出：每次传输至多65536个UTF-16字符，逐块压缩并校验序号、累计长度和结束标记；完整数据单独落盘，失败前缀保留为 `.part`，`export-status.json` 明确完整性。平台内部停止/复制仍可能失败，分块传输不等于保证验收。
 
-独立评测（第十九局结束并完整导出后，使用兼容driver v6的评测器v4）：
+独立评测预备命令（第二十局尚未启动；待该局结束并完整导出后，使用兼容driver v6的评测器v4）：
 
 ```sh
 python3 tools/evaluate_autonomous_brain.py \
-  --input artifacts/autonomous-brain/map05-run-19/map-05-run-1 \
-  --out artifacts/autonomous-brain/map05-run-19/report
+  --input artifacts/autonomous-brain/map05-run-20/map-05-run-1 \
+  --out artifacts/autonomous-brain/map05-run-20/report
 ```
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
