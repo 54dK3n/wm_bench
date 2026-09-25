@@ -1,0 +1,252 @@
+--- a/tests/test_brain_perception.py
++++ b/tests/test_brain_perception.py
+@@ -1,4 +1,5 @@
+ """Sensor conversion, independent-view confirmation, and action evidence tests."""
++import copy
+ import math
+ import os
+ from pathlib import Path
+@@ -37,11 +38,21 @@
+                              round_index=frame)
+ 
+ 
+-def placement_evidence(position=None):
+-    return {"holding": False, "strict_pixel_inside": True, "placement": {
+-        "ball_position_m": position or {"x": 0.0, "z": 1.5}, "frame_id": "placed",
+-        "ball_bbox": {"x": 305, "y": 310, "w": 10, "h": 10},
+-        "storage_bbox": {"x": 295, "y": 300, "w": 50, "h": 40}}}
++def placement_evidence(perception, object_id):
++    """Make a fresh release witness through the public sensor conversion path."""
++    preexisting = [row["id"] for row in perception.objects()
++                   if row["category"] == "red-ball" and row["id"] != object_id]
++    zone = {"category": "storage-zone", "source": "storage-ground-pixels", "confidence": 1,
++            "bbox": {"x": 240, "y": 230, "w": 160, "h": 100}}
++    observed = observe(perception, 4, time=2, items=[ball(60), zone])
++    witness, storage = observed["detections"]
++    return {"holding": False, "candidate_witnesses": 1,
++            "release_observation": {"frame_id": "4", "simulation_time_s": 2,
++                                    "preexisting_ball_ids": preexisting},
++            "placement": {"ball_track_id": witness["track_id"], "ball_category": witness["category"],
++                          "ball_position_m": copy.deepcopy(witness["position_m"]), "frame_id": "4",
++                          "ball_bbox": copy.deepcopy(witness["bbox"]),
++                          "storage_bbox": copy.deepcopy(storage["bbox"])}}
+ 
+ 
+ class PerceptionTests(unittest.TestCase):
+@@ -168,7 +179,7 @@
+             self.assertFalse(self.perception.mark_delivered(oid, holding=holding,
+                 ball_in_storage=inside, simulation_time_s=2, evidence={"frame_id": "placed"}))
+         self.assertTrue(self.perception.mark_delivered(oid, holding=False,
+-            ball_in_storage=True, simulation_time_s=2, evidence=placement_evidence()))
++            ball_in_storage=True, simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
+         self.assertEqual(self.perception.get_object(oid)["state"], "DELIVERED")
+         self.assertEqual(self.perception.timeline()[0]["picked_s"], 1)
+         self.assertEqual(self.perception.timeline()[0]["delivered_s"], 2)
+@@ -183,12 +194,12 @@
+         self.assertFalse(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
+             simulation_time_s=2, evidence={"holding": False, "placement": {"frame_id": "incomplete"}}))
+         self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
+-            simulation_time_s=2, evidence=placement_evidence(placed)))
++            simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
+         self.assertEqual(self.perception.get_object(oid)["position_m"], placed)
+         timeline = self.perception.timeline()[0]
+         self.assertEqual(timeline["original_position_m"], original)
+         self.assertEqual(timeline["delivered_position_m"], placed)
+-        evidence = observe(self.perception, 4, right=14, time=3,
++        evidence = observe(self.perception, 5, right=14, time=3,
+                            items=[ball(60), ball(60, "blue-ball")])
+         red, blue = evidence["detections"]
+         self.assertEqual(red["known_delivered_object_id"], oid)
+@@ -196,10 +207,11 @@
+         self.assertEqual(red["track_id"], oid)
+         self.assertNotIn("known_delivered_object_id", blue)
+         self.assertTrue(blue["fed_to_world_model"])
+-        evidence = observe(self.perception, 5, right=16, time=3.1, items=[ball(60)])
++        evidence = observe(self.perception, 6, right=16, time=3.1, items=[ball(60)])
+         self.assertNotIn("known_delivered_object_id", evidence["detections"][0])
+         self.assertTrue(evidence["detections"][0]["fed_to_world_model"])
+-        self.assertEqual(len(self.perception.objects()), 3)
++        self.assertEqual(len([row for row in self.perception.objects()
++                              if row["category"] in {"red-ball", "blue-ball"}]), 3)
+         self.assertEqual(self.perception.get_object(oid)["state"], "DELIVERED")
+ 
+     def test_unverified_release_never_claims_delivery_or_suppresses_reobservation(self):
+@@ -224,11 +236,11 @@
+         self.perception.mark_picked(oid, holding=True, original_position_absent=True,
+                                    simulation_time_s=1, evidence={"frame_id": "grabbed"})
+         placed = {"x": 0.0, "z": calibrate_reading(60, 0)[0] / 100}
+-        self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
+-            simulation_time_s=2, evidence=placement_evidence(placed))
++        self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
++            simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
+         # Both detections lie within 15 cm of the known delivered ball. The
+         # closer one is second in input order; matching must use distance.
+-        evidence = observe(self.perception, 4, time=3,
++        evidence = observe(self.perception, 5, time=3,
+                            items=[ball(60, bearing=5), ball(60)])
+         unplaced, delivered = evidence["detections"]
+         self.assertNotIn("known_delivered_object_id", unplaced)
+@@ -237,7 +249,7 @@
+         self.assertNotEqual(unplaced["track_id"], oid)
+         self.assertEqual(delivered["known_delivered_object_id"], oid)
+         self.assertFalse(delivered["fed_to_world_model"])
+-        self.assertEqual(len(self.perception.objects()), 2)
++        self.assertEqual(len([row for row in self.perception.objects() if row["category"] == "red-ball"]), 2)
+ 
+     def test_near_visibility_preserves_existing_confirmation_without_new_hits_or_geometry(self):
+         oid = self.confirm_red()
+--- a/tests/test_brain_delivery_identity.py
++++ b/tests/test_brain_delivery_identity.py
+@@ -84,6 +84,7 @@
+         self.call("release", {})
+         self.observe()
+         release_frame = self.snapshot["observation"]["frameId"]
++        self.release_observation_time = self.bridge.seconds
+         self.call("backward", {"distanceCm": 25, "speed": 30})
+         self.observe()
+         return release_frame
+@@ -95,6 +96,20 @@
+ 
+ def red_rows(runtime):
+     return [row for row in runtime.perception.objects() if row["category"] == "red-ball"]
++
++
++def current_delivery_evidence(runtime, release_frame, witness=None):
++    witness = witness or runtime.current_release_witness()
++    zone = next(d for d in runtime.snapshot["perception"]["detections"] if d["category"] == "storage-zone")
++    return {"holding": False, "candidate_witnesses": 1, "post_observation": runtime.frame,
++            "release_observation": {"frame_id": release_frame,
++                                    "simulation_time_s": runtime.release_observation_time,
++                                    "preexisting_ball_ids": sorted(runtime.preexisting_ids)},
++            "placement": {"ball_track_id": witness["track_id"], "ball_category": witness["category"],
++                          "ball_position_m": copy.deepcopy(witness["position_m"]),
++                          "ball_bbox": copy.deepcopy(witness["bbox"]),
++                          "storage_bbox": copy.deepcopy(zone["bbox"]),
++                          "frame_id": runtime.snapshot["observation"]["frameId"]}}
+ 
+ 
+ def test_verified_place_leaves_one_canonical_identity_for_its_release_witness():
+@@ -148,13 +163,118 @@
+     runtime = DeliveryRuntime()
+     release_frame = runtime.release_observations_without_delivery_mark()
+     witness = runtime.current_release_witness()
+-    zone = next(d for d in runtime.snapshot["perception"]["detections"] if d["category"] == "storage-zone")
+     assert release_frame != runtime.snapshot["observation"]["frameId"]
+     assert runtime.perception.get_object(witness["track_id"])["state"] == "TENTATIVE"
++    evidence = current_delivery_evidence(runtime, release_frame)
++    evidence["placement"]["frame_id"] = release_frame
+     marked = runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
+-        simulation_time_s=runtime.bridge.seconds, evidence={
+-            "holding": False, "post_observation": runtime.frame,
+-            "placement": {"ball_position_m": witness["position_m"], "ball_bbox": witness["bbox"],
+-                          "storage_bbox": zone["bbox"], "frame_id": release_frame}})
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence)
+     assert marked is False, "A witness from the retreat frame cannot be attributed to the earlier release frame"
+     assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++
++
++@pytest.mark.parametrize("mismatch", ["track_id", "category", "position", "bbox", "preexisting_id", "release_time"])
++def test_delivery_binding_rejects_mismatched_identity_evidence_without_mutation(mismatch):
++    runtime = DeliveryRuntime()
++    release_frame = runtime.release_observations_without_delivery_mark()
++    evidence = current_delivery_evidence(runtime, release_frame)
++    if mismatch == "track_id":
++        evidence["placement"]["ball_track_id"] = "not-an-observed-track"
++    elif mismatch == "category":
++        evidence["placement"]["ball_category"] = "blue-ball"
++    elif mismatch == "position":
++        evidence["placement"]["ball_position_m"]["x"] += .01
++    elif mismatch == "bbox":
++        evidence["placement"]["ball_bbox"]["x"] += 1
++    elif mismatch == "preexisting_id":
++        evidence["release_observation"]["preexisting_ball_ids"] = [evidence["placement"]["ball_track_id"]]
++    else:
++        evidence["release_observation"]["simulation_time_s"] += .1
++    before = copy.deepcopy(runtime.perception.timeline())
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.timeline() == before
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++
++
++def test_an_older_nearby_track_cannot_bind_even_if_preexisting_list_omits_it():
++    runtime = DeliveryRuntime(nearby_reds=True)
++    release_frame = runtime.release_observations_without_delivery_mark()
++    witness = next(d for d in runtime.snapshot["perception"]["detections"]
++                   if d["track_id"] in runtime.preexisting_ids)
++    evidence = current_delivery_evidence(runtime, release_frame, witness)
++    evidence["release_observation"]["preexisting_ball_ids"] = []
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++    assert all(runtime.perception.get_object(oid)["state"] != "DELIVERED" for oid in runtime.preexisting_ids)
++
++
++def test_pre_release_track_at_the_same_clock_time_is_not_a_new_release_identity():
++    runtime = DeliveryRuntime()
++    runtime.phase, runtime.forward = "after_retreat", 125
++    runtime.observe()
++    older_id = runtime.current_release_witness()["track_id"]
++    runtime.phase, runtime.forward = "before_release", 150
++    runtime.observe()
++    original_call = runtime.call
++
++    def release_without_advancing_clock(method, params):
++        previous_time = runtime.bridge.seconds
++        result = original_call(method, params)
++        if method == "release":
++            runtime.bridge.seconds = previous_time
++        return result
++
++    runtime.call = release_without_advancing_clock
++    release_frame = runtime.release_observations_without_delivery_mark()
++    witness = runtime.current_release_witness()
++    assert witness["track_id"] == older_id
++    birth = next(row for row in runtime.perception.timeline() if row["object_id"] == older_id)
++    assert birth["first_seen_s"] == runtime.release_observation_time
++    evidence = current_delivery_evidence(runtime, release_frame)
++    assert evidence["release_observation"]["preexisting_ball_ids"] == []
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++
++
++def test_ambiguous_new_post_release_balls_cannot_authorize_identity_binding():
++    runtime = DeliveryRuntime()
++    # Three simultaneous new detections are public, but none has evidence
++    # distinguishing it as the object just released from the gripper.
++    runtime.nearby_reds = True
++    outcome = Actions(runtime).place()
++    assert outcome["success"] is False
++    assert outcome["evidence"]["candidate_witnesses"] == 3
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "RELEASED_UNVERIFIED"
++    assert not any(row["state"] == "DELIVERED" for row in red_rows(runtime))
++
++
++def test_current_ambiguous_sensor_witnesses_override_a_claimed_unique_count():
++    runtime = DeliveryRuntime()
++    runtime.nearby_reds = True
++    release_frame = runtime.release_observations_without_delivery_mark()
++    evidence = current_delivery_evidence(runtime, release_frame)
++    assert evidence["candidate_witnesses"] == 1
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++
++
++def test_alias_keeps_raw_timeline_and_cannot_be_bound_again():
++    runtime = DeliveryRuntime()
++    original_before = copy.deepcopy(runtime.perception.timeline()[0])
++    outcome = Actions(runtime).place()
++    assert outcome["success"] is True
++    witness_id = outcome["evidence"]["placement"]["ball_track_id"]
++    timeline = {row["object_id"]: row for row in runtime.perception.timeline()}
++    assert timeline[witness_id]["alias_of"] == runtime.original_id
++    assert timeline[witness_id]["first_seen_frame_id"] == outcome["evidence"]["placement"]["frame_id"]
++    assert timeline[runtime.original_id]["accepted_hit_poses"] == original_before["accepted_hit_poses"]
++    assert runtime.perception.get_object(witness_id)["alias_of"] == runtime.original_id
++    assert witness_id not in {row["id"] for row in runtime.perception.objects()}
++    recorded = copy.deepcopy(runtime.perception.action_evidence())
++    assert recorded[-1]["delivery_alias"]["witness_id"] == witness_id
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=outcome["evidence"]) is False
++    assert runtime.perception.action_evidence() == recorded

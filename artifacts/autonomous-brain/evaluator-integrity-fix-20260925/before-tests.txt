@@ -1,0 +1,749 @@
+.....................FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                  [100%]
+=================================== FAILURES ===================================
+___________ test_final_sample_must_match_exact_export_end_tick[None] ___________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_final_sample_must_match_e0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+tick = None
+
+    @pytest.mark.parametrize("tick", [None, 4999, 5001, True])
+    def test_final_sample_must_match_exact_export_end_tick(tmp_path, fixture_data, tick):
+        fixture_data["record"]["native"]["samples"][-1]["tick"] = tick
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:272: AssertionError
+___________ test_final_sample_must_match_exact_export_end_tick[4999] ___________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_final_sample_must_match_e1')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+tick = 4999
+
+    @pytest.mark.parametrize("tick", [None, 4999, 5001, True])
+    def test_final_sample_must_match_exact_export_end_tick(tmp_path, fixture_data, tick):
+        fixture_data["record"]["native"]["samples"][-1]["tick"] = tick
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:272: AssertionError
+___________ test_final_sample_must_match_exact_export_end_tick[5001] ___________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_final_sample_must_match_e2')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+tick = 5001
+
+    @pytest.mark.parametrize("tick", [None, 4999, 5001, True])
+    def test_final_sample_must_match_exact_export_end_tick(tmp_path, fixture_data, tick):
+        fixture_data["record"]["native"]["samples"][-1]["tick"] = tick
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:272: AssertionError
+___________ test_final_sample_must_match_exact_export_end_tick[True] ___________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_final_sample_must_match_e3')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+tick = True
+
+    @pytest.mark.parametrize("tick", [None, 4999, 5001, True])
+    def test_final_sample_must_match_exact_export_end_tick(tmp_path, fixture_data, tick):
+        fixture_data["record"]["native"]["samples"][-1]["tick"] = tick
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:272: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[no_done] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'no_done'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[failed_done] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_1')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'failed_done'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[missing_reference] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_2')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'missing_reference'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[unknown_reference] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_3')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'unknown_reference'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[wrong_round] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_4')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'wrong_round'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[stale_tick] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_5')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'stale_tick'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_ test_terminal_done_requires_a_successful_action_and_final_observation[holding] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_terminal_done_requires_a_6')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'holding'
+
+    @pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+    def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+        last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+        if mutation == "no_done":
+            last["action"]["action"] = "look_around"
+        elif mutation == "failed_done":
+            last["result"]["success"] = False
+        elif mutation == "missing_reference":
+            last["result"].pop("evidence")
+        elif mutation == "unknown_reference":
+            last["result"]["evidence"]["after_observation"] = 9
+        elif mutation == "wrong_round":
+            observation["round"] = 1
+        elif mutation == "stale_tick":
+            observation["observation"]["tick"] = 4999
+        else:
+            observation["holding"]["holding"] = True
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:294: AssertionError
+_______ test_source_proof_failures_cannot_pass_final_acceptance[changed] _______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'changed'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+_____ test_source_proof_failures_cannot_pass_final_acceptance[flag_false] ______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can1')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...ccccc'}, ...}, 'sourcesUnchanged': False, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'flag_false'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+____ test_source_proof_failures_cannot_pass_final_acceptance[summary_hash] _____
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can2')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'summary_hash'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+_______ test_source_proof_failures_cannot_pass_final_acceptance[missing] _______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can3')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...0.5}], 'metadata': {'map': 'map-05', 'maxRounds': 200, 'maxSimulationSeconds': 1200, 'process': {'code': 0}, ...}, ...}
+mutation = 'missing'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+_____ test_source_proof_failures_cannot_pass_final_acceptance[unsupported] _____
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can4')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'unsupported'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+___ test_source_proof_failures_cannot_pass_final_acceptance[malformed_hash] ____
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_source_proof_failures_can5')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+mutation = 'malformed_hash'
+
+    @pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+    def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+        if mutation == "changed":
+            fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+        elif mutation == "flag_false":
+            fixture_data["driver_summary"]["sourcesUnchanged"] = False
+        elif mutation == "summary_hash":
+            fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+        elif mutation == "missing":
+            fixture_data.pop("source_manifest")
+            fixture_data.pop("driver_summary")
+        elif mutation == "unsupported":
+            fixture_data["source_manifest"]["version"] = "unknown/v1"
+        else:
+            fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:314: AssertionError
+_____ test_known_source_proof_is_reported_without_reading_current_runtime ______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_known_source_proof_is_rep0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+
+    def test_known_source_proof_is_reported_without_reading_current_runtime(tmp_path, fixture_data):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+>       assert result["source_proof"]["status"] == "verified"
+E       KeyError: 'source_proof'
+
+tests/test_brain_evaluation.py:321: KeyError
+________ test_missing_archive_sidecar_is_not_a_fallback_integrity_pass _________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_missing_archive_sidecar_i0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+
+    def test_missing_archive_sidecar_is_not_a_fallback_integrity_pass(tmp_path, fixture_data):
+        run = write_fixture(tmp_path, fixture_data)
+        (run / "evidence.json").unlink()
+        result = evaluation.evaluate_run(run)
+>       assert not result["success"]
+E       assert not True
+
+tests/test_brain_evaluation.py:330: AssertionError
+_ test_report_does_not_call_active_event_a_valid_delivery_when_final_position_fails _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_report_does_not_call_acti0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cccccc'}, ...}, 'sourcesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}], ...}
+
+    def test_report_does_not_call_active_event_a_valid_delivery_when_final_position_fails(tmp_path, fixture_data):
+        fixture_data["record"]["native"]["samples"][-1]["packages"][0]["x"] = 20
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+        assert not result["success"]
+        report = evaluation.report_text(result)
+>       assert "最终有效送达" not in report
+E       AssertionError: assert '最终有效送达' not in '# 小车自主大脑离线评...<新的报告目录>`。\n'
+E         
+E         '最终有效送达' is contained here:
+E            | 首次抓到 | 最终有效送达 |
+E         ?           ++++++
+E           |---|---|---:|---:|---:|---:|
+E           | truth-red-east | unrelated-wm-0 | 2.000000 | 3.000000 | 10.000000 | 20.000000 |
+E           | truth-red-west | unrelated-wm-1 | 2.000000 | 3.000000 | 30.000000 | 40.000000 |...
+E         
+E         ...Full output truncated (41 lines hidden), use '-vv' to show
+
+tests/test_brain_evaluation.py:339: AssertionError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[True-True-match-pick] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'pick', claimed = True, actual = True, status = 'match'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[True-True-match-place] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_1')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'place', claimed = True, actual = True, status = 'match'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[False-False-match-pick] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_2')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'pick', claimed = False, actual = False, status = 'match'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[False-False-match-place] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_3')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'place', claimed = False, actual = False, status = 'match'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[True-False-false_positive-pick] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_4')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'pick', claimed = True, actual = False, status = 'false_positive'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[True-False-false_positive-place] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_5')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'place', claimed = True, actual = False, status = 'false_positive'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[False-True-false_negative-pick] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_6')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'pick', claimed = False, actual = True, status = 'false_negative'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_ test_independent_judge_counts_bound_pick_and_place_outcomes[False-True-false_negative-place] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_independent_judge_counts_7')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+action = 'place', claimed = False, actual = True, status = 'false_negative'
+
+    @pytest.mark.parametrize("action", ["pick", "place"])
+    @pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                      (True, False, "false_positive"), (False, True, "false_negative")])
+    def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+        result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+>       judge = result["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:384: KeyError
+_____ test_judge_marks_missing_or_ambiguous_evidence_unverifiable[binding] _____
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_judge_marks_missing_or_am0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+missing = 'binding'
+
+    @pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+    def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+        data = judge_fixture(fixture_data, "pick", True, True)
+        if missing == "binding":
+            data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+            data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+        elif missing == "sample":
+            data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+        elif missing == "motion":
+            data.pop("motions")
+        elif missing == "reference":
+            data["rounds"][1]["result"]["evidence"].pop("before_observation")
+        else:
+            data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+>       judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:406: KeyError
+_____ test_judge_marks_missing_or_ambiguous_evidence_unverifiable[sample] ______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_judge_marks_missing_or_am1')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+missing = 'sample'
+
+    @pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+    def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+        data = judge_fixture(fixture_data, "pick", True, True)
+        if missing == "binding":
+            data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+            data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+        elif missing == "sample":
+            data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+        elif missing == "motion":
+            data.pop("motions")
+        elif missing == "reference":
+            data["rounds"][1]["result"]["evidence"].pop("before_observation")
+        else:
+            data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+>       judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:406: KeyError
+_____ test_judge_marks_missing_or_ambiguous_evidence_unverifiable[motion] ______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_judge_marks_missing_or_am2')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+missing = 'motion'
+
+    @pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+    def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+        data = judge_fixture(fixture_data, "pick", True, True)
+        if missing == "binding":
+            data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+            data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+        elif missing == "sample":
+            data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+        elif missing == "motion":
+            data.pop("motions")
+        elif missing == "reference":
+            data["rounds"][1]["result"]["evidence"].pop("before_observation")
+        else:
+            data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+>       judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:406: KeyError
+____ test_judge_marks_missing_or_ambiguous_evidence_unverifiable[reference] ____
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_judge_marks_missing_or_am3')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+missing = 'reference'
+
+    @pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+    def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+        data = judge_fixture(fixture_data, "pick", True, True)
+        if missing == "binding":
+            data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+            data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+        elif missing == "sample":
+            data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+        elif missing == "motion":
+            data.pop("motions")
+        elif missing == "reference":
+            data["rounds"][1]["result"]["evidence"].pop("before_observation")
+        else:
+            data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+>       judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:406: KeyError
+_ test_judge_marks_missing_or_ambiguous_evidence_unverifiable[ambiguous_sample] _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_judge_marks_missing_or_am4')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...cesUnchanged': True, 'status': 'complete'}, 'llm': [{'elapsed_s': 0.25}, {'elapsed_s': 0.5}, {'elapsed_s': 0.25}], ...}
+missing = 'ambiguous_sample'
+
+    @pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+    def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+        data = judge_fixture(fixture_data, "pick", True, True)
+        if missing == "binding":
+            data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+            data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+        elif missing == "sample":
+            data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+        elif missing == "motion":
+            data.pop("motions")
+        elif missing == "reference":
+            data["rounds"][1]["result"]["evidence"].pop("before_observation")
+        else:
+            data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+>       judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+E       KeyError: 'judge'
+
+tests/test_brain_evaluation.py:406: KeyError
+__________ test_external_stop_error_is_separated_from_action_failure ___________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-110/test_external_stop_error_is_se0')
+fixture_data = {'bridge': [{'request': {'method': 'observe'}}], 'captures': [{'cameraPose': {'cx': 320, 'cy': 240, 'fx': 100, 'fy': 1...top', 'result': {'running': True, 'tick': 5000}, 'task_success': False, 'version': 'evaluator-requested-stop/v1'}, ...}
+
+    def test_external_stop_error_is_separated_from_action_failure(tmp_path, fixture_data):
+        fixture_data["summary"].update(status="failed", reason="BridgeError: turn: NOT_RUNNING")
+        fixture_data["rounds"][-1]["result"] = {"success": False, "reason": "turn: NOT_RUNNING", "error_type": "BridgeError"}
+        fixture_data["evaluator_stop"] = {"version": "evaluator-requested-stop/v1", "task_success": False,
+                                         "reason": "fixture stop", "result": {"running": True, "tick": 5000}}
+        result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+        assert not result["success"]
+>       assert result["metrics"]["failed_rounds"] == result["metrics"]["external_stop_failures"] == 1
+E       KeyError: 'failed_rounds'
+
+tests/test_brain_evaluation.py:419: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_brain_evaluation.py::test_final_sample_must_match_exact_export_end_tick[None]
+FAILED tests/test_brain_evaluation.py::test_final_sample_must_match_exact_export_end_tick[4999]
+FAILED tests/test_brain_evaluation.py::test_final_sample_must_match_exact_export_end_tick[5001]
+FAILED tests/test_brain_evaluation.py::test_final_sample_must_match_exact_export_end_tick[True]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[no_done]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[failed_done]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[missing_reference]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[unknown_reference]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[wrong_round]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[stale_tick]
+FAILED tests/test_brain_evaluation.py::test_terminal_done_requires_a_successful_action_and_final_observation[holding]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[changed]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[flag_false]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[summary_hash]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[missing]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[unsupported]
+FAILED tests/test_brain_evaluation.py::test_source_proof_failures_cannot_pass_final_acceptance[malformed_hash]
+FAILED tests/test_brain_evaluation.py::test_known_source_proof_is_reported_without_reading_current_runtime
+FAILED tests/test_brain_evaluation.py::test_missing_archive_sidecar_is_not_a_fallback_integrity_pass
+FAILED tests/test_brain_evaluation.py::test_report_does_not_call_active_event_a_valid_delivery_when_final_position_fails
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[True-True-match-pick]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[True-True-match-place]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[False-False-match-pick]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[False-False-match-place]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[True-False-false_positive-pick]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[True-False-false_positive-place]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[False-True-false_negative-pick]
+FAILED tests/test_brain_evaluation.py::test_independent_judge_counts_bound_pick_and_place_outcomes[False-True-false_negative-place]
+FAILED tests/test_brain_evaluation.py::test_judge_marks_missing_or_ambiguous_evidence_unverifiable[binding]
+FAILED tests/test_brain_evaluation.py::test_judge_marks_missing_or_ambiguous_evidence_unverifiable[sample]
+FAILED tests/test_brain_evaluation.py::test_judge_marks_missing_or_ambiguous_evidence_unverifiable[motion]
+FAILED tests/test_brain_evaluation.py::test_judge_marks_missing_or_ambiguous_evidence_unverifiable[reference]
+FAILED tests/test_brain_evaluation.py::test_judge_marks_missing_or_ambiguous_evidence_unverifiable[ambiguous_sample]
+FAILED tests/test_brain_evaluation.py::test_external_stop_error_is_separated_from_action_failure
+34 failed, 21 passed in 1.18s

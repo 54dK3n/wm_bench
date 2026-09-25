@@ -1,0 +1,186 @@
+--- a/autonomous_brain/perception.py
++++ b/autonomous_brain/perception.py
+@@ -391,37 +391,42 @@
+             return False
+         witness_id = placement.get("ball_track_id")
+         preexisting = release.get("preexisting_ball_ids")
+-        if (not isinstance(witness_id, str) or witness_id == object_id
++        if ("ball_track_id" not in placement
++                or (witness_id is not None and not isinstance(witness_id, str)) or witness_id == object_id
+                 or witness_id in self._delivery_aliases
+                 or not isinstance(preexisting, list) or not all(isinstance(oid, str) for oid in preexisting)
+                 or witness_id in preexisting):
+             return False
+         frame_id = str(placement.get("frame_id", ""))
+         boundary = self._observed_frames.get(str(release.get("frame_id", "")))
+-        birth = self._times.get(witness_id, {})
+-        birth_frame = self._observed_frames.get(birth.get("first_seen_frame_id"))
+-        if (frame_id != self._last_frame or boundary is None or birth_frame is None
++        if (frame_id != self._last_frame or boundary is None
+                 or type(release.get("simulation_time_s")) not in (int, float)
+                 or release.get("simulation_time_s") != boundary["simulation_time_s"]
+-                or birth_frame["index"] < boundary["index"]
+-                or birth["first_seen_s"] < boundary["simulation_time_s"]
+                 or simulation_time_s != self._last_timestamp):
+             return False
++        # The near-field pixel witness remains valid outside the WM admission
++        # window. Only an actual track needs release-identity/birth validation.
++        if witness_id is not None:
++            birth = self._times.get(witness_id, {})
++            birth_frame = self._observed_frames.get(birth.get("first_seen_frame_id"))
++            if (birth_frame is None or birth_frame["index"] < boundary["index"]
++                    or birth["first_seen_s"] < boundary["simulation_time_s"]
++                    or witness_id not in {track.obj_id for track in self.wm.get_scene()}):
++                return False
+         original = self.get_object(object_id)
+         category = original["category"]
+         witnesses = [d for d in self.last_evidence["detections"]
+-                     if d.get("track_id") == witness_id]
+-        if (len(witnesses) != 1 or placement.get("ball_category") != category
+-                or witnesses[0].get("category") != category
+-                or str(witnesses[0].get("frame_id")) != frame_id
+-                or witnesses[0].get("known_delivered_object_id")
+-                or placement.get("ball_position_m") != witnesses[0].get("position_m")
+-                or placement.get("ball_bbox") != witnesses[0].get("bbox")):
++                     if d.get("track_id") == witness_id and d.get("category") == category
++                     and str(d.get("frame_id")) == frame_id
++                     and not d.get("known_delivered_object_id")
++                     and placement.get("ball_position_m") == d.get("position_m")
++                     and placement.get("ball_bbox") == d.get("bbox")]
++        if len(witnesses) != 1 or placement.get("ball_category") != category:
+             return False
+         zones = [d for d in self.last_evidence["detections"]
+                  if d.get("category") == "storage-zone" and str(d.get("frame_id")) == frame_id
+                  and d.get("bbox") == placement.get("storage_bbox")]
+-        if len(zones) != 1 or witness_id not in {track.obj_id for track in self.wm.get_scene()}:
++        if len(zones) != 1:
+             return False
+         # Recheck the same unique pixel-witness gate as Actions.place; a
+         # claimed count of one cannot conceal another qualifying detection.
+@@ -432,7 +437,7 @@
+                  and not ball.get("known_delivered_object_id")
+                  and ball.get("track_id") not in preexisting
+                  and ball_inside_region(ball["bbox"], zone["bbox"])]
+-        if len(pairs) != 1 or pairs[0][0].get("track_id") != witness_id or pairs[0][1] != zones[0]:
++        if len(pairs) != 1 or pairs[0][0] != witnesses[0] or pairs[0][1] != zones[0]:
+             return False
+         try:
+             position = {key: _number(placement["ball_position_m"][key], f"ball_position_m.{key}")
+@@ -443,13 +448,15 @@
+         except (KeyError, TypeError, ValueError):
+             return False
+         self.wm.mark_removed(object_id, now=timestamp)
+-        self.wm.mark_removed(witness_id, now=timestamp)
+-        alias = {"alias_of": object_id, "aliased_s": timestamp,
+-                 "witness_frame_id": frame_id, "release_observation": copy.deepcopy(dict(release)),
+-                 "witness_position_m": copy.deepcopy(position), "category": category}
+-        self._delivery_aliases[witness_id] = object_id
+-        self._lifecycle[witness_id] = "DELIVERY_ALIAS"
+-        self._times[witness_id].update(copy.deepcopy(alias))
++        alias = None
++        if witness_id is not None:
++            self.wm.mark_removed(witness_id, now=timestamp)
++            alias = {"alias_of": object_id, "aliased_s": timestamp,
++                     "witness_frame_id": frame_id, "release_observation": copy.deepcopy(dict(release)),
++                     "witness_position_m": copy.deepcopy(position), "category": category}
++            self._delivery_aliases[witness_id] = object_id
++            self._lifecycle[witness_id] = "DELIVERY_ALIAS"
++            self._times[witness_id].update(copy.deepcopy(alias))
+         self._times[object_id]["delivery_witness_id"] = witness_id
+         track = self.wm.get_object(object_id, include_lost=True)
+         # The archived identity moves only with verified action/visual evidence.
+@@ -468,7 +475,7 @@
+         self._times[object_id]["delivered_position_m"] = copy.deepcopy(position)
+         self._action_evidence.append({"action": "place", "object_id": object_id,
+             "simulation_time_s": timestamp, "holding": False,
+-            "ball_in_storage": True, "delivery_alias": dict(alias, witness_id=witness_id),
++            "ball_in_storage": True, "delivery_alias": dict(alias, witness_id=witness_id) if alias else None,
+             "evidence": copy.deepcopy(dict(evidence))})
+         return True
+ 
+--- a/tests/test_brain_delivery_identity.py
++++ b/tests/test_brain_delivery_identity.py
+@@ -278,3 +278,83 @@
+     assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
+         simulation_time_s=runtime.bridge.seconds, evidence=outcome["evidence"]) is False
+     assert runtime.perception.action_evidence() == recorded
++
++
++class NearFieldDeliveryRuntime(DeliveryRuntime):
++    def public_detections(self):
++        items = super().public_detections()
++        if self.phase == "after_retreat":
++            items[0] = ball(35)
++        return items
++
++
++@pytest.mark.parametrize("nearby_reds", [False, True], ids=["single_ball", "two_other_known_reds"])
++def test_near_field_unique_pixel_witness_delivers_without_creating_an_alias(nearby_reds):
++    runtime = NearFieldDeliveryRuntime(nearby_reds=nearby_reds)
++    before = {oid: runtime.perception.get_object(oid) for oid in runtime.preexisting_ids}
++    outcome = Actions(runtime).place()
++    witness = runtime.current_release_witness()
++    assert witness["raw_distance_cm"] == 35
++    assert witness["fed_to_world_model"] is False
++    assert witness["track_id"] is None
++    assert outcome["evidence"]["candidate_witnesses"] == 1
++    assert outcome["success"] is True, outcome
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "DELIVERED"
++    assert {row["id"] for row in red_rows(runtime)} == {runtime.original_id, *runtime.preexisting_ids}
++    assert all("alias_of" not in row for row in runtime.perception.timeline())
++    assert runtime.perception.action_evidence()[-1].get("delivery_alias") is None
++    for oid, previous in before.items():
++        current = runtime.perception.get_object(oid)
++        assert current["state"] != "DELIVERED"
++        assert current["position_m"] == previous["position_m"]
++        p, q = current["position_m"], witness["position_m"]
++        assert 0 < ((p["x"] - q["x"]) ** 2 + (p["z"] - q["z"]) ** 2) ** .5 < .15
++    done = Actions(runtime).done()
++    assert done["success"] is not nearby_reds
++    if nearby_reds:
++        assert set(done["evidence"]["pending_objects"]) == runtime.preexisting_ids
++
++
++@pytest.mark.parametrize("mismatch", ["frame", "release_time", "bbox", "position"])
++def test_untracked_witness_still_requires_authentic_current_release_evidence(mismatch):
++    runtime = NearFieldDeliveryRuntime()
++    release_frame = runtime.release_observations_without_delivery_mark()
++    evidence = current_delivery_evidence(runtime, release_frame)
++    assert evidence["placement"]["ball_track_id"] is None
++    if mismatch == "frame":
++        evidence["placement"]["frame_id"] = release_frame
++    elif mismatch == "release_time":
++        evidence["release_observation"]["simulation_time_s"] += .1
++    elif mismatch == "bbox":
++        evidence["placement"]["ball_bbox"]["x"] += 1
++    else:
++        evidence["placement"]["ball_position_m"]["x"] += .01
++    before = copy.deepcopy(runtime.perception.timeline())
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.timeline() == before
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++
++
++def test_tracked_witness_cannot_bypass_identity_checks_by_claiming_no_track():
++    runtime = DeliveryRuntime()
++    release_frame = runtime.release_observations_without_delivery_mark()
++    evidence = current_delivery_evidence(runtime, release_frame)
++    assert evidence["placement"]["ball_track_id"] is not None
++    evidence["placement"]["ball_track_id"] = None
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"
++
++
++def test_two_untracked_near_field_witnesses_cannot_be_treated_as_one_none_identity():
++    runtime = NearFieldDeliveryRuntime()
++    release_frame = runtime.release_observations_without_delivery_mark()
++    runtime.public_detections = lambda: [ball(35, bearing=-3), ball(35, bearing=3), storage_bbox(close=False)]
++    runtime.observe()
++    balls = [d for d in runtime.snapshot["perception"]["detections"] if d["category"] == "red-ball"]
++    assert len(balls) == 2 and all(d["track_id"] is None for d in balls)
++    evidence = current_delivery_evidence(runtime, release_frame, balls[0])
++    assert runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
++        simulation_time_s=runtime.bridge.seconds, evidence=evidence) is False
++    assert runtime.perception.get_object(runtime.original_id)["state"] == "HELD"

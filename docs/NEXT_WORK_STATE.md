@@ -12,7 +12,9 @@
 - 第五局已导出 FAIL：42 轮、47 次调用、147.52 仿真秒，首球确认但没有抓放。47 次模型调用离线回放一致；运行中源码未变。停止原因为离线复现动作边界缺陷，不能误记为未执行的 go_to/place 在该局失败。Actions v6 修复下一路点选择、离路/受阻后退及另一已知球误作放置见证；LLM v8 提示优先处理已确认任务目标。207 项相关测试通过，[修复证据](../artifacts/autonomous-brain/action-safety-fix-20260925/REPORT.md)。
 - 第六局已导出 FAIL：46 轮、49 次调用、567.38 仿真秒；首个红球抓取成功，但导航循环、停靠观测冲突及下一状态缺少具体依据阻碍送达。完整证据见[失败分析](../artifacts/autonomous-brain/map05-run-06/FAILURE_ANALYSIS.md)。49 次模型调用离线回放一致。Actions v8 保留路线进度、识别路线尽头与重复状态，并按实时视觉作有界停靠校正；Runtime v2 补齐下一状态的观测依据。256 项整体测试通过，补充抓取证据字段后 43 项复验通过；[修复记录](../artifacts/autonomous-brain/route-visual-feedback-fix-20260925/REPORT.md)。
 - 第七局已完整保存 FAIL：首个红球抓取后，视觉停靠的一次斜向前进超过已观测左侧净空，随后离路；54 轮、57 次调用均已离线回放。失败记录见 [第七局分析](../artifacts/autonomous-brain/map05-run-07/FAILURE_ANALYSIS.md)。Actions v9 对直线接近按道路侧向/前方净空限幅，因曲率仍离路时只逆转最后一小段已测直线位移；近处目标先转向重获观测。Runtime v3 / LLM v9 明确物体方位与出口角的相反正负方向，携带净空失败依据；[修复记录](../artifacts/autonomous-brain/road-clearance-fix-20260925/REPORT.md)。
-- 下一局使用新目录 `artifacts/autonomous-brain/map05-run-08`。M5、WorldModel、确认/抓放几何规则、模型参数与每局上限不变；只有正式 map-05 成功后才能跑十布局。
+- 第八局已保存 FAIL：54 轮、64 次调用、226.04 仿真秒，首球抓取与绿色区前停靠成功，但 place 在 5 次平移和 3 次转向后用尽原联合预算，球仍在夹爪内；随后离路状态阻断导航。64 次模型调用均严格离线回放；[第八局分析](../artifacts/autonomous-brain/map05-run-08/FAILURE_ANALYSIS.md)。独立 evaluator v2 加入终态、源码证据和可绑定抓放 Judge 核验，历史结论不改写。
+- 当前修复：放置分别限制转向/平移，记录本次真实运动用于归路；放置判据与归路结果分开记录。Perception v5 用释放后同帧唯一见证关联重复轨迹；合法近场无新轨迹的见证仍可确认送达。Runtime v4 将归路成败与观测编号交给下一轮模型。原始轨迹、失败和回放日志全部保留。
+- 下一局使用新目录 `artifacts/autonomous-brain/map05-run-09`。M5、WorldModel、确认/抓放几何规则、模型参数与每局上限不变；只有正式 map-05 成功后才能跑十布局。
 
 ## 历史状态：v4 严格阶段验收
 

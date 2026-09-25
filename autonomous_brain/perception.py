@@ -20,8 +20,10 @@ from world_model.providers.guangyang import (
 )
 from world_model.types import Detection, FrameQuality, ObjectState
 
+from .actions import ball_inside_region
 
-VERSION = "autonomous-brain-perception/v4"
+
+VERSION = "autonomous-brain-perception/v5"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -89,6 +91,8 @@ class Perception:
         self._accepted_poses: dict[str, list[dict[str, Any]]] = {}
         self._action_evidence: list[dict[str, Any]] = []
         self._delivered_positions: dict[str, dict[str, Any]] = {}
+        self._delivery_aliases: dict[str, str] = {}
+        self._observed_frames: dict[str, dict[str, Any]] = {}
         self._last_timestamp: float | None = None
         self._last_frame: str | None = None
 
@@ -188,7 +192,7 @@ class Perception:
                 self.camera["width"], self.camera["height"]):
             raise ValueError("observation size differs from camera calibration")
         frame_id = str(observation["frameId"])
-        if frame_id == self._last_frame:
+        if frame_id in self._observed_frames:
             raise ValueError("a camera frame may update WorldModel only once")
         self.pose = odometry_to_pose(odometry)
         converted = [self._convert(item, frame_id, timestamp)
@@ -286,6 +290,7 @@ class Perception:
             times = self._times.setdefault(oid, {"object_id": oid,
                 "category": WM_TO_PUBLIC.get(track.name, track.name),
                 "first_seen_s": track.first_seen, "first_seen_round": round_index,
+                "first_seen_frame_id": frame_id,
                 "confirmed_s": None, "picked_s": None, "delivered_s": None})
             if track.hit_count > old_hits.get(oid, 0):
                 self._accepted_poses.setdefault(oid, []).append({
@@ -298,6 +303,8 @@ class Perception:
                 newly_confirmed.append(oid)
             self._history[oid] = self._row(track)
         self._last_timestamp, self._last_frame = timestamp, frame_id
+        self._observed_frames[frame_id] = {"index": len(self._observed_frames),
+                                          "simulation_time_s": timestamp}
         self.last_evidence = {
             "version": VERSION, "frame_id": frame_id, "tick": observation["tick"],
             "simulation_time_s": timestamp, "round": round_index,
@@ -323,15 +330,20 @@ class Perception:
                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
 
     def objects(self) -> list[dict[str, Any]]:
-        """Include lost/action-removed history, so forgetting cannot mean done."""
+        """Keep lost history, but count a verified release alias only once."""
         rows = []
         for oid in self._history:
+            if oid in self._delivery_aliases:
+                continue
             track = self.wm.get_object(oid, include_lost=True)
             if track is not None:
                 rows.append(self._row(track))
         return rows
 
     def get_object(self, object_id: str) -> dict[str, Any] | None:
+        if object_id in self._delivery_aliases:
+            track = self.wm.get_object(object_id, include_lost=True)
+            return dict(self._row(track), alias_of=self._delivery_aliases[object_id]) if track is not None else None
         return next((row for row in self.objects() if row["id"] == object_id), None)
 
     def confirmed(self, object_id: str) -> dict[str, Any] | None:
@@ -351,7 +363,7 @@ class Perception:
         row = self.get_object(object_id)
         if row is None or self._times[object_id]["confirmed_s"] is None:
             return False
-        if self._lifecycle.get(object_id) in ("HELD", "DELIVERED", "RELEASED_UNVERIFIED"):
+        if self._lifecycle.get(object_id) in ("HELD", "DELIVERED", "RELEASED_UNVERIFIED", "DELIVERY_ALIAS"):
             return False
         timestamp = _number(simulation_time_s, "simulation_time_s")
         if not self.wm.mark_removed(object_id, now=timestamp):
@@ -371,16 +383,81 @@ class Perception:
         if self._lifecycle.get(object_id) != "HELD":
             return False
         placement = evidence.get("placement")
-        if not isinstance(placement, Mapping) or not placement.get("frame_id"):
+        release = evidence.get("release_observation")
+        if (not isinstance(placement, Mapping) or not isinstance(release, Mapping)
+                or evidence.get("holding") is not False
+                or type(evidence.get("candidate_witnesses")) is not int or evidence["candidate_witnesses"] != 1
+                or not self.last_evidence):
             return False
-        if not all(key in placement for key in ("ball_position_m", "ball_bbox", "storage_bbox")):
+        witness_id = placement.get("ball_track_id")
+        preexisting = release.get("preexisting_ball_ids")
+        if ("ball_track_id" not in placement
+                or (witness_id is not None and not isinstance(witness_id, str)) or witness_id == object_id
+                or witness_id in self._delivery_aliases
+                or not isinstance(preexisting, list) or not all(isinstance(oid, str) for oid in preexisting)
+                or witness_id in preexisting):
             return False
-        position = {key: _number(placement["ball_position_m"][key], f"ball_position_m.{key}")
-                    for key in ("x", "z")}
-        self._bbox({"bbox": placement["ball_bbox"]})
-        self._bbox({"bbox": placement["storage_bbox"]})
-        timestamp = _number(simulation_time_s, "simulation_time_s")
+        frame_id = str(placement.get("frame_id", ""))
+        boundary = self._observed_frames.get(str(release.get("frame_id", "")))
+        if (frame_id != self._last_frame or boundary is None
+                or type(release.get("simulation_time_s")) not in (int, float)
+                or release.get("simulation_time_s") != boundary["simulation_time_s"]
+                or simulation_time_s != self._last_timestamp):
+            return False
+        # The near-field pixel witness remains valid outside the WM admission
+        # window. Only an actual track needs release-identity/birth validation.
+        if witness_id is not None:
+            birth = self._times.get(witness_id, {})
+            birth_frame = self._observed_frames.get(birth.get("first_seen_frame_id"))
+            if (birth_frame is None or birth_frame["index"] < boundary["index"]
+                    or birth["first_seen_s"] < boundary["simulation_time_s"]
+                    or witness_id not in {track.obj_id for track in self.wm.get_scene()}):
+                return False
+        original = self.get_object(object_id)
+        category = original["category"]
+        witnesses = [d for d in self.last_evidence["detections"]
+                     if d.get("track_id") == witness_id and d.get("category") == category
+                     and str(d.get("frame_id")) == frame_id
+                     and not d.get("known_delivered_object_id")
+                     and placement.get("ball_position_m") == d.get("position_m")
+                     and placement.get("ball_bbox") == d.get("bbox")]
+        if len(witnesses) != 1 or placement.get("ball_category") != category:
+            return False
+        zones = [d for d in self.last_evidence["detections"]
+                 if d.get("category") == "storage-zone" and str(d.get("frame_id")) == frame_id
+                 and d.get("bbox") == placement.get("storage_bbox")]
+        if len(zones) != 1:
+            return False
+        # Recheck the same unique pixel-witness gate as Actions.place; a
+        # claimed count of one cannot conceal another qualifying detection.
+        pairs = [(ball, zone) for ball in self.last_evidence["detections"]
+                 for zone in self.last_evidence["detections"]
+                 if ball["category"] == category and "position_m" in ball
+                 and zone["category"] == "storage-zone"
+                 and not ball.get("known_delivered_object_id")
+                 and ball.get("track_id") not in preexisting
+                 and ball_inside_region(ball["bbox"], zone["bbox"])]
+        if len(pairs) != 1 or pairs[0][0] != witnesses[0] or pairs[0][1] != zones[0]:
+            return False
+        try:
+            position = {key: _number(placement["ball_position_m"][key], f"ball_position_m.{key}")
+                        for key in ("x", "z")}
+            self._bbox({"bbox": placement["ball_bbox"]})
+            self._bbox({"bbox": placement["storage_bbox"]})
+            timestamp = _number(simulation_time_s, "simulation_time_s")
+        except (KeyError, TypeError, ValueError):
+            return False
         self.wm.mark_removed(object_id, now=timestamp)
+        alias = None
+        if witness_id is not None:
+            self.wm.mark_removed(witness_id, now=timestamp)
+            alias = {"alias_of": object_id, "aliased_s": timestamp,
+                     "witness_frame_id": frame_id, "release_observation": copy.deepcopy(dict(release)),
+                     "witness_position_m": copy.deepcopy(position), "category": category}
+            self._delivery_aliases[witness_id] = object_id
+            self._lifecycle[witness_id] = "DELIVERY_ALIAS"
+            self._times[witness_id].update(copy.deepcopy(alias))
+        self._times[object_id]["delivery_witness_id"] = witness_id
         track = self.wm.get_object(object_id, include_lost=True)
         # The archived identity moves only with verified action/visual evidence.
         # Its original observation position and confirmation views stay logged.
@@ -398,7 +475,8 @@ class Perception:
         self._times[object_id]["delivered_position_m"] = copy.deepcopy(position)
         self._action_evidence.append({"action": "place", "object_id": object_id,
             "simulation_time_s": timestamp, "holding": False,
-            "ball_in_storage": True, "evidence": copy.deepcopy(dict(evidence))})
+            "ball_in_storage": True, "delivery_alias": dict(alias, witness_id=witness_id) if alias else None,
+            "evidence": copy.deepcopy(dict(evidence))})
         return True
 
     def mark_release_unverified(self, object_id: str, *, simulation_time_s: float,

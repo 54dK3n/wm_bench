@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,os,sys\nfrom pathlib import Path\nfrom unittest.mock import patch\nroot=Path.cwd()\nmanifest=json.loads((root/'artifacts/autonomous-brain/delivery-identity-fix-20260925/shadow-manifest.json').read_text())\nshadow=(root/manifest['shadow_directory']).resolve()\nsys.dont_write_bytecode=True\nsys.path.insert(0,str(root/'vendor/wm_kit_opt2'))\nsys.path.insert(0,str(shadow))\nimport autonomous_brain.actions as actions\nimport autonomous_brain.perception as perception\nfor module in (actions,perception):assert Path(module.__file__).resolve().is_relative_to(shadow)\nprint(json.dumps({'loaded_source':{m.__name__:os.path.relpath(m.__file__,root) for m in (actions,perception)}}))\nimport pytest\nwith patch('urllib.request.urlopen',side_effect=AssertionError('offline tests forbid network')) as http, patch('socket.create_connection',side_effect=AssertionError('offline tests forbid network')) as network:\n result=pytest.main(['-q']+[str(shadow/'tests'/name) for name in ['test_brain_delivery_identity.py', 'test_brain_perception.py', 'test_brain_actions.py', 'test_brain_actions_navigation_regression.py', 'test_brain_route_progress.py', 'test_brain_visual_standoff.py', 'test_brain_road_clearance.py']])\n assert http.call_count==network.call_count==0\n print(json.dumps({'network_calls':http.call_count+network.call_count}))\nraise SystemExit(result)\n"
+  ]
+}

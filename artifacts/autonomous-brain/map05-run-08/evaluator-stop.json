@@ -1,0 +1,22 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "timestamp": "2026-09-25T08:16:21.937Z",
+  "reason": "place alignment exhausted combined turn/translation budget and left car off observed road; later navigation declined movement. Preserve trial before changing controller.",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "source_commit": "fa5c0f18487171a5d294080500deccb54f718d4d",
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 11302,
+    "errors": []
+  },
+  "evidence": [
+    "map-05-run-1/brain/rounds.jsonl: rounds 47-52",
+    "map-05-run-1/brain/observations.jsonl: observations 233-241",
+    "map-05-run-1/brain/motions.jsonl: motions 141-148"
+  ],
+  "note": "One red ball grasped; no release or delivery. This does not prove every remaining action was impossible: place could be retried, but the observed missing road-return path warrants fixing the controller."
+}

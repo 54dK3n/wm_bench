@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,sys\nfrom pathlib import Path\nfrom unittest.mock import patch\nsys.dont_write_bytecode=True\nsys.path.insert(0,str(Path.cwd()/'vendor/wm_kit_opt2'))\nimport pytest\nwith patch('urllib.request.urlopen',side_effect=AssertionError('offline test forbids network')) as http, patch('socket.create_connection',side_effect=AssertionError('offline test forbids network')) as network:\n result=pytest.main(['-q','tests/test_brain_delivery_identity.py'])\n assert http.call_count==network.call_count==0\n print(json.dumps({'network_calls':http.call_count+network.call_count}))\nraise SystemExit(result)\n"
+  ],
+  "exit_code": 1
+}

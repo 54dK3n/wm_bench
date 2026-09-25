@@ -7,7 +7,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v9"
+VERSION = "autonomous-brain-actions/v11"
 
 
 def road_translation_limit(road, method, requested_cm):
@@ -337,8 +337,10 @@ class Actions:
                 reacquired_from.add(current_pose)
                 self.turn(-bearing)
                 continue
-            if (remaining <= 65 and observed is not None
-                    and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])):
+            if (observed is not None
+                    and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])
+                    and type(observed.get("distance_cm")) in (int, float)
+                    and math.isfinite(observed["distance_cm"]) and 0 < observed["distance_cm"] <= 65):
                 return self.visual_standoff(object_id)
             if 25 <= remaining <= 40:
                 self.turn(-bearing)
@@ -507,10 +509,143 @@ class Actions:
                     return self.result(False, "pick_retry_blocked", attempts=attempts, actuator_result=result)
         return self.result(False, "three_grab_attempts_failed", object_id=object_id, attempts=attempts)
 
+    def return_place_path(self, trajectory):
+        """Undo measured place motions until fresh sensors reacquire the road.
+
+        Manipulation may leave the road. Only this call's observed straight
+        segments and rotations can supply its return path, never a guessed
+        fixed retreat or a line to a remembered map location.
+        """
+        returned = []
+        anchors = [row["before_observation"] for row in trajectory if row["before_on_road"]]
+        anchors += [row["after_observation"] for row in trajectory if row["after_on_road"]]
+
+        def outcome(success, reason, **details):
+            return {"success": success, "reason": reason,
+                    "on_road": self.s["road"]["onRoad"],
+                    "anchor_observation": max(anchors) if anchors else None,
+                    "after_observation": self.s["observation_index"], "motions": returned, **details}
+
+        if self.s["road"]["onRoad"]:
+            return outcome(True, "already_on_observed_road")
+        if not anchors:
+            return outcome(False, "no_observed_road_entry")
+        blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
+        for row in reversed(trajectory):
+            before, after = row["before"], row["after"]
+            current = self.s["odometry"]
+            if (distance(position(current), position(after)) * 100 > .2
+                    or abs(wrap(current["headingDeg"] - after["headingDeg"])) > .2):
+                return outcome(False, "recorded_path_pose_mismatch")
+            method, params = row["method"], row["params"]
+            measured = distance(position(before), position(after)) * 100
+            heading_change = wrap(after["headingDeg"] - before["headingDeg"])
+            if method in {"forward", "backward"}:
+                direction = 1 if method == "forward" else -1
+                theta = math.radians(before["headingDeg"])
+                dx = after["rightCm"] - before["rightCm"]
+                dz = after["forwardCm"] - before["forwardCm"]
+                along = direction * (-math.sin(theta) * dx + math.cos(theta) * dz)
+                across = math.cos(theta) * dx + math.sin(theta) * dz
+                if (abs(heading_change) > .2 or abs(across) > .2 or along < -.1
+                        or measured > params["distanceCm"] + .2):
+                    return outcome(False, "recorded_translation_not_reversible")
+                inverse = "backward" if method == "forward" else "forward"
+                # The recorded endpoint fixes a finite maximum number of
+                # corrections even when the actuator makes partial progress.
+                for _ in range(math.ceil(measured / 7) + 1):
+                    gap = distance(position(self.s["odometry"]), position(before)) * 100
+                    if gap <= .2:
+                        break
+                    requested = min(7, gap)
+                    if inverse == "forward":
+                        front = self.s["road"].get("frontClearanceCm")
+                        if (type(front) not in (int, float) or not math.isfinite(front)
+                                or front < requested + .1):
+                            return outcome(False, "recorded_return_blocked",
+                                           block_reason="current_front_clearance",
+                                           front_clearance_cm=front if type(front) in (int, float)
+                                           and math.isfinite(front) else None, requested_cm=requested)
+                    old = dict(self.s["odometry"])
+                    old_observation = self.s["observation_index"]
+                    result = self.move(inverse, {"distanceCm": requested, "speed": 20})
+                    returned.append({"method": inverse, "distance_cm": min(7, gap),
+                                     "before_observation": old_observation,
+                                     "after_observation": self.s["observation_index"],
+                                     "actuator_result": result})
+                    if result.get("stoppedBy") in blocked:
+                        return outcome(False, "recorded_return_blocked")
+                    now = self.s["odometry"]
+                    new_gap = distance(position(now), position(before)) * 100
+                    moved = distance(position(old), position(now)) * 100
+                    lateral = (math.cos(theta) * (now["rightCm"] - before["rightCm"])
+                               + math.sin(theta) * (now["forwardCm"] - before["forwardCm"]))
+                    if (abs(wrap(now["headingDeg"] - old["headingDeg"])) > .2
+                            or abs(lateral) > .25 or moved > min(7, gap) + .2
+                            or new_gap >= gap - .01):
+                        return outcome(False, "recorded_return_no_verified_progress")
+                    if self.s["road"]["onRoad"]:
+                        return outcome(True, "returned_to_observed_road")
+                if distance(position(self.s["odometry"]), position(before)) * 100 > .2:
+                    return outcome(False, "recorded_return_segment_incomplete")
+            elif method == "turn":
+                if measured > .2 or abs(heading_change) > abs(params["angleDeg"]) + .2:
+                    return outcome(False, "recorded_rotation_not_reversible")
+                if abs(heading_change) >= 1:
+                    old_observation = self.s["observation_index"]
+                    result = self.move("turn", {"angleDeg": -heading_change, "speed": 50})
+                    returned.append({"method": "turn", "angle_deg": -heading_change,
+                                     "before_observation": old_observation,
+                                     "after_observation": self.s["observation_index"],
+                                     "actuator_result": result})
+                    if result.get("stoppedBy") in blocked:
+                        return outcome(False, "recorded_return_blocked")
+                    current = self.s["odometry"]
+                    if (distance(position(current), position(before)) * 100 > .2
+                            or abs(wrap(current["headingDeg"] - before["headingDeg"])) > .2):
+                        return outcome(False, "recorded_return_rotation_incomplete")
+                    if self.s["road"]["onRoad"]:
+                        return outcome(True, "returned_to_observed_road")
+            elif measured > .2 or abs(heading_change) > .2:
+                return outcome(False, "unrecorded_place_displacement")
+            if row["before_observation"] == max(anchors):
+                return outcome(False, "recorded_entry_not_on_road")
+        return outcome(False, "recorded_return_did_not_reach_road")
+
     def place(self):
+        trajectory = []
+
+        def place_move(method, params):
+            before = dict(self.s["odometry"])
+            before_observation = self.s["observation_index"]
+            before_on_road = self.s["road"]["onRoad"]
+            result = self.move(method, params)
+            trajectory.append({"method": method, "params": dict(params),
+                               "before": before, "after": dict(self.s["odometry"]),
+                               "before_observation": before_observation,
+                               "after_observation": self.s["observation_index"],
+                               "before_on_road": before_on_road,
+                               "after_on_road": self.s["road"]["onRoad"]})
+            return result
+
+        def finish(success, reason, **evidence):
+            if not success:
+                regions = [d for d in self.s["perception"]["detections"]
+                           if d["category"] == "storage-zone" and "distance_cm" in d]
+                if regions:
+                    # Capture the failed gate's current camera reading before
+                    # recovery changes pose, view, or the generic result frame.
+                    region = dict(min(regions, key=lambda d: d["distance_cm"]))
+                    region.setdefault("frame_id", str(self.s["observation"]["frameId"]))
+                    evidence.setdefault("detection", region)
+            # Placement evidence is decided before retracing. A blocked road
+            # return cannot revoke an observed delivery or establish one.
+            recovery = self.return_place_path(trajectory)
+            return self.result(success, reason, place_trajectory=trajectory,
+                               road_return=recovery, **evidence)
         if self.r.pending_grasp and self.s["holding"]["holding"]:
             pending = self.r.pending_grasp
-            self.move("backward", {"distanceCm": 16, "speed": 30})
+            place_move("backward", {"distanceCm": 16, "speed": 30})
             matches = [d for d in self.s["perception"]["detections"]
                        if d["category"] == pending["category"] and "position_m" in d
                        and distance(pending["original_position_m"], (d["position_m"]["x"], d["position_m"]["z"])) < 0.15]
@@ -522,31 +657,45 @@ class Actions:
                 self.r.pending_grasp = None
         object_id = self.r.held_object_id
         if not self.s["holding"]["holding"] or object_id is None:
-            return self.result(False, "no_observation_confirmed_held_object")
+            return finish(False, "no_observation_confirmed_held_object")
         category = self.r.perception.get_object(object_id)["category"]
-        for _ in range(8):
-            regions = [d for d in self.s["perception"]["detections"] if d["category"] == "storage-zone" and "distance_cm" in d]
-            if not regions:
-                return self.result(False, "storage_region_not_observed")
-            region = min(regions, key=lambda d: d["distance_cm"])
-            if region["distance_cm"] > 65:
-                return self.result(False, "storage_region_too_far", distance_cm=region["distance_cm"])
-            if abs(region["bearing_deg"]) > 3:
-                self.turn(-region["bearing_deg"])
-                continue
+        blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
+        for translations in range(9):
+            # Turning does not spend the eight-translation budget. Three
+            # fresh alignment turns are allowed before each translation.
+            for alignment in range(4):
+                regions = [d for d in self.s["perception"]["detections"]
+                           if d["category"] == "storage-zone" and "distance_cm" in d]
+                if not regions:
+                    return finish(False, "storage_region_not_observed")
+                region = min(regions, key=lambda d: d["distance_cm"])
+                if region["distance_cm"] > 65:
+                    return finish(False, "storage_region_too_far", distance_cm=region["distance_cm"])
+                if abs(region["bearing_deg"]) <= 3:
+                    break
+                if alignment == 3 or translations == 8:
+                    return finish(False, "storage_alignment_did_not_converge")
+                result = place_move("turn", {"angleDeg": wrap(-region["bearing_deg"]), "speed": 50})
+                if result.get("stoppedBy") in blocked:
+                    return finish(False, "storage_approach_blocked", actuator_result=result)
             if region["distance_cm"] <= 19:
                 break
-            self.move("forward", {"distanceCm": min(7, region["distance_cm"] - 18), "speed": 30})
-        else:
-            return self.result(False, "storage_alignment_did_not_converge")
+            if translations == 8:
+                return finish(False, "storage_alignment_did_not_converge")
+            result = place_move("forward", {"distanceCm": min(7, region["distance_cm"] - 18), "speed": 30})
+            if result.get("stoppedBy") in blocked:
+                return finish(False, "storage_approach_blocked", actuator_result=result)
         # Another previously known ball cannot witness this object's release.
         other_known_ball_ids = {row["id"] for row in self.r.perception.objects()
                                 if row["category"] == category and row["id"] != object_id}
-        self.move("release", {})
+        place_move("release", {})
         if self.s["holding"]["holding"]:
-            return self.result(False, "release_did_not_empty_gripper")
+            return finish(False, "release_did_not_empty_gripper")
+        release_observation = {"frame_id": self.s["observation"]["frameId"],
+                               "simulation_time_s": self.r.bridge.seconds,
+                               "preexisting_ball_ids": sorted(other_known_ball_ids)}
         # Move back to see the released ball and complete storage region.
-        self.move("backward", {"distanceCm": 25, "speed": 30})
+        place_move("backward", {"distanceCm": 25, "speed": 30})
         detections = self.s["perception"]["detections"]
         witnesses = [(ball, zone) for ball in detections for zone in detections
             if ball["category"] == category and "position_m" in ball and zone["category"] == "storage-zone"
@@ -556,16 +705,18 @@ class Actions:
         placement = None
         if len(witnesses) == 1:
             ball, zone = witnesses[0]
-            placement = {"ball_position_m": ball["position_m"], "ball_bbox": ball["bbox"],
+            placement = {"ball_track_id": ball.get("track_id"), "ball_category": ball["category"],
+                         "ball_position_m": ball["position_m"], "ball_bbox": ball["bbox"],
                          "storage_bbox": zone["bbox"], "frame_id": self.s["observation"]["frameId"]}
         evidence = {"holding": False, "post_observation": self.s["observation_index"],
+                    "release_observation": release_observation,
                     "placement": placement, "candidate_witnesses": len(witnesses)}
         marked = self.r.perception.mark_delivered(object_id, holding=False, ball_in_storage=placement is not None,
                     simulation_time_s=self.r.bridge.seconds, evidence=evidence)
         if not marked:
             self.r.perception.mark_release_unverified(object_id, simulation_time_s=self.r.bridge.seconds, evidence=evidence)
         self.r.held_object_id = None
-        return self.result(marked, "ball_observed_in_storage" if marked else "released_ball_not_verified_in_storage",
+        return finish(marked, "ball_observed_in_storage" if marked else "released_ball_not_verified_in_storage",
                            object_id=object_id, **evidence)
 
     def done(self):

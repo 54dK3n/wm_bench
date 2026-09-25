@@ -1,0 +1,40 @@
+[
+  {
+    "name": "regressions-before",
+    "exit_code": 1,
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "/private/tmp/wm-brain-place-shadow-au1enl9p/tests/test_brain_place_path_recovery.py",
+      "/private/tmp/wm-brain-place-shadow-au1enl9p/tests/test_brain_visual_range_dispatch_regression.py"
+    ],
+    "summary": "23 failed, 4 passed in 0.14s",
+    "output_file": "regressions-before.txt"
+  },
+  {
+    "name": "related-after",
+    "exit_code": 0,
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/test_brain_actions.py",
+      "tests/test_brain_actions_navigation_regression.py",
+      "tests/test_brain_road_clearance.py",
+      "tests/test_brain_route_progress.py",
+      "tests/test_brain_visual_standoff.py",
+      "tests/test_brain_place_path_recovery.py",
+      "tests/test_brain_visual_range_dispatch_regression.py",
+      "tests/test_brain_delivery_identity.py"
+    ],
+    "summary": "101 passed in 0.14s",
+    "output_file": "related-after.txt"
+  }
+]

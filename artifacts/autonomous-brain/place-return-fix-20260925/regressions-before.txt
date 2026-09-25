@@ -1,0 +1,395 @@
+FFFFFFFFFFFFFFFFFFFFFF....F                                              [100%]
+=================================== FAILURES ===================================
+_ test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget _
+
+    def test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget():
+        # Run08 r47's observed distance/bearing sequence through its eighth motion,
+        # followed by two explicitly synthetic views that allow a sixth approach.
+        views = [(33.8865303, 2.5651), (23.8832029, 3.5857), (23.898327, -1.2347),
+                 (21.2945146, 0), (20.7190282, 0), (21.3470637, 19.3271),
+                 (20.2543594, 6.9127), (19.9293573, -1.1816), (19.5021733, -4.6845),
+                 (19.4, 0), (18, 0)]
+        runtime, motions, _, objects, evidence = place_runtime(views)
+        result = Actions(runtime).place()
+>       assert result["success"] is True
+E       assert False is True
+
+../tests/test_brain_place_path_recovery.py:94: AssertionError
+________ test_eighth_translation_gets_a_fresh_gate_check_before_failing ________
+
+    def test_eighth_translation_gets_a_fresh_gate_check_before_failing():
+        runtime, motions, _, _, _ = place_runtime([(30, 0)] * 8 + [(18, 0)])
+        result = Actions(runtime).place()
+>       assert result["success"] is True
+E       assert False is True
+
+../tests/test_brain_place_path_recovery.py:107: AssertionError
+__ test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge ___
+
+    def test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge():
+        runtime, motions, _, _, _ = place_runtime([(30, 0)])
+        result = Actions(runtime).place()
+        assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
+        assert [method for method, _ in motions] == ["forward"] * 8
+>       assert result["evidence"]["detection"]["distance_cm"] == 30
+E       KeyError: 'detection'
+
+../tests/test_brain_place_path_recovery.py:116: KeyError
+_____ test_alignment_stops_after_three_observed_turns_without_translation ______
+
+    def test_alignment_stops_after_three_observed_turns_without_translation():
+        runtime, motions, _, _, _ = place_runtime([(30, 10)])
+        result = Actions(runtime).place()
+        assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
+>       assert [method for method, _ in motions] == ["turn"] * 3
+E       AssertionError: assert ['turn', 'tur..., 'turn', ...] == ['turn', 'turn', 'turn']
+E         
+E         Left contains 5 more items, first extra item: 'turn'
+E         Use -v to get more diff
+
+../tests/test_brain_place_path_recovery.py:125: AssertionError
+_______ test_failed_multiturn_approach_retraces_actual_segments_to_road ________
+
+    def test_failed_multiturn_approach_retraces_actual_segments_to_road():
+        near_origin = lambda odo: math.hypot(odo["rightCm"], odo["forwardCm"]) < .01
+        runtime, motions, logs, _, _ = place_runtime([(30, 0), (28, 30), (26, 0), None], road=near_origin)
+        result = Actions(runtime).place()
+        assert result["success"] is False and result["reason"] == "storage_region_not_observed"
+>       assert [method for method, _ in motions] == ["forward", "turn", "forward", "backward", "turn", "backward"]
+E       AssertionError: assert ['forward', 'turn', 'forward'] == ['forward', '...', 'backward']
+E         
+E         Right contains 3 more items, first extra item: 'backward'
+E         Use -v to get more diff
+
+../tests/test_brain_place_path_recovery.py:133: AssertionError
+_ test_return_uses_measured_partial_translation_instead_of_requested_distance __
+
+    def test_return_uses_measured_partial_translation_instead_of_requested_distance():
+        near_origin = lambda odo: abs(odo["forwardCm"]) < .01
+        runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin, actual_first_cm=3)
+        result = Actions(runtime).place()
+>       assert result["evidence"]["road_return"]["success"] is True
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:146: KeyError
+__________ test_failed_approach_stops_at_first_blocked_return_command __________
+
+    def test_failed_approach_stops_at_first_blocked_return_command():
+        near_origin = lambda odo: abs(odo["forwardCm"]) < .01
+        runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin, block_return=True)
+        result = Actions(runtime).place()
+        assert result["success"] is False
+>       assert result["evidence"]["road_return"]["reason"] == "recorded_return_blocked"
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:156: KeyError
+____ test_verified_delivery_is_separate_from_small_step_road_return[False] _____
+
+block_return = False
+
+    @pytest.mark.parametrize("block_return", [False, True])
+    def test_verified_delivery_is_separate_from_small_step_road_return(block_return):
+        road = lambda odo: odo["forwardCm"] >= -11.01
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=road, block_return=block_return)
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert runtime.held_object_id is None
+        assert evidence[0]["post_observation"] == 3
+        assert evidence[0]["placement"]["frame_id"] == 3
+>       assert result["evidence"]["road_return"]["success"] is not block_return
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:170: KeyError
+_____ test_verified_delivery_is_separate_from_small_step_road_return[True] _____
+
+block_return = True
+
+    @pytest.mark.parametrize("block_return", [False, True])
+    def test_verified_delivery_is_separate_from_small_step_road_return(block_return):
+        road = lambda odo: odo["forwardCm"] >= -11.01
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=road, block_return=block_return)
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert runtime.held_object_id is None
+        assert evidence[0]["post_observation"] == 3
+        assert evidence[0]["placement"]["frame_id"] == 3
+>       assert result["evidence"]["road_return"]["success"] is not block_return
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:170: KeyError
+____ test_offroad_entry_without_recorded_road_anchor_never_invents_a_return ____
+
+    def test_offroad_entry_without_recorded_road_anchor_never_invents_a_return():
+        runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=lambda odo: False)
+        result = Actions(runtime).place()
+        assert result["success"] is False
+        assert [method for method, _ in motions] == ["forward"]
+>       assert result["evidence"]["road_return"]["reason"] == "no_observed_road_entry"
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:185: KeyError
+_ test_failed_gate_keeps_its_detection_frame_separate_from_return_observations _
+
+    def test_failed_gate_keeps_its_detection_frame_separate_from_return_observations():
+        runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: abs(odo["forwardCm"]) < .01)
+        result = Actions(runtime).place()
+        assert result["success"] is False
+>       assert result["evidence"]["detection"]["frame_id"] == "9"
+E       KeyError: 'detection'
+
+../tests/test_brain_place_path_recovery.py:192: KeyError
+_ test_recorded_run08_rounded_trajectory_can_be_reversed_without_guessing_geometry _
+
+    def test_recorded_run08_rounded_trajectory_can_be_reversed_without_guessing_geometry():
+        # Public odometry from observations 233–241; the inverse actuator below is
+        # synthetic. This checks rounding tolerance, not live recovery success.
+        poses = [(101, 29.1, -174.3), (101.7, 22.1, -174.3), (101.7, 22.1, -177.9),
+                 (101.9, 16.2, -177.9), (102, 13, -177.9), (102.1, 10.2, -177.9),
+                 (102.1, 10.2, 162.7), (102.1, 10.2, 155.8), (101.3, 8.5, 155.8)]
+        primitives = [("forward", 7), ("turn", -3.5857494828805727),
+                      ("forward", 5.898326965863912), ("forward", 3.294514605401428),
+                      ("forward", 2.7190282433608637), ("turn", -19.327137708467546),
+                      ("turn", -6.912663265784602), ("forward", 1.9293573454716224)]
+        road = lambda odo: math.hypot(odo["rightCm"] - 101, odo["forwardCm"] - 29.1) < .11
+        runtime, motions, _, _, _ = place_runtime([(20, 0)], road=road)
+        runtime.snapshot["odometry"].update(rightCm=101.3, forwardCm=8.5, headingDeg=155.8)
+        original_call = runtime.bridge.call
+    
+        def rounded_call(method, params):
+            result = original_call(method, params)
+            for key in ("rightCm", "forwardCm", "headingDeg"):
+                runtime.snapshot["odometry"][key] = round(runtime.snapshot["odometry"][key], 1)
+            return result
+    
+        runtime.bridge.call = rounded_call
+        trace = []
+        for i, (method, amount) in enumerate(primitives):
+            pose = lambda j: dict(zip(("rightCm", "forwardCm", "headingDeg"), poses[j]))
+            trace.append({"method": method, "params": {"angleDeg" if method == "turn" else "distanceCm": amount},
+                          "before": pose(i), "after": pose(i + 1), "before_observation": 233 + i,
+                          "after_observation": 234 + i, "before_on_road": i == 0, "after_on_road": False})
+>       result = Actions(runtime).return_place_path(trace)
+E       AttributeError: 'Actions' object has no attribute 'return_place_path'
+
+../tests/test_brain_place_path_recovery.py:226: AttributeError
+_ test_return_does_not_pass_the_latest_recorded_entry_if_road_sensor_disagrees _
+
+    def test_return_does_not_pass_the_latest_recorded_entry_if_road_sensor_disagrees():
+        runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: False)
+        runtime.snapshot["odometry"]["forwardCm"] = 14
+        pose = lambda z: {"rightCm": 0, "forwardCm": z, "headingDeg": 0}
+        trace = [{"method": "forward", "params": {"distanceCm": 7},
+                  "before": pose(z), "after": pose(z + 7), "before_observation": i + 1,
+                  "after_observation": i + 2, "before_on_road": True, "after_on_road": i == 0}
+                 for i, z in enumerate((0, 7))]
+>       result = Actions(runtime).return_place_path(trace)
+E       AttributeError: 'Actions' object has no attribute 'return_place_path'
+
+../tests/test_brain_place_path_recovery.py:241: AttributeError
+___ test_return_stops_when_inverse_actuator_reports_complete_without_motion ____
+
+    def test_return_stops_when_inverse_actuator_reports_complete_without_motion():
+        near_origin = lambda odo: abs(odo["forwardCm"]) < .01
+        runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin)
+        original_call = runtime.bridge.call
+    
+        def no_progress(method, params):
+            if method == "backward":
+                motions.append((method, dict(params)))
+                return {"completed": True}
+            return original_call(method, params)
+    
+        runtime.bridge.call = no_progress
+        result = Actions(runtime).place()
+        assert result["success"] is False
+>       assert result["evidence"]["road_return"]["reason"] == "recorded_return_no_verified_progress"
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:260: KeyError
+_ test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[4] _
+
+front = 4
+
+    @pytest.mark.parametrize("front", [4, 7, None, float("nan")])
+    def test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation(front):
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=lambda odo: odo["forwardCm"] >= -11.01)
+        original_call = runtime.bridge.call
+    
+        def limited_front(method, params):
+            result = original_call(method, params)
+            if method == "backward":
+                runtime.snapshot["road"]["frontClearanceCm"] = front
+            return result
+    
+        runtime.bridge.call = limited_front
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert [method for method, _ in motions] == ["release", "backward"]
+>       recovery = result["evidence"]["road_return"]
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:279: KeyError
+_ test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[7] _
+
+front = 7
+
+    @pytest.mark.parametrize("front", [4, 7, None, float("nan")])
+    def test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation(front):
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=lambda odo: odo["forwardCm"] >= -11.01)
+        original_call = runtime.bridge.call
+    
+        def limited_front(method, params):
+            result = original_call(method, params)
+            if method == "backward":
+                runtime.snapshot["road"]["frontClearanceCm"] = front
+            return result
+    
+        runtime.bridge.call = limited_front
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert [method for method, _ in motions] == ["release", "backward"]
+>       recovery = result["evidence"]["road_return"]
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:279: KeyError
+_ test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[None] _
+
+front = None
+
+    @pytest.mark.parametrize("front", [4, 7, None, float("nan")])
+    def test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation(front):
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=lambda odo: odo["forwardCm"] >= -11.01)
+        original_call = runtime.bridge.call
+    
+        def limited_front(method, params):
+            result = original_call(method, params)
+            if method == "backward":
+                runtime.snapshot["road"]["frontClearanceCm"] = front
+            return result
+    
+        runtime.bridge.call = limited_front
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert [method for method, _ in motions] == ["release", "backward"]
+>       recovery = result["evidence"]["road_return"]
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:279: KeyError
+_ test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[nan] _
+
+front = nan
+
+    @pytest.mark.parametrize("front", [4, 7, None, float("nan")])
+    def test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation(front):
+        runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=lambda odo: odo["forwardCm"] >= -11.01)
+        original_call = runtime.bridge.call
+    
+        def limited_front(method, params):
+            result = original_call(method, params)
+            if method == "backward":
+                runtime.snapshot["road"]["frontClearanceCm"] = front
+            return result
+    
+        runtime.bridge.call = limited_front
+        result = Actions(runtime).place()
+        assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
+        assert [method for method, _ in motions] == ["release", "backward"]
+>       recovery = result["evidence"]["road_return"]
+E       KeyError: 'road_return'
+
+../tests/test_brain_place_path_recovery.py:279: KeyError
+_ test_far_fresh_view_allows_bounded_road_progress_before_visual_success[61.991369447611035-70.96864831142133] _
+
+memory_cm = 61.991369447611035, fresh_cm = 70.96864831142133
+
+    @pytest.mark.parametrize("memory_cm,fresh_cm", RANGE_PAIRS)
+    def test_far_fresh_view_allows_bounded_road_progress_before_visual_success(memory_cm, fresh_cm):
+        runtime, moves, routes, logs, detection = range_runtime(memory_cm, fresh_cm)
+        result = Actions(runtime).go_to("red")
+    
+>       assert moves, "Fresh range above 65 cm must not preempt the available bounded road approach"
+E       AssertionError: Fresh range above 65 cm must not preempt the available bounded road approach
+E       assert []
+
+../tests/test_brain_visual_range_dispatch_regression.py:73: AssertionError
+_ test_far_fresh_view_allows_bounded_road_progress_before_visual_success[58.13136344830492-74.02842535359996] _
+
+memory_cm = 58.13136344830492, fresh_cm = 74.02842535359996
+
+    @pytest.mark.parametrize("memory_cm,fresh_cm", RANGE_PAIRS)
+    def test_far_fresh_view_allows_bounded_road_progress_before_visual_success(memory_cm, fresh_cm):
+        runtime, moves, routes, logs, detection = range_runtime(memory_cm, fresh_cm)
+        result = Actions(runtime).go_to("red")
+    
+>       assert moves, "Fresh range above 65 cm must not preempt the available bounded road approach"
+E       AssertionError: Fresh range above 65 cm must not preempt the available bounded road approach
+E       assert []
+
+../tests/test_brain_visual_range_dispatch_regression.py:73: AssertionError
+_____ test_far_fresh_view_does_not_ignore_a_blocked_road_or_claim_success ______
+
+    def test_far_fresh_view_does_not_ignore_a_blocked_road_or_claim_success():
+        runtime, moves, routes, _, detection = range_runtime(*RANGE_PAIRS[0], actuator="blocked")
+        result = Actions(runtime).go_to("red")
+    
+        assert result["success"] is False
+>       assert result["reason"] == "route_blocked"
+E       AssertionError: assert 'visual_stand...not_supported' == 'route_blocked'
+E         
+E         - route_blocked
+E         + visual_standoff_range_not_supported
+
+../tests/test_brain_visual_range_dispatch_regression.py:90: AssertionError
+____ test_far_fresh_view_stops_after_one_road_command_with_no_pose_progress ____
+
+    def test_far_fresh_view_stops_after_one_road_command_with_no_pose_progress():
+        runtime, moves, routes, _, detection = range_runtime(*RANGE_PAIRS[0], actuator="stationary")
+        result = Actions(runtime).go_to("red")
+    
+        assert result["success"] is False
+>       assert result["reason"] == "route_no_progress"
+E       AssertionError: assert 'visual_stand...not_supported' == 'route_no_progress'
+E         
+E         - route_no_progress
+E         + visual_standoff_range_not_supported
+
+../tests/test_brain_visual_range_dispatch_regression.py:101: AssertionError
+_ test_fresh_supported_view_enters_visual_control_when_memory_is_slightly_farther _
+
+    def test_fresh_supported_view_enters_visual_control_when_memory_is_slightly_farther():
+        runtime, moves, routes, _, detection = range_runtime(66, 50)
+        result = Actions(runtime).go_to("red")
+    
+>       assert routes == [], "A same-identity current-frame 50 cm view should enter existing visual control directly"
+E       AssertionError: A same-identity current-frame 50 cm view should enter existing visual control directly
+E       assert [({'forwardCm...}, (0, 0.66))] == []
+E         
+E         Left contains one more item: ({'forwardCm': 0, 'headingDeg': 0, 'rightCm': 0, 'tick': 0}, (0, 0.66))
+E         Use -v to get more diff
+
+../tests/test_brain_visual_range_dispatch_regression.py:139: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_brain_place_path_recovery.py::test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget
+FAILED ../tests/test_brain_place_path_recovery.py::test_eighth_translation_gets_a_fresh_gate_check_before_failing
+FAILED ../tests/test_brain_place_path_recovery.py::test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge
+FAILED ../tests/test_brain_place_path_recovery.py::test_alignment_stops_after_three_observed_turns_without_translation
+FAILED ../tests/test_brain_place_path_recovery.py::test_failed_multiturn_approach_retraces_actual_segments_to_road
+FAILED ../tests/test_brain_place_path_recovery.py::test_return_uses_measured_partial_translation_instead_of_requested_distance
+FAILED ../tests/test_brain_place_path_recovery.py::test_failed_approach_stops_at_first_blocked_return_command
+FAILED ../tests/test_brain_place_path_recovery.py::test_verified_delivery_is_separate_from_small_step_road_return[False]
+FAILED ../tests/test_brain_place_path_recovery.py::test_verified_delivery_is_separate_from_small_step_road_return[True]
+FAILED ../tests/test_brain_place_path_recovery.py::test_offroad_entry_without_recorded_road_anchor_never_invents_a_return
+FAILED ../tests/test_brain_place_path_recovery.py::test_failed_gate_keeps_its_detection_frame_separate_from_return_observations
+FAILED ../tests/test_brain_place_path_recovery.py::test_recorded_run08_rounded_trajectory_can_be_reversed_without_guessing_geometry
+FAILED ../tests/test_brain_place_path_recovery.py::test_return_does_not_pass_the_latest_recorded_entry_if_road_sensor_disagrees
+FAILED ../tests/test_brain_place_path_recovery.py::test_return_stops_when_inverse_actuator_reports_complete_without_motion
+FAILED ../tests/test_brain_place_path_recovery.py::test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[4]
+FAILED ../tests/test_brain_place_path_recovery.py::test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[7]
+FAILED ../tests/test_brain_place_path_recovery.py::test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[None]
+FAILED ../tests/test_brain_place_path_recovery.py::test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation[nan]
+FAILED ../tests/test_brain_visual_range_dispatch_regression.py::test_far_fresh_view_allows_bounded_road_progress_before_visual_success[61.991369447611035-70.96864831142133]
+FAILED ../tests/test_brain_visual_range_dispatch_regression.py::test_far_fresh_view_allows_bounded_road_progress_before_visual_success[58.13136344830492-74.02842535359996]
+FAILED ../tests/test_brain_visual_range_dispatch_regression.py::test_far_fresh_view_does_not_ignore_a_blocked_road_or_claim_success
+FAILED ../tests/test_brain_visual_range_dispatch_regression.py::test_far_fresh_view_stops_after_one_road_command_with_no_pose_progress
+FAILED ../tests/test_brain_visual_range_dispatch_regression.py::test_fresh_supported_view_enters_visual_control_when_memory_is_slightly_farther
+23 failed, 4 passed in 0.14s

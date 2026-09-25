@@ -1,4 +1,5 @@
 """Sensor conversion, independent-view confirmation, and action evidence tests."""
+import copy
 import math
 import os
 from pathlib import Path
@@ -37,11 +38,21 @@ def observe(perception, frame, forward=0, *, items=None, heading=0, right=0, tim
                              round_index=frame)
 
 
-def placement_evidence(position=None):
-    return {"holding": False, "strict_pixel_inside": True, "placement": {
-        "ball_position_m": position or {"x": 0.0, "z": 1.5}, "frame_id": "placed",
-        "ball_bbox": {"x": 305, "y": 310, "w": 10, "h": 10},
-        "storage_bbox": {"x": 295, "y": 300, "w": 50, "h": 40}}}
+def placement_evidence(perception, object_id):
+    """Make a fresh release witness through the public sensor conversion path."""
+    preexisting = [row["id"] for row in perception.objects()
+                   if row["category"] == "red-ball" and row["id"] != object_id]
+    zone = {"category": "storage-zone", "source": "storage-ground-pixels", "confidence": 1,
+            "bbox": {"x": 240, "y": 230, "w": 160, "h": 100}}
+    observed = observe(perception, 4, time=2, items=[ball(60), zone])
+    witness, storage = observed["detections"]
+    return {"holding": False, "candidate_witnesses": 1,
+            "release_observation": {"frame_id": "4", "simulation_time_s": 2,
+                                    "preexisting_ball_ids": preexisting},
+            "placement": {"ball_track_id": witness["track_id"], "ball_category": witness["category"],
+                          "ball_position_m": copy.deepcopy(witness["position_m"]), "frame_id": "4",
+                          "ball_bbox": copy.deepcopy(witness["bbox"]),
+                          "storage_bbox": copy.deepcopy(storage["bbox"])}}
 
 
 class PerceptionTests(unittest.TestCase):
@@ -168,7 +179,7 @@ class PerceptionTests(unittest.TestCase):
             self.assertFalse(self.perception.mark_delivered(oid, holding=holding,
                 ball_in_storage=inside, simulation_time_s=2, evidence={"frame_id": "placed"}))
         self.assertTrue(self.perception.mark_delivered(oid, holding=False,
-            ball_in_storage=True, simulation_time_s=2, evidence=placement_evidence()))
+            ball_in_storage=True, simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
         self.assertEqual(self.perception.get_object(oid)["state"], "DELIVERED")
         self.assertEqual(self.perception.timeline()[0]["picked_s"], 1)
         self.assertEqual(self.perception.timeline()[0]["delivered_s"], 2)
@@ -183,12 +194,12 @@ class PerceptionTests(unittest.TestCase):
         self.assertFalse(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
             simulation_time_s=2, evidence={"holding": False, "placement": {"frame_id": "incomplete"}}))
         self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
-            simulation_time_s=2, evidence=placement_evidence(placed)))
+            simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
         self.assertEqual(self.perception.get_object(oid)["position_m"], placed)
         timeline = self.perception.timeline()[0]
         self.assertEqual(timeline["original_position_m"], original)
         self.assertEqual(timeline["delivered_position_m"], placed)
-        evidence = observe(self.perception, 4, right=14, time=3,
+        evidence = observe(self.perception, 5, right=14, time=3,
                            items=[ball(60), ball(60, "blue-ball")])
         red, blue = evidence["detections"]
         self.assertEqual(red["known_delivered_object_id"], oid)
@@ -196,10 +207,11 @@ class PerceptionTests(unittest.TestCase):
         self.assertEqual(red["track_id"], oid)
         self.assertNotIn("known_delivered_object_id", blue)
         self.assertTrue(blue["fed_to_world_model"])
-        evidence = observe(self.perception, 5, right=16, time=3.1, items=[ball(60)])
+        evidence = observe(self.perception, 6, right=16, time=3.1, items=[ball(60)])
         self.assertNotIn("known_delivered_object_id", evidence["detections"][0])
         self.assertTrue(evidence["detections"][0]["fed_to_world_model"])
-        self.assertEqual(len(self.perception.objects()), 3)
+        self.assertEqual(len([row for row in self.perception.objects()
+                              if row["category"] in {"red-ball", "blue-ball"}]), 3)
         self.assertEqual(self.perception.get_object(oid)["state"], "DELIVERED")
 
     def test_unverified_release_never_claims_delivery_or_suppresses_reobservation(self):
@@ -224,11 +236,11 @@ class PerceptionTests(unittest.TestCase):
         self.perception.mark_picked(oid, holding=True, original_position_absent=True,
                                    simulation_time_s=1, evidence={"frame_id": "grabbed"})
         placed = {"x": 0.0, "z": calibrate_reading(60, 0)[0] / 100}
-        self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
-            simulation_time_s=2, evidence=placement_evidence(placed))
+        self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
+            simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
         # Both detections lie within 15 cm of the known delivered ball. The
         # closer one is second in input order; matching must use distance.
-        evidence = observe(self.perception, 4, time=3,
+        evidence = observe(self.perception, 5, time=3,
                            items=[ball(60, bearing=5), ball(60)])
         unplaced, delivered = evidence["detections"]
         self.assertNotIn("known_delivered_object_id", unplaced)
@@ -237,7 +249,7 @@ class PerceptionTests(unittest.TestCase):
         self.assertNotEqual(unplaced["track_id"], oid)
         self.assertEqual(delivered["known_delivered_object_id"], oid)
         self.assertFalse(delivered["fed_to_world_model"])
-        self.assertEqual(len(self.perception.objects()), 2)
+        self.assertEqual(len([row for row in self.perception.objects() if row["category"] == "red-ball"]), 2)
 
     def test_near_visibility_preserves_existing_confirmation_without_new_hits_or_geometry(self):
         oid = self.confirm_red()

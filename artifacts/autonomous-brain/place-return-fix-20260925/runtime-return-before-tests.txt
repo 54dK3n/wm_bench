@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ CompactActionResultTests.test_delivery_witness_and_failed_return_remain_distinct_in_next_state _
+
+self = <test_brain_state_evidence.CompactActionResultTests testMethod=test_delivery_witness_and_failed_return_remain_distinct_in_next_state>
+
+    def test_delivery_witness_and_failed_return_remain_distinct_in_next_state(self):
+        source = {"success": True, "reason": "ball_observed_in_storage", "evidence": {
+            "post_observation": 4, "frame_id": 9,
+            "placement": {"frame_id": 4},
+            "road_return": {"success": False, "reason": "recorded_return_blocked",
+                            "on_road": False, "anchor_observation": 1, "after_observation": 9,
+                            "motions": [{"method": "forward"}], "unrelated": "omit"}}}
+        original = copy.deepcopy(source)
+        compact = self.compact(source, {"action": "place", "params": {}})
+        self.assertTrue(compact["success"])
+        self.assertEqual(compact["evidence"]["placement"]["frame_id"], 4)
+        self.assertEqual(compact["evidence"]["post_observation"], 4)
+>       returned = compact["evidence"]["road_return"]
+E       KeyError: 'road_return'
+
+tests/test_brain_state_evidence.py:45: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_brain_state_evidence.py::CompactActionResultTests::test_delivery_witness_and_failed_return_remain_distinct_in_next_state
+1 failed in 0.06s

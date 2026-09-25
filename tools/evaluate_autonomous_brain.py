@@ -16,10 +16,11 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 from typing import Any
 
 
-VERSION = "autonomous-brain-offline-evaluation/v1"
+VERSION = "autonomous-brain-offline-evaluation/v2"
 ROOT = Path(__file__).resolve().parents[1]
 METHODS = {"observe", "camera_parameters", "odometry", "local_road", "holding",
            "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"}
@@ -134,7 +135,24 @@ def match_pixels(detections: list[dict], capture: dict) -> list[dict]:
     return candidates
 
 
-def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict) -> dict:
+def terminal_done(rounds: list, observations: list, end_tick: Any) -> dict:
+    last = rounds[-1] if rounds else {}
+    result = last.get("result", {})
+    evidence = result.get("evidence", {})
+    reference = evidence.get("final_observation", evidence.get("after_observation"))
+    matches = [row for row in observations if row.get("observation_index") == reference]
+    observed = matches[0] if type(reference) is int and len(matches) == 1 else {}
+    tick = observed.get("observation", {}).get("tick")
+    verified = ((last.get("action") or {}).get("action") == "done" and result.get("success") is True
+                and bool(observed) and observed.get("round") == last.get("round")
+                and observed is observations[-1] and finite(tick) and tick == end_tick
+                and observed.get("holding", {}).get("holding") is False)
+    return {"verified": verified, "round": last.get("round"),
+            "observation_index": reference, "observation_tick": tick}
+
+
+def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
+                      observations: list | None = None) -> dict:
     failures = []
     native = record.get("native", {})
     step_ms = record.get("clock", {}).get("stepMs", 20)
@@ -171,6 +189,10 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict)
             event_rows[truth_id].append(event_reference(index, event, step_ms))
     samples = native.get("samples", [])
     last_sample = samples[-1] if samples else {}
+    end_tick = native.get("simulationEndTick")
+    if (not finite(last_sample.get("tick")) or not finite(end_tick)
+            or last_sample.get("tick") != end_tick):
+        failures.append("final_sample_tick_mismatch")
     finals = []
     for truth_id in expected:
         definition = destinations[truth_id]
@@ -195,7 +217,6 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict)
             failures.append(f"no_active_delivery_event:{truth_id}")
         if not inside:
             failures.append(f"final_position_outside_storage:{truth_id}")
-    end_tick = native.get("simulationEndTick")
     simulation_seconds = end_tick * step_ms / 1000 if finite(end_tick) and end_tick >= 0 else None
     if simulation_seconds is None:
         failures.append("simulation_end_tick_missing")
@@ -217,6 +238,9 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict)
         failures.append("nonwhitelist_calls_executed")
     if summary.get("status") != "done":
         failures.append("brain_did_not_finish_with_observed_done")
+    completion = terminal_done(rounds, observations or [], end_tick)
+    if not completion["verified"]:
+        failures.append("terminal_done_not_corroborated")
     process = metadata.get("process", {})
     if (process.get("spawnError") or process.get("interrupted")
             or ("code" in process and process["code"] != 0)
@@ -227,6 +251,8 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict)
             "rounds": count, "round_records": len(rounds),
             "max_rounds": cap_rounds, "simulation_seconds": simulation_seconds,
             "max_simulation_seconds": cap_seconds, "step_ms": step_ms,
+            "final_sample_tick": last_sample.get("tick"), "simulation_end_tick": end_tick,
+            "terminal_done": completion,
             "rejected_calls": len(denied), "nonwhitelist_accepted_calls": len(forbidden)}
 
 
@@ -367,6 +393,203 @@ def evaluate_perception(observations: list, captures: list, record: dict,
             "timeline": timeline}
 
 
+def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: dict) -> dict:
+    """Compare recorded byte identities, never the possibly newer working tree."""
+    result = {"status": "missing", "failures": [], "recorded_before_after_equal": False,
+              "driver_sources_unchanged": driver_summary.get("sourcesUnchanged") if isinstance(driver_summary, dict) else None,
+              "brain_summary_hashes_match": False}
+    if not manifest or not driver_summary:
+        result["failures"].append("source_proof_missing")
+        return result
+
+    def sha(value):
+        return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+    def valid(value):
+        if not isinstance(value, dict) or value.get("version") not in {
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 5)}:
+            return False
+        driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
+        return (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
+                and sha(driver.get("sha256")) and isinstance(brain, dict) and bool(brain)
+                and all(isinstance(key, str) and key.startswith("autonomous_brain/")
+                        and key.endswith(".py") and ".." not in key.split("/") and sha(digest)
+                        for key, digest in brain.items())
+                and len({Path(key).name for key in brain}) == len(brain)
+                and isinstance(platform, dict) and bool(platform) and all(sha(value) for value in platform.values())
+                and sha(value.get("evaluatorCaptureSha256")))
+
+    if not isinstance(manifest, dict) or not isinstance(driver_summary, dict):
+        result.update(status="invalid")
+        result["failures"].append("source_proof_unsupported_or_invalid_manifest")
+        return result
+    after = driver_summary.get("sourceManifestAfterRun")
+    if not valid(manifest) or not valid(after) or driver_summary.get("schema") != manifest.get("version"):
+        result.update(status="invalid")
+        result["failures"].append("source_proof_unsupported_or_invalid_manifest")
+        return result
+    result["recorded_before_after_equal"] = manifest == after
+    expected = {Path(path).name: value for path, value in manifest["brain"].items()}
+    result["brain_summary_hashes_match"] = brain_summary.get("source_sha256") == expected
+    result["recorded_brain_and_driver_files"] = len(expected) + 1
+    for passed, failure in ((result["recorded_before_after_equal"], "source_proof_before_after_mismatch"),
+                            (driver_summary.get("sourcesUnchanged") is True, "source_proof_driver_flag_not_true"),
+                            (driver_summary.get("status") == "complete", "source_proof_driver_not_complete"),
+                            (result["brain_summary_hashes_match"], "source_proof_brain_summary_hash_mismatch")):
+        if not passed:
+            result["failures"].append(failure)
+    result["status"] = "verified" if not result["failures"] else "mismatch"
+    return result
+
+
+def stop_failure_kind(row: dict, final_round: Any, stop: dict, step_ms: float) -> str:
+    result = row.get("result", {})
+    stop = stop if isinstance(stop, dict) else {}
+    value = stop.get("result", {})
+    if stop.get("version") == "evaluator-stop/v1":
+        for key in ("result", "result", "value"):
+            value = value.get(key, {}) if isinstance(value, dict) else {}
+    value = value if isinstance(value, dict) else {}
+    known = stop.get("version") in {"evaluator-stop/v1", "evaluator-requested-stop/v1"}
+    tick, recorded_time = value.get("tick"), row.get("simulation_seconds")
+    if (known and stop.get("task_success") is False and finite(tick) and finite(recorded_time)
+            and recorded_time >= tick * step_ms / 1000 and row.get("round") == final_round
+            and result.get("error_type") == "BridgeError"
+            and str(result.get("reason", "")).endswith(": NOT_RUNNING")):
+        return "external_stop"
+    return "execution_error" if result.get("error_type") else "action_failure"
+
+
+def evaluate_judge(record: dict, rounds: list, observations: list, motions: list, bindings: dict) -> dict:
+    """Audit bound pick/place outcomes; absent evidence is never a guessed verdict."""
+    native = record.get("native", {})
+    by_index = defaultdict(list)
+    for observation in observations:
+        by_index[observation.get("observation_index")].append(observation)
+    samples_by_tick = defaultdict(list)
+    for sample in native.get("samples", []):
+        samples_by_tick[sample.get("tick")].append(sample)
+    destinations = {}
+    for definition in native.get("taskDefinition", {}).get("deliveries", []):
+        if definition.get("objectRole") == "target" and definition.get("destinationRole") == "storage":
+            for identity in definition.get("requiredPackageIds", []):
+                destinations[identity] = definition
+
+    def observation_at(index):
+        rows = by_index.get(index, []) if type(index) is int else []
+        return rows[0] if len(rows) == 1 else None
+
+    def exact_sample(tick, identity, geometry=False):
+        rows = samples_by_tick.get(tick, []) if finite(tick) else []
+        snapshots = []
+        for sample in rows:
+            if "holding" not in sample:
+                return None
+            snapshot = {"holding": sample["holding"]}
+            if geometry:
+                packages = [item for item in sample.get("packages", []) if item.get("id") == identity]
+                if len(packages) != 1 or not all(finite(packages[0].get(key)) for key in ("x", "z")):
+                    return None
+                snapshot.update(x=packages[0]["x"], z=packages[0]["z"])
+            snapshots.append(snapshot)
+        return snapshots[0] if snapshots and all(value == snapshots[0] for value in snapshots) else None
+
+    audited = []
+    for row in rounds:
+        action, result = row.get("action") or {}, row.get("result", {})
+        name = action.get("action")
+        entry = {"round": row.get("round"), "action": name, "claimed_success": result.get("success"),
+                 "independent_success": None, "status": "not_evaluated", "reason": "outside_pick_place_scope"}
+        audited.append(entry)
+        if name not in {"pick", "place"}:
+            continue
+        entry.update(status="unverifiable", reason="insufficient_action_evidence")
+        evidence = result.get("evidence", {})
+        selected = (action.get("params", {}).get("object_id") if name == "pick"
+                    else row.get("state", {}).get("robot", {}).get("held_object_id"))
+        object_id = evidence.get("object_id", selected)
+        if selected is not None and object_id != selected:
+            entry["reason"] = "conflicting_action_identity"
+            continue
+        identity = bindings.get(object_id)
+        if identity not in destinations:
+            entry["reason"] = "missing_or_ambiguous_truth_binding"
+            continue
+        entry.update(object_id=object_id, truth_id=identity)
+        if record.get("complete") is not True or type(result.get("success")) is not bool:
+            entry["reason"] = "incomplete_record_or_missing_claim"
+            continue
+        before_id = evidence.get("before_observation")
+        after_id = evidence.get("final_observation", evidence.get("after_observation"))
+        before, after = observation_at(before_id), observation_at(after_id)
+        if (before is None or after is None or before_id >= after_id
+                or before.get("round") != row.get("round") or after.get("round") != row.get("round")):
+            entry["reason"] = "missing_or_ambiguous_observation_window"
+            continue
+        first_tick, last_tick = (item.get("observation", {}).get("tick") for item in (before, after))
+        if not finite(first_tick) or not finite(last_tick) or first_tick > last_tick:
+            entry["reason"] = "invalid_observation_ticks"
+            continue
+        method = "grab" if name == "pick" else "release"
+        executed = [motion for motion in motions if motion.get("round") == row.get("round")
+                    and motion.get("method") == method
+                    and type(motion.get("before_observation")) is int
+                    and type(motion.get("after_observation")) is int
+                    and before_id <= motion["before_observation"] < motion["after_observation"] <= after_id]
+        if not executed:
+            entry["reason"] = "missing_actuator_motion_in_action_window"
+            continue
+        start = exact_sample(first_tick, identity)
+        finish = exact_sample(last_tick, identity, geometry=name == "place")
+        if start is None or finish is None:
+            entry["reason"] = "missing_or_ambiguous_exact_tick_sample"
+            continue
+        events = [event for event in native.get("events", []) if event.get("packageId") == identity
+                  and event.get("type") in {"package_grabbed", "package_delivered", "package_delivery_revoked"}]
+        if any(not finite(event.get("tick")) for event in events):
+            entry["reason"] = "missing_truth_event_tick"
+            continue
+        window_events = [event for event in events if first_tick < event["tick"] <= last_tick]
+        if name == "pick":
+            if start["holding"] is not None:
+                entry["reason"] = "gripper_already_holding_before_pick"
+                continue
+            grabbed = any(event["type"] == "package_grabbed" and event.get("accepted") is True
+                          for event in window_events)
+            if finish["holding"] == identity and not grabbed:
+                entry["reason"] = "holding_without_corresponding_grab_event"
+                continue
+            success = finish["holding"] == identity and grabbed
+        else:
+            if start["holding"] != identity:
+                entry["reason"] = "selected_object_not_held_before_release"
+                continue
+            definition = destinations[identity]
+            destination, radius = definition.get("destination"), definition.get("radius")
+            if (not isinstance(destination, list) or len(destination) != 2
+                    or not all(finite(value) for value in destination) or not finite(radius) or radius < 0):
+                entry["reason"] = "missing_destination_geometry"
+                continue
+            active = False
+            for event in window_events:
+                if event["type"] == "package_delivered":
+                    active = True
+                elif event["type"] == "package_delivery_revoked":
+                    active = False
+            inside = math.hypot(finish["x"] - destination[0], finish["z"] - destination[1]) <= radius
+            success = finish["holding"] is None and inside and active
+        status = ("match" if success == result["success"]
+                  else "false_positive" if result["success"] else "false_negative")
+        entry.update(status=status, reason="exact_tick_truth_and_action_window", independent_success=success,
+                     before_observation=before_id, final_observation=after_id,
+                     before_tick=first_tick, final_tick=last_tick)
+    counts = {name: sum(row["status"] == name for row in audited)
+              for name in ("match", "false_positive", "false_negative", "unverifiable", "not_evaluated")}
+    counts["eligible_actions"] = sum(row["action"] in {"pick", "place"} for row in audited)
+    return {"scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+            "report_only": True, "counts": counts, "rows": audited}
+
+
 def evaluate_run(directory: Path) -> dict:
     directory = Path(directory).resolve()
     inputs = {}
@@ -386,7 +609,8 @@ def evaluate_run(directory: Path) -> dict:
             value = ([json.loads(line) for line in expanded.decode("utf-8").splitlines() if line.strip()]
                      if lines else json.loads(expanded))
             inputs[name] = {"path": relative(path), "sha256": hashlib.sha256(raw).hexdigest(),
-                            "bytes": len(raw), "expanded_sha256": hashlib.sha256(expanded).hexdigest()}
+                            "bytes": len(raw), "expanded_sha256": hashlib.sha256(expanded).hexdigest(),
+                            "expanded_bytes": len(expanded)}
             return value
         except (OSError, UnicodeError, ValueError) as exc:
             failures.append("unreadable_input:" + name + ":" + type(exc).__name__)
@@ -399,15 +623,27 @@ def evaluate_run(directory: Path) -> dict:
     observations = load("brain/observations.jsonl", [], lines=True)
     calls = load("brain/llm.jsonl", [], lines=True)
     bridge = load("brain/bridge-calls.jsonl", [], lines=True)
-    metadata = load("evaluation.json", {}, required=False)
-    evidence = load("evidence.json", {}, required=False)
+    motions = load("brain/motions.jsonl", [], required=False, lines=True)
+    metadata = load("evaluation.json", {})
+    evidence = load("evidence.json", {})
+    manifest = load("../manifest.json", {})
+    driver_summary = load("../summary.json", {})
+    stop = load("../evaluator-stop.json", {}, required=False)
+    source_proof = evaluate_source_proof(manifest, driver_summary, summary)
+    failures.extend(source_proof["failures"])
     for key, file_key in (("record", "record.json"), ("captures", "captures.json")):
         expected = evidence.get(key, {})
         found = inputs.get(file_key)
-        if found and expected:
-            if expected.get("sha256") != found["sha256"] or expected.get("expandedSha256") != found["expanded_sha256"]:
+        if found:
+            if (not expected.get("sha256") or not expected.get("expandedSha256")
+                    or expected.get("file") != Path(found["path"]).name):
+                failures.append("evidence_hash_missing_or_wrong_file:" + key)
+            elif (expected.get("sha256") != found["sha256"]
+                    or expected.get("expandedSha256") != found["expanded_sha256"]
+                    or ("bytes" in expected and expected["bytes"] != found["bytes"])
+                    or ("expandedBytes" in expected and expected["expandedBytes"] != found["expanded_bytes"])):
                 failures.append("evidence_sha_mismatch:" + key)
-    delivery = evaluate_delivery(record, rounds, summary, metadata)
+    delivery = evaluate_delivery(record, rounds, summary, metadata, observations)
     failures.extend(delivery["failures"])
     if not rounds:
         failures.append("no_completed_round_logs")
@@ -427,23 +663,32 @@ def evaluate_run(directory: Path) -> dict:
     if nonwhitelist_requests:
         failures.append("nonwhitelist_brain_requests")
     perception = evaluate_perception(observations, captures, record, summary, delivery["expected_target_ids"])
+    judge = evaluate_judge(record, rounds, observations, motions, perception["track_truth_bindings"])
     failures_by_action = [{"round": row.get("round"), "action": row.get("action"),
-                           "simulation_seconds": row.get("simulation_seconds"), "result": row.get("result")}
+                           "simulation_seconds": row.get("simulation_seconds"), "result": row.get("result"),
+                           "failure_kind": stop_failure_kind(row, rounds[-1].get("round"), stop, delivery["step_ms"])}
                           for row in rounds if row.get("result", {}).get("success") is False]
+    failure_counts = Counter(row["failure_kind"] for row in failures_by_action)
     return {"version": VERSION, "evaluation_only": True, "run_directory": relative(directory),
             "map": metadata.get("map", directory.name.split("-run-")[0]),
             "success": not failures, "failures": list(dict.fromkeys(failures)),
             "delivery": delivery, "metrics": {"rounds": delivery["rounds"],
                 "llm_calls": len(calls), "llm_total_elapsed_s": llm_seconds,
                 "simulation_seconds": delivery["simulation_seconds"], "observations": len(observations),
-                "failed_actions": len(failures_by_action), "bridge_calls": len(bridge),
+                "failed_rounds": len(failures_by_action), "failed_actions": failure_counts["action_failure"],
+                "execution_failures": failure_counts["execution_error"],
+                "external_stop_failures": failure_counts["external_stop"], "bridge_calls": len(bridge),
                 "nonwhitelist_brain_requests": len(nonwhitelist_requests)},
             "brain_status": summary.get("status"), "brain_reason": summary.get("reason"),
             "failed_actions": failures_by_action, "perception": perception,
+            "source_proof": source_proof, "judge": judge,
+            "external_stop": {"recorded": bool(stop), "version": stop.get("version"),
+                              "reason": stop.get("reason"), "classified_failures": failure_counts["external_stop"]},
             "inputs": inputs, "evaluator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "rules": {"truth_only_in_evaluator": True,
                 "success_recomputed_from_record": True, "determinism_is_not_a_gate": True,
                 "position_error_is_report_only": True,
+                "judge_disagreements_are_report_only": True,
                 "limits": "reaching configured round/time cap fails; caps never exceed 200 rounds or 1200 seconds"}}
 
 
@@ -460,31 +705,46 @@ def report_text(result: dict) -> str:
              "结果由 record 中的红球交付事件、撤销事件和最终存放区内位置独立复算；没有使用 driver 的 success 布尔值。真值只在离线评测中使用。", "",
              f"输入目录：`{result['run_directory']}`。大脑状态：`{safe(result['brain_status'])}`；原因：{safe(result['brain_reason'])}。", "",
              "| 指标 | 结果 |", "|---|---:|",
-             f"| 总轮数 | {metrics['rounds']} |", f"| 大模型调用次数（含非法输出重试） | {metrics['llm_calls']} |",
+             f"| 总轮数 | {metrics['rounds']} |", f"| 大模型调用次数（含修复与传输重试） | {metrics['llm_calls']} |",
              f"| 大模型累计耗时（秒） | {fmt(metrics['llm_total_elapsed_s'])} |",
              f"| 仿真用时（秒） | {fmt(metrics['simulation_seconds'])} |",
-             f"| 观测次数 | {metrics['observations']} |", f"| 失败动作数 | {metrics['failed_actions']} |", "",
+             f"| 观测次数 | {metrics['observations']} |", f"| 动作判定失败数 | {metrics['failed_actions']} |",
+             f"| 执行或模型错误数 | {metrics['execution_failures']} |",
+             f"| 评估方停止后的错误 | {metrics['external_stop_failures']} |",
+             f"| 失败轮数合计 | {metrics['failed_rounds']} |", "",
              f"上限：{result['delivery']['max_rounds']} 轮 / {result['delivery']['max_simulation_seconds']} 秒；达到上限判失败。",
+             f"最终样本tick：{result['delivery']['final_sample_tick']}；导出结束tick：{result['delivery']['simulation_end_tick']}。",
+             f"末轮成功done及最终观测交叉核验：{result['delivery']['terminal_done']['verified']}；源码记录核验：{result['source_proof']['status']}。",
              "", "## 每球时间线", "",
              "下列时间均为仿真秒。首次看到由原始桥检测与同帧相机真值的唯一几何对应重建；确认由 WorldModel 的 CONFIRMED 记录重建；抓到和送达由原生事件核对。未能唯一对应时明确留空，WorldModel 首次入库不替代首次看到。", "",
-             "| 真值红球 ID | WM 轨迹 ID | 首次看到 | 首次确认 | 首次抓到 | 最终有效送达 |", "|---|---|---:|---:|---:|---:|"]
+             "| 真值红球 ID | WM 轨迹 ID | 首次看到 | 首次确认 | 首次抓到 | 最终未撤销交付事件 |", "|---|---|---:|---:|---:|---:|"]
     for ball in perception["timeline"]:
         lines.append(f"| {ball['truth_id']} | {', '.join(ball['wm_track_ids']) or '未匹配'} | {time_at(ball['first_raw_seen'])} | {time_at(ball['first_confirmed'])} | {time_at(ball['first_grabbed_truth_event'])} | {time_at(ball['final_active_delivery_truth_event'])} |")
     lines.extend(["", "## 最终真值核对", "", "| 红球 ID | 交付事件仍有效 | 最终在存放区 | 仍被夹持 |", "|---|---|---|---|"])
     for row in result["delivery"]["final_positions"]:
         lines.append(f"| {row['truth_id']} | {row['active_delivery_event']} | {row['inside_storage']} | {row['held']} |")
+    counts = result["judge"]["counts"]
+    lines.extend(["", "## 独立 Judge 对照", "",
+        "仅对有唯一真值身份绑定、动作内grab/release记录、前后观测及同tick真值样本的pick/place作独立对照。缺失或歧义记为无法核验，不猜测；explore、look_around、go_to、done不套用抓放真值判据。对照统计本身不增加任务通过门槛。", "",
+        "| 可对照动作 | 一致 | 假阳性（自报成功但真值失败） | 假阴性（自报失败但真值成功） | 无法核验 | 不在对照范围 |",
+        "|---:|---:|---:|---:|---:|---:|",
+        f"| {counts['eligible_actions']} | {counts['match']} | {counts['false_positive']} | {counts['false_negative']} | {counts['unverifiable']} | {counts['not_evaluated']} |",
+        "", "逐轮身份、观测/tick范围和无法核验原因见evaluation.json的judge.rows。"])
+    if result["external_stop"]["recorded"]:
+        lines.extend(["", "评估方停止记录：" + safe(result["external_stop"]["reason"]) + "。",
+                      "停止后NOT_RUNNING仅在已知停止记录、时间及末轮桥错误相符时单独分类；仍保留整局FAIL，不解释为自主完成。"])
     error = perception["position_error"]
     lines.extend(["", "## WorldModel 位置误差", "",
         "仅统计已通过原始像素框证据唯一绑定身份的 CONFIRMED 红球；真值由初始车体朝向和位置变换到里程计 right/forward 米坐标。每个轨迹、每次观测算一个样本，未更新的位置重复出现仍计入。没有最近距离强行匹配，也没有额外误差通过门限。", "",
         f"样本数 **{error['count']}**；平均误差 **{fmt(error['mean_cm'])} cm**；RMSE **{fmt(error['rmse_cm'])} cm**。",
         f"无法计入的确认轨迹观测数：{perception['unmatched_confirmed_count']}；身份冲突轨迹数：{len(perception['ambiguous_track_ids'])}。原始红球检测匹配：{safe(perception['raw_red_match_counts'])}。",
         "几何对应要求同类真值中心落在像素框内且双向唯一；无法独立证明遮挡可见性，部分框不含中心时会保持未匹配。每个误差样本、身份绑定、歧义与未匹配原因保存在 evaluation.json。", "",
-        "## 失败动作及原因", "", "| 轮次 | 动作 | 原因及依据 |", "|---:|---|---|"])
+        "## 失败轮次及原因", "", "| 轮次 | 动作 | 分类 | 原因及依据 |", "|---:|---|---|---|"])
     for row in result["failed_actions"]:
         detail = json.dumps(row["result"], ensure_ascii=False, separators=(",", ":"))
-        lines.append(f"| {row['round']} | {safe(json.dumps(row['action'], ensure_ascii=False))} | {safe(detail[:500])}{'…（完整内容见 evaluation.json）' if len(detail) > 500 else ''} |")
+        lines.append(f"| {row['round']} | {safe(json.dumps(row['action'], ensure_ascii=False))} | {row['failure_kind']} | {safe(detail[:500])}{'…（完整内容见 evaluation.json）' if len(detail) > 500 else ''} |")
     if not result["failed_actions"]:
-        lines.append("| — | — | 无已记录的失败动作 |")
+        lines.append("| — | — | — | 无已记录的失败动作 |")
     lines.extend(["", "失败判定项：" + ("；".join(safe(x) for x in result["failures"]) or "无") + "。", "",
                   "## 完整日志与复算", "", "以下全部为仓库相对路径；逐轮状态、模型原文、动作和结果保存在对应日志。", ""])
     for name, value in result["inputs"].items():

@@ -1,0 +1,1010 @@
+{
+  "schema": "autonomous-brain-run-metrics/v2",
+  "run": "map05-run-08",
+  "source_commit": "fa5c0f18487171a5d294080500deccb54f718d4d",
+  "success": false,
+  "metrics": {
+    "rounds": 54,
+    "llm_calls": 64,
+    "llm_total_elapsed_s": 1442.4293853300005,
+    "simulation_seconds": 226.04,
+    "observations": 263,
+    "failed_rounds": 12,
+    "failed_actions": 11,
+    "execution_failures": 0,
+    "external_stop_failures": 1,
+    "bridge_calls": 1210,
+    "nonwhitelist_brain_requests": 0
+  },
+  "motion_rows": 156,
+  "action_counts": {
+    "explore": 26,
+    "look_around": 17,
+    "go_to": 9,
+    "pick": 1,
+    "place": 1
+  },
+  "motion_method_counts": {
+    "take_exit": 27,
+    "turn": 81,
+    "follow_road": 37,
+    "grab": 2,
+    "forward": 8,
+    "backward": 1
+  },
+  "transport_errors": [
+    {
+      "call_index": 11,
+      "decision_index": 11,
+      "transport_error": {
+        "type": "URLError"
+      },
+      "recovered_on_call": 12
+    },
+    {
+      "call_index": 16,
+      "decision_index": 15,
+      "transport_error": {
+        "type": "URLError"
+      },
+      "recovered_on_call": 17
+    },
+    {
+      "call_index": 20,
+      "decision_index": 18,
+      "transport_error": {
+        "type": "URLError"
+      },
+      "recovered_on_call": 22
+    },
+    {
+      "call_index": 21,
+      "decision_index": 18,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 22
+    },
+    {
+      "call_index": 29,
+      "decision_index": 25,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 30
+    },
+    {
+      "call_index": 37,
+      "decision_index": 32,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 39
+    },
+    {
+      "call_index": 38,
+      "decision_index": 32,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 39
+    },
+    {
+      "call_index": 52,
+      "decision_index": 45,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 53
+    },
+    {
+      "call_index": 59,
+      "decision_index": 51,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 60
+    },
+    {
+      "call_index": 62,
+      "decision_index": 53,
+      "transport_error": {
+        "type": "URLError"
+      },
+      "recovered_on_call": 63
+    }
+  ],
+  "recovered_transport_error_count": 10,
+  "transport_error_types": {
+    "URLError": 4,
+    "HTTPError": 6
+  },
+  "validation_error_count": 0,
+  "terminal_cause": "evaluator_stop_then_bridge_NOT_RUNNING",
+  "terminal_model_request_failure": false,
+  "brain_reason": "BridgeError: turn: NOT_RUNNING",
+  "evaluator_stop": {
+    "version": "evaluator-requested-stop/v1",
+    "timestamp": "2026-09-25T08:16:21.937Z",
+    "reason": "place alignment exhausted combined turn/translation budget and left car off observed road; later navigation declined movement. Preserve trial before changing controller.",
+    "task_success": false,
+    "source_changed_during_run": false,
+    "source_commit": "fa5c0f18487171a5d294080500deccb54f718d4d",
+    "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+    "expression": "stopRequested = true; RobotBackend.status()",
+    "result": {
+      "running": true,
+      "healthy": true,
+      "tick": 11302,
+      "errors": []
+    },
+    "evidence": [
+      "map-05-run-1/brain/rounds.jsonl: rounds 47-52",
+      "map-05-run-1/brain/observations.jsonl: observations 233-241",
+      "map-05-run-1/brain/motions.jsonl: motions 141-148"
+    ],
+    "note": "One red ball grasped; no release or delivery. This does not prove every remaining action was impossible: place could be retried, but the observed missing road-return path warrants fixing the controller."
+  },
+  "first_sensor_holding": {
+    "observation_index": 119,
+    "round": 28,
+    "simulation_seconds": 91.06
+  },
+  "first_offroad_observation": {
+    "observation_index": 234,
+    "round": 47,
+    "simulation_seconds": 214.98
+  },
+  "offroad_observation_count": 30,
+  "final_holding": true,
+  "final_held_object_id": "target_021",
+  "place_action_count": 1,
+  "release_motion_count": 0,
+  "valid_deliveries": 0,
+  "timeline": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_021"
+      ],
+      "first_raw_seen": {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 323.30623603480814,
+              "v": 205.54424459794765,
+              "depth_world": 6.393179548968487
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": {
+        "observation_index": 91,
+        "round": 21,
+        "frame_id": "91",
+        "tick": 3684,
+        "simulation_seconds": 73.68,
+        "track_id": "target_021"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "track_id": "target_021",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": {
+        "event_index": 2,
+        "seq": 1532,
+        "type": "package_grabbed",
+        "tick": 4539,
+        "simulation_seconds": 90.78,
+        "package_id": "guangyang-target-1"
+      },
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_021",
+          "category": "red-ball",
+          "first_seen_s": 47.34,
+          "first_seen_round": 14,
+          "confirmed_s": 73.68,
+          "picked_s": 94.26,
+          "delivered_s": null,
+          "confirmed_round": 21,
+          "original_position_m": {
+            "x": -1.5767203827521328,
+            "z": 1.1043430029783192
+          },
+          "accepted_hit_poses": [
+            {
+              "frame_id": "58",
+              "simulation_time_s": 47.34,
+              "x_m": -1.895,
+              "z_m": 0.325,
+              "heading_deg": -21.8
+            },
+            {
+              "frame_id": "82",
+              "simulation_time_s": 67.84,
+              "x_m": -2.206,
+              "z_m": 1.218,
+              "heading_deg": -71.7
+            },
+            {
+              "frame_id": "91",
+              "simulation_time_s": 73.68,
+              "x_m": -2.22,
+              "z_m": 1.374,
+              "heading_deg": -101.6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [],
+      "first_raw_seen": {
+        "observation_index": 73,
+        "round": 17,
+        "frame_id": "73",
+        "tick": 3005,
+        "simulation_seconds": 60.1,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 372,
+          "y": 186,
+          "w": 16,
+          "h": 12
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-2",
+            "projection": {
+              "u": 381.69068486385845,
+              "v": 193.5268637323795,
+              "depth_world": 12.82316527088489
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-2"
+      },
+      "first_confirmed": null,
+      "first_logged_wm_presence": null,
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": []
+    }
+  ],
+  "position_error": {
+    "count": 28,
+    "mean_cm": 1.2655612994754868,
+    "rmse_cm": 1.265561299475488,
+    "max_cm": 1.265561299475488
+  },
+  "unmatched_confirmed_count": 1,
+  "judge": {
+    "scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+    "report_only": true,
+    "counts": {
+      "match": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 1,
+      "not_evaluated": 52,
+      "eligible_actions": 2
+    },
+    "rows": [
+      {
+        "round": 1,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 2,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 3,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 4,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 5,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 6,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 7,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 8,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 9,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 10,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 11,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 12,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 13,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 14,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 15,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 16,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 17,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 18,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 19,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 20,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 21,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 22,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 23,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 24,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 25,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 26,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 27,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 28,
+        "action": "pick",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_021",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 116,
+        "final_observation": 121,
+        "before_tick": 4422,
+        "final_tick": 4713
+      },
+      {
+        "round": 29,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 30,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 31,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 32,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 33,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 34,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 35,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 36,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 37,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 38,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 39,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 40,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 41,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 42,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 43,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 44,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 45,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 46,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 47,
+        "action": "place",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "unverifiable",
+        "reason": "missing_actuator_motion_in_action_window",
+        "object_id": "target_021",
+        "truth_id": "guangyang-target-1"
+      },
+      {
+        "round": 48,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 49,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 50,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 51,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 52,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 53,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 54,
+        "action": "look_around",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      }
+    ]
+  },
+  "place_round_47_motions": [
+    {
+      "round": 47,
+      "method": "forward",
+      "params": {
+        "distanceCm": 7,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 233,
+      "after_observation": 234,
+      "motion_index": 141,
+      "after_simulation_seconds": 214.98,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 23.883202862062756,
+        "bearing_deg": 3.5857494828805616,
+        "bbox": {
+          "x": 95.0,
+          "y": 266.0,
+          "w": 514.0,
+          "h": 180.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "turn",
+      "params": {
+        "angleDeg": -3.5857494828805727,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 234,
+      "after_observation": 235,
+      "motion_index": 142,
+      "after_simulation_seconds": 215.04,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 23.898326965863912,
+        "bearing_deg": -1.2346519335007409,
+        "bbox": {
+          "x": 53.0,
+          "y": 266.0,
+          "w": 512.0,
+          "h": 179.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "forward",
+      "params": {
+        "distanceCm": 5.898326965863912,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 235,
+      "after_observation": 236,
+      "motion_index": 143,
+      "after_simulation_seconds": 215.68,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 21.294514605401428,
+        "bearing_deg": 0.0,
+        "bbox": {
+          "x": 0.0,
+          "y": 284.0,
+          "w": 640.0,
+          "h": 196.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "forward",
+      "params": {
+        "distanceCm": 3.294514605401428,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 236,
+      "after_observation": 237,
+      "motion_index": 144,
+      "after_simulation_seconds": 216.04,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 20.719028243360864,
+        "bearing_deg": 0.0,
+        "bbox": {
+          "x": 0.0,
+          "y": 298.0,
+          "w": 640.0,
+          "h": 182.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "forward",
+      "params": {
+        "distanceCm": 2.7190282433608637,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 237,
+      "after_observation": 238,
+      "motion_index": 145,
+      "after_simulation_seconds": 216.34,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 21.34706372120156,
+        "bearing_deg": 19.327137708467532,
+        "bbox": {
+          "x": 373.0,
+          "y": 313.0,
+          "w": 267.0,
+          "h": 167.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "turn",
+      "params": {
+        "angleDeg": -19.327137708467546,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 238,
+      "after_observation": 239,
+      "motion_index": 146,
+      "after_simulation_seconds": 216.6,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 20.25435935606066,
+        "bearing_deg": 6.912663265784596,
+        "bbox": {
+          "x": 172.0,
+          "y": 314.0,
+          "w": 425.0,
+          "h": 166.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "turn",
+      "params": {
+        "angleDeg": -6.912663265784602,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 239,
+      "after_observation": 240,
+      "motion_index": 147,
+      "after_simulation_seconds": 216.7,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 19.929357345471622,
+        "bearing_deg": -1.1815965823559405,
+        "bbox": {
+          "x": 94.0,
+          "y": 319.0,
+          "w": 430.0,
+          "h": 161.0
+        }
+      }
+    },
+    {
+      "round": 47,
+      "method": "forward",
+      "params": {
+        "distanceCm": 1.9293573454716224,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 240,
+      "after_observation": 241,
+      "motion_index": 148,
+      "after_simulation_seconds": 216.92,
+      "after_on_road": false,
+      "nearest_region": {
+        "track_id": "storage-zone_053",
+        "distance_cm": 19.502173279657995,
+        "bearing_deg": -4.68448440629353,
+        "bbox": {
+          "x": 39.0,
+          "y": 333.0,
+          "w": 474.0,
+          "h": 147.0
+        }
+      }
+    }
+  ],
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 54,
+    "replayed_calls": 64,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/summary.json": "71ddbf63b2bc7b6dcd250d7dab194474905d12ff125a912553a4a126e450399e",
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/rounds.jsonl": "40fdcd2389e7add7dc2b2ded60b2fe2b068987276fe80914a0cf649a0429f4fa",
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/motions.jsonl": "7bac0b718be89a90cc730fd4aef0aabab76d6fa0e77ca0dd2cc221df4e9e3276",
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/observations.jsonl": "cf09cb7627a008c7656a3817df3f27783b8dca654261f224bd3d7d34b15a3d9d",
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/llm.jsonl": "5dc647bfd5e2c161958a18c86a2d852c7a7271a9fb12b4dad55b7a15e3cf2e46",
+    "artifacts/autonomous-brain/map05-run-08/map-05-run-1/brain/bridge-calls.jsonl": "e959725090273d9e8a88f453f44d9f4f73ca83309b6b360cd0f19a74adaddfa0",
+    "artifacts/autonomous-brain/map05-run-08/report/evaluation.json": "a8715b139986ed382d2e0f30e10a6af79fb7a8bf7b546042fd7e33354fed4460",
+    "artifacts/autonomous-brain/map05-run-08/evaluator-stop.json": "1b51dc9a1cdc83c7c80815b379e97385db27337f0ed6ee3fa614d0c3088802d2",
+    "artifacts/autonomous-brain/map05-run-08/llm-replay/replay-checks.json": "9c35ffaf006339b1ff9257a085b330eed085789b01b31055acec9a7a8e0d4707",
+    "artifacts/autonomous-brain/map05-run-08/source-commit.json": "29b36b097f841994b9372553bd1a305c3af2b6b6eef03d101e4485d28798f807",
+    "artifacts/autonomous-brain/map05-run-08/archive-integrity.json": "936d23ca59097e576815e31aaf0534bc457d9055aa9791655549b782dca04ef9"
+  }
+}

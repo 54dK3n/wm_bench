@@ -1,0 +1,66 @@
+{
+  "schema": "autonomous-brain-evaluator-fix-checks/v1",
+  "evaluator_version": "autonomous-brain-offline-evaluation/v2",
+  "before_evaluator_sha256": "6ed620a9c93858b5d0906b79268bcadb6428bf08a6d92311308ca52475c831b4",
+  "after_evaluator_sha256": "168a19ac4f921f201d26d3afb7f293832f43d9a9817cbfe38b928acaa52a2308",
+  "test_sha256": "b74b528b3321373fab2e0ec38adef70d6d1622deb202749b3e67e6493aeb667c",
+  "baseline": {
+    "passed": 21,
+    "failed": 34,
+    "log": "artifacts/autonomous-brain/evaluator-integrity-fix-20260925/before-tests.txt",
+    "sha256": "e391d694e518d74d9d3176039614e18fee60bb0e69d740ef2938401fda25c1ed"
+  },
+  "after": {
+    "passed": 55,
+    "failed": 0,
+    "log": "artifacts/autonomous-brain/evaluator-integrity-fix-20260925/after-tests.txt",
+    "sha256": "393b52dfb566453cc0b72e7f3067f40c5350aebdd9109350ad2306de001b003a"
+  },
+  "historical_run07": {
+    "success": false,
+    "source_proof": {
+      "status": "verified",
+      "failures": [],
+      "recorded_before_after_equal": true,
+      "driver_sources_unchanged": true,
+      "brain_summary_hashes_match": true,
+      "recorded_brain_and_driver_files": 8
+    },
+    "metrics": {
+      "rounds": 54,
+      "llm_calls": 57,
+      "llm_total_elapsed_s": 1211.691688041001,
+      "simulation_seconds": 249.92,
+      "observations": 266,
+      "failed_rounds": 12,
+      "failed_actions": 11,
+      "execution_failures": 0,
+      "external_stop_failures": 1,
+      "bridge_calls": 1225,
+      "nonwhitelist_brain_requests": 0
+    },
+    "judge_counts": {
+      "match": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 0,
+      "not_evaluated": 53,
+      "eligible_actions": 1
+    },
+    "report": "artifacts/autonomous-brain/evaluator-integrity-fix-20260925/historical-run07-v2/REPORT.md",
+    "evaluation_sha256": "87644a64c70e15ac97ea5c967dc523434823ced3f4c9446ad57c972299100d4c"
+  },
+  "prior_reports": [
+    {
+      "path": "artifacts/autonomous-brain/map05-run-07/report/REPORT.md",
+      "sha256": "4e796ecd9cc5a9794600ec910345d70e34eef695bf8ea4eba6c97d5c45d023c5",
+      "matches_committed_original": true
+    },
+    {
+      "path": "artifacts/autonomous-brain/map05-run-07/report/evaluation.json",
+      "sha256": "5a3b146e15868160cb42c92212801f0fbb11977e900047ae53c563f32db564d8",
+      "matches_committed_original": true
+    }
+  ],
+  "scope": "Evaluator and evaluator tests only; no autonomous runtime/driver/platform edits or run08 truth access; no network/model calls."
+}

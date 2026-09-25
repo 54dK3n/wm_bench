@@ -1,0 +1,13 @@
+# Near-field placement witness correction
+
+The initial v5 identity binding accidentally required a WorldModel track for delivery. A real public 35 cm ball detection is outside the unchanged 40–90 cm memory admission window, so it can have `track_id=None` despite being the unique current ball inside the observed storage region with an empty gripper. The newly added regressions failed for both the single-ball case and the case with two nearby existing red identities: **2 failed, 22 passed**, exit 1, zero network calls (`tests-before.log`).
+
+The correction in `autonomous_brain/perception.py` preserves that pixel-based delivery gate. It validates the explicit witness ID value (including None), exact current frame/category/position/bbox, release observation/time boundary and recomputed unique ball/region pair. Track birth, active-track and preexisting/alias checks apply when the real detection has a track. Only that validated new track is archived as an alias. An untracked near-field witness marks the original held identity delivered without creating, consuming or aliasing another identity; its raw witness is retained in the action evidence, with `delivery_alias=None`.
+
+The candidate perception version remains v5, as no v5 runtime had yet been frozen or deployed. This change does not modify `actions.py`, the memory range/confirmation thresholds, containment thresholds, or completion policy. The preceding shadow source/test patches and report remain unchanged; this report supersedes their unconditional track requirement only.
+
+Eight additional regression cases cover successful untracked witnesses alone and beside two known red tracks within 15 cm, unchanged nearby identities/pending state, stale frame/release-time/position/bbox evidence, a claimed None ID that attempts to bypass a real track, and two simultaneous untracked balls. The original duplicate-track alias and identity-safety regressions remain.
+
+After correction, all seven scoped files passed: **102 passed in 0.10s**, exit 0, zero network calls (`tests-after.log`). These use real Perception and explicit public synthetic detections, with network entry points blocked. No scene data, live-run artifacts, credentials, model calls or simulation were used. Exact test commands and exit codes are recorded in `validation-before.json` and `validation-after.json`.
+
+`before.json` and `after.json` record source/test SHA256 values. `near-field-correction.patch` is the incremental applied change relative to the just-applied initial identity fix. This is offline regression evidence and does not change any experiment outcome.

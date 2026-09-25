@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v3"
+RUNTIME_VERSION = "autonomous-brain-runtime/v4"
 
 
 def dump(path, value):
@@ -64,6 +64,9 @@ def compact_action_result(number, action, result, after_observation):
             names = (("stoppedBy", "return_error_cm", "reversed_cm")
                      if name == "recovery_result" else ("stoppedBy",))
             evidence[name] = fields(raw[name], names)
+    if isinstance(raw.get("road_return"), dict):
+        evidence["road_return"] = fields(raw["road_return"], (
+            "success", "reason", "on_road", "anchor_observation", "after_observation"))
     if isinstance(raw.get("road_clearance"), dict):
         evidence["road_clearance"] = fields(raw["road_clearance"], (
             "requested_cm", "permitted_cm", "heading_error_deg", "side",

@@ -1,0 +1,527 @@
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,7 +7,7 @@
+ from .bridge import SimulationLimit
+ from .navigation import distance, heading_to, position, wrap
+ 
+-VERSION = "autonomous-brain-actions/v10"
++VERSION = "autonomous-brain-actions/v11"
+ 
+ 
+ def road_translation_limit(road, method, requested_cm):
+@@ -337,8 +337,10 @@
+                 reacquired_from.add(current_pose)
+                 self.turn(-bearing)
+                 continue
+-            if (remaining <= 65 and observed is not None
+-                    and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])):
++            if (observed is not None
++                    and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])
++                    and type(observed.get("distance_cm")) in (int, float)
++                    and math.isfinite(observed["distance_cm"]) and 0 < observed["distance_cm"] <= 65):
+                 return self.visual_standoff(object_id)
+             if 25 <= remaining <= 40:
+                 self.turn(-bearing)
+@@ -507,10 +509,143 @@
+                     return self.result(False, "pick_retry_blocked", attempts=attempts, actuator_result=result)
+         return self.result(False, "three_grab_attempts_failed", object_id=object_id, attempts=attempts)
+ 
++    def return_place_path(self, trajectory):
++        """Undo measured place motions until fresh sensors reacquire the road.
++
++        Manipulation may leave the road. Only this call's observed straight
++        segments and rotations can supply its return path, never a guessed
++        fixed retreat or a line to a remembered map location.
++        """
++        returned = []
++        anchors = [row["before_observation"] for row in trajectory if row["before_on_road"]]
++        anchors += [row["after_observation"] for row in trajectory if row["after_on_road"]]
++
++        def outcome(success, reason, **details):
++            return {"success": success, "reason": reason,
++                    "on_road": self.s["road"]["onRoad"],
++                    "anchor_observation": max(anchors) if anchors else None,
++                    "after_observation": self.s["observation_index"], "motions": returned, **details}
++
++        if self.s["road"]["onRoad"]:
++            return outcome(True, "already_on_observed_road")
++        if not anchors:
++            return outcome(False, "no_observed_road_entry")
++        blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
++        for row in reversed(trajectory):
++            before, after = row["before"], row["after"]
++            current = self.s["odometry"]
++            if (distance(position(current), position(after)) * 100 > .2
++                    or abs(wrap(current["headingDeg"] - after["headingDeg"])) > .2):
++                return outcome(False, "recorded_path_pose_mismatch")
++            method, params = row["method"], row["params"]
++            measured = distance(position(before), position(after)) * 100
++            heading_change = wrap(after["headingDeg"] - before["headingDeg"])
++            if method in {"forward", "backward"}:
++                direction = 1 if method == "forward" else -1
++                theta = math.radians(before["headingDeg"])
++                dx = after["rightCm"] - before["rightCm"]
++                dz = after["forwardCm"] - before["forwardCm"]
++                along = direction * (-math.sin(theta) * dx + math.cos(theta) * dz)
++                across = math.cos(theta) * dx + math.sin(theta) * dz
++                if (abs(heading_change) > .2 or abs(across) > .2 or along < -.1
++                        or measured > params["distanceCm"] + .2):
++                    return outcome(False, "recorded_translation_not_reversible")
++                inverse = "backward" if method == "forward" else "forward"
++                # The recorded endpoint fixes a finite maximum number of
++                # corrections even when the actuator makes partial progress.
++                for _ in range(math.ceil(measured / 7) + 1):
++                    gap = distance(position(self.s["odometry"]), position(before)) * 100
++                    if gap <= .2:
++                        break
++                    requested = min(7, gap)
++                    if inverse == "forward":
++                        front = self.s["road"].get("frontClearanceCm")
++                        if (type(front) not in (int, float) or not math.isfinite(front)
++                                or front < requested + .1):
++                            return outcome(False, "recorded_return_blocked",
++                                           block_reason="current_front_clearance",
++                                           front_clearance_cm=front if type(front) in (int, float)
++                                           and math.isfinite(front) else None, requested_cm=requested)
++                    old = dict(self.s["odometry"])
++                    old_observation = self.s["observation_index"]
++                    result = self.move(inverse, {"distanceCm": requested, "speed": 20})
++                    returned.append({"method": inverse, "distance_cm": min(7, gap),
++                                     "before_observation": old_observation,
++                                     "after_observation": self.s["observation_index"],
++                                     "actuator_result": result})
++                    if result.get("stoppedBy") in blocked:
++                        return outcome(False, "recorded_return_blocked")
++                    now = self.s["odometry"]
++                    new_gap = distance(position(now), position(before)) * 100
++                    moved = distance(position(old), position(now)) * 100
++                    lateral = (math.cos(theta) * (now["rightCm"] - before["rightCm"])
++                               + math.sin(theta) * (now["forwardCm"] - before["forwardCm"]))
++                    if (abs(wrap(now["headingDeg"] - old["headingDeg"])) > .2
++                            or abs(lateral) > .25 or moved > min(7, gap) + .2
++                            or new_gap >= gap - .01):
++                        return outcome(False, "recorded_return_no_verified_progress")
++                    if self.s["road"]["onRoad"]:
++                        return outcome(True, "returned_to_observed_road")
++                if distance(position(self.s["odometry"]), position(before)) * 100 > .2:
++                    return outcome(False, "recorded_return_segment_incomplete")
++            elif method == "turn":
++                if measured > .2 or abs(heading_change) > abs(params["angleDeg"]) + .2:
++                    return outcome(False, "recorded_rotation_not_reversible")
++                if abs(heading_change) >= 1:
++                    old_observation = self.s["observation_index"]
++                    result = self.move("turn", {"angleDeg": -heading_change, "speed": 50})
++                    returned.append({"method": "turn", "angle_deg": -heading_change,
++                                     "before_observation": old_observation,
++                                     "after_observation": self.s["observation_index"],
++                                     "actuator_result": result})
++                    if result.get("stoppedBy") in blocked:
++                        return outcome(False, "recorded_return_blocked")
++                    current = self.s["odometry"]
++                    if (distance(position(current), position(before)) * 100 > .2
++                            or abs(wrap(current["headingDeg"] - before["headingDeg"])) > .2):
++                        return outcome(False, "recorded_return_rotation_incomplete")
++                    if self.s["road"]["onRoad"]:
++                        return outcome(True, "returned_to_observed_road")
++            elif measured > .2 or abs(heading_change) > .2:
++                return outcome(False, "unrecorded_place_displacement")
++            if row["before_observation"] == max(anchors):
++                return outcome(False, "recorded_entry_not_on_road")
++        return outcome(False, "recorded_return_did_not_reach_road")
++
+     def place(self):
++        trajectory = []
++
++        def place_move(method, params):
++            before = dict(self.s["odometry"])
++            before_observation = self.s["observation_index"]
++            before_on_road = self.s["road"]["onRoad"]
++            result = self.move(method, params)
++            trajectory.append({"method": method, "params": dict(params),
++                               "before": before, "after": dict(self.s["odometry"]),
++                               "before_observation": before_observation,
++                               "after_observation": self.s["observation_index"],
++                               "before_on_road": before_on_road,
++                               "after_on_road": self.s["road"]["onRoad"]})
++            return result
++
++        def finish(success, reason, **evidence):
++            if not success:
++                regions = [d for d in self.s["perception"]["detections"]
++                           if d["category"] == "storage-zone" and "distance_cm" in d]
++                if regions:
++                    # Capture the failed gate's current camera reading before
++                    # recovery changes pose, view, or the generic result frame.
++                    region = dict(min(regions, key=lambda d: d["distance_cm"]))
++                    region.setdefault("frame_id", str(self.s["observation"]["frameId"]))
++                    evidence.setdefault("detection", region)
++            # Placement evidence is decided before retracing. A blocked road
++            # return cannot revoke an observed delivery or establish one.
++            recovery = self.return_place_path(trajectory)
++            return self.result(success, reason, place_trajectory=trajectory,
++                               road_return=recovery, **evidence)
+         if self.r.pending_grasp and self.s["holding"]["holding"]:
+             pending = self.r.pending_grasp
+-            self.move("backward", {"distanceCm": 16, "speed": 30})
++            place_move("backward", {"distanceCm": 16, "speed": 30})
+             matches = [d for d in self.s["perception"]["detections"]
+                        if d["category"] == pending["category"] and "position_m" in d
+                        and distance(pending["original_position_m"], (d["position_m"]["x"], d["position_m"]["z"])) < 0.15]
+@@ -522,34 +657,45 @@
+                 self.r.pending_grasp = None
+         object_id = self.r.held_object_id
+         if not self.s["holding"]["holding"] or object_id is None:
+-            return self.result(False, "no_observation_confirmed_held_object")
++            return finish(False, "no_observation_confirmed_held_object")
+         category = self.r.perception.get_object(object_id)["category"]
+-        for _ in range(8):
+-            regions = [d for d in self.s["perception"]["detections"] if d["category"] == "storage-zone" and "distance_cm" in d]
+-            if not regions:
+-                return self.result(False, "storage_region_not_observed")
+-            region = min(regions, key=lambda d: d["distance_cm"])
+-            if region["distance_cm"] > 65:
+-                return self.result(False, "storage_region_too_far", distance_cm=region["distance_cm"])
+-            if abs(region["bearing_deg"]) > 3:
+-                self.turn(-region["bearing_deg"])
+-                continue
++        blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
++        for translations in range(9):
++            # Turning does not spend the eight-translation budget. Three
++            # fresh alignment turns are allowed before each translation.
++            for alignment in range(4):
++                regions = [d for d in self.s["perception"]["detections"]
++                           if d["category"] == "storage-zone" and "distance_cm" in d]
++                if not regions:
++                    return finish(False, "storage_region_not_observed")
++                region = min(regions, key=lambda d: d["distance_cm"])
++                if region["distance_cm"] > 65:
++                    return finish(False, "storage_region_too_far", distance_cm=region["distance_cm"])
++                if abs(region["bearing_deg"]) <= 3:
++                    break
++                if alignment == 3 or translations == 8:
++                    return finish(False, "storage_alignment_did_not_converge")
++                result = place_move("turn", {"angleDeg": wrap(-region["bearing_deg"]), "speed": 50})
++                if result.get("stoppedBy") in blocked:
++                    return finish(False, "storage_approach_blocked", actuator_result=result)
+             if region["distance_cm"] <= 19:
+                 break
+-            self.move("forward", {"distanceCm": min(7, region["distance_cm"] - 18), "speed": 30})
+-        else:
+-            return self.result(False, "storage_alignment_did_not_converge")
++            if translations == 8:
++                return finish(False, "storage_alignment_did_not_converge")
++            result = place_move("forward", {"distanceCm": min(7, region["distance_cm"] - 18), "speed": 30})
++            if result.get("stoppedBy") in blocked:
++                return finish(False, "storage_approach_blocked", actuator_result=result)
+         # Another previously known ball cannot witness this object's release.
+         other_known_ball_ids = {row["id"] for row in self.r.perception.objects()
+                                 if row["category"] == category and row["id"] != object_id}
+-        self.move("release", {})
++        place_move("release", {})
+         if self.s["holding"]["holding"]:
+-            return self.result(False, "release_did_not_empty_gripper")
++            return finish(False, "release_did_not_empty_gripper")
+         release_observation = {"frame_id": self.s["observation"]["frameId"],
+                                "simulation_time_s": self.r.bridge.seconds,
+                                "preexisting_ball_ids": sorted(other_known_ball_ids)}
+         # Move back to see the released ball and complete storage region.
+-        self.move("backward", {"distanceCm": 25, "speed": 30})
++        place_move("backward", {"distanceCm": 25, "speed": 30})
+         detections = self.s["perception"]["detections"]
+         witnesses = [(ball, zone) for ball in detections for zone in detections
+             if ball["category"] == category and "position_m" in ball and zone["category"] == "storage-zone"
+@@ -570,7 +716,7 @@
+         if not marked:
+             self.r.perception.mark_release_unverified(object_id, simulation_time_s=self.r.bridge.seconds, evidence=evidence)
+         self.r.held_object_id = None
+-        return self.result(marked, "ball_observed_in_storage" if marked else "released_ball_not_verified_in_storage",
++        return finish(marked, "ball_observed_in_storage" if marked else "released_ball_not_verified_in_storage",
+                            object_id=object_id, **evidence)
+ 
+     def done(self):
+--- /dev/null
++++ b/tests/test_brain_place_path_recovery.py
+@@ -0,0 +1,283 @@
++"""Bounded place budgets and odometry-only recovery from synthetic observations."""
++import math
++from types import SimpleNamespace
++
++import pytest
++
++from autonomous_brain.actions import Actions
++
++
++def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_first_cm=None):
++    objects = {"held": {"id": "held", "category": "red-ball", "state": "HELD",
++                         "position_m": {"x": 0, "z": .18}}}
++    views = list(views)
++    snapshot = {"observation_index": 1, "observation": {"frameId": 1},
++                "odometry": {"rightCm": 0., "forwardCm": 0., "headingDeg": 0., "tick": 0},
++                "road": {"onRoad": True, "frontClearanceCm": 100}, "holding": {"holding": True},
++                "perception": {"detections": []}}
++    motions, logs, delivery_evidence = [], [], []
++    released = False
++
++    def set_view(view):
++        snapshot["perception"]["detections"] = [] if view is None else [{
++            "category": "storage-zone", "distance_cm": view[0], "bearing_deg": view[1],
++            "bbox": {"x": 100, "y": 200, "w": 100, "h": 60}}]
++
++    set_view(views.pop(0))
++    snapshot["road"]["onRoad"] = road(snapshot["odometry"])
++
++    def observe():
++        snapshot["observation_index"] += 1
++        snapshot["observation"]["frameId"] += 1
++        snapshot["odometry"]["tick"] += 1
++        snapshot["road"]["onRoad"] = road(snapshot["odometry"])
++        for d in snapshot["perception"]["detections"]:
++            d["frame_id"] = str(snapshot["observation"]["frameId"])
++
++    def mark_delivered(oid, *, holding, ball_in_storage, **kwargs):
++        delivery_evidence.append(kwargs["evidence"])
++        if holding or not ball_in_storage:
++            return False
++        objects[oid]["state"] = "DELIVERED"
++        return True
++
++    def mark_unverified(oid, **kwargs):
++        objects[oid]["state"] = "RELEASED_UNVERIFIED"
++
++    def call(method, params):
++        nonlocal released
++        motions.append((method, dict(params)))
++        if block_return and ((released and method == "forward") or
++                             (not snapshot["perception"]["detections"] and method == "backward")):
++            return {"stoppedBy": "front_clearance", "distanceCm": 0}
++        odo = snapshot["odometry"]
++        if method == "release":
++            released = True
++            snapshot["holding"]["holding"] = False
++        elif method == "turn":
++            odo["headingDeg"] = (odo["headingDeg"] + params["angleDeg"] + 180) % 360 - 180
++        else:
++            assert method in {"forward", "backward"}
++            cm = actual_first_cm if actual_first_cm is not None and len(motions) == 1 else params["distanceCm"]
++            signed = cm if method == "forward" else -cm
++            theta = math.radians(odo["headingDeg"])
++            odo["rightCm"] -= math.sin(theta) * signed
++            odo["forwardCm"] += math.cos(theta) * signed
++        if not released and views:
++            set_view(views.pop(0))
++        elif released and method == "backward":
++            snapshot["perception"]["detections"] = [
++                {"category": "storage-zone", "distance_cm": 40, "bearing_deg": 0,
++                 "bbox": {"x": 100, "y": 200, "w": 100, "h": 60}},
++                {"category": "red-ball", "track_id": "fresh-release", "position_m": {"x": 0, "z": .18},
++                 "bbox": {"x": 145, "y": 210, "w": 10, "h": 20}},
++            ]
++        return {"accepted": True, "completed": True}
++
++    runtime = SimpleNamespace(snapshot=snapshot, round=1, pending_grasp=None, held_object_id="held",
++        bridge=SimpleNamespace(seconds=0, max_seconds=1200, call=call), observe=observe,
++        motion_log=SimpleNamespace(write=logs.append),
++        perception=SimpleNamespace(objects=lambda: list(objects.values()),
++            get_object=objects.get, mark_delivered=mark_delivered, mark_release_unverified=mark_unverified))
++    return runtime, motions, logs, objects, delivery_evidence
++
++
++def test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget():
++    # Run08 r47's observed distance/bearing sequence through its eighth motion,
++    # followed by two explicitly synthetic views that allow a sixth approach.
++    views = [(33.8865303, 2.5651), (23.8832029, 3.5857), (23.898327, -1.2347),
++             (21.2945146, 0), (20.7190282, 0), (21.3470637, 19.3271),
++             (20.2543594, 6.9127), (19.9293573, -1.1816), (19.5021733, -4.6845),
++             (19.4, 0), (18, 0)]
++    runtime, motions, _, objects, evidence = place_runtime(views)
++    result = Actions(runtime).place()
++    assert result["success"] is True
++    before_release = motions[:next(i for i, row in enumerate(motions) if row[0] == "release")]
++    assert sum(method == "forward" for method, _ in before_release) == 6
++    assert sum(method == "turn" for method, _ in before_release) == 4
++    assert all(params["distanceCm"] <= 7 for method, params in before_release if method == "forward")
++    assert objects["held"]["state"] == "DELIVERED"
++    assert evidence[0]["placement"]["ball_track_id"] == "fresh-release"
++    assert "release_observation" in evidence[0]
++
++
++def test_eighth_translation_gets_a_fresh_gate_check_before_failing():
++    runtime, motions, _, _, _ = place_runtime([(30, 0)] * 8 + [(18, 0)])
++    result = Actions(runtime).place()
++    assert result["success"] is True
++    assert sum(method == "forward" for method, _ in motions) == 8
++
++
++def test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge():
++    runtime, motions, _, _, _ = place_runtime([(30, 0)])
++    result = Actions(runtime).place()
++    assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
++    assert [method for method, _ in motions] == ["forward"] * 8
++    assert result["evidence"]["detection"]["distance_cm"] == 30
++    assert result["evidence"]["detection"]["bearing_deg"] == 0
++    assert str(result["evidence"]["detection"]["frame_id"]) == str(runtime.snapshot["observation"]["frameId"])
++
++
++def test_alignment_stops_after_three_observed_turns_without_translation():
++    runtime, motions, _, _, _ = place_runtime([(30, 10)])
++    result = Actions(runtime).place()
++    assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
++    assert [method for method, _ in motions] == ["turn"] * 3
++
++
++def test_failed_multiturn_approach_retraces_actual_segments_to_road():
++    near_origin = lambda odo: math.hypot(odo["rightCm"], odo["forwardCm"]) < .01
++    runtime, motions, logs, _, _ = place_runtime([(30, 0), (28, 30), (26, 0), None], road=near_origin)
++    result = Actions(runtime).place()
++    assert result["success"] is False and result["reason"] == "storage_region_not_observed"
++    assert [method for method, _ in motions] == ["forward", "turn", "forward", "backward", "turn", "backward"]
++    assert motions[-2][1]["angleDeg"] == pytest.approx(30)
++    assert result["evidence"]["road_return"]["success"] is True
++    assert near_origin(runtime.snapshot["odometry"])
++    assert runtime.snapshot["holding"]["holding"] is True
++    assert len(logs) == len(motions)
++    assert all(row["after_observation"] == row["before_observation"] + 1 for row in logs)
++
++
++def test_return_uses_measured_partial_translation_instead_of_requested_distance():
++    near_origin = lambda odo: abs(odo["forwardCm"]) < .01
++    runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin, actual_first_cm=3)
++    result = Actions(runtime).place()
++    assert result["evidence"]["road_return"]["success"] is True
++    assert motions == [("forward", {"distanceCm": 7, "speed": 30}),
++                       ("backward", {"distanceCm": 3, "speed": 20})]
++
++
++def test_failed_approach_stops_at_first_blocked_return_command():
++    near_origin = lambda odo: abs(odo["forwardCm"]) < .01
++    runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin, block_return=True)
++    result = Actions(runtime).place()
++    assert result["success"] is False
++    assert result["evidence"]["road_return"]["reason"] == "recorded_return_blocked"
++    assert [method for method, _ in motions] == ["forward", "backward"]
++    assert runtime.snapshot["holding"]["holding"] is True
++
++
++@pytest.mark.parametrize("block_return", [False, True])
++def test_verified_delivery_is_separate_from_small_step_road_return(block_return):
++    road = lambda odo: odo["forwardCm"] >= -11.01
++    runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=road, block_return=block_return)
++    result = Actions(runtime).place()
++    assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
++    assert runtime.held_object_id is None
++    assert evidence[0]["post_observation"] == 3
++    assert evidence[0]["placement"]["frame_id"] == 3
++    assert result["evidence"]["road_return"]["success"] is not block_return
++    if block_return:
++        assert [method for method, _ in motions] == ["release", "backward", "forward"]
++        assert result["evidence"]["road_return"]["reason"] == "recorded_return_blocked"
++    else:
++        assert [method for method, _ in motions] == ["release", "backward", "forward", "forward"]
++        assert runtime.snapshot["odometry"]["forwardCm"] == pytest.approx(-11)
++        assert all(params["distanceCm"] <= 7 for method, params in motions[2:])
++
++
++def test_offroad_entry_without_recorded_road_anchor_never_invents_a_return():
++    runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=lambda odo: False)
++    result = Actions(runtime).place()
++    assert result["success"] is False
++    assert [method for method, _ in motions] == ["forward"]
++    assert result["evidence"]["road_return"]["reason"] == "no_observed_road_entry"
++
++
++def test_failed_gate_keeps_its_detection_frame_separate_from_return_observations():
++    runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: abs(odo["forwardCm"]) < .01)
++    result = Actions(runtime).place()
++    assert result["success"] is False
++    assert result["evidence"]["detection"]["frame_id"] == "9"
++    assert result["evidence"]["frame_id"] > 9
++    assert result["evidence"]["road_return"]["success"] is True
++    assert len(motions) == 16
++
++
++def test_recorded_run08_rounded_trajectory_can_be_reversed_without_guessing_geometry():
++    # Public odometry from observations 233–241; the inverse actuator below is
++    # synthetic. This checks rounding tolerance, not live recovery success.
++    poses = [(101, 29.1, -174.3), (101.7, 22.1, -174.3), (101.7, 22.1, -177.9),
++             (101.9, 16.2, -177.9), (102, 13, -177.9), (102.1, 10.2, -177.9),
++             (102.1, 10.2, 162.7), (102.1, 10.2, 155.8), (101.3, 8.5, 155.8)]
++    primitives = [("forward", 7), ("turn", -3.5857494828805727),
++                  ("forward", 5.898326965863912), ("forward", 3.294514605401428),
++                  ("forward", 2.7190282433608637), ("turn", -19.327137708467546),
++                  ("turn", -6.912663265784602), ("forward", 1.9293573454716224)]
++    road = lambda odo: math.hypot(odo["rightCm"] - 101, odo["forwardCm"] - 29.1) < .11
++    runtime, motions, _, _, _ = place_runtime([(20, 0)], road=road)
++    runtime.snapshot["odometry"].update(rightCm=101.3, forwardCm=8.5, headingDeg=155.8)
++    original_call = runtime.bridge.call
++
++    def rounded_call(method, params):
++        result = original_call(method, params)
++        for key in ("rightCm", "forwardCm", "headingDeg"):
++            runtime.snapshot["odometry"][key] = round(runtime.snapshot["odometry"][key], 1)
++        return result
++
++    runtime.bridge.call = rounded_call
++    trace = []
++    for i, (method, amount) in enumerate(primitives):
++        pose = lambda j: dict(zip(("rightCm", "forwardCm", "headingDeg"), poses[j]))
++        trace.append({"method": method, "params": {"angleDeg" if method == "turn" else "distanceCm": amount},
++                      "before": pose(i), "after": pose(i + 1), "before_observation": 233 + i,
++                      "after_observation": 234 + i, "before_on_road": i == 0, "after_on_road": False})
++    result = Actions(runtime).return_place_path(trace)
++    assert result["success"] is True
++    assert result["anchor_observation"] == 233
++    assert road(runtime.snapshot["odometry"])
++    assert all(params["distanceCm"] <= 7 for method, params in motions if method != "turn")
++
++
++def test_return_does_not_pass_the_latest_recorded_entry_if_road_sensor_disagrees():
++    runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: False)
++    runtime.snapshot["odometry"]["forwardCm"] = 14
++    pose = lambda z: {"rightCm": 0, "forwardCm": z, "headingDeg": 0}
++    trace = [{"method": "forward", "params": {"distanceCm": 7},
++              "before": pose(z), "after": pose(z + 7), "before_observation": i + 1,
++              "after_observation": i + 2, "before_on_road": True, "after_on_road": i == 0}
++             for i, z in enumerate((0, 7))]
++    result = Actions(runtime).return_place_path(trace)
++    assert result["success"] is False and result["reason"] == "recorded_entry_not_on_road"
++    assert len(motions) == 1 and runtime.snapshot["odometry"]["forwardCm"] == 7
++
++
++def test_return_stops_when_inverse_actuator_reports_complete_without_motion():
++    near_origin = lambda odo: abs(odo["forwardCm"]) < .01
++    runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin)
++    original_call = runtime.bridge.call
++
++    def no_progress(method, params):
++        if method == "backward":
++            motions.append((method, dict(params)))
++            return {"completed": True}
++        return original_call(method, params)
++
++    runtime.bridge.call = no_progress
++    result = Actions(runtime).place()
++    assert result["success"] is False
++    assert result["evidence"]["road_return"]["reason"] == "recorded_return_no_verified_progress"
++    assert [method for method, _ in motions] == ["forward", "backward"]
++
++
++@pytest.mark.parametrize("front", [4, 7, None, float("nan")])
++def test_released_ball_or_unknown_front_clearance_blocks_forward_return_before_actuation(front):
++    runtime, motions, _, objects, evidence = place_runtime([(18, 0)], road=lambda odo: odo["forwardCm"] >= -11.01)
++    original_call = runtime.bridge.call
++
++    def limited_front(method, params):
++        result = original_call(method, params)
++        if method == "backward":
++            runtime.snapshot["road"]["frontClearanceCm"] = front
++        return result
++
++    runtime.bridge.call = limited_front
++    result = Actions(runtime).place()
++    assert result["success"] is True and objects["held"]["state"] == "DELIVERED"
++    assert [method for method, _ in motions] == ["release", "backward"]
++    recovery = result["evidence"]["road_return"]
++    assert recovery["success"] is False and recovery["reason"] == "recorded_return_blocked"
++    assert recovery["block_reason"] == "current_front_clearance"
++    assert recovery["requested_cm"] == 7
++    assert evidence[0]["post_observation"] == recovery["after_observation"] == 3

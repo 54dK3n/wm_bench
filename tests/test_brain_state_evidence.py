@@ -30,6 +30,24 @@ class CompactActionResultTests(unittest.TestCase):
         return run.compact_action_result(3, action or {"action": "go_to", "params": {"object_id": "red-1"}},
                                          result, 8)
 
+    def test_delivery_witness_and_failed_return_remain_distinct_in_next_state(self):
+        source = {"success": True, "reason": "ball_observed_in_storage", "evidence": {
+            "post_observation": 4, "frame_id": 9,
+            "placement": {"frame_id": 4},
+            "road_return": {"success": False, "reason": "recorded_return_blocked",
+                            "on_road": False, "anchor_observation": 1, "after_observation": 9,
+                            "motions": [{"method": "forward"}], "unrelated": "omit"}}}
+        original = copy.deepcopy(source)
+        compact = self.compact(source, {"action": "place", "params": {}})
+        self.assertTrue(compact["success"])
+        self.assertEqual(compact["evidence"]["placement"]["frame_id"], 4)
+        self.assertEqual(compact["evidence"]["post_observation"], 4)
+        returned = compact["evidence"]["road_return"]
+        self.assertEqual(returned, {"success": False, "reason": "recorded_return_blocked",
+                                   "on_road": False, "anchor_observation": 1, "after_observation": 9})
+        returned["success"] = True
+        self.assertEqual(source, original)
+
     def test_fresh_camera_geometry_and_observation_provenance_are_preserved(self):
         source = failed_go_to()
         summary = self.compact(source)
@@ -223,7 +241,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v3")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v4")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

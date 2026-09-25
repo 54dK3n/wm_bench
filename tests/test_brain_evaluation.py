@@ -62,11 +62,26 @@ def fixture_data():
                             {"id": truth_id, "role": "target", "x": 8, "z": -8} for truth_id in expected]}]}}
     rounds = [{"round": i, "state": {}, "action": {"action": "look_around", "params": {}},
                "result": {"success": True}, "simulation_seconds": i * 2} for i in (1, 2)]
+    observations.append({"observation_index": 3, "round": 2, "simulation_seconds": 100,
+                         "observation": {"frameId": 3, "tick": 5000, "detections": []},
+                         "holding": {"holding": False}, "objects": []})
+    rounds[-1].update(action={"action": "done", "params": {}}, simulation_seconds=100,
+                      result={"success": True, "reason": "observed_completion",
+                              "evidence": {"before_observation": 2, "after_observation": 3}})
     summary = {"status": "done", "reason": "observed_completion", "rounds": 2,
                "llm_calls": 2, "llm_total_elapsed_s": 0.75, "simulation_seconds": 100,
-               "timeline": [{"object_id": "unrelated-wm-0", "first_seen_s": 2.5}]}
+               "timeline": [{"object_id": "unrelated-wm-0", "first_seen_s": 2.5}],
+               "source_sha256": {"run.py": "a" * 64}}
+    source_manifest = {"version": "wm-autonomous-brain-driver/v4",
+                       "brain": {"autonomous_brain/run.py": "a" * 64},
+                       "driver": {"file": "tools/autonomous_brain_driver.js", "sha256": "b" * 64},
+                       "platform": {"competition-core.js": "c" * 64},
+                       "evaluatorCaptureSha256": "d" * 64}
     return {"record": record, "captures": captures, "summary": summary, "rounds": rounds,
             "observations": observations, "llm": [{"elapsed_s": 0.25}, {"elapsed_s": 0.5}],
+            "source_manifest": source_manifest,
+            "driver_summary": {"schema": source_manifest["version"], "status": "complete",
+                               "sourcesUnchanged": True, "sourceManifestAfterRun": copy.deepcopy(source_manifest)},
             "bridge": [{"request": {"method": "observe"}}],
             "metadata": {"map": "map-05", "success": True, "process": {"code": 0},
                          "maxRounds": 200, "maxSimulationSeconds": 1200}}
@@ -86,8 +101,14 @@ def write_fixture(tmp_path, data, compressed=True):
     (run / "evidence.json").write_text(json.dumps(evidence))
     (run / "evaluation.json").write_text(json.dumps(data["metadata"]))
     (run / "brain/summary.json").write_text(json.dumps(data["summary"]))
+    for key, name in (("source_manifest", "manifest.json"), ("driver_summary", "summary.json"),
+                      ("evaluator_stop", "evaluator-stop.json")):
+        if key in data:
+            (run.parent / name).write_text(json.dumps(data[key]))
     for key, name in (("rounds", "rounds"), ("observations", "observations"), ("llm", "llm"), ("bridge", "bridge-calls")):
         (run / "brain" / (name + ".jsonl")).write_text("".join(json.dumps(row) + "\n" for row in data[key]))
+    if "motions" in data:
+        (run / "brain/motions.jsonl").write_text("".join(json.dumps(row) + "\n" for row in data["motions"]))
     return run
 
 
@@ -204,7 +225,7 @@ def test_multiple_boxes_for_one_truth_are_ambiguous(fixture_data):
 
 
 def test_conflicting_track_identity_excludes_position_error(tmp_path, fixture_data):
-    for item in fixture_data["observations"][-1]["perception"]["detections"]:
+    for item in fixture_data["observations"][1]["perception"]["detections"]:
         item["track_id"] = "unrelated-wm-0"
     result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
     assert len(result["perception"]["ambiguous_track_ids"]["unrelated-wm-0"]) == 2
@@ -242,3 +263,160 @@ def test_cli_writes_new_report_and_refuses_overwrite(tmp_path, fixture_data):
     with pytest.raises(SystemExit):
         evaluation.main(["--input", str(run), "--out", str(out)])
     assert (out / "REPORT.md").read_text() == before
+
+
+@pytest.mark.parametrize("tick", [None, 4999, 5001, True])
+def test_final_sample_must_match_exact_export_end_tick(tmp_path, fixture_data, tick):
+    fixture_data["record"]["native"]["samples"][-1]["tick"] = tick
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert not result["success"]
+    assert "final_sample_tick_mismatch" in result["failures"]
+
+
+@pytest.mark.parametrize("mutation", ["no_done", "failed_done", "missing_reference", "unknown_reference", "wrong_round", "stale_tick", "holding"])
+def test_terminal_done_requires_a_successful_action_and_final_observation(tmp_path, fixture_data, mutation):
+    last, observation = fixture_data["rounds"][-1], fixture_data["observations"][-1]
+    if mutation == "no_done":
+        last["action"]["action"] = "look_around"
+    elif mutation == "failed_done":
+        last["result"]["success"] = False
+    elif mutation == "missing_reference":
+        last["result"].pop("evidence")
+    elif mutation == "unknown_reference":
+        last["result"]["evidence"]["after_observation"] = 9
+    elif mutation == "wrong_round":
+        observation["round"] = 1
+    elif mutation == "stale_tick":
+        observation["observation"]["tick"] = 4999
+    else:
+        observation["holding"]["holding"] = True
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert not result["success"]
+    assert "terminal_done_not_corroborated" in result["failures"]
+
+
+@pytest.mark.parametrize("mutation", ["changed", "flag_false", "summary_hash", "missing", "unsupported", "malformed_hash"])
+def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_data, mutation):
+    if mutation == "changed":
+        fixture_data["driver_summary"]["sourceManifestAfterRun"]["brain"]["autonomous_brain/run.py"] = "e" * 64
+    elif mutation == "flag_false":
+        fixture_data["driver_summary"]["sourcesUnchanged"] = False
+    elif mutation == "summary_hash":
+        fixture_data["summary"]["source_sha256"]["run.py"] = "f" * 64
+    elif mutation == "missing":
+        fixture_data.pop("source_manifest")
+        fixture_data.pop("driver_summary")
+    elif mutation == "unsupported":
+        fixture_data["source_manifest"]["version"] = "unknown/v1"
+    else:
+        fixture_data["source_manifest"]["brain"]["autonomous_brain/run.py"] = "not-a-sha"
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert not result["success"]
+    assert result["source_proof"]["status"] != "verified"
+    assert any(reason.startswith("source_proof_") for reason in result["failures"])
+
+
+def test_known_source_proof_is_reported_without_reading_current_runtime(tmp_path, fixture_data):
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert result["source_proof"]["status"] == "verified"
+    assert result["source_proof"]["recorded_before_after_equal"] is True
+    assert result["source_proof"]["brain_summary_hashes_match"] is True
+
+
+def test_missing_archive_sidecar_is_not_a_fallback_integrity_pass(tmp_path, fixture_data):
+    run = write_fixture(tmp_path, fixture_data)
+    (run / "evidence.json").unlink()
+    result = evaluation.evaluate_run(run)
+    assert not result["success"]
+    assert "missing_input:evidence.json" in result["failures"]
+
+
+def test_report_does_not_call_active_event_a_valid_delivery_when_final_position_fails(tmp_path, fixture_data):
+    fixture_data["record"]["native"]["samples"][-1]["packages"][0]["x"] = 20
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert not result["success"]
+    report = evaluation.report_text(result)
+    assert "最终有效送达" not in report
+    assert "最终未撤销交付事件" in report
+
+
+def judge_fixture(data, action, claimed_success, actual_success):
+    """Build a real bounded actuator window using public observations and offline truth."""
+    truth_id = "truth-red-east"
+    before = {"observation_index": 3, "round": 2, "simulation_seconds": 5,
+              "observation": {"frameId": 3, "tick": 250, "detections": []},
+              "holding": {"holding": action == "place"}, "objects": []}
+    after = {"observation_index": 4, "round": 2, "simulation_seconds": 12,
+             "observation": {"frameId": 4, "tick": 600, "detections": []},
+             "holding": {"holding": action == "pick" and actual_success}, "objects": []}
+    terminal = copy.deepcopy(data["observations"][-1])
+    terminal.update(observation_index=5, round=3)
+    data["observations"] = data["observations"][:2] + [before, after, terminal]
+    done = copy.deepcopy(data["rounds"][-1])
+    done.update(round=3)
+    done["result"]["evidence"] = {"before_observation": 4, "after_observation": 5}
+    data["rounds"] = [data["rounds"][0], {"round": 2, "state": {"robot": {"held_object_id": "unrelated-wm-0"}},
+        "action": {"action": action, "params": {"object_id": "unrelated-wm-0"} if action == "pick" else {}},
+        "result": {"success": claimed_success, "reason": "synthetic_action_result",
+                   "evidence": {"object_id": "unrelated-wm-0", "before_observation": 3,
+                                "after_observation": 4, "final_observation": 4}}, "simulation_seconds": 12}, done]
+    data["motions"] = [{"round": 2, "method": "grab" if action == "pick" else "release",
+                        "before_observation": 3, "after_observation": 4, "actuator_result": {"completed": True}}]
+    native = data["record"]["native"]
+    native["events"] = [e for e in native["events"] if not (e.get("packageId") == truth_id and e.get("tick", 0) <= 600)]
+    if actual_success:
+        native["events"].insert(0, {"type": "package_grabbed" if action == "pick" else "package_delivered",
+                                    "packageId": truth_id, "accepted": True, "tick": 500})
+    native["samples"].insert(1, {"tick": 250, "holding": truth_id if action == "place" else None,
+                                "packages": [{"id": truth_id, "x": 20, "z": -8}]})
+    native["samples"].insert(2, {"tick": 600, "holding": truth_id if action == "pick" and actual_success else None,
+                                "packages": [{"id": truth_id, "x": 8 if actual_success else 20, "z": -8}]})
+    data["summary"].update(rounds=3, llm_calls=3, llm_total_elapsed_s=1)
+    data["llm"].append({"elapsed_s": .25})
+    return data
+
+
+@pytest.mark.parametrize("action", ["pick", "place"])
+@pytest.mark.parametrize("claimed,actual,status", [(True, True, "match"), (False, False, "match"),
+                                                  (True, False, "false_positive"), (False, True, "false_negative")])
+def test_independent_judge_counts_bound_pick_and_place_outcomes(tmp_path, fixture_data, action, claimed, actual, status):
+    result = evaluation.evaluate_run(write_fixture(tmp_path, judge_fixture(fixture_data, action, claimed, actual)))
+    judge = result["judge"]
+    assert judge["rows"][1]["status"] == status
+    assert judge["counts"][status] == 1
+    assert judge["counts"]["eligible_actions"] == 1
+    assert judge["counts"]["not_evaluated"] == 2
+    assert "Judge" in evaluation.report_text(result)
+
+
+@pytest.mark.parametrize("missing", ["binding", "sample", "motion", "reference", "ambiguous_sample"])
+def test_judge_marks_missing_or_ambiguous_evidence_unverifiable(tmp_path, fixture_data, missing):
+    data = judge_fixture(fixture_data, "pick", True, True)
+    if missing == "binding":
+        data["rounds"][1]["action"]["params"]["object_id"] = "unknown"
+        data["rounds"][1]["result"]["evidence"]["object_id"] = "unknown"
+    elif missing == "sample":
+        data["record"]["native"]["samples"] = [x for x in data["record"]["native"]["samples"] if x["tick"] != 600]
+    elif missing == "motion":
+        data.pop("motions")
+    elif missing == "reference":
+        data["rounds"][1]["result"]["evidence"].pop("before_observation")
+    else:
+        data["record"]["native"]["samples"].insert(3, {"tick": 600, "holding": None, "packages": []})
+    judge = evaluation.evaluate_run(write_fixture(tmp_path, data))["judge"]
+    assert judge["rows"][1]["status"] == "unverifiable"
+    assert judge["counts"]["unverifiable"] == 1
+    assert judge["counts"]["false_positive"] == judge["counts"]["false_negative"] == 0
+
+
+def test_external_stop_error_is_separated_from_action_failure(tmp_path, fixture_data):
+    fixture_data["summary"].update(status="failed", reason="BridgeError: turn: NOT_RUNNING")
+    fixture_data["rounds"][-1]["result"] = {"success": False, "reason": "turn: NOT_RUNNING", "error_type": "BridgeError"}
+    fixture_data["evaluator_stop"] = {"version": "evaluator-requested-stop/v1", "task_success": False,
+                                     "reason": "fixture stop", "result": {"running": True, "tick": 5000}}
+    result = evaluation.evaluate_run(write_fixture(tmp_path, fixture_data))
+    assert not result["success"]
+    assert result["metrics"]["failed_rounds"] == result["metrics"]["external_stop_failures"] == 1
+    assert result["metrics"]["failed_actions"] == 0
+    assert result["failed_actions"][0]["failure_kind"] == "external_stop"
+    assert "评估方停止后的错误" in evaluation.report_text(result)

@@ -1,0 +1,88 @@
+FFF.F                                                                    [100%]
+=================================== FAILURES ===================================
+__ test_verified_place_leaves_one_canonical_identity_for_its_release_witness ___
+
+    def test_verified_place_leaves_one_canonical_identity_for_its_release_witness():
+        runtime = DeliveryRuntime()
+        outcome = Actions(runtime).place()
+        assert outcome["success"] is True
+        assert runtime.motions == [("release", {}), ("backward", {"distanceCm": 25, "speed": 30})]
+        witness = runtime.current_release_witness()
+        assert witness["fed_to_world_model"] is True
+        assert witness["track_id"] != runtime.original_id, "The post-release sensor frame created a new identity"
+        assert runtime.perception.get_object(runtime.original_id)["state"] == "DELIVERED"
+        history_ids = {row["object_id"] for row in runtime.perception.timeline()}
+        assert {runtime.original_id, witness["track_id"]}.issubset(history_ids), (
+            "Resolving the release identity must preserve both raw observation timelines")
+        pending = [row["id"] for row in red_rows(runtime) if row["state"] != "DELIVERED"]
+>       assert pending == [], "A verified release witness must not remain a separate undelivered task object"
+E       AssertionError: A verified release witness must not remain a separate undelivered task object
+E       assert ['target_003'] == []
+E         
+E         Left contains one more item: 'target_003'
+E         Use -v to get more diff
+
+tests/test_brain_delivery_identity.py:113: AssertionError
+_ test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done[next_observation] _
+
+later_time = 1
+
+    @pytest.mark.parametrize("later_time", [1, 100], ids=["next_observation", "after_decay"])
+    def test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done(later_time):
+        runtime = DeliveryRuntime()
+        assert Actions(runtime).place()["success"] is True
+        runtime.bridge.seconds = later_time
+        runtime.observe()
+        witness = runtime.current_release_witness()
+        assert witness["known_delivered_object_id"] == runtime.original_id
+        assert witness["fed_to_world_model"] is False
+        outcome = Actions(runtime).done()
+>       assert outcome["success"] is True, outcome
+E       AssertionError: {'evidence': {'after_observation': 7, 'frame_id': '7', 'holding': False, 'pending_objects': ['target_003'], ...}, 'reason': 'completion_not_supported_by_observations', 'success': False}
+E       assert False is True
+
+tests/test_brain_delivery_identity.py:126: AssertionError
+_ test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done[after_decay] _
+
+later_time = 100
+
+    @pytest.mark.parametrize("later_time", [1, 100], ids=["next_observation", "after_decay"])
+    def test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done(later_time):
+        runtime = DeliveryRuntime()
+        assert Actions(runtime).place()["success"] is True
+        runtime.bridge.seconds = later_time
+        runtime.observe()
+        witness = runtime.current_release_witness()
+        assert witness["known_delivered_object_id"] == runtime.original_id
+        assert witness["fed_to_world_model"] is False
+        outcome = Actions(runtime).done()
+>       assert outcome["success"] is True, outcome
+E       AssertionError: {'evidence': {'after_observation': 7, 'frame_id': '7', 'holding': False, 'pending_objects': ['target_003'], ...}, 'reason': 'completion_not_supported_by_observations', 'success': False}
+E       assert False is True
+
+tests/test_brain_delivery_identity.py:126: AssertionError
+__ test_stale_release_frame_cannot_authorize_delivery_of_a_new_witness_track ___
+
+    def test_stale_release_frame_cannot_authorize_delivery_of_a_new_witness_track():
+        runtime = DeliveryRuntime()
+        release_frame = runtime.release_observations_without_delivery_mark()
+        witness = runtime.current_release_witness()
+        zone = next(d for d in runtime.snapshot["perception"]["detections"] if d["category"] == "storage-zone")
+        assert release_frame != runtime.snapshot["observation"]["frameId"]
+        assert runtime.perception.get_object(witness["track_id"])["state"] == "TENTATIVE"
+        marked = runtime.perception.mark_delivered(runtime.original_id, holding=False, ball_in_storage=True,
+            simulation_time_s=runtime.bridge.seconds, evidence={
+                "holding": False, "post_observation": runtime.frame,
+                "placement": {"ball_position_m": witness["position_m"], "ball_bbox": witness["bbox"],
+                              "storage_bbox": zone["bbox"], "frame_id": release_frame}})
+>       assert marked is False, "A witness from the retreat frame cannot be attributed to the earlier release frame"
+E       AssertionError: A witness from the retreat frame cannot be attributed to the earlier release frame
+E       assert True is False
+
+tests/test_brain_delivery_identity.py:159: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_delivery_identity.py::test_verified_place_leaves_one_canonical_identity_for_its_release_witness
+FAILED tests/test_brain_delivery_identity.py::test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done[next_observation]
+FAILED tests/test_brain_delivery_identity.py::test_reobserving_delivered_ball_cannot_leave_a_duplicate_blocking_done[after_decay]
+FAILED tests/test_brain_delivery_identity.py::test_stale_release_frame_cannot_authorize_delivery_of_a_new_witness_track
+4 failed, 1 passed in 0.17s
