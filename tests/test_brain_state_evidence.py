@@ -222,6 +222,7 @@ class NextModelStateTests(unittest.TestCase):
 
         class FakeClient:
             def __init__(self, **kwargs):
+                assert kwargs["transport_retries"] == 5
                 self.call_count, self.total_elapsed_s, self.last_record = 0, 0, {}
 
             def decide(self, state):
@@ -256,7 +257,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v8")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v9")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

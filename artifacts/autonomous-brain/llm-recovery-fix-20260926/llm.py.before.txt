@@ -20,8 +20,8 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v12"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 13)}
+VERSION = "autonomous-brain-llm/v11"
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 12)}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -90,40 +90,6 @@ def _partial_response_text(error: BaseException, prefix: bytes = b"") -> str | N
     if isinstance(partial, (bytes, bytearray)):
         return (prefix + bytes(partial)).decode("utf-8", errors="replace")
     return prefix.decode("utf-8", errors="replace") if prefix else None
-
-
-def _validate_transport_diagnostics(value: Any) -> None:
-    required = {"phase", "received_bytes"}
-    optional = {"reason_type", "reason_errno"}
-    if (not isinstance(value, dict) or not required <= set(value)
-            or not set(value) <= required | optional
-            or value["phase"] not in ("open", "read_stream", "read_body")
-            or type(value["received_bytes"]) is not int or value["received_bytes"] < 0):
-        raise ReplayError("Replay has invalid transport diagnostics")
-    if "reason_type" in value:
-        name = value["reason_type"]
-        if (not isinstance(name, str) or not name.isascii() or not name.isidentifier()
-                or len(name) > 80):
-            raise ReplayError("Replay has invalid transport diagnostics reason_type")
-    if "reason_errno" in value and ("reason_type" not in value or type(value["reason_errno"]) is not int):
-        raise ReplayError("Replay has invalid transport diagnostics reason_errno")
-
-
-def _record_transport_reason(diagnostics: dict[str, Any], exc: BaseException,
-                             received: bytes) -> None:
-    partial = getattr(exc, "partial", b"")
-    diagnostics["received_bytes"] = len(received) + (
-        len(partial) if isinstance(partial, (bytes, bytearray)) else 0)
-    if isinstance(exc, urllib.error.URLError):
-        # Never stringify the reason: DNS/TLS errors can contain hostnames or
-        # endpoint credentials. Only structural type and numeric errno escape.
-        reason = exc.reason
-        name = type(reason).__name__
-        diagnostics["reason_type"] = (name if name.isascii() and name.isidentifier()
-                                      and len(name) <= 80 else "unknown")
-        errno = getattr(reason, "errno", None)
-        if type(errno) is int:
-            diagnostics["reason_errno"] = errno
 
 
 def _sse_events(body: str):
@@ -221,7 +187,7 @@ class LLMClient:
     [DONE] can produce an action; raw SSE is retained for offline replay.
 
     Invalid model outputs get one repair request. Transport errors stop by
-    default; an explicit transport_retries limit from 1 through 5 allows only the
+    default; an explicit transport_retries limit of 1 or 2 allows only the
     listed transient failures to retry the same JSON request. Every attempt
     and its delay are logged; no model/temperature/format fallback is used.
     """
@@ -261,8 +227,7 @@ class LLMClient:
                 raise ReplayError("Replay is missing its request object")
             first_request = self._replay[0]["request"]
             self.transport_retries = self._replay[0].get("transport_retry_limit", 0)
-            replay_limit = 5 if self._replay[0]["version"] == VERSION else 2
-            if type(self.transport_retries) is not int or not 0 <= self.transport_retries <= replay_limit:
+            if type(self.transport_retries) is not int or not 0 <= self.transport_retries <= 2:
                 raise ReplayError("Replay has invalid transport retry limit")
             self.model = model or first_request.get("model")
             self.stream = first_request.get("stream")
@@ -288,8 +253,8 @@ class LLMClient:
             if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
                 raise ReplayError("Replay has invalid temperature")
         else:
-            if type(transport_retries) is not int or not 0 <= transport_retries <= 5:
-                raise ValueError("transport_retries must be an integer from 0 through 5")
+            if type(transport_retries) is not int or not 0 <= transport_retries <= 2:
+                raise ValueError("transport_retries must be an integer from 0 through 2")
             self.transport_retries = transport_retries
             if not isinstance(stream, bool):
                 raise ValueError("stream must be a boolean")
@@ -411,8 +376,6 @@ class LLMClient:
                 raise ReplayError("Replay exhausted before this decision")
             replay_record = self._replay[self._replay_cursor]
             record["version"] = replay_record["version"]
-            if replay_record["version"] != VERSION and self.transport_retries > 2:
-                raise ReplayError("Replay has invalid legacy transport retry limit")
             if replay_record["version"] == VERSION or any(key in replay_record for key in retry_metadata):
                 for key, expected in retry_metadata.items():
                     if type(replay_record.get(key)) is not int or replay_record[key] != expected:
@@ -431,20 +394,10 @@ class LLMClient:
             record["transport_error"] = replay_record.get("transport_error")
             if "transport_timeout_s" in replay_record:
                 record["transport_timeout_s"] = replay_record["transport_timeout_s"]
-            if replay_record["version"] == VERSION or "transport_diagnostics" in replay_record:
-                diagnostics = replay_record.get("transport_diagnostics")
-                _validate_transport_diagnostics(diagnostics)
-                record["transport_diagnostics"] = dict(diagnostics)
             self._replay_cursor += 1
         else:
             record.update(retry_metadata)
             record["transport_timeout_s"] = self.timeout_s
-            diagnostics = {"phase": "open", "received_bytes": 0}
-            # phase identifies the primary failure stage (HTTP status failures
-            # occur at open), or the final successful read stage. Byte counts
-            # cover captured data, including IncompleteRead.partial, not bytes
-            # that might remain in the underlying socket.
-            record["transport_diagnostics"] = diagnostics
             outbound = urllib.request.Request(
                 f"{self._base_url}/chat/completions",
                 data=_canonical(request).encode("utf-8"),
@@ -457,7 +410,6 @@ class LLMClient:
             try:
                 with urllib.request.urlopen(outbound, timeout=self.timeout_s) as response:
                     if request.get("stream"):
-                        diagnostics["phase"] = "read_stream"
                         event_data = []
                         while True:
                             line = response.readline()
@@ -474,30 +426,21 @@ class LLMClient:
                                 event_data.append(value[1:] if value.startswith(b" ") else value)
                         record["response_body"] = received.decode("utf-8")
                     else:
-                        diagnostics["phase"] = "read_body"
-                        received.extend(response.read())
-                        record["response_body"] = received.decode("utf-8")
-                    diagnostics["received_bytes"] = len(received)
+                        record["response_body"] = response.read().decode("utf-8")
             except urllib.error.HTTPError as exc:
                 record["transport_error"] = {"type": "HTTPError", "status": exc.code}
                 try:
-                    received.extend(exc.read())
-                    record["response_body"] = received.decode("utf-8", errors="replace")
-                    diagnostics["received_bytes"] = len(received)
+                    record["response_body"] = exc.read().decode("utf-8", errors="replace")
                 except (http.client.HTTPException, OSError, UnicodeError) as read_error:
-                    record["response_body"] = _partial_response_text(read_error, bytes(received))
+                    record["response_body"] = _partial_response_text(read_error)
                     record["transport_error"]["body_read_error"] = type(read_error).__name__
-                    diagnostics["phase"] = "read_body"
-                    _record_transport_reason(diagnostics, read_error, bytes(received))
             except http.client.HTTPException as exc:
                 record["response_body"] = _partial_response_text(exc, bytes(received))
                 record["transport_error"] = {"type": type(exc).__name__}
-                _record_transport_reason(diagnostics, exc, bytes(received))
             except (urllib.error.URLError, TimeoutError, OSError, UnicodeError) as exc:
                 # Exception text may include endpoint credentials; log only its type.
                 record["response_body"] = _partial_response_text(exc, bytes(received))
                 record["transport_error"] = {"type": type(exc).__name__}
-                _record_transport_reason(diagnostics, exc, bytes(received))
             finally:
                 record["elapsed_s"] = time.perf_counter() - start
 

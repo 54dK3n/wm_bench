@@ -47,6 +47,8 @@ def response(content, *, stream=True, **extra):
 def legacy_record(saved, version):
     saved["version"] = version
     number = int(version.rsplit("v", 1)[1])
+    if number < 12:
+        saved.pop("transport_diagnostics", None)
     if number < 6:
         saved["request"].pop("stream", None)
     saved["request_sha256"] = hashlib.sha256(json.dumps(saved["request"],
@@ -104,7 +106,7 @@ def test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with
     assert json.loads(request["messages"][1]["content"]) == state
 
 
-@pytest.mark.parametrize("number", range(1, 10))
+@pytest.mark.parametrize("number", range(1, 12))
 def test_legacy_repair_replay_keeps_original_prompt_and_state_without_convention(tmp_path, state, number):
     legacy_prompt = f"历史提示/v{number}：只按该轮记录的对象和出口选择一个动作。"
     path = tmp_path / "legacy-repair.jsonl"
@@ -157,7 +159,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v11"
+            assert saved["version"] == "autonomous-brain-llm/v12"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
@@ -498,10 +500,153 @@ def test_replay_rejects_inconsistent_transport_retry_metadata(tmp_path, state, f
             assert replay.call_count == 1
 
 
-@pytest.mark.parametrize("limit", [True, -1, 3, 1.0, "2", None])
+@pytest.mark.parametrize("limit", [True, -1, 6, 1.0, "2", None])
 def test_transport_retry_limit_is_bounded_integer(tmp_path, limit):
     with pytest.raises(ValueError, match="transport_retries"):
         LLMClient(tmp_path / "invalid-limit.jsonl", transport_retries=limit)
+
+
+@pytest.mark.parametrize("reason,expected", [
+    (ConnectionRefusedError(61, "https://private-user:private-key@private-endpoint"),
+     {"reason_type": "ConnectionRefusedError", "reason_errno": 61}),
+    (TimeoutError("private-timeout-detail"), {"reason_type": "TimeoutError"}),
+    ("https://private-user:private-key@private-endpoint", {"reason_type": "str"}),
+])
+def test_urlerror_diagnostics_are_structural_and_replay_exactly(tmp_path, state, reason, expected):
+    path = tmp_path / "failure.jsonl"
+    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError(reason)):
+        with LLMClient(path) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+    saved = records(path)[0]
+    assert saved["transport_diagnostics"] == {"phase": "open", "received_bytes": 0, **expected}
+    assert saved["transport_error"] == {"type": "URLError"}
+    for forbidden in ("private-user", "private-key", "private-endpoint", "private-timeout-detail",
+                      "never-record-this-key"):
+        assert forbidden not in path.read_text()
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("sleep")):
+        with LLMClient(tmp_path / "replayed.jsonl", replay_path=path) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+            client.assert_replay_consumed()
+    assert [{k: v for k, v in row.items() if k != "mode"} for row in records(path)] == [
+        {k: v for k, v in row.items() if k != "mode"} for row in records(tmp_path / "replayed.jsonl")]
+
+
+def test_urlerror_reason_is_never_stringified_or_coerced_to_errno(tmp_path, state):
+    class SecretReason:
+        errno = True
+
+        def __str__(self):
+            raise AssertionError("Do not stringify exception reason")
+
+    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError(SecretReason())):
+        with LLMClient(tmp_path / "failure.jsonl") as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+    assert records(tmp_path / "failure.jsonl")[0]["transport_diagnostics"] == {
+        "phase": "open", "received_bytes": 0, "reason_type": "SecretReason"}
+
+
+def test_stream_read_diagnostics_count_received_utf8_bytes_and_keep_partial_content(tmp_path, state):
+    line = ('data: ' + json.dumps({"model": "测试模型", "choices": [{"index": 0,
+        "delta": {"content": '{"action":"look_around","params":{}}'}}]}, ensure_ascii=False) + '\n').encode()
+
+    class BrokenStream(io.BytesIO):
+        def readline(self, *args):
+            if self.tell() == len(line):
+                raise urllib.error.URLError(ConnectionResetError(54, "private-read-detail"))
+            return super().readline(*args)
+
+    path = tmp_path / "partial.jsonl"
+    with patch("urllib.request.urlopen", return_value=BrokenStream(line)):
+        with LLMClient(path) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+    saved = records(path)[0]
+    assert saved["transport_diagnostics"] == {"phase": "read_stream", "received_bytes": len(line),
+        "reason_type": "ConnectionResetError", "reason_errno": 54}
+    assert saved["response_body"] == line.decode()
+    assert saved["action"] is None
+    assert saved["raw_output"] == '{"action":"look_around","params":{}}'
+    assert "private-read-detail" not in path.read_text()
+
+
+@pytest.mark.parametrize("stream", [False, True])
+def test_success_diagnostics_count_actual_response_bytes(tmp_path, state, stream):
+    body = response('{"action":"look_around","params":{}}', stream=stream)
+    length = len(body.getvalue())
+    with patch("urllib.request.urlopen", return_value=body):
+        with LLMClient(tmp_path / "success.jsonl", stream=stream) as client:
+            client.decide(state)
+    assert records(tmp_path / "success.jsonl")[0]["transport_diagnostics"] == {
+        "phase": "read_stream" if stream else "read_body", "received_bytes": length}
+
+
+def test_incomplete_body_diagnostics_include_exception_partial_bytes(tmp_path, state):
+    class BrokenBody(io.BytesIO):
+        def read(self, *args):
+            raise http.client.IncompleteRead("部分".encode(), 20)
+
+    with patch("urllib.request.urlopen", return_value=BrokenBody()):
+        with LLMClient(tmp_path / "partial-body.jsonl", stream=False) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+    row = records(tmp_path / "partial-body.jsonl")[0]
+    assert row["response_body"] == "部分"
+    assert row["transport_diagnostics"] == {"phase": "read_body", "received_bytes": 6}
+
+
+@pytest.mark.parametrize("broken_body", [False, True])
+def test_http_diagnostics_distinguish_status_failure_from_error_body_read_failure(tmp_path, state, broken_body):
+    body = "网关".encode()
+
+    class ErrorBody(io.BytesIO):
+        def read(self, *args):
+            raise http.client.IncompleteRead(body, 20)
+
+    error = urllib.error.HTTPError("https://model.example/v1", 502, "private-http-detail",
+                                   None, ErrorBody() if broken_body else io.BytesIO(body))
+    with patch("urllib.request.urlopen", side_effect=error):
+        with LLMClient(tmp_path / "http.jsonl") as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+    row = records(tmp_path / "http.jsonl")[0]
+    assert row["response_body"] == body.decode()
+    assert row["transport_diagnostics"] == {
+        "phase": "read_body" if broken_body else "open", "received_bytes": len(body)}
+    assert "private-http-detail" not in (tmp_path / "http.jsonl").read_text()
+
+
+@pytest.mark.parametrize("diagnostics", [None, {}, {"phase": "open"},
+    {"phase": "connect", "received_bytes": 0}, {"phase": "open", "received_bytes": True},
+    {"phase": "open", "received_bytes": -1}, {"phase": "open", "received_bytes": 1.0},
+    {"phase": "open", "received_bytes": 0, "url": "not-allowed"},
+    {"phase": "open", "received_bytes": 0, "reason_type": "reason with text"},
+    {"phase": "open", "received_bytes": 0, "reason_type": 2},
+    {"phase": "open", "received_bytes": 0, "reason_type": "x" * 81},
+    {"phase": "open", "received_bytes": 0, "reason_errno": 54},
+    {"phase": "open", "received_bytes": 0, "reason_type": "OSError", "reason_errno": True},
+    {"phase": "open", "received_bytes": 0, "reason_type": "OSError", "reason_errno": "54"}])
+def test_v12_replay_rejects_malformed_diagnostics(tmp_path, state, diagnostics):
+    path = tmp_path / "source.jsonl"
+    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}')):
+        with LLMClient(path) as client:
+            client.decide(state)
+    row = records(path)[0]
+    if diagnostics is None:
+        row.pop("transport_diagnostics")
+    else:
+        row["transport_diagnostics"] = diagnostics
+    path.write_text(json.dumps(row) + '\n')
+    with patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("sleep")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as client:
+            with pytest.raises(ReplayError, match="transport diagnostics"):
+                client.decide(state)
+            assert client.call_count == 0
 
 
 @pytest.mark.parametrize("temperature", ["0", "0.0", "0.7", "2"])
@@ -816,7 +961,8 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
                                      "autonomous-brain-llm/v3", "autonomous-brain-llm/v4",
                                      "autonomous-brain-llm/v5", "autonomous-brain-llm/v6",
-                                     "autonomous-brain-llm/v7", "autonomous-brain-llm/v8", "autonomous-brain-llm/v9"])
+                                     "autonomous-brain-llm/v7", "autonomous-brain-llm/v8", "autonomous-brain-llm/v9",
+                                     "autonomous-brain-llm/v10", "autonomous-brain-llm/v11"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"

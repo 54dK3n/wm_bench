@@ -1,0 +1,104 @@
+{
+  "schema": "autonomous-brain-offline-llm-replay/v1",
+  "scope": "offline_llm_transcript_replay",
+  "task_acceptance": false,
+  "full_simulation_replayed": false,
+  "live_model_called": false,
+  "source_brain_directory": "artifacts/autonomous-brain/map05-run-03/map-05-run-1/brain",
+  "original_run": {
+    "status": "failed",
+    "reason": "LLMRequestError: LLM request failed: RemoteDisconnected; see transcript",
+    "rounds": 2,
+    "llm_calls": 2
+  },
+  "original_llm_client_sha256": "50a869e343d8a33dbd43c1e42bc0dbfea7bbb5cac1de6ecae81743211f7cc0b7",
+  "rows": [
+    {
+      "round": 1,
+      "expected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "actual_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "expected_error": null,
+      "actual_error": null,
+      "replayed_call_count": 1,
+      "recorded_call_count": 1,
+      "recorded_execution_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 2,
+          "frame_id": 2,
+          "tick": 81,
+          "holding": false,
+          "before_observation": 1,
+          "final_observation": 3
+        }
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    },
+    {
+      "round": 2,
+      "expected_action": null,
+      "actual_action": null,
+      "expected_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: RemoteDisconnected; see transcript"
+      },
+      "actual_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: RemoteDisconnected; see transcript"
+      },
+      "replayed_call_count": 2,
+      "recorded_call_count": 2,
+      "recorded_execution_result": {
+        "success": false,
+        "reason": "LLM request failed: RemoteDisconnected; see transcript",
+        "error_type": "LLMRequestError"
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    }
+  ],
+  "recorded_rounds": 2,
+  "replayed_rounds": 2,
+  "recorded_calls": 2,
+  "replayed_calls": 2,
+  "all_records_consumed": true,
+  "full_records_equal_except_mode": true,
+  "mismatched_record_indexes": [],
+  "replay_error": null,
+  "recorded_elapsed_s_replayed": 112.14927674999998,
+  "network_calls": 0,
+  "blocked_network_entry_points": {
+    "urllib.request.urlopen": 0,
+    "urllib.request.OpenerDirector.open": 0,
+    "http.client.HTTPConnection.request": 0,
+    "http.client.HTTPConnection.connect": 0,
+    "http.client.HTTPSConnection.connect": 0,
+    "socket.create_connection": 0,
+    "socket.socket.connect": 0,
+    "socket.socket.connect_ex": 0,
+    "socket.socket.sendto": 0,
+    "socket.getaddrinfo": 0
+  },
+  "environment_access_attempts": 0,
+  "source_sha256": {
+    "rounds": "f1dbbbefb198462c23073131c818d713218bfccf7a41ffe07b808fac1c4d2f7f",
+    "original_llm": "7b4f713bbf1c48637b991b5d8486e623017a55be34b27e33082f9a8dc6874055",
+    "original_summary": "dcc2642194c9995f391f38892b4155573df9a9730b14e9244d6413841ede93c0",
+    "tool": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+    "llm_client": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab"
+  },
+  "source_evidence_unchanged": true,
+  "allPass": true
+}

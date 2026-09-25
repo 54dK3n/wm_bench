@@ -19,7 +19,7 @@
 driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-16
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-17
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
@@ -32,7 +32,9 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 
 大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。用户已批准本机 Kimi K2.6 非思考模式、温度 0.6；程序不会按服务错误自动改模型或温度。完整但不合法的输出最多修复一次，仍非法就停止。
 
-客户端默认网络重试为 0；正式大脑自 v7 起显式设为 2，仅对列明的瞬态连接错误重发相同请求，最多初次加两次，等待 1 秒和 2 秒。每次失败和重试均记录，永久错误立即停止，耗尽后整局失败。默认单次网络等待为 180 秒，实际值记入 `transport_timeout_s`；调用耗时与重试等待分别保存。网络重试不增加 JSON 修复次数。旧记录回放恢复其原策略，缺失重试字段时按 0 处理，不补写字段、不联网或等待。细节与验证见[连接重试报告](../artifacts/autonomous-brain/llm-retry-fix-20260925/REPORT.md)。
+客户端默认网络重试为0；runtime v9正式设为5，仅对列明的瞬态连接错误重发相同请求，最多初次加五次，等待1、2、4、8、16秒。每次失败和重试均完整记录，永久错误立即停止，耗尽后整局失败。非法JSON仍只允许修正一次；网络恢复不改变模型、温度、动作或成功判据。连接/读取等待参数仍为180秒，记入`transport_timeout_s`，不是整次请求耗时的硬上限；调用耗时与重试等待分别保存。见[有限网络恢复验证](../artifacts/autonomous-brain/llm-recovery-fix-20260926/REPORT.md)。
+
+历史runtime v7–v8使用的最多两次网络重试及1/2秒等待仍可按原记录回放；更早缺失重试字段时按0处理，不补写字段、不联网或等待。LLM v12新增阶段、已捕获响应字节数及URLError底层类型/数值errno等安全诊断，不记录异常文本、URL或凭据。HTTP错误在打开请求时发生但随后读到错误正文，主失败阶段仍为open；读取错误正文自身失败则为read_body。旧v1–v11记录保持原结构，新增诊断不会倒填进旧日志。原[连接重试报告](../artifacts/autonomous-brain/llm-retry-fix-20260925/REPORT.md)保持不变。
 
 ## 大脑模块
 
@@ -59,7 +61,7 @@ actions v16增加同次place内的有限复观测：仅在释放后夹爪为空�
 
 v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-reobservation-replay-01/DIAGNOSTIC.md)已完成，90条原调用全部输入匹配、无新模型调用，但仅完成一个15.940812099cm视点，仍只识别旧球，诊断FAIL。离线堆叠分析不能作为脑的状态输入或补判依据。
 
-当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式map05-run-15冻结于`9b2cc8486ec9b870cf1219b977ea36387565331a`，第69轮因连续网络错误耗尽重试而失败，实际交付1/2，完整导出与源码证明已保留。下一正式局采用上述navigation v4，其他大脑与模型策略不变。
+当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式第十五局实际交付1/2，第十六局0/2；两局均因连续模型服务错误耗尽旧重试而结束，完整导出与失败结论保留。下一正式局采用navigation v4、LLM v12/runtime v9的有限网络恢复，其余感知与动作策略不变。
 
 ## 日志与复算
 
