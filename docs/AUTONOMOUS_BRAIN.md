@@ -19,7 +19,7 @@
 driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-15
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-16
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
@@ -43,6 +43,8 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 - `autonomous_brain/actions.py`：explore、look_around、go_to、pick、place、done。go_to/pick 开始前必须 CONFIRMED；抓取最多三次；每次运动后有新观测。环视使用八个45°方向，原地旋转不增加独立位置命中。
 - `autonomous_brain/llm.py`：单动作 JSON 校验、完整调用输入输出、耗时和严格输入匹配的离线模型回放。
 
+navigation v4统一路口更新、当前出口读取和出口选择的节点定位：均使用严格小于15cm范围内的最近节点，完全等距时保留插入顺序。原v3在更新时选最近节点、读取和选择时却选首个符合范围的节点，会把相邻路口的出口状态读错或写错。修复不扩大距离/角度门限、不合并或删除节点，不直接关闭探索义务。原传感日志复现、失败基线和[正式修复验证](../artifacts/autonomous-brain/road-node-locator-fix-20260926/REPORT.md)均保留；全套567项brain测试通过。
+
 红蓝球使用旧 demo 的 M5 参数和有效测距窗口，不以近距重复帧增加确认次数；静态配置要求三次独立视点，间距至少 15cm。已确认轨迹在近距被双向唯一匹配时，仅刷新看见时刻与帧信息，不修改位置、置信度、状态或命中数；实际未见和匹配歧义仍正常衰减。近距框用于视觉对准，最终接近用已确认位置与里程计控制，采用 demo 的 22cm 记忆停点及失败后 6cm 小步，最多三抓；不把 M5 的近场外推值当精确抓距。绿色地面不是旧立式标牌，使用相机内外参作地面投影。障碍条纹框经过扩框，反演位置明确标为近似。
 
 Perception v7保留曾确认的LOST身份与新轨迹的独立历史。新红球轨迹自己满足原三位置确认后，才可在原30cm同类门控内，与历史身份建立双向唯一的重获绑定；竞争集合包含暂定、陈旧及其他历史轨迹，操作生命周期不能充当历史重获来源。绑定是数据关联假设，不能独立证明物理身份。`go_to/pick`仍只接受当前CONFIRMED身份；完成判定仅在完整无歧义绑定链的后继具有原抓放证据、状态为DELIVERED后，解除对应历史义务。旧LOST状态、位置与时间线不改写，证据缺失、循环或未验证释放仍待处理。
@@ -57,7 +59,7 @@ actions v16增加同次place内的有限复观测：仅在释放后夹爪为空�
 
 v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-reobservation-replay-01/DIAGNOSTIC.md)已完成，90条原调用全部输入匹配、无新模型调用，但仅完成一个15.940812099cm视点，仍只识别旧球，诊断FAIL。离线堆叠分析不能作为脑的状态输入或补判依据。
 
-当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；新严格仿真诊断已取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式map05-run-15已启动，源码冻结于`9b2cc8486ec9b870cf1219b977ea36387565331a`。
+当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式map05-run-15冻结于`9b2cc8486ec9b870cf1219b977ea36387565331a`，第69轮因连续网络错误耗尽重试而失败，实际交付1/2，完整导出与源码证明已保留。下一正式局采用上述navigation v4，其他大脑与模型策略不变。
 
 ## 日志与复算
 
@@ -103,13 +105,26 @@ python3 tools/replay_brain_llm.py \
 
 它要求调用记录全部耗尽、除 `mode` 外完整记录相同；动作执行失败不会被误计为模型输出失败。这项核验不代表全仿真复跑或任务成功。
 
-只有 map-05 正式成功后，才可凭保存的成功局运行十布局：
+只有 map-05 正式成功、独立v3评测通过且确认正式200轮/1200秒配置与完整来源后，才可凭保存的成功局运行十布局。门票为该正式局原始trial的`evaluation.json`，同目录必须有`evidence.json`；不是独立报告目录的同名文件。每个布局使用独立driver目录，避免后续导出失败影响先前完整局的来源核验：
 
 ```sh
-node tools/autonomous_brain_driver.js \
-  --map05-success artifacts/autonomous-brain/map05-run-01/map-05-run-1/evaluation.json \
-  --maps map-01,map-02,map-03,map-04,map-05,map-06,map-07,map-08,map-09,map-10 \
-  --out artifacts/autonomous-brain/ten-layouts-01
+brain_proof='<已通过独立评测的正式局>/map-05-run-1/evaluation.json'
+brain_batch=artifacts/autonomous-brain/ten-layouts-01
+for brain_layout in map-01 map-02 map-03 map-04 map-05 map-06 map-07 map-08 map-09 map-10; do
+  if node tools/autonomous_brain_driver.js \
+    --map05-success "$brain_proof" --maps "$brain_layout" --runs 1 \
+    --max-rounds 200 --max-simulation-seconds 1200 \
+    --out "$brain_batch/$brain_layout"; then
+    :
+  fi
+  brain_trial="$brain_batch/$brain_layout/$brain_layout-run-1"
+  if [ -d "$brain_trial" ]; then
+    if python3 tools/evaluate_autonomous_brain.py \
+      --input "$brain_trial" --out "$brain_batch/$brain_layout/report"; then
+      :
+    fi
+  fi
+done
 ```
 
-十布局只报告成败与原因。当前是否存在正式成功局，以最新交付报告为准；单测和假模型联调不代表任务通过。
+十布局各运行一次，失败继续下一局，只报告成败与原因；缺少运行或评测明确列为NOT_RUN/缺失，不能从历史门票的`map05Passed`推断当前图成功。当前是否存在正式成功局，以最新交付报告为准；单测和假模型联调不代表任务通过。

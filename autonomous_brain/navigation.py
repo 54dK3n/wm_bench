@@ -4,7 +4,7 @@ from __future__ import annotations
 import heapq
 import math
 
-VERSION = "autonomous-brain-navigation/v3"
+VERSION = "autonomous-brain-navigation/v4"
 
 
 def wrap(angle):
@@ -75,8 +75,8 @@ class RoadMemory:
             self.last_vertex = None
         self.last_position = p
         if road.get("atNode") and road["exits"]:
-            node = min(self.nodes, key=lambda n: distance(p, n["position"]), default=None)
-            if node is None or distance(p, node["position"]) >= 0.15:
+            node = self.current_node(odo)
+            if node is None:
                 node = {"id": f"junction-{len(self.nodes)+1}", "position": p, "exits": []}
                 self.nodes.append(node)
             for raw in road["exits"]:
@@ -109,7 +109,9 @@ class RoadMemory:
 
     def current_node(self, odo):
         p = position(odo)
-        return next((n for n in self.nodes if distance(p, n["position"]) < 0.15), None)
+        # min keeps the first inserted node when distances are exactly tied.
+        node = min(self.nodes, key=lambda n: distance(p, n["position"]), default=None)
+        return node if node is not None and distance(p, node["position"]) < 0.15 else None
 
     def exits(self, odo, road):
         node = self.current_node(odo)
