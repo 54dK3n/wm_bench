@@ -1,0 +1,131 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................................................ [ 42%]
+........................................................................ [ 53%]
+......................................FFF............................... [ 64%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 96%]
+.......................                                                  [100%]
+=================================== FAILURES ===================================
+_____________ test_real_http_sse_aggregates_deltas_usage_and_done ______________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-149/test_real_http_sse_aggregates_0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_sse_aggregates_deltas_usage_and_done(tmp_path, state):
+        parts = ['{"action":', '"look_around",', '"params":{}}']
+        raw = "".join(parts)
+        payload = stream_body(parts, usage=True)
+        log_path = tmp_path / "complete-stream.jsonl"
+>       with local_stream_server([payload]) as requests:
+
+tests/test_brain_llm_stream_transport.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x10b3ae220>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+_ test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-149/test_real_http_eof_without_don0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action(tmp_path, state):
+        # Even a syntactically complete action and finish_reason=stop are not enough.
+        raw = '{"action":"pick","params":{"object_id":"wm-1"}}'
+        payload = stream_body([raw[:18], raw[18:]], done=False)
+        log_path = tmp_path / "incomplete-stream.jsonl"
+        executed = []
+>       with local_stream_server([payload]) as requests:
+
+tests/test_brain_llm_stream_transport.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x10b4c6d00>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+_______ test_real_http_complete_invalid_json_has_only_one_repair_request _______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-149/test_real_http_complete_invali0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_complete_invalid_json_has_only_one_repair_request(tmp_path, state):
+        invalid = ["not a JSON object", '{"action":"look_around","params":']
+        payloads = [stream_body([text], done=True) for text in invalid]
+        log_path = tmp_path / "invalid-streams.jsonl"
+        executed = []
+>       with local_stream_server(payloads) as requests:
+
+tests/test_brain_llm_stream_transport.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x10b5483d0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_sse_aggregates_deltas_usage_and_done
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_complete_invalid_json_has_only_one_repair_request
+3 failed, 668 passed in 0.81s

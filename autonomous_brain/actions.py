@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v18"
+VERSION = "autonomous-brain-actions/v19"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -305,6 +305,100 @@ class Actions:
                            reobservation_candidate=chosen,
                            final_heading_deg=self.s["odometry"]["headingDeg"])
 
+    def observed_road_node(self):
+        return self.s["road"].get("onRoad") is True and self.s["road"].get("atNode") is True
+
+    def recover_unobserved_junction(self, actuator_result):
+        """Resolve an actuator/sensor boundary disagreement using local sensing.
+
+        An actuator endpoint label is not arrival evidence. Align to the
+        observed tangent and probe at most one ordinary 20 cm road step, in
+        the existing 4 cm increments. The actuator label never closes an edge;
+        normal road memory updates still use each fresh node observation.
+        """
+        diagnostic = {"trigger_observation": self.s["observation_index"],
+                      "actuator_result": copy.deepcopy(actuator_result),
+                      "method": "observed_local_tangent_and_bounded_forward",
+                      "requested_budget_cm": 20, "steps": []}
+
+        def number(value):
+            return type(value) in (int, float) and math.isfinite(value)
+
+        def finish(success, reason):
+            diagnostic["reason"] = reason
+            diagnostic["after_observation"] = self.s["observation_index"]
+            return self.result(success, "next_junction_observed" if success else reason,
+                               junction_recovery=diagnostic)
+
+        def move_checked(method, params):
+            before = dict(self.s["odometry"])
+            index = self.s["observation_index"]
+            frame = self.s["observation"]["frameId"]
+            if not all(number(before.get(k)) for k in ("rightCm", "forwardCm", "headingDeg")):
+                return "junction_recovery_odometry_unavailable"
+            result = self.move(method, params)
+            after = dict(self.s["odometry"])
+            entry = {"method": method, "params": dict(params), "before": before, "after": after,
+                     "before_observation": index, "after_observation": self.s["observation_index"],
+                     "actuator_result": result}
+            diagnostic["steps"].append(entry)
+            if (self.s["observation_index"] <= index
+                    or str(self.s["observation"]["frameId"]) == str(frame)
+                    or not all(number(after.get(k))
+                    for k in ("rightCm", "forwardCm", "headingDeg"))):
+                return "junction_recovery_observation_unverified"
+            measured = distance(position(before), position(after)) * 100
+            change = wrap(after["headingDeg"] - before["headingDeg"])
+            entry.update(measured_cm=measured, heading_change_deg=change)
+            if method == "turn":
+                if measured > .2 or abs(wrap(change - params["angleDeg"])) > .2:
+                    return "junction_recovery_turn_unverified"
+            else:
+                theta = math.radians(before["headingDeg"])
+                dx, dz = after["rightCm"] - before["rightCm"], after["forwardCm"] - before["forwardCm"]
+                along = -math.sin(theta) * dx + math.cos(theta) * dz
+                across = math.cos(theta) * dx + math.sin(theta) * dz
+                entry.update(along_cm=along, across_cm=across)
+                if (abs(change) > .2 or abs(across) > .2 or along < .2
+                        or measured > params["distanceCm"] + .2):
+                    return "junction_recovery_translation_unverified"
+            if not self.s["road"].get("onRoad"):
+                return "junction_recovery_left_road"
+            if result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:
+                return "junction_recovery_motion_blocked"
+            return None
+
+        if actuator_result.get("stoppedBy") != "junction":
+            return finish(False, "junction_recovery_not_requested")
+        for _ in range(5):
+            road = self.s["road"]
+            if not road.get("onRoad") or not number(road.get("headingErrorDeg")):
+                return finish(False, "junction_recovery_road_direction_unavailable")
+            if self.observed_road_node():
+                return finish(True, "road_node_observed")
+            angle = wrap(road["headingErrorDeg"])
+            if abs(angle) >= 1:
+                failure = move_checked("turn", {"angleDeg": angle, "speed": 50})
+                if failure:
+                    return finish(False, failure)
+                if self.observed_road_node():
+                    return finish(True, "road_node_observed")
+            # Use the post-turn reading, including its new forward clearance.
+            road = self.s["road"]
+            if (not number(road.get("headingErrorDeg"))
+                    or abs(wrap(road["headingErrorDeg"])) > 10):
+                return finish(False, "junction_recovery_road_not_aligned")
+            permitted, clearance = road_translation_limit(road, "forward", 4)
+            diagnostic["road_clearance"] = clearance
+            if permitted < .2:
+                return finish(False, "junction_recovery_clearance_insufficient")
+            failure = move_checked("forward", {"distanceCm": permitted, "speed": 30})
+            if failure:
+                return finish(False, failure)
+            if self.observed_road_node():
+                return finish(True, "road_node_observed")
+        return finish(False, "junction_stop_not_observed_after_bounded_recovery")
+
     def return_from_blocked_road(self, blocked_result):
         """Turn back and follow the observed road, including its bends."""
         self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
@@ -327,10 +421,17 @@ class Actions:
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
                 return self.result(False, "blocked_road_return_left_road",
                                    actuator_result=blocked_result, recovery_result=result)
-            if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+            if self.observed_road_node():
                 return self.result(False, "road_blocked_returned_to_junction",
                                    actuator_result=blocked_result, recovery_result=result,
                                    recovery_steps=step + 1)
+            if result.get("stoppedBy") == "junction":
+                recovery = self.recover_unobserved_junction(result)
+                return self.result(False, "road_blocked_returned_to_junction" if recovery["success"]
+                                   else "blocked_road_return_junction_not_observed",
+                                   actuator_result=blocked_result, recovery_result=result,
+                                   recovery_steps=step + 1,
+                                   junction_recovery=recovery["evidence"]["junction_recovery"])
             moved = distance(before, position(self.s["odometry"])) * 100
             if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
                 return self.result(False, "blocked_road_return_blocked",
@@ -392,9 +493,13 @@ class Actions:
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
-            if result.get("stoppedBy") == "junction" or (
-                    self.s["road"].get("atNode") and result.get("distanceCm", 0) >= 0.2):
+            moved = distance(start, position(self.s["odometry"])) * 100
+            if self.observed_road_node() and moved >= .2:
                 return self.result(True, "next_junction_observed")
+            if result.get("stoppedBy") == "junction":
+                if self.observed_road_node():
+                    return self.result(False, "selected_exit_no_observed_progress", actuator_result=result)
+                return self.recover_unobserved_junction(result)
             if result.get("distanceCm", 0) < 0.2:
                 self.r.roads.mark_blocked()
                 return self.result(False, "selected_exit_blocked", actuator_result=result)
@@ -412,10 +517,10 @@ class Actions:
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
-            # A nearby junction can be less than one step away, or the road
-            # follower can report it without moving. Neither is an obstacle.
-            if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+            if self.observed_road_node():
                 return self.result(True, "next_junction_observed")
+            if result.get("stoppedBy") == "junction":
+                return self.recover_unobserved_junction(result)
             moved = distance(before, position(self.s["odometry"])) * 100
             if moved < 0.2:
                 return self.return_from_blocked_road(result)

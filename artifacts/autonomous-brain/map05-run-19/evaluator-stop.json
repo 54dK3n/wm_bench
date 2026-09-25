@@ -1,0 +1,32 @@
+{
+  "schema": "wm-brain-evaluator-stop/v1",
+  "requestedAt": "2026-09-25T19:11:39.164Z",
+  "reason": "Repeated next_junction_observed success contradicted by unchanged odometry and fresh atNode=false/exits=[]; stop for a versioned observation-Judge and boundary-recovery fix.",
+  "publicEvidence": [
+    {
+      "round": 140,
+      "before": 925,
+      "after": 926
+    },
+    {
+      "round": 145,
+      "before": 952,
+      "after": 953
+    },
+    {
+      "round": 146,
+      "before": 955,
+      "after": 956
+    }
+  ],
+  "sourceCommit": "609772040d00f35e3ec6e25cfa5433894be4e5a7",
+  "action": "set stopRequested=true; let the next bridge call fail normally so the child summary and all driver exports are saved",
+  "result": {
+    "priorStopRequested": false,
+    "stopRequested": true,
+    "tick": 34583,
+    "status": "running",
+    "backendRunning": true
+  },
+  "response_binding": "evaluator-stop-cdp.json/result/result/value"
+}

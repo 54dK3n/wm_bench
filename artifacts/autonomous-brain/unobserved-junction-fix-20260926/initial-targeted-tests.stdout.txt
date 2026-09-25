@@ -1,0 +1,22 @@
+.............F........................................................   [100%]
+=================================== FAILURES ===================================
+______ ExploreRecoveryTests.test_zero_distance_junction_is_not_a_blockage ______
+
+self = <test_brain_actions.ExploreRecoveryTests testMethod=test_zero_distance_junction_is_not_a_blockage>
+
+    def test_zero_distance_junction_is_not_a_blockage(self):
+        for at_node in (False, True):
+            with self.subTest(at_node=at_node):
+                runtime, moves, _ = self.scripted_runtime([{
+                    "method": "follow_road",
+                    "result": {"accepted": True, "stoppedBy": "junction", "distanceCm": 0},
+                    "road": {"atNode": at_node},
+                }])
+                result = Actions(runtime).explore()
+>               self.assertTrue(result["success"])
+E               AssertionError: False is not true
+
+tests/test_brain_actions.py:191: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_actions.py::ExploreRecoveryTests::test_zero_distance_junction_is_not_a_blockage
+1 failed, 69 passed in 0.07s

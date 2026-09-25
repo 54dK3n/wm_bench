@@ -1,0 +1,180 @@
+{
+  "source_version": "autonomous-brain-actions/v18",
+  "network_or_robot_calls": 0,
+  "checks": [
+    {
+      "name": "r140_no_success_without_observed_node",
+      "passed": false,
+      "expected_success": false,
+      "actual_success": true,
+      "actual_reason": "next_junction_observed"
+    },
+    {
+      "name": "r145_no_success_without_observed_node",
+      "passed": false,
+      "expected_success": false,
+      "actual_success": true,
+      "actual_reason": "next_junction_observed"
+    },
+    {
+      "name": "r146_no_success_without_observed_node",
+      "passed": false,
+      "expected_success": false,
+      "actual_success": true,
+      "actual_reason": "next_junction_observed"
+    },
+    {
+      "name": "three_actual_observation_pairs_have_no_motion_or_node",
+      "passed": true
+    },
+    {
+      "name": "existing_road_budget_forbids_unaligned_forward",
+      "passed": true,
+      "permitted_cm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "round": 140,
+      "before_observation": 925,
+      "after_observation": 926,
+      "action_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 926,
+          "frame_id": 926,
+          "tick": 33423,
+          "holding": true
+        }
+      },
+      "calls": [
+        {
+          "method": "follow_road",
+          "params": {
+            "distanceCm": 20,
+            "speed": 50
+          }
+        }
+      ],
+      "exact_saved_motion_reproduced": true,
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": -47.6,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 28.4,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33423
+      },
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": -171,
+        "distanceCm": 4258.2,
+        "tick": 33423
+      }
+    },
+    {
+      "round": 145,
+      "before_observation": 952,
+      "after_observation": 953,
+      "action_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 953,
+          "frame_id": 953,
+          "tick": 33887,
+          "holding": true
+        }
+      },
+      "calls": [
+        {
+          "method": "follow_road",
+          "params": {
+            "distanceCm": 20,
+            "speed": 50
+          }
+        }
+      ],
+      "exact_saved_motion_reproduced": true,
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": -47.6,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 28.4,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33887
+      },
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": -171,
+        "distanceCm": 4258.2,
+        "tick": 33887
+      }
+    },
+    {
+      "round": 146,
+      "before_observation": 955,
+      "after_observation": 956,
+      "action_result": {
+        "success": true,
+        "reason": "next_junction_observed",
+        "evidence": {
+          "after_observation": 956,
+          "frame_id": 956,
+          "tick": 33887,
+          "holding": true
+        }
+      },
+      "calls": [
+        {
+          "method": "follow_road",
+          "params": {
+            "distanceCm": 20,
+            "speed": 50
+          }
+        }
+      ],
+      "exact_saved_motion_reproduced": true,
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": -9.1,
+        "headingErrorDeg": -47.6,
+        "leftClearanceCm": 0.1,
+        "rightClearanceCm": 18.3,
+        "frontClearanceCm": 28.4,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 33887
+      },
+      "odometry": {
+        "forwardCm": 31.9,
+        "rightCm": 103.3,
+        "headingDeg": -171,
+        "distanceCm": 4258.2,
+        "tick": 33887
+      }
+    }
+  ],
+  "passed": 2,
+  "failed": 3,
+  "interpretation": "Expected baseline failures demonstrate a false-positive action postcondition; no fix is applied."
+}

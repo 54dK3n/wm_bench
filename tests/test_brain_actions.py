@@ -179,7 +179,7 @@ class ExploreRecoveryTests(ScriptedActionCase):
                 self.assertEqual(remaining, [])
                 self.assertEqual(runtime.roads.blocked, [])
 
-    def test_zero_distance_junction_is_not_a_blockage(self):
+    def test_zero_distance_junction_requires_observation_and_is_not_a_blockage(self):
         for at_node in (False, True):
             with self.subTest(at_node=at_node):
                 runtime, moves, _ = self.scripted_runtime([{
@@ -188,8 +188,13 @@ class ExploreRecoveryTests(ScriptedActionCase):
                     "road": {"atNode": at_node},
                 }])
                 result = Actions(runtime).explore()
-                self.assertTrue(result["success"])
-                self.assertEqual(result["reason"], "next_junction_observed")
+                self.assertEqual(result["success"], at_node)
+                if at_node:
+                    self.assertEqual(result["reason"], "next_junction_observed")
+                else:
+                    # No fresh node and no side-clearance evidence authorizing
+                    # boundary recovery: neither arrival nor an obstacle.
+                    self.assertNotEqual(result["reason"], "next_junction_observed")
                 self.assertEqual(len(moves), 1)
                 self.assertEqual(runtime.roads.blocked, [])
 

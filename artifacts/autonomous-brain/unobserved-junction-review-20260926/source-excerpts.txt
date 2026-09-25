@@ -1,0 +1,383 @@
+autonomous_brain/actions.py:155-180
+155: def road_translation_limit(road, method, requested_cm):
+156:     """Bound a straight move using the current local tangent and clearances.
+157: 
+158:     Sensors round centimetres and degrees to one decimal. Reserve 0.1 cm
+159:     and include the angular rounding bound; this is a motion constraint,
+160:     not an alteration of any perception or success threshold.
+161:     """
+162:     names = ("headingErrorDeg", "leftClearanceCm", "rightClearanceCm")
+163:     if not road.get("onRoad") or not all(
+164:             type(road.get(k)) in (int, float) and math.isfinite(road[k]) for k in names):
+165:         return 0, {"reason": "local_road_geometry_unavailable"}
+166:     error = road["headingErrorDeg"]
+167:     direction = 1 if method == "forward" else -1
+168:     lateral = direction * math.sin(math.radians(error))
+169:     side = "rightClearanceCm" if lateral >= 0 else "leftClearanceCm"
+170:     angular_bound = max(abs(math.sin(math.radians(error + d))) for d in (-.05, .05))
+171:     limit = max(0, road[side] - .1) / angular_bound if angular_bound > 1e-9 else math.inf
+172:     front = road.get("frontClearanceCm")
+173:     if method == "forward":
+174:         if type(front) not in (int, float) or not math.isfinite(front):
+175:             return 0, {"reason": "front_clearance_unavailable"}
+176:         limit = min(limit, max(0, front - .1))
+177:     permitted = min(requested_cm, limit)
+178:     return permitted, {"requested_cm": requested_cm, "permitted_cm": permitted,
+179:                        "heading_error_deg": error, "side": side,
+180:                        "side_clearance_cm": road[side], "front_clearance_cm": front,
+
+autonomous_brain/actions.py:307-333
+307: 
+308:     def return_from_blocked_road(self, blocked_result):
+309:         """Turn back and follow the observed road, including its bends."""
+310:         self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
+311:                                      "tick": self.s["odometry"]["tick"],
+312:                                      "reason": blocked_result.get("stoppedBy")})
+313:         self.r.roads.mark_blocked()
+314:         if not self.s["road"]["onRoad"] or blocked_result.get("stoppedBy") == "off_road":
+315:             return self.result(False, "not_on_observed_road", actuator_result=blocked_result)
+316:         if self.s["road"].get("atNode"):
+317:             return self.result(False, "road_blocked_at_junction", actuator_result=blocked_result)
+318:         self.turn(180)
+319:         for step in range(45):
+320:             if not self.s["road"]["onRoad"]:
+321:                 return self.result(False, "blocked_road_return_left_road", actuator_result=blocked_result)
+322:             if self.s["road"].get("atNode"):
+323:                 return self.result(False, "road_blocked_returned_to_junction",
+324:                                    actuator_result=blocked_result, recovery_steps=step)
+325:             before = position(self.s["odometry"])
+326:             result = self.move("follow_road", {"distanceCm": 20, "speed": 30})
+327:             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+328:                 return self.result(False, "blocked_road_return_left_road",
+329:                                    actuator_result=blocked_result, recovery_result=result)
+330:             if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+331:                 return self.result(False, "road_blocked_returned_to_junction",
+332:                                    actuator_result=blocked_result, recovery_result=result,
+333:                                    recovery_steps=step + 1)
+
+autonomous_brain/actions.py:349-421
+349:         wanted_heading = wrap(self.s["odometry"]["headingDeg"] + angle)
+350:         self.turn(angle)
+351:         road, odo = self.s["road"], self.s["odometry"]
+352:         evidence = {"before_observation": start_observation,
+353:                     "after_observation": self.s["observation_index"],
+354:                     "wanted_heading_deg": wanted_heading}
+355:         if not road["onRoad"] or not road.get("atNode"):
+356:             return {"selection_error": "exit_junction_not_reobserved", **evidence}
+357:         relative = wrap(wanted_heading - odo["headingDeg"])
+358:         matches = [entry for entry in road.get("exits", [])
+359:                    if abs(wrap(entry["angleDeg"] - relative)) <= 5]
+360:         if len(matches) != 1:
+361:             return {"selection_error": "selected_exit_not_uniquely_reobserved",
+362:                     "observed_exit_angles": [entry["angleDeg"] for entry in road.get("exits", [])],
+363:                     **evidence}
+364:         fresh_angle = matches[0]["angleDeg"]
+365:         self.r.roads.chosen(odo, fresh_angle)
+366:         return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+367: 
+368:     def explore(self, exit_angle=None):
+369:         before_ids = {o["id"] for o in self.r.perception.objects()}
+370:         before_confirmed = {o["id"] for o in self.r.perception.objects() if o["state"] == "CONFIRMED"}
+371:         start = position(self.s["odometry"])
+372:         road, odo = self.s["road"], self.s["odometry"]
+373:         if not road["onRoad"]:
+374:             return self.result(False, "not_on_observed_road")
+375:         if exit_angle is not None and not road.get("atNode"):
+376:             return self.result(False, "exit_angle_requires_a_current_junction")
+377:         if road.get("atNode") and road["exits"]:
+378:             exits = self.r.roads.exits(odo, road)
+379:             if exit_angle is None:
+380:                 chosen = min(exits, key=lambda e: (e["blocked"], e["completed"], e["visits"], abs(e["angle_deg"])))
+381:             else:
+382:                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
+383:                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
+384:                     return self.result(False, "requested_exit_not_observed", available_exits=exits)
+385:             result = self.take_observed_exit(chosen["angle_deg"])
+386:             if result.get("selection_error"):
+387:                 return self.result(False, result["selection_error"], exit_selection=result)
+388:             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+389:                 return self.return_from_blocked_road(result)
+390:             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+391:                 return self.return_from_blocked_road(result)
+392:             confirmed = self.newly_confirmed(before_confirmed)
+393:             if confirmed:
+394:                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+395:             if result.get("stoppedBy") == "junction" or (
+396:                     self.s["road"].get("atNode") and result.get("distanceCm", 0) >= 0.2):
+397:                 return self.result(True, "next_junction_observed")
+398:             if result.get("distanceCm", 0) < 0.2:
+399:                 self.r.roads.mark_blocked()
+400:                 return self.result(False, "selected_exit_blocked", actuator_result=result)
+401:         for step in range(12):
+402:             new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
+403:             if new:
+404:                 return self.result(True, "new_objects_observed", new_object_ids=new)
+405:             before = position(self.s["odometry"])
+406:             step_cm = 16 if self.fresh_tentative_views() else 20
+407:             result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
+408:             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+409:                 return self.return_from_blocked_road(result)
+410:             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+411:                 return self.return_from_blocked_road(result)
+412:             confirmed = self.newly_confirmed(before_confirmed)
+413:             if confirmed:
+414:                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+415:             # A nearby junction can be less than one step away, or the road
+416:             # follower can report it without moving. Neither is an obstacle.
+417:             if self.s["road"].get("atNode") or result.get("stoppedBy") == "junction":
+418:                 return self.result(True, "next_junction_observed")
+419:             moved = distance(before, position(self.s["odometry"])) * 100
+420:             if moved < 0.2:
+421:                 return self.return_from_blocked_road(result)
+
+autonomous_brain/navigation.py:77-108
+77:         if road.get("atNode") and road["exits"]:
+78:             node = self.current_node(odo)
+79:             if node is None:
+80:                 node = {"id": f"junction-{len(self.nodes)+1}", "position": p, "exits": []}
+81:                 self.nodes.append(node)
+82:             for raw in road["exits"]:
+83:                 heading = wrap(odo["headingDeg"] + raw["angleDeg"])
+84:                 if not any(abs(wrap(e["heading_deg"] - heading)) < 15 for e in node["exits"]):
+85:                     node["exits"].append({"heading_deg": heading, "visits": 0, "completed": False, "blocked": False})
+86:             if self.active_exit:
+87:                 origin = self.active_exit["node"]
+88:                 # A sensor step can cross the whole segment without observing
+89:                 # atNode=False. Distinct odometry positions establish arrival.
+90:                 if distance(node["position"], origin["position"]) >= 0.15:
+91:                     self.active_exit["exit"]["completed"] = True
+92:                     # Mark only a uniquely observed current reverse exit. Old
+93:                     # bearings retained at a merged node are not fresh evidence.
+94:                     reverse = self.active_exit["reverse_heading"]
+95:                     if reverse is not None and road["onRoad"]:
+96:                         current = [wrap(odo["headingDeg"] + raw["angleDeg"])
+97:                                    for raw in road["exits"]
+98:                                    if abs(wrap(odo["headingDeg"] + raw["angleDeg"] - reverse)) < 45]
+99:                         if len(current) == 1:
+100:                             saved = [e for e in node["exits"]
+101:                                      if abs(wrap(e["heading_deg"] - current[0])) < 15]
+102:                             if len(saved) == 1:
+103:                                 saved[0]["completed"] = True
+104:                     self.active_exit = None
+105:                 elif self.active_exit["departed"]:
+106:                     self.active_exit = None
+107:         elif self.active_exit:
+108:             self.active_exit["departed"] = True
+
+autonomous_brain/navigation.py:129-144
+129:     def chosen(self, odo, angle, blocked=False):
+130:         node = self.current_node(odo)
+131:         if not node:
+132:             return
+133:         heading = wrap(odo["headingDeg"] + angle)
+134:         for exit in node["exits"]:
+135:             if abs(wrap(exit["heading_deg"] - heading)) < 15:
+136:                 exit["visits"] += 1
+137:                 exit["blocked"] |= blocked
+138:                 self.active_exit = {"node": node, "exit": exit, "departed": False,
+139:                                     "last_position": position(odo), "reverse_heading": None}
+140: 
+141:     def mark_blocked(self):
+142:         if self.active_exit:
+143:             self.active_exit["exit"]["blocked"] = True
+144:             self.active_exit = None
+
+workspaces/guangyang-platform/projects/car-python/competition-core.js:759-785
+759:   function navigationJunctionProjection(topology, selectedRoadId, pose, definition, rules = {}) {
+760:     const radius = navigationJunctionRadiusWorld(rules, definition);
+761:     const vehicleForward = [-Math.sin(pose.heading), -Math.cos(pose.heading)];
+762:     const junction = topology.junctions
+763:       .filter(node => node.roadIds.includes(selectedRoadId))
+764:       .map(node => {
+765:         const endpoint = node.endpoints.find(candidate => candidate.roadId === selectedRoadId);
+766:         const outward = endpoint ? navigationEndpointTangent(endpoint) : null;
+767:         return {
+768:           node,
+769:           distance: Math.hypot(pose.x - node.point[0], pose.z - node.point[1]),
+770:           ahead: Boolean(outward
+771:             && outward[0] * vehicleForward[0] + outward[1] * vehicleForward[1] < -EPSILON)
+772:         };
+773:       })
+774:       .filter(candidate => candidate.distance <= radius + EPSILON)
+775:       .sort((left, right) => Number(right.ahead) - Number(left.ahead)
+776:         || left.distance - right.distance
+777:         || navigationTextCompare(left.node.nodeId, right.node.nodeId))[0]?.node || null;
+778:     if (!junction) return { junctionId: null, exits: [] };
+779:     const exitsByRoad = new Map();
+780:     junction.endpoints.forEach(endpoint => {
+781:       if (endpoint.record.oneWay && endpoint.side !== "start") return;
+782:       const tangent = navigationEndpointTangent(endpoint);
+783:       if (!tangent) return;
+784:       const exitHeading = Math.atan2(-tangent[0], -tangent[1]);
+785:       const turnDeg = navigationRounded(normalizeSignedAngle(exitHeading - pose.heading) * 180 / Math.PI);
+
+workspaces/guangyang-platform/projects/car-python/competition-core.js:807-830
+807:   function navigationNodeProjection(topology, selectedRoadId, pose, definition, rules = {}) {
+808:     const radius = navigationJunctionRadiusWorld(rules, definition);
+809:     const vehicleForward = [-Math.sin(pose.heading), -Math.cos(pose.heading)];
+810:     const node = [...topology.nodesById.values()]
+811:       .filter(candidate => candidate.roadIds.includes(selectedRoadId))
+812:       .map(candidate => {
+813:         const endpoint = candidate.endpoints.find(item => item.roadId === selectedRoadId);
+814:         const outward = endpoint ? navigationEndpointTangent(endpoint) : null;
+815:         return {
+816:           node: candidate,
+817:           distance: Math.hypot(pose.x - candidate.point[0], pose.z - candidate.point[1]),
+818:           ahead: Boolean(outward
+819:             && outward[0] * vehicleForward[0] + outward[1] * vehicleForward[1] < -EPSILON)
+820:         };
+821:       })
+822:       .filter(candidate => candidate.distance <= radius + EPSILON)
+823:       .sort((left, right) => Number(right.ahead) - Number(left.ahead)
+824:         || left.distance - right.distance
+825:         || navigationTextCompare(left.node.nodeId, right.node.nodeId))[0]?.node || null;
+826:     if (!node) return { nodeId: null, exits: [] };
+827:     const exitsByRoad = new Map();
+828:     node.endpoints.forEach(endpoint => {
+829:       if (endpoint.record.oneWay && endpoint.side !== "start") return;
+830:       const tangent = navigationEndpointTangent(endpoint);
+
+workspaces/guangyang-platform/projects/car-python/competition-core.js:3677-3693
+3677:         stoppedBy,
+3678:         roadId,
+3679:         distanceCm: navigationRounded(navigationWorldToCm(
+3680:           simulator.travelDistance - startDistance,
+3681:           rules
+3682:         )),
+3683:         elapsedTicks: simulator.tick - startTick
+3684:       }, controlDefinition);
+3685:     }
+3686: 
+3687:     runPath(path, allowedRoadIds, speedPercent, startTick, startDistance, completedBy, options = {}) {
+3688:       const { simulator, controlDefinition, topology, rules } = navigationActionRunnerStates.get(this);
+3689:       const controller = controlDefinition.controller;
+3690:       const maxActionTicks = controller.maxActionTicks;
+3691:       const maximumDistance = Number.isFinite(options.maximumDistance)
+3692:         ? Math.max(0, options.maximumDistance)
+3693:         : Infinity;
+
+workspaces/guangyang-platform/projects/car-python/competition-core.js:3704-3718
+3704:       const executeOneTick = command => {
+3705:         if (simulator.tick >= maxTick) return { stoppedBy: "time_limit", frame: null };
+3706:         if (simulator.tick - startTick >= maxActionTicks) {
+3707:           return { stoppedBy: "safety_limit", frame: null };
+3708:         }
+3709:         if (typeof options.beforeStep === "function") options.beforeStep(command);
+3710:         simulator.startCommand(command);
+3711:         const frame = simulator.step();
+3712:         const keepGoing = typeof options.onStep === "function" ? options.onStep(frame) : true;
+3713:         if (keepGoing === false) return { stoppedBy: "time_limit", frame };
+3714:         if (frame.collision) return { stoppedBy: "collision", frame };
+3715:         return { stoppedBy: null, frame };
+3716:       };
+3717: 
+3718:       while (true) {
+
+workspaces/guangyang-platform/projects/car-python/competition-core.js:3811-3869
+3811:       if (action.method === "follow_road") {
+3812:         if (!roadState.onRoad || !roadState.roadId) {
+3813:           return this.result(false, "off_road", null, startTick, startDistance);
+3814:         }
+3815:         const record = topology.recordsById.get(roadState.roadId);
+3816:         if (!record) return this.result(false, "off_road", null, startTick, startDistance);
+3817:         const projection = navigationRoadProjection(record, simulator.pose);
+3818:         const forward = [-Math.sin(simulator.pose.heading), -Math.cos(simulator.pose.heading)];
+3819:         const tangentDot = projection.tangent[0] * forward[0] + projection.tangent[1] * forward[1];
+3820:         if (record.oneWay && tangentDot < -EPSILON) {
+3821:           return this.result(false, "wrong_way", record.roadId, startTick, startDistance);
+3822:         }
+3823:         const direction = record.oneWay || tangentDot >= 0 ? 1 : -1;
+3824:         const edge = topology.graph.edges.find(item => item.roadId === record.roadId);
+3825:         const endpointNodeId = direction > 0 ? edge.toNodeId : edge.fromNodeId;
+3826:         const endpointNode = topology.nodesById.get(endpointNodeId);
+3827:         const junctionAhead = Boolean(endpointNode && endpointNode.roadIds.length >= (
+3828:           navigationSupportsMissionQueries(navigationDefinition) ? 2 : 3
+3829:         ));
+3830:         const junctionRadius = navigationJunctionRadiusWorld(rules, navigationDefinition);
+3831:         const shortEdgeNodeArrival = controlDefinition.controller.shortEdgeNodeArrival === true
+3832:           && junctionAhead
+3833:           // Include a 0.02-world-unit geometry/discretisation guard band
+3834:           // (0.25 cm on the 8-units/metre Guangyang maps). The controller
+3835:           // advances in 20ms steps, so an almost-touching pair of approach
+3836:           // ranges can otherwise still strand a caller at the entry node.
+3837:           && record.length <= junctionRadius * 2 + 0.02;
+3838:         // A short edge can be entirely covered by the two endpoint approach
+3839:         // radii.  Before v7, reaching the far approach boundary was reported
+3840:         // as the entry node, so a graph-based program could not select the
+3841:         // next legal exit.  In v7 only, complete that short edge to its actual
+3842:         // endpoint; longer roads retain the old early-at-junction behaviour.
+3843:         const boundaryProgress = shortEdgeNodeArrival
+3844:           ? (direction > 0 ? record.length : 0)
+3845:           : (direction > 0
+3846:             ? record.length - (junctionAhead ? junctionRadius : 0)
+3847:             : junctionAhead ? junctionRadius : 0);
+3848:         const available = direction > 0
+3849:           ? boundaryProgress - projection.progress
+3850:           : projection.progress - boundaryProgress;
+3851:         if (available <= EPSILON) {
+3852:           return this.result(true, junctionAhead ? "junction" : "road_end", record.roadId,
+3853:             startTick, startDistance);
+3854:         }
+3855:         const requested = navigationCmToWorld(action.args.maxCm, rules);
+3856:         const pathDistance = Math.min(requested, available);
+3857:         const targetProgress = projection.progress + direction * pathDistance;
+3858:         const completedBy = available <= requested + EPSILON
+3859:           ? junctionAhead ? "junction" : "road_end"
+3860:           : "max_distance";
+3861:         const path = navigationRoadPath(record, projection.progress, targetProgress);
+3862:         const stoppedBy = this.runPath(path, [record.roadId], action.args.speed,
+3863:           startTick, startDistance, completedBy, {
+3864:             ...options,
+3865:             maximumDistance: requested,
+3866:             obeySpeedLimit: action.args.obeySpeedLimit === true
+3867:           });
+3868:         return this.result(true, stoppedBy, record.roadId, startTick, startDistance);
+3869:       }
+
+workspaces/guangyang-platform/projects/car-python/robot-backend-runtime.js:55-86
+55:   function localRoad() {
+56:     const value = readNavigationSensor("road_state");
+57:     return { onRoad: value.onRoad, lateralOffsetCm: value.lateralOffsetCm,
+58:       headingErrorDeg: value.headingErrorDeg, leftClearanceCm: value.leftClearanceCm,
+59:       rightClearanceCm: value.rightClearanceCm, frontClearanceCm: value.frontClearanceCm,
+60:       atJunction: value.atJunction, atNode: value.atNode,
+61:       exits: value.exits.map(exit => ({ angleDeg: exit.turnDeg })), tick: value.tick };
+62:   }
+63: 
+64:   async function execute(command) {
+65:     if (!active || !running || stopRequested || competitionSession?.status !== "running") {
+66:       throw new root.RobotBridgeContract.ContractError("NOT_RUNNING");
+67:     }
+68:     const { method, params } = command;
+69:     switch (method) {
+70:       case "observe": return observe(params, command.requestId);
+71:       case "camera_parameters": return cameraParameters();
+72:       case "odometry": return readNavigationSensor("odometry");
+73:       case "local_road": return localRoad();
+74:       case "holding": return { holding: Boolean(heldPackageId) };
+75:       case "follow_road": return executeNavigationControl("follow_road", {
+76:         maxCm: params.distanceCm, speed: params.speed ?? 50, obeySpeedLimit: false });
+77:       case "take_exit": {
+78:         // IDs stay inside the actuator implementation. Select only the currently
+79:         // sensed local exit by its published relative angle, with no path lookup.
+80:         const road = readNavigationSensor("road_state");
+81:         const exits = road.exits.filter(exit => exit.turnDeg === params.angleDeg);
+82:         if (exits.length !== 1) throw new root.RobotBridgeContract.ContractError(
+83:           exits.length ? "AMBIGUOUS_EXIT" : "INVALID_EXIT");
+84:         return executeNavigationControl("take_exit", { roadId: exits[0].roadId,
+85:           speed: params.speed ?? 50, obeySpeedLimit: false });
+86:       }
+
+workspaces/guangyang-platform/projects/car-python/robot-bridge-contract.js:61-72
+61:     } else if (["forward", "backward", "follow_road", "turn", "take_exit"].includes(value.method)) {
+62:       const key = ["turn", "take_exit"].includes(value.method) ? "angleDeg" : "distanceCm";
+63:       exactKeys(p, [key, "speed"], [key]);
+64:       const min = key === "angleDeg" ? (value.method === "turn" ? -360 : -180)
+65:         : value.method === "follow_road" ? 10 : 0.1;
+66:       const max = key === "angleDeg" ? (value.method === "turn" ? 360 : 180) : 500;
+67:       result[key] = number(p[key], min, max, "INVALID_PARAMS");
+68:       if (value.method === "turn" && Math.abs(p[key]) < 1) fail("INVALID_PARAMS");
+69:       if (p.speed !== undefined) result.speed = number(p.speed, 10, 100, "INVALID_PARAMS");
+70:     } else exactKeys(p, []);
+71:     return { requestId: id, method: value.method, params: result };
+72:   }

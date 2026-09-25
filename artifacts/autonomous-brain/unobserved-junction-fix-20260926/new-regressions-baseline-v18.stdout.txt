@@ -1,0 +1,869 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF..FFFF                                   [100%]
+=================================== FAILURES ===================================
+________ test_run19_turns_minus_47_6_then_uses_new_front_clearance[0.1] ________
+
+old_front = 0.1
+
+    @pytest.mark.parametrize("old_front", [.1, 28.4])
+    def test_run19_turns_minus_47_6_then_uses_new_front_clearance(old_front):
+        f = junction_runtime([
+            response("follow_road"),
+            response("turn", road={"frontClearanceCm": 2.1, "leftClearanceCm": 9, "rightClearanceCm": 9}),
+            response("forward", road=NODE),
+        ], road={"frontClearanceCm": old_front})
+        result = f.actions.explore()
+        assert result["success"] is True and result["reason"] == "next_junction_observed"
+>       assert [row["method"] for row in f.calls] == ["follow_road", "turn", "forward"]
+E       AssertionError: assert ['follow_road'] == ['follow_road...n', 'forward']
+E         
+E         Right contains 2 more items, first extra item: 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_junction_observation.py:121: AssertionError
+_______ test_run19_turns_minus_47_6_then_uses_new_front_clearance[28.4] ________
+
+old_front = 28.4
+
+    @pytest.mark.parametrize("old_front", [.1, 28.4])
+    def test_run19_turns_minus_47_6_then_uses_new_front_clearance(old_front):
+        f = junction_runtime([
+            response("follow_road"),
+            response("turn", road={"frontClearanceCm": 2.1, "leftClearanceCm": 9, "rightClearanceCm": 9}),
+            response("forward", road=NODE),
+        ], road={"frontClearanceCm": old_front})
+        result = f.actions.explore()
+        assert result["success"] is True and result["reason"] == "next_junction_observed"
+>       assert [row["method"] for row in f.calls] == ["follow_road", "turn", "forward"]
+E       AssertionError: assert ['follow_road'] == ['follow_road...n', 'forward']
+E         
+E         Right contains 2 more items, first extra item: 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_junction_observation.py:121: AssertionError
+_____ test_post_turn_blocked_front_cannot_reuse_the_old_28_4_cm_clearance ______
+
+    def test_post_turn_blocked_front_cannot_reuse_the_old_28_4_cm_clearance():
+        f = junction_runtime([response("follow_road"), response("turn", road={"frontClearanceCm": .1})])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...vation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'road': {'frontClearanceCm': 0.1}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+__ test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[None] ___
+
+invalid = None
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), True])
+    def test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn(invalid):
+        f = junction_runtime([response("follow_road")], road={"headingErrorDeg": invalid})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...', 'distanceCm': 0, 'elapsedTicks': 0}, 'before_observation': 100, 'after_observation': 101}], remaining=[], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+___ test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[nan] ___
+
+invalid = nan
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), True])
+    def test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn(invalid):
+        f = junction_runtime([response("follow_road")], road={"headingErrorDeg": invalid})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...', 'distanceCm': 0, 'elapsedTicks': 0}, 'before_observation': 100, 'after_observation': 101}], remaining=[], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+___ test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[inf] ___
+
+invalid = inf
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), True])
+    def test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn(invalid):
+        f = junction_runtime([response("follow_road")], road={"headingErrorDeg": invalid})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...', 'distanceCm': 0, 'elapsedTicks': 0}, 'before_observation': 100, 'after_observation': 101}], remaining=[], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+__ test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[True] ___
+
+invalid = True
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), True])
+    def test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn(invalid):
+        f = junction_runtime([response("follow_road")], road={"headingErrorDeg": invalid})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...', 'distanceCm': 0, 'elapsedTicks': 0}, 'before_observation': 100, 'after_observation': 101}], remaining=[], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_missing_post_turn_geometry_cannot_authorize_translation[headingErrorDeg] _
+
+field = 'headingErrorDeg'
+
+    @pytest.mark.parametrize("field", ["headingErrorDeg", "frontClearanceCm", "leftClearanceCm", "rightClearanceCm"])
+    def test_missing_post_turn_geometry_cannot_authorize_translation(field):
+        f = junction_runtime([response("follow_road"), response("turn", remove_road=[field])])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...ation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'remove_road': ['headingErrorDeg']}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_missing_post_turn_geometry_cannot_authorize_translation[frontClearanceCm] _
+
+field = 'frontClearanceCm'
+
+    @pytest.mark.parametrize("field", ["headingErrorDeg", "frontClearanceCm", "leftClearanceCm", "rightClearanceCm"])
+    def test_missing_post_turn_geometry_cannot_authorize_translation(field):
+        f = junction_runtime([response("follow_road"), response("turn", remove_road=[field])])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...tion': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'remove_road': ['frontClearanceCm']}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_missing_post_turn_geometry_cannot_authorize_translation[leftClearanceCm] _
+
+field = 'leftClearanceCm'
+
+    @pytest.mark.parametrize("field", ["headingErrorDeg", "frontClearanceCm", "leftClearanceCm", "rightClearanceCm"])
+    def test_missing_post_turn_geometry_cannot_authorize_translation(field):
+        f = junction_runtime([response("follow_road"), response("turn", remove_road=[field])])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...ation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'remove_road': ['leftClearanceCm']}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_missing_post_turn_geometry_cannot_authorize_translation[rightClearanceCm] _
+
+field = 'rightClearanceCm'
+
+    @pytest.mark.parametrize("field", ["headingErrorDeg", "frontClearanceCm", "leftClearanceCm", "rightClearanceCm"])
+    def test_missing_post_turn_geometry_cannot_authorize_translation(field):
+        f = junction_runtime([response("follow_road"), response("turn", remove_road=[field])])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...tion': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'remove_road': ['rightClearanceCm']}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+________ test_unverified_turn_stops_before_any_forward_command[no_turn] ________
+
+fault = {'actual_angle': 0}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...}, 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'actual_angle': 0}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_____ test_unverified_turn_stops_before_any_forward_command[reverse_turn] ______
+
+fault = {'actual_angle': 47.6}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'actual_angle': 47.6}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+______ test_unverified_turn_stops_before_any_forward_command[wrong_angle] ______
+
+fault = {'actual_angle': -47.3}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'actual_angle': -47.3}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_turn_stops_before_any_forward_command[translated_while_turning] _
+
+fault = {'shift_right_cm': 0.3}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'shift_right_cm': 0.3}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_______ test_unverified_turn_stops_before_any_forward_command[left_road] _______
+
+fault = {'road': {'onRoad': False}}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...re_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'road': {'onRoad': False}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_turn_stops_before_any_forward_command[stale_observation_index] _
+
+fault = {'stale_index': True}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'... 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'stale_index': True}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+______ test_unverified_turn_stops_before_any_forward_command[stale_frame] ______
+
+fault = {'stale_frame': True}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_angle": 0}, {"actual_angle": 47.6}, {"actual_angle": -47.3},
+        {"shift_right_cm": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["no_turn", "reverse_turn", "wrong_angle", "translated_while_turning", "left_road",
+            "stale_observation_index", "stale_frame"])
+    def test_unverified_turn_stops_before_any_forward_command(fault):
+        f = junction_runtime([response("follow_road"), response("turn", **fault)])
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'... 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'turn', 'stale_frame': True}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[zero_progress] _
+
+fault = {'actual_cm': 0}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...}, 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'actual_cm': 0}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[reverse_progress] _
+
+fault = {'actual_cm': -4}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'..., 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'actual_cm': -4}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[sideways] __
+
+fault = {'across_cm': 0.3}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'... 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'across_cm': 0.3}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[exceeds_request_tolerance] _
+
+fault = {'actual_cm': 4.3}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'... 'before_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'actual_cm': 4.3}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[heading_changed] _
+
+fault = {'heading_delta': 0.3}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...fore_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'heading_delta': 0.3}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[left_road] _
+
+fault = {'road': {'onRoad': False}}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'road': {'onRoad': False}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[stale_observation_index] _
+
+fault = {'stale_index': True}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...efore_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'stale_index': True}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_unverified_forward_stops_without_closing_or_blocking_an_exit[stale_frame] _
+
+fault = {'stale_frame': True}
+
+    @pytest.mark.parametrize("fault", [
+        {"actual_cm": 0}, {"actual_cm": -4}, {"across_cm": .3}, {"actual_cm": 4.3},
+        {"heading_delta": .3}, {"road": {"onRoad": False}},
+        {"stale_index": True}, {"stale_frame": True},
+    ], ids=["zero_progress", "reverse_progress", "sideways", "exceeds_request_tolerance",
+            "heading_changed", "left_road", "stale_observation_index", "stale_frame"])
+    def test_unverified_forward_stops_without_closing_or_blocking_an_exit(fault):
+        f = junction_runtime([response("follow_road"), response("forward", **fault)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...efore_observation': 100, 'after_observation': 101}], remaining=[{'method': 'forward', 'stale_frame': True}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[collision] _
+
+stopped_by = 'collision'
+
+    @pytest.mark.parametrize("stopped_by", ["collision", "front_clearance", "off_road", "wrong_way"])
+    def test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag(stopped_by):
+        # The same-position node flag below cannot override the primitive's failure.
+        f = junction_runtime([response("follow_road"), response("forward", road=NODE,
+            result={"accepted": True, "stoppedBy": stopped_by})],
+            road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'..., 'atJunction': True, 'exits': [{'angleDeg': 0}]}, 'result': {'accepted': True, 'stoppedBy': 'collision'}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[front_clearance] _
+
+stopped_by = 'front_clearance'
+
+    @pytest.mark.parametrize("stopped_by", ["collision", "front_clearance", "off_road", "wrong_way"])
+    def test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag(stopped_by):
+        # The same-position node flag below cannot override the primitive's failure.
+        f = junction_runtime([response("follow_road"), response("forward", road=NODE,
+            result={"accepted": True, "stoppedBy": stopped_by})],
+            road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...unction': True, 'exits': [{'angleDeg': 0}]}, 'result': {'accepted': True, 'stoppedBy': 'front_clearance'}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[off_road] _
+
+stopped_by = 'off_road'
+
+    @pytest.mark.parametrize("stopped_by", ["collision", "front_clearance", "off_road", "wrong_way"])
+    def test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag(stopped_by):
+        # The same-position node flag below cannot override the primitive's failure.
+        f = junction_runtime([response("follow_road"), response("forward", road=NODE,
+            result={"accepted": True, "stoppedBy": stopped_by})],
+            road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...e, 'atJunction': True, 'exits': [{'angleDeg': 0}]}, 'result': {'accepted': True, 'stoppedBy': 'off_road'}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[wrong_way] _
+
+stopped_by = 'wrong_way'
+
+    @pytest.mark.parametrize("stopped_by", ["collision", "front_clearance", "off_road", "wrong_way"])
+    def test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag(stopped_by):
+        # The same-position node flag below cannot override the primitive's failure.
+        f = junction_runtime([response("follow_road"), response("forward", road=NODE,
+            result={"accepted": True, "stoppedBy": stopped_by})],
+            road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'..., 'atJunction': True, 'exits': [{'angleDeg': 0}]}, 'result': {'accepted': True, 'stoppedBy': 'wrong_way'}}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked[1] _
+
+fraction = 1
+
+    @pytest.mark.parametrize("fraction", [1, .5])
+    def test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked(fraction):
+        f = junction_runtime([response("follow_road")] + [response("forward", fraction=fraction) for _ in range(5)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...od': 'forward', 'fraction': 1}, {'method': 'forward', 'fraction': 1}, {'method': 'forward', 'fraction': 1}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+_ test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked[0.5] _
+
+fraction = 0.5
+
+    @pytest.mark.parametrize("fraction", [1, .5])
+    def test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked(fraction):
+        f = junction_runtime([response("follow_road")] + [response("forward", fraction=fraction) for _ in range(5)],
+                             road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore()
+>       assert_unobserved_failure(f, result)
+
+tests/test_brain_junction_observation.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fixture = namespace(runtime=namespace(snapshot={'observation_index': 101, 'observation': {'frameId': 101, 'tick': 0}, 'odometry'...forward', 'fraction': 0.5}, {'method': 'forward', 'fraction': 0.5}, {'method': 'forward', 'fraction': 0.5}], marked=[])
+result = {'evidence': {'after_observation': 101, 'frame_id': 101, 'holding': False, 'tick': 0}, 'reason': 'next_junction_observed', 'success': True}
+
+    def assert_unobserved_failure(fixture, result):
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:104: AssertionError
+________ test_take_exit_zero_motion_at_the_same_node_is_not_new_arrival ________
+
+    def test_take_exit_zero_motion_at_the_same_node_is_not_new_arrival():
+        f = junction_runtime([response("take_exit")], road={**NODE, "headingErrorDeg": 0})
+        result = f.actions.explore(0)
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_junction_observation.py:225: AssertionError
+_______ test_take_exit_unobserved_junction_uses_the_same_sensor_recovery _______
+
+    def test_take_exit_unobserved_junction_uses_the_same_sensor_recovery():
+        f = junction_runtime([response("take_exit", road={"atNode": False, "atJunction": False, "exits": []}),
+                              response("forward", road=NODE)],
+                             road={**NODE, "headingErrorDeg": 0, "leftClearanceCm": 9})
+        result = f.actions.explore(0)
+        assert result["success"] is True and result["reason"] == "next_junction_observed"
+>       assert [row["method"] for row in f.calls] == ["take_exit", "forward"]
+E       AssertionError: assert ['take_exit'] == ['take_exit', 'forward']
+E         
+E         Right contains one more item: 'forward'
+E         Use -v to get more diff
+
+tests/test_brain_junction_observation.py:238: AssertionError
+_ test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block[False] _
+
+arrives = False
+
+    @pytest.mark.parametrize("arrives", [False, True])
+    def test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block(arrives):
+        final = {"road": NODE} if arrives else {"actual_cm": 0}
+        f = junction_runtime([
+            response("turn"),
+            response("follow_road", road={"headingErrorDeg": -47.6}),
+            response("turn", road={"leftClearanceCm": 9, "rightClearanceCm": 9}),
+            response("forward", **final),
+        ])
+        result = f.actions.return_from_blocked_road({"stoppedBy": "front_clearance"})
+        assert result["success"] is False, "returning to a node cannot undo the original blockage"
+>       assert (result["reason"] == "road_blocked_returned_to_junction") is arrives
+E       AssertionError: assert ('road_blocked...d_to_junction' == 'road_blocked...d_to_junction'
+E         
+E           road_blocked_returned_to_junction) is False
+
+tests/test_brain_junction_observation.py:254: AssertionError
+_ test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block[True] _
+
+arrives = True
+
+    @pytest.mark.parametrize("arrives", [False, True])
+    def test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block(arrives):
+        final = {"road": NODE} if arrives else {"actual_cm": 0}
+        f = junction_runtime([
+            response("turn"),
+            response("follow_road", road={"headingErrorDeg": -47.6}),
+            response("turn", road={"leftClearanceCm": 9, "rightClearanceCm": 9}),
+            response("forward", **final),
+        ])
+        result = f.actions.return_from_blocked_road({"stoppedBy": "front_clearance"})
+        assert result["success"] is False, "returning to a node cannot undo the original blockage"
+        assert (result["reason"] == "road_blocked_returned_to_junction") is arrives
+>       assert f.runtime.snapshot["road"]["atNode"] is arrives
+E       assert False is True
+
+tests/test_brain_junction_observation.py:255: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_junction_observation.py::test_run19_turns_minus_47_6_then_uses_new_front_clearance[0.1]
+FAILED tests/test_brain_junction_observation.py::test_run19_turns_minus_47_6_then_uses_new_front_clearance[28.4]
+FAILED tests/test_brain_junction_observation.py::test_post_turn_blocked_front_cannot_reuse_the_old_28_4_cm_clearance
+FAILED tests/test_brain_junction_observation.py::test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[None]
+FAILED tests/test_brain_junction_observation.py::test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[nan]
+FAILED tests/test_brain_junction_observation.py::test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[inf]
+FAILED tests/test_brain_junction_observation.py::test_missing_or_nonfinite_initial_direction_cannot_authorize_a_turn[True]
+FAILED tests/test_brain_junction_observation.py::test_missing_post_turn_geometry_cannot_authorize_translation[headingErrorDeg]
+FAILED tests/test_brain_junction_observation.py::test_missing_post_turn_geometry_cannot_authorize_translation[frontClearanceCm]
+FAILED tests/test_brain_junction_observation.py::test_missing_post_turn_geometry_cannot_authorize_translation[leftClearanceCm]
+FAILED tests/test_brain_junction_observation.py::test_missing_post_turn_geometry_cannot_authorize_translation[rightClearanceCm]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[no_turn]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[reverse_turn]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[wrong_angle]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[translated_while_turning]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[left_road]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[stale_observation_index]
+FAILED tests/test_brain_junction_observation.py::test_unverified_turn_stops_before_any_forward_command[stale_frame]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[zero_progress]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[reverse_progress]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[sideways]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[exceeds_request_tolerance]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[heading_changed]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[left_road]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[stale_observation_index]
+FAILED tests/test_brain_junction_observation.py::test_unverified_forward_stops_without_closing_or_blocking_an_exit[stale_frame]
+FAILED tests/test_brain_junction_observation.py::test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[collision]
+FAILED tests/test_brain_junction_observation.py::test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[front_clearance]
+FAILED tests/test_brain_junction_observation.py::test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[off_road]
+FAILED tests/test_brain_junction_observation.py::test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[wrong_way]
+FAILED tests/test_brain_junction_observation.py::test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked[1]
+FAILED tests/test_brain_junction_observation.py::test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked[0.5]
+FAILED tests/test_brain_junction_observation.py::test_take_exit_zero_motion_at_the_same_node_is_not_new_arrival
+FAILED tests/test_brain_junction_observation.py::test_take_exit_unobserved_junction_uses_the_same_sensor_recovery
+FAILED tests/test_brain_junction_observation.py::test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block[False]
+FAILED tests/test_brain_junction_observation.py::test_blocked_return_cannot_claim_an_unobserved_junction_or_mark_a_second_block[True]
+36 failed, 2 passed in 0.28s
