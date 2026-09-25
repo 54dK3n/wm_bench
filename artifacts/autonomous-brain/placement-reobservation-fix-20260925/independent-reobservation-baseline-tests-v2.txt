@@ -1,0 +1,261 @@
+.FFFFFFFFFFFF...........FFFFFF                                           [100%]
+=================================== FAILURES ===================================
+_____ test_new_unique_ball_from_later_road_view_keeps_original_release[16] _____
+
+reveal_at = 16
+
+    @pytest.mark.parametrize("reveal_at", [16, 32])
+    def test_new_unique_ball_from_later_road_view_keeps_original_release(reveal_at):
+        f = reobservation_runtime(later="new", reveal_at=reveal_at)
+        result = Actions(f.runtime).place()
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_place_reobservation.py:221: AssertionError
+_____ test_new_unique_ball_from_later_road_view_keeps_original_release[32] _____
+
+reveal_at = 32
+
+    @pytest.mark.parametrize("reveal_at", [16, 32])
+    def test_new_unique_ball_from_later_road_view_keeps_original_release(reveal_at):
+        f = reobservation_runtime(later="new", reveal_at=reveal_at)
+        result = Actions(f.runtime).place()
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_place_reobservation.py:221: AssertionError
+_____ test_old_ball_only_exhausts_two_road_views_without_claiming_delivery _____
+
+    def test_old_ball_only_exhausts_two_road_views_without_claiming_delivery():
+        f = reobservation_runtime()
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+        assert f.objects["held"]["state"] == "RELEASED_UNVERIFIED"
+        moves = supplementary_forwards(f)
+>       assert len(moves) == 8
+E       assert 0 == 8
+E        +  where 0 = len([])
+
+tests/test_brain_place_reobservation.py:243: AssertionError
+_ test_one_unmatched_blob_without_old_ball_reobservation_does_not_prove_another_ball _
+
+    def test_one_unmatched_blob_without_old_ball_reobservation_does_not_prove_another_ball():
+        f = reobservation_runtime(later="unmatched_only")
+        result = Actions(f.runtime).place()
+>       assert f.views
+E       AssertionError: assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:254: AssertionError
+_ test_disconnected_green_fragments_allow_unique_largest_component_for_aiming __
+
+    def test_disconnected_green_fragments_allow_unique_largest_component_for_aiming():
+        f = reobservation_runtime(later="new", green_components="fragments")
+        result = Actions(f.runtime).place()
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_place_reobservation.py:267: AssertionError
+______ test_equal_largest_green_components_do_not_choose_an_arbitrary_aim ______
+
+    def test_equal_largest_green_components_do_not_choose_an_arbitrary_aim():
+        f = reobservation_runtime(later="new", green_components="tied")
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+        assert supplementary_forwards(f) == []
+>       assert result["evidence"]["reobservation"]["aiming_region"] is None
+E       KeyError: 'reobservation'
+
+tests/test_brain_place_reobservation.py:279: KeyError
+_____ test_illegal_or_nonunique_later_witness_never_delivers[preexisting] ______
+
+later = 'preexisting'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+_______ test_illegal_or_nonunique_later_witness_never_delivers[clipped] ________
+
+later = 'clipped'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+_______ test_illegal_or_nonunique_later_witness_never_delivers[outside] ________
+
+later = 'outside'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+______ test_illegal_or_nonunique_later_witness_never_delivers[two_balls] _______
+
+later = 'two_balls'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+____ test_illegal_or_nonunique_later_witness_never_delivers[repeated_ball] _____
+
+later = 'repeated_ball'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+______ test_illegal_or_nonunique_later_witness_never_delivers[two_zones] _______
+
+later = 'two_zones'
+
+    @pytest.mark.parametrize("later", ["preexisting", "clipped", "outside", "two_balls", "repeated_ball", "two_zones"])
+    def test_illegal_or_nonunique_later_witness_never_delivers(later):
+        f = reobservation_runtime(later=later)
+        result = Actions(f.runtime).place()
+>       assert f.views, "the invalid view must actually be observed"
+E       AssertionError: the invalid view must actually be observed
+E       assert []
+E        +  where [] = namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}).views
+
+tests/test_brain_place_reobservation.py:287: AssertionError
+_ test_each_road_step_observes_again_and_stops_at_new_hazard[front_after_step] _
+
+road_fault = 'front_after_step'
+
+    @pytest.mark.parametrize("road_fault", ["front_after_step", "off_road"])
+    def test_each_road_step_observes_again_and_stops_at_new_hazard(road_fault):
+        f = reobservation_runtime(later="new", road_fault=road_fault)
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert len(supplementary_forwards(f)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = supplementary_forwards(namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}))
+
+tests/test_brain_place_reobservation.py:326: AssertionError
+_____ test_each_road_step_observes_again_and_stops_at_new_hazard[off_road] _____
+
+road_fault = 'off_road'
+
+    @pytest.mark.parametrize("road_fault", ["front_after_step", "off_road"])
+    def test_each_road_step_observes_again_and_stops_at_new_hazard(road_fault):
+        f = reobservation_runtime(later="new", road_fault=road_fault)
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert len(supplementary_forwards(f)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = supplementary_forwards(namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}))
+
+tests/test_brain_place_reobservation.py:326: AssertionError
+__ test_exit_that_disappears_after_alignment_cannot_authorize_forward_motion ___
+
+    def test_exit_that_disappears_after_alignment_cannot_authorize_forward_motion():
+        f = reobservation_runtime(later="new", road_fault="exit_disappears")
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert [m["method"] for m in f.motions] == ["release", "backward", "turn"]
+E       AssertionError: assert ['release', 'backward'] == ['release', '...ward', 'turn']
+E         
+E         Right contains one more item: 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_place_reobservation.py:336: AssertionError
+_ test_actuator_completed_cannot_override_inconsistent_measured_motion[stationary] _
+
+movement_fault = 'stationary'
+
+    @pytest.mark.parametrize("movement_fault", ["stationary", "overshoot", "lateral"])
+    def test_actuator_completed_cannot_override_inconsistent_measured_motion(movement_fault):
+        f = reobservation_runtime(later="new", movement_fault=movement_fault)
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert len(supplementary_forwards(f)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = supplementary_forwards(namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}))
+
+tests/test_brain_place_reobservation.py:347: AssertionError
+_ test_actuator_completed_cannot_override_inconsistent_measured_motion[overshoot] _
+
+movement_fault = 'overshoot'
+
+    @pytest.mark.parametrize("movement_fault", ["stationary", "overshoot", "lateral"])
+    def test_actuator_completed_cannot_override_inconsistent_measured_motion(movement_fault):
+        f = reobservation_runtime(later="new", movement_fault=movement_fault)
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert len(supplementary_forwards(f)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = supplementary_forwards(namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}))
+
+tests/test_brain_place_reobservation.py:347: AssertionError
+_ test_actuator_completed_cannot_override_inconsistent_measured_motion[lateral] _
+
+movement_fault = 'lateral'
+
+    @pytest.mark.parametrize("movement_fault", ["stationary", "overshoot", "lateral"])
+    def test_actuator_completed_cannot_override_inconsistent_measured_motion(movement_fault):
+        f = reobservation_runtime(later="new", movement_fault=movement_fault)
+        result = Actions(f.runtime).place()
+        assert result["success"] is False
+>       assert len(supplementary_forwards(f)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = supplementary_forwards(namespace(runtime=namespace(snapshot={'observation_index': 3, 'observation': {'frameId': 3}, 'odometry': {'rightCm': 0...18}}}, views=[], state={'released': True, 'retreated': True, 'road_cm': 0.0, 'forward_attempts': 0, 'off_road': False}))
+
+tests/test_brain_place_reobservation.py:347: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_place_reobservation.py::test_new_unique_ball_from_later_road_view_keeps_original_release[16]
+FAILED tests/test_brain_place_reobservation.py::test_new_unique_ball_from_later_road_view_keeps_original_release[32]
+FAILED tests/test_brain_place_reobservation.py::test_old_ball_only_exhausts_two_road_views_without_claiming_delivery
+FAILED tests/test_brain_place_reobservation.py::test_one_unmatched_blob_without_old_ball_reobservation_does_not_prove_another_ball
+FAILED tests/test_brain_place_reobservation.py::test_disconnected_green_fragments_allow_unique_largest_component_for_aiming
+FAILED tests/test_brain_place_reobservation.py::test_equal_largest_green_components_do_not_choose_an_arbitrary_aim
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[preexisting]
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[clipped]
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[outside]
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[two_balls]
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[repeated_ball]
+FAILED tests/test_brain_place_reobservation.py::test_illegal_or_nonunique_later_witness_never_delivers[two_zones]
+FAILED tests/test_brain_place_reobservation.py::test_each_road_step_observes_again_and_stops_at_new_hazard[front_after_step]
+FAILED tests/test_brain_place_reobservation.py::test_each_road_step_observes_again_and_stops_at_new_hazard[off_road]
+FAILED tests/test_brain_place_reobservation.py::test_exit_that_disappears_after_alignment_cannot_authorize_forward_motion
+FAILED tests/test_brain_place_reobservation.py::test_actuator_completed_cannot_override_inconsistent_measured_motion[stationary]
+FAILED tests/test_brain_place_reobservation.py::test_actuator_completed_cannot_override_inconsistent_measured_motion[overshoot]
+FAILED tests/test_brain_place_reobservation.py::test_actuator_completed_cannot_override_inconsistent_measured_motion[lateral]
+18 failed, 12 passed in 0.09s

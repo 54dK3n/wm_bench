@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v16"
+VERSION = "autonomous-brain-actions/v15"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -860,150 +860,8 @@ class Actions:
                 return outcome(False, "recorded_entry_not_on_road")
         return outcome(False, "recorded_return_did_not_reach_road")
 
-    def placement_evidence(self, category, release_observation):
-        """Build the unchanged unique, fresh pixel witness for this release."""
-        detections = self.s["perception"]["detections"]
-        preexisting = release_observation["preexisting_ball_ids"]
-        witnesses = [(ball, zone) for ball in detections for zone in detections
-            if ball["category"] == category and "position_m" in ball and zone["category"] == "storage-zone"
-            and not ball.get("known_delivered_object_id")
-            and ball.get("track_id") not in preexisting
-            and ball_inside_region(ball["bbox"], zone["bbox"])]
-        placement = None
-        if len(witnesses) == 1:
-            ball, zone = witnesses[0]
-            placement = {"ball_track_id": ball.get("track_id"), "ball_category": ball["category"],
-                         "ball_position_m": ball["position_m"], "ball_bbox": ball["bbox"],
-                         "storage_bbox": zone["bbox"], "frame_id": self.s["observation"]["frameId"]}
-        return {"holding": self.s["holding"]["holding"],
-                "post_observation": self.s["observation_index"],
-                "release_observation": release_observation,
-                "placement": placement, "candidate_witnesses": len(witnesses)}
-
-    def reobserve_placement(self, category, release_observation, region_position, required_delivered_ids):
-        """Try two short road viewpoints, never infer a second ball from one box.
-
-        The remembered green point is used only to aim the camera. Delivery
-        still needs a fresh complete region and an independent unique ball.
-        """
-        trajectory, viewpoints = [], []
-        diagnostic = {"trajectory": trajectory, "viewpoints": viewpoints,
-                      "max_viewpoints": 2, "max_distance_cm": 32,
-                      "required_delivered_ids": sorted(required_delivered_ids)}
-        blocked = {"collision", "front_clearance", "off_road", "wrong_way"}
-
-        def number(value):
-            return type(value) in (int, float) and math.isfinite(value)
-
-        def move(method, params):
-            before = dict(self.s["odometry"])
-            old_index, on_road = self.s["observation_index"], self.s["road"]["onRoad"]
-            result = self.move(method, params)
-            after = dict(self.s["odometry"])
-            trajectory.append({"method": method, "params": dict(params), "before": before, "after": after,
-                "before_observation": old_index, "after_observation": self.s["observation_index"],
-                "before_on_road": on_road, "after_on_road": self.s["road"]["onRoad"]})
-            moved = distance(position(before), position(after)) * 100
-            change = wrap(after["headingDeg"] - before["headingDeg"])
-            if result.get("stoppedBy") in blocked:
-                return "viewpoint_motion_blocked"
-            if not self.s["road"]["onRoad"]:
-                return "viewpoint_left_observed_road"
-            if method == "turn":
-                if moved > .2 or abs(wrap(change - params["angleDeg"])) > .2:
-                    return "viewpoint_rotation_incomplete"
-            else:
-                theta = math.radians(before["headingDeg"])
-                dx, dz = after["rightCm"] - before["rightCm"], after["forwardCm"] - before["forwardCm"]
-                along = -math.sin(theta) * dx + math.cos(theta) * dz
-                across = math.cos(theta) * dx + math.sin(theta) * dz
-                if (abs(change) > .2 or abs(across) > .2 or along < .2
-                        or moved > params["distanceCm"] + .2):
-                    return "viewpoint_translation_unverified"
-            return None
-
-        def finish(reason):
-            diagnostic["reason"] = reason
-            if not self.s["road"]["onRoad"]:
-                diagnostic["road_return"] = self.return_place_path(trajectory)
-            diagnostic["after_observation"] = self.s["observation_index"]
-            observed = {d["known_delivered_object_id"] for d in self.s["perception"]["detections"]
-                        if d["category"] == category and d.get("known_delivered_object_id")}
-            diagnostic["observed_delivered_ids"] = sorted(observed)
-            diagnostic["old_objects_reobserved"] = bool(required_delivered_ids) and set(required_delivered_ids) <= observed
-            return self.placement_evidence(category, release_observation), diagnostic
-
-        if (not isinstance(region_position, dict)
-                or not all(number(region_position.get(key)) for key in ("x", "z"))):
-            return finish("observed_region_position_unavailable")
-        last_direction = None
-        for view in range(2):
-            road, odo = self.s["road"], self.s["odometry"]
-            if not road["onRoad"] or not number(road.get("headingErrorDeg")):
-                return finish("viewpoint_road_direction_unavailable")
-            tangent = wrap(odo["headingDeg"] + road["headingErrorDeg"])
-            directions = [tangent, wrap(tangent + 180)]
-            if road.get("atNode"):
-                exits = [wrap(odo["headingDeg"] + entry["angleDeg"])
-                         for entry in road.get("exits", []) if number(entry.get("angleDeg"))]
-                directions = [matches[0] for direction in directions
-                              if len(matches := [angle for angle in exits
-                                  if abs(wrap(angle - direction)) <= 5]) == 1]
-            if last_direction is not None:
-                directions = [angle for angle in directions if abs(wrap(angle - last_direction)) <= 10]
-            if not directions:
-                return finish("viewpoint_road_direction_not_observed")
-            heading = min(directions, key=lambda angle: abs(wrap(angle - odo["headingDeg"])))
-            angle = wrap(heading - odo["headingDeg"])
-            if abs(angle) >= 1:
-                failure = move("turn", {"angleDeg": angle, "speed": 50})
-                if failure:
-                    return finish(failure)
-            if road.get("atNode"):
-                fresh_road, fresh_odo = self.s["road"], self.s["odometry"]
-                matches = [entry for entry in fresh_road.get("exits", [])
-                           if number(entry.get("angleDeg"))
-                           and abs(wrap(fresh_odo["headingDeg"] + entry["angleDeg"] - heading)) <= 5]
-                if not fresh_road.get("atNode") or len(matches) != 1:
-                    return finish("viewpoint_exit_not_uniquely_reobserved")
-            # The turn's fresh reading, never its old forward clearance,
-            # authorizes each subsequent small translation.
-            moved_cm = 0.
-            for _ in range(4):
-                road = self.s["road"]
-                error = road.get("headingErrorDeg")
-                if (not number(error) or min(abs(wrap(error)), abs(wrap(error + 180))) > 10):
-                    return finish("viewpoint_not_aligned_with_observed_road")
-                requested, clearance = road_translation_limit(road, "forward", min(4, 16 - moved_cm))
-                if requested < .2:
-                    diagnostic["clearance"] = clearance
-                    return finish("viewpoint_clearance_insufficient")
-                before = position(self.s["odometry"])
-                failure = move("forward", {"distanceCm": requested, "speed": 20})
-                if failure:
-                    return finish(failure)
-                moved_cm += distance(before, position(self.s["odometry"])) * 100
-            last_direction = self.s["odometry"]["headingDeg"]
-            desired = heading_to(position(self.s["odometry"]), (region_position["x"], region_position["z"]))
-            angle = wrap(desired - self.s["odometry"]["headingDeg"])
-            if abs(angle) >= 1:
-                failure = move("turn", {"angleDeg": angle, "speed": 50})
-                if failure:
-                    return finish(failure)
-            evidence = self.placement_evidence(category, release_observation)
-            observed = {d["known_delivered_object_id"] for d in self.s["perception"]["detections"]
-                        if d["category"] == category and d.get("known_delivered_object_id")}
-            old_seen = bool(required_delivered_ids) and set(required_delivered_ids) <= observed
-            viewpoints.append({"viewpoint": view + 1, "distance_cm": moved_cm,
-                               "observed_delivered_ids": sorted(observed), "old_objects_reobserved": old_seen,
-                               "evidence": copy.deepcopy(evidence)})
-            if evidence["placement"] is not None and not evidence["holding"] and old_seen:
-                return finish("independent_ball_witness_observed")
-        return finish("bounded_viewpoints_without_unique_witness")
-
     def place(self):
         trajectory = []
-        recovery = None
 
         def place_move(method, params):
             before = dict(self.s["odometry"])
@@ -1019,7 +877,6 @@ class Actions:
             return result
 
         def finish(success, reason, **evidence):
-            nonlocal recovery
             if not success:
                 regions = [d for d in self.s["perception"]["detections"]
                            if d["category"] == "storage-zone" and "distance_cm" in d]
@@ -1031,8 +888,7 @@ class Actions:
                     evidence.setdefault("detection", region)
             # Placement evidence is decided before retracing. A blocked road
             # return cannot revoke an observed delivery or establish one.
-            if recovery is None:
-                recovery = self.return_place_path(trajectory)
+            recovery = self.return_place_path(trajectory)
             return self.result(success, reason, place_trajectory=trajectory,
                                road_return=recovery, **evidence)
         if self.r.pending_grasp and self.s["holding"]["holding"]:
@@ -1089,46 +945,27 @@ class Actions:
         # Move back to see the released ball and complete storage region.
         place_move("backward", {"distanceCm": 25, "speed": 30})
         detections = self.s["perception"]["detections"]
-        evidence = self.placement_evidence(category, release_observation)
-        balls = [d for d in detections if d["category"] == category]
-        reobservation = None
-        if (not evidence["holding"] and evidence["candidate_witnesses"] == 0 and balls
-                and all(ball.get("known_delivered_object_id") for ball in balls)):
-            # One old delivered blob is ambiguous, never proof of another
-            # delivery. Keep this release open only during bounded reobservation.
-            initial = copy.deepcopy(evidence)
-            zones = [d for d in detections if d["category"] == "storage-zone"
-                     and isinstance(d.get("position_m"), dict)
-                     and all(type(d["position_m"].get(key)) in (int, float)
-                             and math.isfinite(d["position_m"][key]) for key in ("x", "z"))
-                     and d["bbox"]["x"] > 0 and d["bbox"]["y"] > 0
-                     and d["bbox"]["x"] + d["bbox"]["w"] < 640
-                     and d["bbox"]["y"] + d["bbox"]["h"] < 480]
-            # Green may have several disconnected pixel components. Select
-            # the unique largest complete one only for aiming, not judging.
-            zones.sort(key=lambda d: d["bbox"]["w"] * d["bbox"]["h"], reverse=True)
-            aiming_zone = zones[0] if zones and (len(zones) == 1
-                or zones[0]["bbox"]["w"] * zones[0]["bbox"]["h"]
-                > zones[1]["bbox"]["w"] * zones[1]["bbox"]["h"]) else None
-            point = copy.deepcopy(aiming_zone["position_m"]) if aiming_zone else None
-            recovery = self.return_place_path(trajectory)
-            if recovery["success"] and self.s["road"]["onRoad"]:
-                evidence, reobservation = self.reobserve_placement(category, release_observation, point,
-                    {ball["known_delivered_object_id"] for ball in balls})
-                reobservation["initial_verification"] = initial
-                reobservation["aiming_region"] = copy.deepcopy(aiming_zone)
-            else:
-                reobservation = {"reason": "original_road_return_failed", "initial_verification": initial}
-                evidence = self.placement_evidence(category, release_observation)
-        marked = self.r.perception.mark_delivered(object_id, holding=evidence["holding"],
-                    ball_in_storage=evidence["placement"] is not None
-                        and (reobservation is None or reobservation.get("old_objects_reobserved") is True),
+        witnesses = [(ball, zone) for ball in detections for zone in detections
+            if ball["category"] == category and "position_m" in ball and zone["category"] == "storage-zone"
+            and not ball.get("known_delivered_object_id")
+            and ball.get("track_id") not in other_known_ball_ids
+            and ball_inside_region(ball["bbox"], zone["bbox"])]
+        placement = None
+        if len(witnesses) == 1:
+            ball, zone = witnesses[0]
+            placement = {"ball_track_id": ball.get("track_id"), "ball_category": ball["category"],
+                         "ball_position_m": ball["position_m"], "ball_bbox": ball["bbox"],
+                         "storage_bbox": zone["bbox"], "frame_id": self.s["observation"]["frameId"]}
+        evidence = {"holding": False, "post_observation": self.s["observation_index"],
+                    "release_observation": release_observation,
+                    "placement": placement, "candidate_witnesses": len(witnesses)}
+        marked = self.r.perception.mark_delivered(object_id, holding=False, ball_in_storage=placement is not None,
                     simulation_time_s=self.r.bridge.seconds, evidence=evidence)
         if not marked:
             self.r.perception.mark_release_unverified(object_id, simulation_time_s=self.r.bridge.seconds, evidence=evidence)
         self.r.held_object_id = None
         return finish(marked, "ball_observed_in_storage" if marked else "released_ball_not_verified_in_storage",
-                      object_id=object_id, **({"reobservation": reobservation} if reobservation else {}), **evidence)
+                           object_id=object_id, **evidence)
 
     def done(self):
         completion = completion_evidence(self.r.perception.objects())

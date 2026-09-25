@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-c",
+    "import importlib.util,sys,pytest,autonomous_brain; s=importlib.util.spec_from_file_location('autonomous_brain.actions',sys.argv[1]); m=importlib.util.module_from_spec(s); sys.modules['autonomous_brain.actions']=m; s.loader.exec_module(m); raise SystemExit(pytest.main(['-q','-p','no:cacheprovider',sys.argv[2]]))",
+    "artifacts/autonomous-brain/placement-reobservation-fix-20260925/baseline_source/autonomous_brain/actions.py",
+    "tests/test_brain_place_reobservation.py"
+  ],
+  "cwd": ".",
+  "test_file": "tests/test_brain_place_reobservation.py",
+  "baseline_actions_path": "artifacts/autonomous-brain/placement-reobservation-fix-20260925/baseline_source/autonomous_brain/actions.py",
+  "test_source_sha256": "4bdc66749113b926a4c4ae5b9ced92366fa1e22fe9ce63ab9038af15a34dc4cc",
+  "actions_source_sha256": "3340604b8ac73051f1232b4314c02fe491ec468de72aa38038ac7769d419d2a2",
+  "exit_code": 1,
+  "stdout_path": "artifacts/autonomous-brain/placement-reobservation-fix-20260925/independent-reobservation-baseline-tests-v2.txt"
+}

@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v8"
+RUNTIME_VERSION = "autonomous-brain-runtime/v7"
 
 
 def dump(path, value):
@@ -98,17 +98,6 @@ def compact_action_result(number, action, result, after_observation):
     if isinstance(raw.get("road_return"), dict):
         evidence["road_return"] = fields(raw["road_return"], (
             "success", "reason", "on_road", "anchor_observation", "after_observation"))
-    if isinstance(raw.get("reobservation"), dict):
-        reobservation = raw["reobservation"]
-        evidence["reobservation"] = fields(reobservation, ("reason", "after_observation", "old_objects_reobserved"))
-        for name in ("required_delivered_ids", "observed_delivered_ids"):
-            if isinstance(reobservation.get(name), list):
-                evidence["reobservation"][name] = [oid for oid in reobservation[name] if isinstance(oid, str)]
-        if isinstance(reobservation.get("road_return"), dict):
-            evidence["reobservation"]["road_return"] = fields(reobservation["road_return"], (
-                "success", "reason", "on_road", "anchor_observation", "after_observation"))
-        if isinstance(reobservation.get("viewpoints"), list):
-            evidence["reobservation"]["viewpoint_count"] = len(reobservation["viewpoints"])
     if isinstance(raw.get("road_clearance"), dict):
         evidence["road_clearance"] = fields(raw["road_clearance"], (
             "requested_cm", "permitted_cm", "heading_error_deg", "side",
