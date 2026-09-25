@@ -30,6 +30,21 @@ class CompactActionResultTests(unittest.TestCase):
         return run.compact_action_result(3, action or {"action": "go_to", "params": {"object_id": "red-1"}},
                                          result, 8)
 
+    def test_pick_motion_failure_keeps_sensor_basis_separate_from_return(self):
+        source = {"success": False, "reason": "pick_motion_not_verified", "evidence": {
+            "method": "forward", "front_clearance_cm": 23.9, "requested_cm": 2.5784,
+            "measured_cm": 0.0, "heading_change_deg": .0, "motion_observation": 377,
+            "post_observation": 377, "after_observation": 379,
+            "pick_trajectory": [{"private": "large path stays in action log"}],
+            "road_return": {"success": True, "reason": "returned_to_observed_road",
+                            "on_road": True, "anchor_observation": 376, "after_observation": 379}}}
+        evidence = self.compact(source, {"action": "pick", "params": {"object_id": "red-1"}})["evidence"]
+        for field in ("method", "front_clearance_cm", "requested_cm", "measured_cm",
+                      "heading_change_deg", "motion_observation", "post_observation"):
+            self.assertEqual(evidence[field], source["evidence"][field])
+        self.assertEqual(evidence["road_return"]["after_observation"], 379)
+        self.assertNotIn("pick_trajectory", evidence)
+
     def test_delivery_witness_and_failed_return_remain_distinct_in_next_state(self):
         source = {"success": True, "reason": "ball_observed_in_storage", "evidence": {
             "post_observation": 4, "frame_id": 9,
@@ -241,7 +256,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v4")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v5")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

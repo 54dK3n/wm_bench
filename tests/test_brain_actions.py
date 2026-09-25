@@ -12,7 +12,8 @@ class ActionEvidenceTests(unittest.TestCase):
                             "position_m": {"x": 0, "z": .30}}
         snapshot = {"observation_index": 1, "observation": {"frameId": 1},
                     "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0},
-                    "holding": {"holding": False}, "road": {"onRoad": True},
+                    "holding": {"holding": False},
+                    "road": {"onRoad": True, "frontClearanceCm": 100},
                     "perception": {"detections": []}}
         runtime = SimpleNamespace(snapshot=snapshot, pending_grasp=None,
             perception=SimpleNamespace(confirmed=lambda oid: target, get_object=lambda oid: target,

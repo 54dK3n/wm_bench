@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_lost_holding_at_verification_cannot_establish_pick_success ________
+
+    def test_lost_holding_at_verification_cannot_establish_pick_success():
+        runtime, _, _, marked, controls, target = pick_runtime()
+        original_observe = runtime.observe
+    
+        def observe_dropped_ball():
+            original_observe()
+            if controls["withdrawn_cm"] >= 29.9:
+                runtime.snapshot["holding"]["holding"] = False
+                runtime.snapshot["perception"]["detections"] = []
+    
+        runtime.observe = observe_dropped_ball
+        result = Actions(runtime).pick("target_098")
+    
+        assert runtime.snapshot["holding"]["holding"] is False
+>       assert result["success"] is False
+E       assert True is False
+
+tests/test_brain_pick_road_return.py:284: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_pick_road_return.py::test_lost_holding_at_verification_cannot_establish_pick_success
+1 failed, 11 deselected in 0.05s

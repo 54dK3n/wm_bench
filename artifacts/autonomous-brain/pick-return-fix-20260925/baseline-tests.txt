@@ -1,0 +1,117 @@
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_____ test_aligned_short_pick_may_leave_road_then_verify_grasp_and_return ______
+
+    def test_aligned_short_pick_may_leave_road_then_verify_grasp_and_return():
+        runtime, calls, logs, marked, _, target = pick_runtime()
+        result = Actions(runtime).pick("target_098")
+    
+>       assert result["success"] is True, "Run09's aligned short manipulation must not fail solely because it left the road"
+E       AssertionError: Run09's aligned short manipulation must not fail solely because it left the road
+E       assert False is True
+
+tests/test_brain_pick_road_return.py:134: AssertionError
+__________ test_three_failed_grabs_remain_failure_and_retrace_to_road __________
+
+    def test_three_failed_grabs_remain_failure_and_retrace_to_road():
+        runtime, calls, _, marked, controls, target = pick_runtime(grab_results=(False, False, False))
+        result = Actions(runtime).pick("target_098")
+    
+>       assert result["success"] is False and result["reason"] == "three_grab_attempts_failed"
+E       AssertionError: assert (False is False and 'visual_align..._not_converge' == 'three_grab_attempts_failed'
+E         
+E         - three_grab_attempts_failed
+E         + visual_alignment_did_not_converge)
+
+tests/test_brain_pick_road_return.py:159: AssertionError
+_ test_holding_alone_cannot_confirm_pick_when_original_position_remains_visible _
+
+    def test_holding_alone_cannot_confirm_pick_when_original_position_remains_visible():
+        runtime, _, _, marked, _, target = pick_runtime(old_position_present=True)
+        result = Actions(runtime).pick("target_098")
+    
+        assert result["success"] is False
+>       assert marked and marked[0]["original_position_absent"] is False
+E       assert ([])
+
+tests/test_brain_pick_road_return.py:174: AssertionError
+_______ test_verified_held_identity_survives_a_separately_failed_return ________
+
+    def test_verified_held_identity_survives_a_separately_failed_return():
+        runtime, calls, _, marked, controls, target = pick_runtime(block_return=True)
+        result = Actions(runtime).pick("target_098")
+    
+>       assert result["success"] is True and target["state"] == "HELD"
+E       assert (False is True)
+
+tests/test_brain_pick_road_return.py:184: AssertionError
+_ test_partly_blocked_short_approach_never_grabs_and_returns_by_measured_path __
+
+    def test_partly_blocked_short_approach_never_grabs_and_returns_by_measured_path():
+        runtime, calls, _, marked, controls, _ = pick_runtime(block_approach=True)
+        result = Actions(runtime).pick("target_098")
+    
+        assert result["success"] is False and controls["grabs"] == 0 and marked == []
+>       assert result["evidence"]["road_return"]["success"] is True
+E       KeyError: 'road_return'
+
+tests/test_brain_pick_road_return.py:197: KeyError
+__ test_insufficient_fresh_front_clearance_prevents_pick_translation_and_grab __
+
+    def test_insufficient_fresh_front_clearance_prevents_pick_translation_and_grab():
+        runtime, calls, _, marked, controls, _ = pick_runtime(front_clearance=2)
+        result = Actions(runtime).pick("target_098")
+    
+        assert result["success"] is False
+>       assert all(row["method"] == "turn" for row in calls)
+E       assert False
+E        +  where False = all(<generator object test_insufficient_fresh_front_clearance_prevents_pick_translation_and_grab.<locals>.<genexpr> at 0x10a1ff040>)
+
+tests/test_brain_pick_road_return.py:209: AssertionError
+_ test_completed_true_without_actual_approach_progress_stops_after_one_attempt _
+
+    def test_completed_true_without_actual_approach_progress_stops_after_one_attempt():
+        runtime, _, _, marked, controls, _ = pick_runtime(zero_approach=True)
+        result = Actions(runtime).pick("target_098")
+    
+        assert result["success"] is False
+>       assert controls["forward_attempts"] == 1
+E       assert 2 == 1
+
+tests/test_brain_pick_road_return.py:219: AssertionError
+______ test_incomplete_verification_retreat_cannot_establish_pick_success ______
+
+    def test_incomplete_verification_retreat_cannot_establish_pick_success():
+        runtime, _, _, marked, controls, target = pick_runtime(zero_withdraw=True)
+        result = Actions(runtime).pick("target_098")
+    
+>       assert controls["grabs"] == 1 and runtime.snapshot["holding"]["holding"] is True
+E       assert (0 == 1)
+
+tests/test_brain_pick_road_return.py:228: AssertionError
+____ test_initially_offroad_pick_without_a_path_anchor_never_moves_or_grabs ____
+
+    def test_initially_offroad_pick_without_a_path_anchor_never_moves_or_grabs():
+        runtime, calls, _, marked, controls, _ = pick_runtime(initially_offroad=True)
+        assert runtime.snapshot["road"]["onRoad"] is False
+        result = Actions(runtime).pick("target_098")
+    
+        assert result["success"] is False
+>       assert calls == []
+E       AssertionError: assert [{'before_obs...orward', ...}] == []
+E         
+E         Left contains 2 more items, first extra item: {'before_observation': 375, 'before_odometry': {'forwardCm': 163.8, 'headingDeg': 106.9, 'rightCm': -6.9, 'tick': 17254}, 'before_on_road': False, 'method': 'turn', ...}
+E         Use -v to get more diff
+
+tests/test_brain_pick_road_return.py:241: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_pick_road_return.py::test_aligned_short_pick_may_leave_road_then_verify_grasp_and_return
+FAILED tests/test_brain_pick_road_return.py::test_three_failed_grabs_remain_failure_and_retrace_to_road
+FAILED tests/test_brain_pick_road_return.py::test_holding_alone_cannot_confirm_pick_when_original_position_remains_visible
+FAILED tests/test_brain_pick_road_return.py::test_verified_held_identity_survives_a_separately_failed_return
+FAILED tests/test_brain_pick_road_return.py::test_partly_blocked_short_approach_never_grabs_and_returns_by_measured_path
+FAILED tests/test_brain_pick_road_return.py::test_insufficient_fresh_front_clearance_prevents_pick_translation_and_grab
+FAILED tests/test_brain_pick_road_return.py::test_completed_true_without_actual_approach_progress_stops_after_one_attempt
+FAILED tests/test_brain_pick_road_return.py::test_incomplete_verification_retreat_cannot_establish_pick_success
+FAILED tests/test_brain_pick_road_return.py::test_initially_offroad_pick_without_a_path_anchor_never_moves_or_grabs
+9 failed in 0.07s

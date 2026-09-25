@@ -1,0 +1,320 @@
+diff --git a/autonomous_brain/actions.py b/autonomous_brain/actions.py
+index ef6e15c..9313a6b 100644
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,7 +7,7 @@ import re
+ from .bridge import SimulationLimit
+ from .navigation import distance, heading_to, position, wrap
+ 
+-VERSION = "autonomous-brain-actions/v11"
++VERSION = "autonomous-brain-actions/v12"
+ 
+ 
+ def road_translation_limit(road, method, requested_cm):
+@@ -429,90 +429,164 @@ class Actions:
+         return self.result(False, "remembered_route_did_not_reach_target")
+ 
+     def pick(self, object_id):
++        trajectory, attempts = [], []
++
++        class ObservedMotionFailure(Exception):
++            def __init__(self, reason, evidence):
++                self.reason, self.evidence = reason, evidence
++
++        def finish(success, reason, **evidence):
++            # Fix the manipulation witness before road recovery changes the
++            # camera frame. Grasp and return are independent outcomes.
++            evidence.setdefault("post_observation", self.s["observation_index"])
++            recovery = self.return_place_path(trajectory)
++            return self.result(success, reason, object_id=object_id, attempts=attempts,
++                               pick_trajectory=trajectory, road_return=recovery, **evidence)
++
++        def pick_move(method, params):
++            before = dict(self.s["odometry"])
++            before_observation = self.s["observation_index"]
++            before_on_road = self.s["road"]["onRoad"]
++            if method == "forward":
++                front = self.s["road"].get("frontClearanceCm")
++                if (type(front) not in (int, float) or not math.isfinite(front)
++                        or front < params["distanceCm"] + .1):
++                    raise ObservedMotionFailure("pick_front_clearance_insufficient", {
++                        "front_clearance_cm": front if type(front) in (int, float)
++                        and math.isfinite(front) else None,
++                        "requested_cm": params["distanceCm"]})
++            result = self.move(method, params)
++            after = dict(self.s["odometry"])
++            trajectory.append({"method": method, "params": dict(params),
++                               "before": before, "after": after,
++                               "before_observation": before_observation,
++                               "after_observation": self.s["observation_index"],
++                               "before_on_road": before_on_road,
++                               "after_on_road": self.s["road"]["onRoad"]})
++            # Basic movement responses only acknowledge execution. Verify the
++            # measured path, including blocked/partial motion, from odometry.
++            measured = distance(position(before), position(after)) * 100
++            change = wrap(after["headingDeg"] - before["headingDeg"])
++            invalid = False
++            if method in {"forward", "backward"}:
++                theta = math.radians(before["headingDeg"])
++                direction = 1 if method == "forward" else -1
++                dx, dz = after["rightCm"] - before["rightCm"], after["forwardCm"] - before["forwardCm"]
++                along = direction * (-math.sin(theta) * dx + math.cos(theta) * dz)
++                across = math.cos(theta) * dx + math.sin(theta) * dz
++                requested = params["distanceCm"]
++                invalid = (abs(change) > .2 or abs(across) > .2 or along < -.1
++                           or measured > requested + .2 or measured < requested - .2
++                           or measured < min(.05, requested / 2))
++            elif method == "turn":
++                invalid = measured > .2 or abs(wrap(change - params["angleDeg"])) > .2
++            else:
++                invalid = measured > .2 or abs(change) > .2
++            if invalid:
++                raise ObservedMotionFailure("pick_motion_not_verified", {
++                    "method": method, "actuator_result": result,
++                    "before_observation": before_observation,
++                    "motion_observation": self.s["observation_index"],
++                    "measured_cm": measured, "heading_change_deg": change})
++            if result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:
++                raise ObservedMotionFailure("pick_approach_blocked", {"actuator_result": result})
++            return result
++
++        def pick_turn(angle):
++            angle = wrap(angle)
++            if abs(angle) >= 1:
++                pick_move("turn", {"angleDeg": angle, "speed": 50})
++
+         target = self.r.perception.confirmed(object_id)
+         if target is None:
+-            return self.result(False, "object_not_confirmed")
++            return finish(False, "object_not_confirmed")
+         if target["category"] not in {"red-ball", "blue-ball"}:
+-            return self.result(False, "object_is_not_a_ball")
++            return finish(False, "object_is_not_a_ball")
+         if self.s["holding"]["holding"]:
+-            return self.result(False, "gripper_already_holding")
++            return finish(False, "gripper_already_holding")
++        if not self.s["road"]["onRoad"]:
++            return finish(False, "pick_requires_observed_road_entry")
+         remaining, _ = self.object_geometry(target)
+         if remaining > 65:
+-            return self.result(False, "target_too_far_for_pick", distance_cm=remaining)
++            return finish(False, "target_too_far_for_pick", distance_cm=remaining)
+         original = (target["position_m"]["x"], target["position_m"]["z"])
+-        attempts = []
+-        for attempt in range(1, 4):
+-            # M5 is calibrated at 40–90 cm raw sensor range. Near-field
+-            # pixels still guide bearing, but extrapolated range must not drive
+-            # the car until a clipped ball fills almost the complete frame.
+-            # Use the confirmed world point plus odometry for a bounded final
+-            # approach, starting at the demo's 22 cm remembered standoff.
+-            for _ in range(10):
++        try:
++            for attempt in range(1, 4):
++                # M5's near-field range is extrapolated. Keep the existing
++                # confirmed-position/odometry standoff and fresh pixel bearing.
++                for _ in range(10):
++                    remaining, memory_bearing = self.object_geometry(target)
++                    observed = self.visible(object_id)
++                    if observed is None and remaining > 30:
++                        pick_turn(-memory_bearing)
++                        observed = self.visible(object_id)
++                        if observed is None:
++                            return finish(False, "target_lost_before_close_approach")
++                    bearing = observed["bearing_deg"] if observed is not None else memory_bearing
++                    if abs(bearing) > 3:
++                        pick_turn(-bearing)
++                        continue
++                    if remaining - 22 < 0.1:
++                        break
++                    pick_move("forward", {"distanceCm": min(6, remaining - 22), "speed": 30})
+                 remaining, memory_bearing = self.object_geometry(target)
+                 observed = self.visible(object_id)
+-                if observed is None and remaining > 30:
+-                    self.turn(-memory_bearing)
+-                    observed = self.visible(object_id)
+-                    if observed is None:
+-                        return self.result(False, "target_lost_before_close_approach", attempts=attempts)
+                 bearing = observed["bearing_deg"] if observed is not None else memory_bearing
+-                if abs(bearing) > 3:
+-                    self.turn(-bearing)
+-                    continue
+-                # The public actuator's smallest accepted distance is 0.1 cm.
+-                # A smaller remainder is already inside the existing final
+-                # alignment tolerance; do not submit an invalid command.
+-                if remaining - 22 < 0.1:
+-                    break
+-                result = self.move("forward", {"distanceCm": min(6, remaining - 22), "speed": 30})
+-                if result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:
+-                    return self.result(False, "pick_approach_blocked", attempts=attempts, actuator_result=result)
+-            remaining, memory_bearing = self.object_geometry(target)
+-            observed = self.visible(object_id)
+-            bearing = observed["bearing_deg"] if observed is not None else memory_bearing
+-            if remaining > 22.5 or abs(bearing) > 3 or not self.s["road"]["onRoad"]:
+-                return self.result(False, "visual_alignment_did_not_converge", attempts=attempts,
+-                                   detection=observed, remembered_distance_cm=remaining)
+-            before = self.s["observation_index"]
+-            self.grab_attempts[object_id] = self.grab_attempts.get(object_id, 0) + 1
+-            self.move("grab", {})
+-            attempts.append({"attempt": attempt, "before_observation": before,
+-                             "after_observation": self.s["observation_index"],
+-                             "holding": self.s["holding"]["holding"],
+-                             "alignment": {"mode": "camera_bearing+confirmed_position_odometry" if observed else "confirmed_position_odometry_near_field",
+-                                           "detection": observed, "remembered_distance_cm": remaining,
+-                                           "bearing_deg": bearing}})
+-            if self.s["holding"]["holding"]:
+-                # Separate the gripper from the former ground position so a
+-                # held ball remaining in view cannot masquerade as an old ball.
+-                self.move("backward", {"distanceCm": 30, "speed": 30})
+-                old_position_detections = [d for d in self.s["perception"]["detections"]
+-                    if d["category"] == target["category"] and "position_m" in d
+-                    and distance(original, (d["position_m"]["x"], d["position_m"]["z"])) < 0.15]
+-                absent = not old_position_detections
+-                marked = self.r.perception.mark_picked(object_id, holding=True,
+-                    original_position_absent=absent, simulation_time_s=self.r.bridge.seconds,
+-                    evidence={"holding": True, "post_observation": self.s["observation_index"],
+-                              "old_position_detections": old_position_detections, "attempts": attempts})
+-                if marked:
+-                    self.r.held_object_id = object_id
+-                    self.r.pending_grasp = None
+-                else:
+-                    self.r.pending_grasp = {"object_id": object_id, "original_position_m": original,
+-                                            "category": target["category"], "attempts": attempts}
+-                return self.result(marked, "grasp_observed" if marked else "holding_but_original_position_ambiguous",
+-                                   object_id=object_id, attempts=attempts,
+-                                   old_position_matches=len(old_position_detections))
+-            if attempt < 3:
+-                result = self.move("forward", {"distanceCm": 6, "speed": 20})
+-                if result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:
+-                    return self.result(False, "pick_retry_blocked", attempts=attempts, actuator_result=result)
+-        return self.result(False, "three_grab_attempts_failed", object_id=object_id, attempts=attempts)
++                # Like place, a pick may briefly leave the road within its
++                # observed manipulation path. Road state is a return outcome,
++                # not evidence that an otherwise aligned grasp failed.
++                if remaining > 22.5 or abs(bearing) > 3:
++                    return finish(False, "visual_alignment_did_not_converge",
++                                  detection=observed, remembered_distance_cm=remaining)
++                before = self.s["observation_index"]
++                self.grab_attempts[object_id] = self.grab_attempts.get(object_id, 0) + 1
++                try:
++                    pick_move("grab", {})
++                finally:
++                    # A grab can already have taken effect when the following
++                    # pose check fails. Preserve its fresh sensor outcome and
++                    # pending identity without claiming a verified grasp.
++                    if self.s["observation_index"] > before:
++                        attempts.append({"attempt": attempt, "before_observation": before,
++                                         "after_observation": self.s["observation_index"],
++                                         "holding": self.s["holding"]["holding"],
++                                         "alignment": {"mode": "camera_bearing+confirmed_position_odometry" if observed else "confirmed_position_odometry_near_field",
++                                                       "detection": observed, "remembered_distance_cm": remaining,
++                                                       "bearing_deg": bearing}})
++                        if self.s["holding"]["holding"]:
++                            self.r.pending_grasp = {"object_id": object_id, "original_position_m": original,
++                                                    "category": target["category"], "attempts": attempts}
++                if self.s["holding"]["holding"]:
++                    # Keep identity pending until the full 30 cm separation
++                    # and old-position camera witness have been observed.
++                    for _ in range(5):
++                        pick_move("backward", {"distanceCm": 6, "speed": 30})
++                        if not self.s["holding"]["holding"]:
++                            return finish(False, "holding_lost_during_pick_verification")
++                    old_position_detections = [d for d in self.s["perception"]["detections"]
++                        if d["category"] == target["category"] and "position_m" in d
++                        and distance(original, (d["position_m"]["x"], d["position_m"]["z"])) < 0.15]
++                    holding = self.s["holding"]["holding"]
++                    marked = self.r.perception.mark_picked(object_id, holding=holding,
++                        original_position_absent=not old_position_detections,
++                        simulation_time_s=self.r.bridge.seconds,
++                        evidence={"holding": holding, "post_observation": self.s["observation_index"],
++                                  "old_position_detections": old_position_detections, "attempts": attempts})
++                    if marked:
++                        self.r.held_object_id = object_id
++                        self.r.pending_grasp = None
++                    return finish(marked, "grasp_observed" if marked else "holding_but_original_position_ambiguous",
++                                  old_position_matches=len(old_position_detections))
++                if attempt < 3:
++                    pick_move("forward", {"distanceCm": 6, "speed": 20})
++            return finish(False, "three_grab_attempts_failed")
++        except ObservedMotionFailure as failure:
++            return finish(False, failure.reason, **failure.evidence)
+ 
+     def return_place_path(self, trajectory):
+-        """Undo measured place motions until fresh sensors reacquire the road.
++        """Undo measured manipulation motions until sensors reacquire the road.
+ 
+-        Manipulation may leave the road. Only this call's observed straight
++        Both pick and place may leave the road. Only this call's observed straight
+         segments and rotations can supply its return path, never a guessed
+         fixed retreat or a line to a remembered map location.
+         """
+diff --git a/autonomous_brain/run.py b/autonomous_brain/run.py
+index 6af9676..6fb3dc8 100644
+--- a/autonomous_brain/run.py
++++ b/autonomous_brain/run.py
+@@ -22,7 +22,7 @@ from .llm import LLMClient
+ from .navigation import RoadMemory
+ from .perception import Perception
+ 
+-RUNTIME_VERSION = "autonomous-brain-runtime/v4"
++RUNTIME_VERSION = "autonomous-brain-runtime/v5"
+ 
+ 
+ def dump(path, value):
+@@ -57,6 +57,8 @@ def compact_action_result(number, action, result, after_observation):
+     evidence = fields(raw, ("object_id", "holding", "frame_id", "tick", "before_observation",
+                             "after_observation", "final_observation", "post_observation",
+                             "distance_cm", "remembered_distance_cm", "bearing_deg",
++                            "front_clearance_cm", "requested_cm", "method", "measured_cm",
++                            "heading_change_deg", "motion_observation",
+                             "candidate_witnesses", "recovery_steps", "unexplored_exits"))
+     detection(raw, evidence)
+     for name in ("actuator_result", "recovery_result"):
+diff --git a/tests/test_brain_actions.py b/tests/test_brain_actions.py
+index 3451f54..fd69374 100644
+--- a/tests/test_brain_actions.py
++++ b/tests/test_brain_actions.py
+@@ -12,7 +12,8 @@ class ActionEvidenceTests(unittest.TestCase):
+                             "position_m": {"x": 0, "z": .30}}
+         snapshot = {"observation_index": 1, "observation": {"frameId": 1},
+                     "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0},
+-                    "holding": {"holding": False}, "road": {"onRoad": True},
++                    "holding": {"holding": False},
++                    "road": {"onRoad": True, "frontClearanceCm": 100},
+                     "perception": {"detections": []}}
+         runtime = SimpleNamespace(snapshot=snapshot, pending_grasp=None,
+             perception=SimpleNamespace(confirmed=lambda oid: target, get_object=lambda oid: target,
+diff --git a/tests/test_brain_state_evidence.py b/tests/test_brain_state_evidence.py
+index 9948034..2ae6897 100644
+--- a/tests/test_brain_state_evidence.py
++++ b/tests/test_brain_state_evidence.py
+@@ -30,6 +30,21 @@ class CompactActionResultTests(unittest.TestCase):
+         return run.compact_action_result(3, action or {"action": "go_to", "params": {"object_id": "red-1"}},
+                                          result, 8)
+ 
++    def test_pick_motion_failure_keeps_sensor_basis_separate_from_return(self):
++        source = {"success": False, "reason": "pick_motion_not_verified", "evidence": {
++            "method": "forward", "front_clearance_cm": 23.9, "requested_cm": 2.5784,
++            "measured_cm": 0.0, "heading_change_deg": .0, "motion_observation": 377,
++            "post_observation": 377, "after_observation": 379,
++            "pick_trajectory": [{"private": "large path stays in action log"}],
++            "road_return": {"success": True, "reason": "returned_to_observed_road",
++                            "on_road": True, "anchor_observation": 376, "after_observation": 379}}}
++        evidence = self.compact(source, {"action": "pick", "params": {"object_id": "red-1"}})["evidence"]
++        for field in ("method", "front_clearance_cm", "requested_cm", "measured_cm",
++                      "heading_change_deg", "motion_observation", "post_observation"):
++            self.assertEqual(evidence[field], source["evidence"][field])
++        self.assertEqual(evidence["road_return"]["after_observation"], 379)
++        self.assertNotIn("pick_trajectory", evidence)
++
+     def test_delivery_witness_and_failed_return_remain_distinct_in_next_state(self):
+         source = {"success": True, "reason": "ball_observed_in_storage", "evidence": {
+             "post_observation": 4, "frame_id": 9,
+@@ -241,7 +256,7 @@ class NextModelStateTests(unittest.TestCase):
+         self.assertEqual(recent["after_observation"], 2)
+         self.assertEqual(recent["evidence"]["final_observation"], 2)
+         self.assertEqual(logged_rounds[0]["result"], results[0])
+-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v4")
++        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v5")
+ 
+     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
+         states, runtime, _, _, _ = self.run_offline(8)

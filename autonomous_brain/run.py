@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v4"
+RUNTIME_VERSION = "autonomous-brain-runtime/v5"
 
 
 def dump(path, value):
@@ -57,6 +57,8 @@ def compact_action_result(number, action, result, after_observation):
     evidence = fields(raw, ("object_id", "holding", "frame_id", "tick", "before_observation",
                             "after_observation", "final_observation", "post_observation",
                             "distance_cm", "remembered_distance_cm", "bearing_deg",
+                            "front_clearance_cm", "requested_cm", "method", "measured_cm",
+                            "heading_change_deg", "motion_observation",
                             "candidate_witnesses", "recovery_steps", "unexplored_exits"))
     detection(raw, evidence)
     for name in ("actuator_result", "recovery_result"):

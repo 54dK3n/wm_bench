@@ -1,0 +1,153 @@
+........................................................................ [ 18%]
+........................................................................ [ 37%]
+........................................................................ [ 56%]
+.........................................................FFF............ [ 75%]
+........................................................................ [ 94%]
+.......F..............                                                   [100%]
+=================================== FAILURES ===================================
+_____________ test_real_http_sse_aggregates_deltas_usage_and_done ______________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-114/test_real_http_sse_aggregates_0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_sse_aggregates_deltas_usage_and_done(tmp_path, state):
+        parts = ['{"action":', '"look_around",', '"params":{}}']
+        raw = "".join(parts)
+        payload = stream_body(parts, usage=True)
+        log_path = tmp_path / "complete-stream.jsonl"
+>       with local_stream_server([payload]) as requests:
+
+tests/test_brain_llm_stream_transport.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x1090e6e80>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+_ test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-114/test_real_http_eof_without_don0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action(tmp_path, state):
+        # Even a syntactically complete action and finish_reason=stop are not enough.
+        raw = '{"action":"pick","params":{"object_id":"wm-1"}}'
+        payload = stream_body([raw[:18], raw[18:]], done=False)
+        log_path = tmp_path / "incomplete-stream.jsonl"
+        executed = []
+>       with local_stream_server([payload]) as requests:
+
+tests/test_brain_llm_stream_transport.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x10934dac0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+_______ test_real_http_complete_invalid_json_has_only_one_repair_request _______
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-114/test_real_http_complete_invali0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_complete_invalid_json_has_only_one_repair_request(tmp_path, state):
+        invalid = ["not a JSON object", '{"action":"look_around","params":']
+        payloads = [stream_body([text], done=True) for text in invalid]
+        log_path = tmp_path / "invalid-streams.jsonl"
+        executed = []
+>       with local_stream_server(payloads) as requests:
+
+tests/test_brain_llm_stream_transport.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py:117: in __enter__
+    return next(self.gen)
+tests/test_brain_llm_stream_transport.py:86: in local_stream_server
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:452: in __init__
+    self.server_bind()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/server.py:138: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x10907eb80>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socketserver.py:466: PermissionError
+_ NextModelStateTests.test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry _
+
+self = <test_brain_state_evidence.NextModelStateTests testMethod=test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry>
+
+    def test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry(self):
+        states, runtime, results, summary, logged_rounds = self.run_offline(2)
+        recent = states[1]["recent_actions"][-1]
+        self.assertFalse(recent["success"])
+        self.assertEqual(recent["reason"], "fresh_detection_does_not_verify_standoff")
+        self.assertIn("evidence", recent)
+        self.assertEqual(recent["evidence"]["detection"]["distance_cm"], 24.4818)
+        self.assertEqual(recent["evidence"]["detection"]["bearing_deg"], 1.410)
+        self.assertEqual(states[1]["objects"][0]["distance_cm"], 32.0)
+        self.assertEqual(states[1]["objects"][0]["position_m"], {"x": 0.0, "z": .32})
+        self.assertEqual(recent["after_observation"], 2)
+        self.assertEqual(recent["evidence"]["final_observation"], 2)
+        self.assertEqual(logged_rounds[0]["result"], results[0])
+>       self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v4")
+E       AssertionError: 'autonomous-brain-runtime/v5' != 'autonomous-brain-runtime/v4'
+E       - autonomous-brain-runtime/v5
+E       ?                           ^
+E       + autonomous-brain-runtime/v4
+E       ?                           ^
+
+tests/test_brain_state_evidence.py:259: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_sse_aggregates_deltas_usage_and_done
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_eof_without_done_logs_partial_and_never_retries_or_returns_action
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_complete_invalid_json_has_only_one_repair_request
+FAILED tests/test_brain_state_evidence.py::NextModelStateTests::test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry
+4 failed, 378 passed in 0.52s

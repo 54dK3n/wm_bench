@@ -1,0 +1,4978 @@
+{
+  "version": "autonomous-brain-offline-evaluation/v2",
+  "evaluation_only": true,
+  "run_directory": "artifacts/autonomous-brain/map05-run-09/map-05-run-1",
+  "map": "map-05",
+  "success": false,
+  "failures": [
+    "no_active_delivery_event:guangyang-target-2",
+    "final_position_outside_storage:guangyang-target-2",
+    "brain_did_not_finish_with_observed_done",
+    "terminal_done_not_corroborated",
+    "execution_or_controller_error"
+  ],
+  "delivery": {
+    "failures": [
+      "no_active_delivery_event:guangyang-target-2",
+      "final_position_outside_storage:guangyang-target-2",
+      "brain_did_not_finish_with_observed_done",
+      "terminal_done_not_corroborated",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "delivered_target_ids": [
+      "guangyang-target-1"
+    ],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 17728,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 0.5094136392147339,
+        "position_world": [
+          -10.263683,
+          -8.273873
+        ],
+        "events": [
+          {
+            "event_index": 2,
+            "seq": 1692,
+            "type": "package_grabbed",
+            "tick": 5060,
+            "simulation_seconds": 101.2,
+            "package_id": "guangyang-target-1"
+          },
+          {
+            "event_index": 5,
+            "seq": 3219,
+            "type": "package_delivered",
+            "tick": 10103,
+            "simulation_seconds": 202.06,
+            "package_id": "guangyang-target-1"
+          }
+        ]
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 17728,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 16.819687483719786,
+        "position_world": [
+          0.5097,
+          4.4324
+        ],
+        "events": []
+      }
+    ],
+    "rounds": 77,
+    "round_records": 77,
+    "max_rounds": 200,
+    "simulation_seconds": 354.56,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "final_sample_tick": 17728,
+    "simulation_end_tick": 17728,
+    "terminal_done": {
+      "verified": false,
+      "round": 77,
+      "observation_index": null,
+      "observation_tick": null
+    },
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "metrics": {
+    "rounds": 77,
+    "llm_calls": 89,
+    "llm_total_elapsed_s": 2320.6427533739984,
+    "simulation_seconds": 354.56,
+    "observations": 393,
+    "failed_rounds": 14,
+    "failed_actions": 13,
+    "execution_failures": 0,
+    "external_stop_failures": 1,
+    "bridge_calls": 1814,
+    "nonwhitelist_brain_requests": 0
+  },
+  "brain_status": "failed",
+  "brain_reason": "BridgeError: turn: NOT_RUNNING",
+  "failed_actions": [
+    {
+      "round": 10,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "simulation_seconds": 35.26,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 44,
+          "frame_id": 44,
+          "tick": 1763,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 13.8,
+            "elapsedTicks": 58
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 3.2,
+            "elapsedTicks": 21
+          },
+          "recovery_steps": 3,
+          "before_observation": 37,
+          "final_observation": 45
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 22,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_024"
+        }
+      },
+      "simulation_seconds": 81.24,
+      "result": {
+        "success": false,
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": {
+          "after_observation": 100,
+          "frame_id": 100,
+          "tick": 4062,
+          "holding": false,
+          "object_id": "target_024",
+          "detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9211862068965517,
+            "bbox": {
+              "x": 280.0,
+              "y": 208.0,
+              "w": 58.0,
+              "h": 50.0
+            },
+            "frame_id": "100",
+            "fed_to_world_model": true,
+            "track_id": "target_024",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 45,
+            "raw_bearing_deg": -1.52,
+            "distance_cm": 52.6355995957389,
+            "bearing_deg": -1.3711320535207379,
+            "position_m": {
+              "x": -1.4901820361118336,
+              "z": 1.1063727282499805
+            },
+            "reason": null
+          },
+          "road_clearance": {
+            "requested_cm": 10,
+            "permitted_cm": 0.0,
+            "heading_error_deg": -22.5,
+            "side": "leftClearanceCm",
+            "side_clearance_cm": 0.1,
+            "front_clearance_cm": 35.5,
+            "predicted_lateral_cm": -0.0
+          },
+          "before_observation": 94,
+          "final_observation": 101
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 25,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 95.48,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 116,
+          "frame_id": 116,
+          "tick": 4774,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 0,
+            "elapsedTicks": 0
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 1.6,
+            "elapsedTicks": 9
+          },
+          "recovery_steps": 2,
+          "before_observation": 112,
+          "final_observation": 117
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 28,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_033"
+        }
+      },
+      "simulation_seconds": 159.92,
+      "result": {
+        "success": false,
+        "reason": "known_route_exhausted_needs_exploration",
+        "evidence": {
+          "after_observation": 158,
+          "frame_id": 158,
+          "tick": 7996,
+          "holding": true,
+          "object_id": "storage-zone_033",
+          "before_observation": 130,
+          "final_observation": 159
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 32,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_005"
+        }
+      },
+      "simulation_seconds": 180.06,
+      "result": {
+        "success": false,
+        "reason": "known_route_exhausted_needs_exploration",
+        "evidence": {
+          "after_observation": 177,
+          "frame_id": 177,
+          "tick": 9003,
+          "holding": true,
+          "object_id": "storage-zone_005",
+          "before_observation": 172,
+          "final_observation": 178
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 37,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_005"
+        }
+      },
+      "simulation_seconds": 196.52,
+      "result": {
+        "success": false,
+        "reason": "visual_standoff_range_not_supported",
+        "evidence": {
+          "after_observation": 199,
+          "frame_id": 199,
+          "tick": 9826,
+          "holding": true,
+          "object_id": "storage-zone_005",
+          "detection": {
+            "category": "storage-zone",
+            "source": "storage-ground-pixels",
+            "confidence": 1.0,
+            "bbox": {
+              "x": 183.0,
+              "y": 236.0,
+              "w": 1.0,
+              "h": 1.0
+            },
+            "frame_id": "199",
+            "fed_to_world_model": true,
+            "track_id": "storage-zone_005",
+            "method": "visible-ground-region-bbox-centre",
+            "distance_cm": 69.48251640451168,
+            "bearing_deg": -16.93135817349978,
+            "position_m": {
+              "x": 1.1480542774668103,
+              "z": -0.21723318791993274
+            }
+          },
+          "before_observation": 196,
+          "final_observation": 200
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 40,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -99
+        }
+      },
+      "simulation_seconds": 214.3,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 229,
+          "frame_id": 229,
+          "tick": 10715,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 8.7,
+            "elapsedTicks": 69
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 12.4,
+            "elapsedTicks": 74
+          },
+          "recovery_steps": 1,
+          "before_observation": 226,
+          "final_observation": 230
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 55,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "simulation_seconds": 273.7,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 294,
+          "frame_id": 294,
+          "tick": 13685,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 2.5,
+            "elapsedTicks": 8
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 11.9,
+            "elapsedTicks": 64
+          },
+          "recovery_steps": 2,
+          "before_observation": 290,
+          "final_observation": 295
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 60,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.7
+        }
+      },
+      "simulation_seconds": 300.22,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 317,
+          "frame_id": 317,
+          "tick": 15011,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 7.8,
+            "elapsedTicks": 25
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 17.2,
+            "elapsedTicks": 150
+          },
+          "recovery_steps": 1,
+          "before_observation": 313,
+          "final_observation": 318
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 64,
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.1
+        }
+      },
+      "simulation_seconds": 316.62,
+      "result": {
+        "success": false,
+        "reason": "road_blocked_returned_to_junction",
+        "evidence": {
+          "after_observation": 336,
+          "frame_id": 336,
+          "tick": 15831,
+          "holding": false,
+          "actuator_result": {
+            "accepted": true,
+            "stoppedBy": "front_clearance",
+            "distanceCm": 3.1,
+            "elapsedTicks": 10
+          },
+          "recovery_result": {
+            "accepted": true,
+            "stoppedBy": "junction",
+            "distanceCm": 12.5,
+            "elapsedTicks": 67
+          },
+          "recovery_steps": 1,
+          "before_observation": 332,
+          "final_observation": 337
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 69,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_098"
+        }
+      },
+      "simulation_seconds": 336.26,
+      "result": {
+        "success": false,
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": {
+          "after_observation": 360,
+          "frame_id": 360,
+          "tick": 16813,
+          "holding": false,
+          "object_id": "target_098",
+          "detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9139666666666666,
+            "bbox": {
+              "x": 320.0,
+              "y": 208.0,
+              "w": 80.0,
+              "h": 60.0
+            },
+            "frame_id": "360",
+            "fed_to_world_model": false,
+            "track_id": "target_098",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 34,
+            "raw_bearing_deg": 5.5,
+            "distance_cm": 41.554796259402664,
+            "bearing_deg": 4.818646923235814,
+            "position_m": {
+              "x": -0.37855221395221006,
+              "z": 1.5095148577383999
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "road_clearance": {
+            "requested_cm": 9.554796259402664,
+            "permitted_cm": 0.0,
+            "heading_error_deg": 33.2,
+            "side": "rightClearanceCm",
+            "side_clearance_cm": 0.1,
+            "front_clearance_cm": 32.6,
+            "predicted_lateral_cm": 0.0
+          },
+          "before_observation": 357,
+          "final_observation": 361
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 73,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_098"
+        }
+      },
+      "simulation_seconds": 345.44,
+      "result": {
+        "success": false,
+        "reason": "visual_alignment_did_not_converge",
+        "evidence": {
+          "after_observation": 377,
+          "frame_id": 377,
+          "tick": 17272,
+          "holding": false,
+          "attempts": [],
+          "detection": {
+            "category": "red-ball",
+            "source": "virtual-cv",
+            "confidence": 0.9129245283018868,
+            "bbox": {
+              "x": 268.0,
+              "y": 218.0,
+              "w": 106.0,
+              "h": 88.0
+            },
+            "frame_id": "377",
+            "fed_to_world_model": false,
+            "track_id": "target_098",
+            "method": "virtual-cv-published-width-formula+M5",
+            "raw_distance_cm": 27,
+            "raw_bearing_deg": 0.14,
+            "distance_cm": 34.28456903267375,
+            "bearing_deg": 0.11894687556651334,
+            "position_m": {
+              "x": -0.4095621960134427,
+              "z": 1.496350680097602
+            },
+            "reason": "near_field_visibility_for_existing_confirmation",
+            "visibility_refresh_only": true
+          },
+          "remembered_distance_cm": 21.99263146390738,
+          "before_observation": 375,
+          "final_observation": 378
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 75,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_098"
+        }
+      },
+      "simulation_seconds": 350.0,
+      "result": {
+        "success": false,
+        "reason": "not_on_observed_road",
+        "evidence": {
+          "after_observation": 385,
+          "frame_id": 385,
+          "tick": 17500,
+          "holding": false,
+          "before_observation": 385,
+          "final_observation": 386
+        }
+      },
+      "failure_kind": "action_failure"
+    },
+    {
+      "round": 77,
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "simulation_seconds": 354.56,
+      "result": {
+        "success": false,
+        "reason": "turn: NOT_RUNNING",
+        "error_type": "BridgeError"
+      },
+      "failure_kind": "external_stop"
+    }
+  ],
+  "perception": {
+    "matching_method": "same-frame class + projected truth centre inside exact bbox, unique both ways; WM identities require consistent bbox-to-track associations",
+    "matching_limitation": "geometric correspondence does not independently prove occlusion visibility; partial boxes excluding the centre remain unmatched; no nearest-distance fallback",
+    "coordinate_convention": "initial robot right/forward metres; right=[cos(h0),-sin(h0)], forward=[-sin(h0),-cos(h0)]",
+    "error_sample_definition": "one sample per logged CONFIRMED red track per observation with unique identity and active exact-frame truth; repeated estimates count as repeated samples",
+    "position_error": {
+      "count": 75,
+      "mean_cm": 5.662065554201754,
+      "rmse_cm": 6.679918021321396,
+      "max_cm": 10.972707975947602
+    },
+    "position_samples": [
+      {
+        "observation_index": 91,
+        "round": 21,
+        "frame_id": "91",
+        "tick": 3684,
+        "simulation_seconds": 73.68,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 92,
+        "round": 21,
+        "frame_id": "92",
+        "tick": 3741,
+        "simulation_seconds": 74.82,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 93,
+        "round": 21,
+        "frame_id": "93",
+        "tick": 3741,
+        "simulation_seconds": 74.82,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 94,
+        "round": 22,
+        "frame_id": "94",
+        "tick": 3741,
+        "simulation_seconds": 74.82,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 95,
+        "round": 22,
+        "frame_id": "95",
+        "tick": 3854,
+        "simulation_seconds": 77.08,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 96,
+        "round": 22,
+        "frame_id": "96",
+        "tick": 3937,
+        "simulation_seconds": 78.74,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 97,
+        "round": 22,
+        "frame_id": "97",
+        "tick": 3965,
+        "simulation_seconds": 79.3,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 98,
+        "round": 22,
+        "frame_id": "98",
+        "tick": 4019,
+        "simulation_seconds": 80.38,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5767203827521328,
+          "z": 1.1043430029783192
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 1.265561299475488
+      },
+      {
+        "observation_index": 99,
+        "round": 22,
+        "frame_id": "99",
+        "tick": 4052,
+        "simulation_seconds": 81.04,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 100,
+        "round": 22,
+        "frame_id": "100",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 101,
+        "round": 22,
+        "frame_id": "101",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 102,
+        "round": 23,
+        "frame_id": "102",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 103,
+        "round": 23,
+        "frame_id": "103",
+        "tick": 4275,
+        "simulation_seconds": 85.5,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 104,
+        "round": 23,
+        "frame_id": "104",
+        "tick": 4314,
+        "simulation_seconds": 86.28,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 105,
+        "round": 23,
+        "frame_id": "105",
+        "tick": 4314,
+        "simulation_seconds": 86.28,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 106,
+        "round": 24,
+        "frame_id": "106",
+        "tick": 4314,
+        "simulation_seconds": 86.28,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 107,
+        "round": 24,
+        "frame_id": "107",
+        "tick": 4371,
+        "simulation_seconds": 87.42,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 108,
+        "round": 24,
+        "frame_id": "108",
+        "tick": 4428,
+        "simulation_seconds": 88.56,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 109,
+        "round": 24,
+        "frame_id": "109",
+        "tick": 4485,
+        "simulation_seconds": 89.7,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 110,
+        "round": 24,
+        "frame_id": "110",
+        "tick": 4542,
+        "simulation_seconds": 90.84,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 111,
+        "round": 24,
+        "frame_id": "111",
+        "tick": 4542,
+        "simulation_seconds": 90.84,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 112,
+        "round": 25,
+        "frame_id": "112",
+        "tick": 4542,
+        "simulation_seconds": 90.84,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 113,
+        "round": 25,
+        "frame_id": "113",
+        "tick": 4542,
+        "simulation_seconds": 90.84,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 114,
+        "round": 25,
+        "frame_id": "114",
+        "tick": 4655,
+        "simulation_seconds": 93.1,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 115,
+        "round": 25,
+        "frame_id": "115",
+        "tick": 4765,
+        "simulation_seconds": 95.3,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 116,
+        "round": 25,
+        "frame_id": "116",
+        "tick": 4774,
+        "simulation_seconds": 95.48,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 117,
+        "round": 25,
+        "frame_id": "117",
+        "tick": 4774,
+        "simulation_seconds": 95.48,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 118,
+        "round": 26,
+        "frame_id": "118",
+        "tick": 4774,
+        "simulation_seconds": 95.48,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 119,
+        "round": 26,
+        "frame_id": "119",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 120,
+        "round": 26,
+        "frame_id": "120",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 121,
+        "round": 27,
+        "frame_id": "121",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 122,
+        "round": 27,
+        "frame_id": "122",
+        "tick": 4915,
+        "simulation_seconds": 98.3,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 123,
+        "round": 27,
+        "frame_id": "123",
+        "tick": 4918,
+        "simulation_seconds": 98.36,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 124,
+        "round": 27,
+        "frame_id": "124",
+        "tick": 4943,
+        "simulation_seconds": 98.86,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 125,
+        "round": 27,
+        "frame_id": "125",
+        "tick": 4988,
+        "simulation_seconds": 99.76,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 126,
+        "round": 27,
+        "frame_id": "126",
+        "tick": 5036,
+        "simulation_seconds": 100.72,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "position_m": {
+          "x": -1.5519777880792622,
+          "z": 1.1048705466743114
+        },
+        "truth_odometry_m": {
+          "x": -1.571425,
+          "z": 1.1158374999999998
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 2.2326399547126186
+      },
+      {
+        "observation_index": 355,
+        "round": 68,
+        "frame_id": "355",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.2867375446574458,
+          "z": 1.579341025101368
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 10.972707975947602
+      },
+      {
+        "observation_index": 356,
+        "round": 68,
+        "frame_id": "356",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.2867375446574458,
+          "z": 1.579341025101368
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 10.972707975947602
+      },
+      {
+        "observation_index": 357,
+        "round": 69,
+        "frame_id": "357",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.2867375446574458,
+          "z": 1.579341025101368
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 10.972707975947602
+      },
+      {
+        "observation_index": 358,
+        "round": 69,
+        "frame_id": "358",
+        "tick": 16705,
+        "simulation_seconds": 334.1,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.2867375446574458,
+          "z": 1.579341025101368
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 10.972707975947602
+      },
+      {
+        "observation_index": 359,
+        "round": 69,
+        "frame_id": "359",
+        "tick": 16759,
+        "simulation_seconds": 335.18,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 360,
+        "round": 69,
+        "frame_id": "360",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 361,
+        "round": 69,
+        "frame_id": "361",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 362,
+        "round": 70,
+        "frame_id": "362",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 363,
+        "round": 70,
+        "frame_id": "363",
+        "tick": 16870,
+        "simulation_seconds": 337.4,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 364,
+        "round": 70,
+        "frame_id": "364",
+        "tick": 16927,
+        "simulation_seconds": 338.54,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 365,
+        "round": 70,
+        "frame_id": "365",
+        "tick": 16984,
+        "simulation_seconds": 339.68,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 366,
+        "round": 70,
+        "frame_id": "366",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 367,
+        "round": 70,
+        "frame_id": "367",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 368,
+        "round": 71,
+        "frame_id": "368",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 369,
+        "round": 71,
+        "frame_id": "369",
+        "tick": 17162,
+        "simulation_seconds": 343.24,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 370,
+        "round": 71,
+        "frame_id": "370",
+        "tick": 17162,
+        "simulation_seconds": 343.24,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 371,
+        "round": 72,
+        "frame_id": "371",
+        "tick": 17162,
+        "simulation_seconds": 343.24,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 372,
+        "round": 72,
+        "frame_id": "372",
+        "tick": 17200,
+        "simulation_seconds": 344.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 373,
+        "round": 72,
+        "frame_id": "373",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 374,
+        "round": 72,
+        "frame_id": "374",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 375,
+        "round": 73,
+        "frame_id": "375",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 376,
+        "round": 73,
+        "frame_id": "376",
+        "tick": 17258,
+        "simulation_seconds": 345.16,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 377,
+        "round": 73,
+        "frame_id": "377",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 378,
+        "round": 73,
+        "frame_id": "378",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 379,
+        "round": 74,
+        "frame_id": "379",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 380,
+        "round": 74,
+        "frame_id": "380",
+        "tick": 17329,
+        "simulation_seconds": 346.58,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 381,
+        "round": 74,
+        "frame_id": "381",
+        "tick": 17386,
+        "simulation_seconds": 347.72,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 382,
+        "round": 74,
+        "frame_id": "382",
+        "tick": 17443,
+        "simulation_seconds": 348.86,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 383,
+        "round": 74,
+        "frame_id": "383",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 384,
+        "round": 74,
+        "frame_id": "384",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 385,
+        "round": 75,
+        "frame_id": "385",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 386,
+        "round": 75,
+        "frame_id": "386",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 387,
+        "round": 76,
+        "frame_id": "387",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 388,
+        "round": 76,
+        "frame_id": "388",
+        "tick": 17557,
+        "simulation_seconds": 351.14,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 389,
+        "round": 76,
+        "frame_id": "389",
+        "tick": 17614,
+        "simulation_seconds": 352.28,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 390,
+        "round": 76,
+        "frame_id": "390",
+        "tick": 17671,
+        "simulation_seconds": 353.42,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 391,
+        "round": 76,
+        "frame_id": "391",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 392,
+        "round": 76,
+        "frame_id": "392",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      },
+      {
+        "observation_index": 393,
+        "round": 77,
+        "frame_id": "393",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "position_m": {
+          "x": -0.3041089060227532,
+          "z": 1.5663508826616208
+        },
+        "truth_odometry_m": {
+          "x": -0.37452500000000016,
+          "z": 1.5135125
+        },
+        "origin": {
+          "x": -2.4865,
+          "z": -7.6757,
+          "heading": 3.141592653589793
+        },
+        "world_units_to_meters": 0.125,
+        "error_cm": 8.80359072953096
+      }
+    ],
+    "unmatched_confirmed_samples": [
+      {
+        "observation_index": 127,
+        "round": 27,
+        "frame_id": "127",
+        "tick": 5074,
+        "simulation_seconds": 101.48,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "reason": "no_active_same_frame_truth"
+      }
+    ],
+    "unmatched_confirmed_count": 1,
+    "ambiguous_track_ids": {},
+    "track_truth_bindings": {
+      "target_024": "guangyang-target-1",
+      "target_049": "guangyang-target-2",
+      "target_098": "guangyang-target-2"
+    },
+    "binding_evidence": [
+      {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 61,
+        "round": 14,
+        "frame_id": "61",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 62,
+        "round": 14,
+        "frame_id": "62",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 63,
+        "round": 15,
+        "frame_id": "63",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 64,
+        "round": 15,
+        "frame_id": "64",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 246,
+          "y": 196,
+          "w": 40,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 65,
+        "round": 15,
+        "frame_id": "65",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 246,
+          "y": 196,
+          "w": 40,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 66,
+        "round": 16,
+        "frame_id": "66",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 246,
+          "y": 196,
+          "w": 40,
+          "h": 26
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 76,
+        "round": 18,
+        "frame_id": "76",
+        "tick": 3164,
+        "simulation_seconds": 63.28,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 530,
+          "y": 196,
+          "w": 56,
+          "h": 42
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 82,
+        "round": 19,
+        "frame_id": "82",
+        "tick": 3392,
+        "simulation_seconds": 67.84,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 530,
+          "y": 200,
+          "w": 56,
+          "h": 38
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 91,
+        "round": 21,
+        "frame_id": "91",
+        "tick": 3684,
+        "simulation_seconds": 73.68,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 378,
+          "y": 196,
+          "w": 44,
+          "h": 32
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 97,
+        "round": 22,
+        "frame_id": "97",
+        "tick": 3965,
+        "simulation_seconds": 79.3,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 292,
+          "y": 198,
+          "w": 40,
+          "h": 34
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 98,
+        "round": 22,
+        "frame_id": "98",
+        "tick": 4019,
+        "simulation_seconds": 80.38,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 286,
+          "y": 202,
+          "w": 48,
+          "h": 42
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 99,
+        "round": 22,
+        "frame_id": "99",
+        "tick": 4052,
+        "simulation_seconds": 81.04,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 282,
+          "y": 206,
+          "w": 54,
+          "h": 48
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 100,
+        "round": 22,
+        "frame_id": "100",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 280,
+          "y": 208,
+          "w": 58,
+          "h": 50
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 101,
+        "round": 22,
+        "frame_id": "101",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 280,
+          "y": 208,
+          "w": 58,
+          "h": 50
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 102,
+        "round": 23,
+        "frame_id": "102",
+        "tick": 4062,
+        "simulation_seconds": 81.24,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 280,
+          "y": 208,
+          "w": 58,
+          "h": 50
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 103,
+        "round": 23,
+        "frame_id": "103",
+        "tick": 4275,
+        "simulation_seconds": 85.5,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 250,
+          "y": 246,
+          "w": 146,
+          "h": 136
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 119,
+        "round": 26,
+        "frame_id": "119",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 254,
+          "y": 222,
+          "w": 86,
+          "h": 80
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 120,
+        "round": 26,
+        "frame_id": "120",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 254,
+          "y": 222,
+          "w": 86,
+          "h": 80
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 121,
+        "round": 27,
+        "frame_id": "121",
+        "tick": 4883,
+        "simulation_seconds": 97.66,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 254,
+          "y": 222,
+          "w": 86,
+          "h": 80
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 122,
+        "round": 27,
+        "frame_id": "122",
+        "tick": 4915,
+        "simulation_seconds": 98.3,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 230,
+          "y": 236,
+          "w": 118,
+          "h": 108
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 123,
+        "round": 27,
+        "frame_id": "123",
+        "tick": 4918,
+        "simulation_seconds": 98.36,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 266,
+          "y": 234,
+          "w": 116,
+          "h": 110
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 124,
+        "round": 27,
+        "frame_id": "124",
+        "tick": 4943,
+        "simulation_seconds": 98.86,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 246,
+          "y": 250,
+          "w": 160,
+          "h": 152
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 125,
+        "round": 27,
+        "frame_id": "125",
+        "tick": 4988,
+        "simulation_seconds": 99.76,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 246,
+          "y": 250,
+          "w": 160,
+          "h": 152
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 126,
+        "round": 27,
+        "frame_id": "126",
+        "tick": 5036,
+        "simulation_seconds": 100.72,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 180,
+          "y": 298,
+          "w": 308,
+          "h": 182
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 221,
+        "round": 39,
+        "frame_id": "221",
+        "tick": 10314,
+        "simulation_seconds": 206.28,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 274,
+          "y": 216,
+          "w": 98,
+          "h": 82
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 222,
+        "round": 39,
+        "frame_id": "222",
+        "tick": 10370,
+        "simulation_seconds": 207.4,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 258,
+          "y": 226,
+          "w": 134,
+          "h": 118
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 223,
+        "round": 39,
+        "frame_id": "223",
+        "tick": 10426,
+        "simulation_seconds": 208.52,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 228,
+          "y": 246,
+          "w": 210,
+          "h": 208
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 224,
+        "round": 39,
+        "frame_id": "224",
+        "tick": 10459,
+        "simulation_seconds": 209.18,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 174,
+          "y": 270,
+          "w": 332,
+          "h": 210
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 225,
+        "round": 39,
+        "frame_id": "225",
+        "tick": 10459,
+        "simulation_seconds": 209.18,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 174,
+          "y": 270,
+          "w": 332,
+          "h": 210
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 226,
+        "round": 40,
+        "frame_id": "226",
+        "tick": 10459,
+        "simulation_seconds": 209.18,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 174,
+          "y": 270,
+          "w": 332,
+          "h": 210
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 282,
+        "round": 53,
+        "frame_id": "282",
+        "tick": 13157,
+        "simulation_seconds": 263.14,
+        "track_id": "target_049",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 586,
+          "y": 198,
+          "w": 54,
+          "h": 32
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 306,
+        "round": 58,
+        "frame_id": "306",
+        "tick": 14323,
+        "simulation_seconds": 286.46,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 436,
+          "y": 190,
+          "w": 24,
+          "h": 16
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 307,
+        "round": 58,
+        "frame_id": "307",
+        "tick": 14344,
+        "simulation_seconds": 286.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 442,
+          "y": 190,
+          "w": 26,
+          "h": 18
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 308,
+        "round": 58,
+        "frame_id": "308",
+        "tick": 14344,
+        "simulation_seconds": 286.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 442,
+          "y": 190,
+          "w": 26,
+          "h": 18
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 309,
+        "round": 59,
+        "frame_id": "309",
+        "tick": 14344,
+        "simulation_seconds": 286.88,
+        "track_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "bbox": {
+          "x": 442,
+          "y": 190,
+          "w": 26,
+          "h": 18
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 348,
+        "round": 67,
+        "frame_id": "348",
+        "tick": 16311,
+        "simulation_seconds": 326.22,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 176,
+          "y": 192,
+          "w": 34,
+          "h": 20
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 351,
+        "round": 67,
+        "frame_id": "351",
+        "tick": 16538,
+        "simulation_seconds": 330.76,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 176,
+          "y": 192,
+          "w": 34,
+          "h": 20
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 352,
+        "round": 67,
+        "frame_id": "352",
+        "tick": 16538,
+        "simulation_seconds": 330.76,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 176,
+          "y": 192,
+          "w": 34,
+          "h": 20
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 353,
+        "round": 68,
+        "frame_id": "353",
+        "tick": 16538,
+        "simulation_seconds": 330.76,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 176,
+          "y": 192,
+          "w": 34,
+          "h": 20
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 354,
+        "round": 68,
+        "frame_id": "354",
+        "tick": 16597,
+        "simulation_seconds": 331.94,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 290,
+          "y": 194,
+          "w": 36,
+          "h": 22
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 355,
+        "round": 68,
+        "frame_id": "355",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 318,
+          "y": 196,
+          "w": 46,
+          "h": 30
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 356,
+        "round": 68,
+        "frame_id": "356",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 318,
+          "y": 196,
+          "w": 46,
+          "h": 30
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 357,
+        "round": 69,
+        "frame_id": "357",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 318,
+          "y": 196,
+          "w": 46,
+          "h": 30
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 358,
+        "round": 69,
+        "frame_id": "358",
+        "tick": 16705,
+        "simulation_seconds": 334.1,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 198,
+          "w": 52,
+          "h": 36
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 359,
+        "round": 69,
+        "frame_id": "359",
+        "tick": 16759,
+        "simulation_seconds": 335.18,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 202,
+          "w": 64,
+          "h": 46
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 360,
+        "round": 69,
+        "frame_id": "360",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 361,
+        "round": 69,
+        "frame_id": "361",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 362,
+        "round": 70,
+        "frame_id": "362",
+        "tick": 16813,
+        "simulation_seconds": 336.26,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 366,
+        "round": 70,
+        "frame_id": "366",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 367,
+        "round": 70,
+        "frame_id": "367",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 368,
+        "round": 71,
+        "frame_id": "368",
+        "tick": 17041,
+        "simulation_seconds": 340.82,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 320,
+          "y": 208,
+          "w": 80,
+          "h": 60
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 372,
+        "round": 72,
+        "frame_id": "372",
+        "tick": 17200,
+        "simulation_seconds": 344.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 248,
+          "y": 206,
+          "w": 72,
+          "h": 56
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 373,
+        "round": 72,
+        "frame_id": "373",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 222,
+          "y": 216,
+          "w": 98,
+          "h": 78
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 374,
+        "round": 72,
+        "frame_id": "374",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 222,
+          "y": 216,
+          "w": 98,
+          "h": 78
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 375,
+        "round": 73,
+        "frame_id": "375",
+        "tick": 17254,
+        "simulation_seconds": 345.08,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 222,
+          "y": 216,
+          "w": 98,
+          "h": 78
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 376,
+        "round": 73,
+        "frame_id": "376",
+        "tick": 17258,
+        "simulation_seconds": 345.16,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 274,
+          "y": 216,
+          "w": 96,
+          "h": 78
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 377,
+        "round": 73,
+        "frame_id": "377",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 378,
+        "round": 73,
+        "frame_id": "378",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 379,
+        "round": 74,
+        "frame_id": "379",
+        "tick": 17272,
+        "simulation_seconds": 345.44,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 383,
+        "round": 74,
+        "frame_id": "383",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 384,
+        "round": 74,
+        "frame_id": "384",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 385,
+        "round": 75,
+        "frame_id": "385",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 386,
+        "round": 75,
+        "frame_id": "386",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 387,
+        "round": 76,
+        "frame_id": "387",
+        "tick": 17500,
+        "simulation_seconds": 350.0,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 391,
+        "round": 76,
+        "frame_id": "391",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 392,
+        "round": 76,
+        "frame_id": "392",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      },
+      {
+        "observation_index": 393,
+        "round": 77,
+        "frame_id": "393",
+        "tick": 17728,
+        "simulation_seconds": 354.56,
+        "track_id": "target_098",
+        "truth_id": "guangyang-target-2",
+        "bbox": {
+          "x": 268,
+          "y": 218,
+          "w": 106,
+          "h": 88
+        },
+        "method": "unique_same_frame_projected_center_in_exact_bbox"
+      }
+    ],
+    "raw_red_match_counts": {
+      "unique": 86,
+      "unmatched": 22
+    },
+    "matching_issues": [
+      {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 546,
+          "y": 184,
+          "w": 14,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 61,
+        "round": 14,
+        "frame_id": "61",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 544,
+          "y": 184,
+          "w": 16,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 62,
+        "round": 14,
+        "frame_id": "62",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 544,
+          "y": 184,
+          "w": 16,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 63,
+        "round": 15,
+        "frame_id": "63",
+        "tick": 2594,
+        "simulation_seconds": 51.88,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 544,
+          "y": 184,
+          "w": 16,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 64,
+        "round": 15,
+        "frame_id": "64",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 504,
+          "y": 182,
+          "w": 12,
+          "h": 24
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 65,
+        "round": 15,
+        "frame_id": "65",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 504,
+          "y": 182,
+          "w": 12,
+          "h": 24
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 66,
+        "round": 16,
+        "frame_id": "66",
+        "tick": 2629,
+        "simulation_seconds": 52.58,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 504,
+          "y": 182,
+          "w": 12,
+          "h": 24
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 132,
+        "round": 28,
+        "frame_id": "132",
+        "tick": 5509,
+        "simulation_seconds": 110.18,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 452,
+          "y": 174,
+          "w": 20,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 142,
+        "round": 28,
+        "frame_id": "142",
+        "tick": 6513,
+        "simulation_seconds": 130.26,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 544,
+          "y": 184,
+          "w": 16,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 143,
+        "round": 28,
+        "frame_id": "143",
+        "tick": 6548,
+        "simulation_seconds": 130.96,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 502,
+          "y": 184,
+          "w": 14,
+          "h": 22
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 164,
+        "round": 30,
+        "frame_id": "164",
+        "tick": 8233,
+        "simulation_seconds": 164.66,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 165,
+        "round": 30,
+        "frame_id": "165",
+        "tick": 8233,
+        "simulation_seconds": 164.66,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 166,
+        "round": 31,
+        "frame_id": "166",
+        "tick": 8233,
+        "simulation_seconds": 164.66,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 170,
+        "round": 31,
+        "frame_id": "170",
+        "tick": 8461,
+        "simulation_seconds": 169.22,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 171,
+        "round": 31,
+        "frame_id": "171",
+        "tick": 8461,
+        "simulation_seconds": 169.22,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 172,
+        "round": 32,
+        "frame_id": "172",
+        "tick": 8461,
+        "simulation_seconds": 169.22,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 227,
+        "round": 40,
+        "frame_id": "227",
+        "tick": 10528,
+        "simulation_seconds": 210.56,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 532,
+          "y": 362,
+          "w": 108,
+          "h": 118
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 294,
+        "round": 55,
+        "frame_id": "294",
+        "tick": 13685,
+        "simulation_seconds": 273.7,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 600,
+          "y": 160,
+          "w": 40,
+          "h": 44
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 295,
+        "round": 55,
+        "frame_id": "295",
+        "tick": 13685,
+        "simulation_seconds": 273.7,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 600,
+          "y": 160,
+          "w": 40,
+          "h": 44
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 296,
+        "round": 56,
+        "frame_id": "296",
+        "tick": 13685,
+        "simulation_seconds": 273.7,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 600,
+          "y": 160,
+          "w": 40,
+          "h": 44
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 310,
+        "round": 59,
+        "frame_id": "310",
+        "tick": 14503,
+        "simulation_seconds": 290.06,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 194,
+          "w": 36,
+          "h": 30
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      },
+      {
+        "observation_index": 324,
+        "round": 62,
+        "frame_id": "324",
+        "tick": 15295,
+        "simulation_seconds": 305.9,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 518,
+          "y": 210,
+          "w": 12,
+          "h": 16
+        },
+        "candidates": [],
+        "status": "unmatched",
+        "truth_id": null,
+        "reason": "raw_red_detection_unmatched"
+      }
+    ],
+    "timeline": [
+      {
+        "truth_id": "guangyang-target-1",
+        "wm_track_ids": [
+          "target_024"
+        ],
+        "first_raw_seen": {
+          "observation_index": 58,
+          "round": 14,
+          "frame_id": "58",
+          "tick": 2367,
+          "simulation_seconds": 47.34,
+          "detection_index": 0,
+          "category": "red-ball",
+          "bbox": {
+            "x": 306,
+            "y": 192,
+            "w": 34,
+            "h": 26
+          },
+          "candidates": [
+            {
+              "truth_id": "guangyang-target-1",
+              "projection": {
+                "u": 323.30623603480814,
+                "v": 205.54424459794765,
+                "depth_world": 6.393179548968487
+              }
+            }
+          ],
+          "status": "unique",
+          "truth_id": "guangyang-target-1"
+        },
+        "first_confirmed": {
+          "observation_index": 91,
+          "round": 21,
+          "frame_id": "91",
+          "tick": 3684,
+          "simulation_seconds": 73.68,
+          "track_id": "target_024"
+        },
+        "first_logged_wm_presence": {
+          "observation_index": 58,
+          "round": 14,
+          "frame_id": "58",
+          "tick": 2367,
+          "simulation_seconds": 47.34,
+          "track_id": "target_024",
+          "note": "first logged WM presence, not first raw sighting"
+        },
+        "first_grabbed_truth_event": {
+          "event_index": 2,
+          "seq": 1692,
+          "type": "package_grabbed",
+          "tick": 5060,
+          "simulation_seconds": 101.2,
+          "package_id": "guangyang-target-1"
+        },
+        "first_delivered_truth_event": {
+          "event_index": 5,
+          "seq": 3219,
+          "type": "package_delivered",
+          "tick": 10103,
+          "simulation_seconds": 202.06,
+          "package_id": "guangyang-target-1"
+        },
+        "final_active_delivery_truth_event": {
+          "event_index": 5,
+          "seq": 3219,
+          "type": "package_delivered",
+          "tick": 10103,
+          "simulation_seconds": 202.06,
+          "package_id": "guangyang-target-1"
+        },
+        "delivery_revocations": [],
+        "brain_memory_timeline": [
+          {
+            "object_id": "target_024",
+            "category": "red-ball",
+            "first_seen_s": 47.34,
+            "first_seen_round": 14,
+            "first_seen_frame_id": "58",
+            "confirmed_s": 73.68,
+            "picked_s": 104.68,
+            "delivered_s": 205.16,
+            "confirmed_round": 21,
+            "original_position_m": {
+              "x": -1.5519777880792622,
+              "z": 1.1048705466743114
+            },
+            "delivery_witness_id": null,
+            "delivered_position_m": {
+              "x": 0.9627737873156302,
+              "z": -0.11057754612504633
+            },
+            "accepted_hit_poses": [
+              {
+                "frame_id": "58",
+                "simulation_time_s": 47.34,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -21.8
+              },
+              {
+                "frame_id": "76",
+                "simulation_time_s": 63.28,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -71.7
+              },
+              {
+                "frame_id": "91",
+                "simulation_time_s": 73.68,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "99",
+                "simulation_time_s": 81.04,
+                "x_m": -2.032,
+                "z_m": 1.161,
+                "heading_deg": -97.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "wm_track_ids": [
+          "target_049",
+          "target_098"
+        ],
+        "first_raw_seen": {
+          "observation_index": 104,
+          "round": 23,
+          "frame_id": "104",
+          "tick": 4314,
+          "simulation_seconds": 86.28,
+          "detection_index": 0,
+          "category": "red-ball",
+          "bbox": {
+            "x": 206,
+            "y": 188,
+            "w": 16,
+            "h": 16
+          },
+          "candidates": [
+            {
+              "truth_id": "guangyang-target-2",
+              "projection": {
+                "u": 212.58608263949696,
+                "v": 196.90313377666524,
+                "depth_world": 9.9980520858243
+              }
+            }
+          ],
+          "status": "unique",
+          "truth_id": "guangyang-target-2"
+        },
+        "first_confirmed": {
+          "observation_index": 355,
+          "round": 68,
+          "frame_id": "355",
+          "tick": 16651,
+          "simulation_seconds": 333.02,
+          "track_id": "target_098"
+        },
+        "first_logged_wm_presence": {
+          "observation_index": 164,
+          "round": 30,
+          "frame_id": "164",
+          "tick": 8233,
+          "simulation_seconds": 164.66,
+          "track_id": "target_049",
+          "note": "first logged WM presence, not first raw sighting"
+        },
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": [
+          {
+            "object_id": "target_049",
+            "category": "red-ball",
+            "first_seen_s": 164.66,
+            "first_seen_round": 30,
+            "first_seen_frame_id": "164",
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "164",
+                "simulation_time_s": 164.66,
+                "x_m": -0.003,
+                "z_m": 0.524,
+                "heading_deg": 0.8
+              }
+            ]
+          },
+          {
+            "object_id": "target_098",
+            "category": "red-ball",
+            "first_seen_s": 326.22,
+            "first_seen_round": 67,
+            "first_seen_frame_id": "348",
+            "confirmed_s": 333.02,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 68,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "348",
+                "simulation_time_s": 326.22,
+                "x_m": 0.45,
+                "z_m": 2.124,
+                "heading_deg": 110.6
+              },
+              {
+                "frame_id": "354",
+                "simulation_time_s": 331.94,
+                "x_m": 0.307,
+                "z_m": 2.053,
+                "heading_deg": 126.90000000000002
+              },
+              {
+                "frame_id": "355",
+                "simulation_time_s": 333.02,
+                "x_m": 0.18100000000000002,
+                "z_m": 1.954,
+                "heading_deg": 131.2
+              },
+              {
+                "frame_id": "359",
+                "simulation_time_s": 335.18,
+                "x_m": 0.031,
+                "z_m": 1.8219999999999998,
+                "heading_deg": 131.2
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "source_proof": {
+    "status": "verified",
+    "failures": [],
+    "recorded_before_after_equal": true,
+    "driver_sources_unchanged": true,
+    "brain_summary_hashes_match": true,
+    "recorded_brain_and_driver_files": 8
+  },
+  "judge": {
+    "scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+    "report_only": true,
+    "counts": {
+      "match": 2,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 1,
+      "not_evaluated": 74,
+      "eligible_actions": 3
+    },
+    "rows": [
+      {
+        "round": 1,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 2,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 3,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 4,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 5,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 6,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 7,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 8,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 9,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 10,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 11,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 12,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 13,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 14,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 15,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 16,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 17,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 18,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 19,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 20,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 21,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 22,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 23,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 24,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 25,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 26,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 27,
+        "action": "pick",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 121,
+        "final_observation": 129,
+        "before_tick": 4883,
+        "final_tick": 5234
+      },
+      {
+        "round": 28,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 29,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 30,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 31,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 32,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 33,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 34,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 35,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 36,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 37,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 38,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 39,
+        "action": "place",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 206,
+        "final_observation": 225,
+        "before_tick": 9932,
+        "final_tick": 10459
+      },
+      {
+        "round": 40,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 41,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 42,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 43,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 44,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 45,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 46,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 47,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 48,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 49,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 50,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 51,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 52,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 53,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 54,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 55,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 56,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 57,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 58,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 59,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 60,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 61,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 62,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 63,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 64,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 65,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 66,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 67,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 68,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 69,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 70,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 71,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 72,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 73,
+        "action": "pick",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "unverifiable",
+        "reason": "missing_actuator_motion_in_action_window",
+        "object_id": "target_098",
+        "truth_id": "guangyang-target-2"
+      },
+      {
+        "round": 74,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 75,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 76,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 77,
+        "action": "look_around",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      }
+    ]
+  },
+  "external_stop": {
+    "recorded": true,
+    "version": "evaluator-requested-stop/v1",
+    "reason": "Round 73 pick made a short alignment translation off the observed road, then refused grasp; current pick did not record a return path. Preserve the frozen run before correcting manipulation recovery.",
+    "classified_failures": 1
+  },
+  "inputs": {
+    "record.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/record.json.gz",
+      "sha256": "c06bfe10e7c754303f27fc2f9b6a07e555c51852d33fe3bb2768df5777171357",
+      "bytes": 90006252,
+      "expanded_sha256": "9d795035c801cdb826720c31847d49d97e3db801f7eb7aa4109b8e1b9701d455",
+      "expanded_bytes": 130331897
+    },
+    "captures.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/captures.json.gz",
+      "sha256": "d74c2535d8f42349080f86f260e7b5092bb9488e36f1d033a02eb8f3d5bdbf03",
+      "bytes": 29018,
+      "expanded_sha256": "124d4f1335889031289b9e59528a823cf625b119e01681f3249f4e1cce8c30fb",
+      "expanded_bytes": 845231
+    },
+    "brain/summary.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/summary.json",
+      "sha256": "80302620fbbabb2b25d027a535efea70abf53e929453f72bc9203e1560341479",
+      "bytes": 172167,
+      "expanded_sha256": "80302620fbbabb2b25d027a535efea70abf53e929453f72bc9203e1560341479",
+      "expanded_bytes": 172167
+    },
+    "brain/rounds.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "fa965c71be0d68ed0b01449a640e7c1812972d574071f3fe39cf2ef90e873446",
+      "bytes": 3592044,
+      "expanded_sha256": "fa965c71be0d68ed0b01449a640e7c1812972d574071f3fe39cf2ef90e873446",
+      "expanded_bytes": 3592044
+    },
+    "brain/observations.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/observations.jsonl",
+      "sha256": "b4505517665e1157111187c664cf0c3c775a0924fff51e5034be7b7a403119cf",
+      "bytes": 13291802,
+      "expanded_sha256": "b4505517665e1157111187c664cf0c3c775a0924fff51e5034be7b7a403119cf",
+      "expanded_bytes": 13291802
+    },
+    "brain/llm.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/llm.jsonl",
+      "sha256": "4908c43c3c4d087f00f48cbc5b1e07b6c850604de51b796bb2dac5113196e21e",
+      "bytes": 2520441,
+      "expanded_sha256": "4908c43c3c4d087f00f48cbc5b1e07b6c850604de51b796bb2dac5113196e21e",
+      "expanded_bytes": 2520441
+    },
+    "brain/bridge-calls.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "0bf5d95662e66a62f5866045cc1a0034703304c0f74b236954fb02d11497e51a",
+      "bytes": 796559,
+      "expanded_sha256": "0bf5d95662e66a62f5866045cc1a0034703304c0f74b236954fb02d11497e51a",
+      "expanded_bytes": 796559
+    },
+    "brain/motions.jsonl": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/motions.jsonl",
+      "sha256": "a44bf5c301252c1f592705265f6108a456c4a433b0ef7bc5720a037aa84e5be5",
+      "bytes": 44489,
+      "expanded_sha256": "a44bf5c301252c1f592705265f6108a456c4a433b0ef7bc5720a037aa84e5be5",
+      "expanded_bytes": 44489
+    },
+    "evaluation.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/evaluation.json",
+      "sha256": "36b0409f2a7e3f7762ecd7011c06bd9a18bf9d8a02b2393ce435d31ff59efe3f",
+      "bytes": 188938,
+      "expanded_sha256": "36b0409f2a7e3f7762ecd7011c06bd9a18bf9d8a02b2393ce435d31ff59efe3f",
+      "expanded_bytes": 188938
+    },
+    "evidence.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/map-05-run-1/evidence.json",
+      "sha256": "cc0d75e49da8cedebb39bc865d80f7e926f168b2913c1e8c24b35f92d1b035af",
+      "bytes": 1212,
+      "expanded_sha256": "cc0d75e49da8cedebb39bc865d80f7e926f168b2913c1e8c24b35f92d1b035af",
+      "expanded_bytes": 1212
+    },
+    "../manifest.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/manifest.json",
+      "sha256": "e4d02f1e1c98e0bc28ca887d7d9a9f28e2f8c3940685bc13153aa36b368a67a0",
+      "bytes": 2850,
+      "expanded_sha256": "e4d02f1e1c98e0bc28ca887d7d9a9f28e2f8c3940685bc13153aa36b368a67a0",
+      "expanded_bytes": 2850
+    },
+    "../summary.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/summary.json",
+      "sha256": "a5c955eafa58c8ee893229617fc441102eda0687e316bfdff8e1b6d172e23a9a",
+      "bytes": 220784,
+      "expanded_sha256": "a5c955eafa58c8ee893229617fc441102eda0687e316bfdff8e1b6d172e23a9a",
+      "expanded_bytes": 220784
+    },
+    "../evaluator-stop.json": {
+      "path": "artifacts/autonomous-brain/map05-run-09/evaluator-stop.json",
+      "sha256": "2e8837478d53346815a700f29861422c9118226034adbc6701d2c4255eeb7f94",
+      "bytes": 997,
+      "expanded_sha256": "2e8837478d53346815a700f29861422c9118226034adbc6701d2c4255eeb7f94",
+      "expanded_bytes": 997
+    }
+  },
+  "evaluator_sha256": "168a19ac4f921f201d26d3afb7f293832f43d9a9817cbfe38b928acaa52a2308",
+  "rules": {
+    "truth_only_in_evaluator": true,
+    "success_recomputed_from_record": true,
+    "determinism_is_not_a_gate": true,
+    "position_error_is_report_only": true,
+    "judge_disagreements_are_report_only": true,
+    "limits": "reaching configured round/time cap fails; caps never exceed 200 rounds or 1200 seconds"
+  }
+}

@@ -1,0 +1,2127 @@
+{
+  "schema": "autonomous-brain-run-metrics/v2",
+  "run": "map05-run-09",
+  "source_commit": "9d74652735b3834ea7db2c07c64cbbbfdc5ecec3",
+  "success": false,
+  "metrics": {
+    "rounds": 77,
+    "llm_calls": 89,
+    "llm_total_elapsed_s": 2320.6427533739984,
+    "simulation_seconds": 354.56,
+    "observations": 393,
+    "failed_rounds": 14,
+    "failed_actions": 13,
+    "execution_failures": 0,
+    "external_stop_failures": 1,
+    "bridge_calls": 1814,
+    "nonwhitelist_brain_requests": 0
+  },
+  "motion_rows": 240,
+  "action_counts": {
+    "explore": 47,
+    "look_around": 18,
+    "go_to": 9,
+    "pick": 2,
+    "place": 1
+  },
+  "motion_method_counts": {
+    "take_exit": 44,
+    "turn": 96,
+    "follow_road": 71,
+    "forward": 24,
+    "grab": 2,
+    "backward": 2,
+    "release": 1
+  },
+  "transport_errors": [
+    {
+      "call_index": 25,
+      "decision_index": 23,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 27
+    },
+    {
+      "call_index": 26,
+      "decision_index": 23,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 27
+    },
+    {
+      "call_index": 29,
+      "decision_index": 25,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 30
+    },
+    {
+      "call_index": 36,
+      "decision_index": 31,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 37
+    },
+    {
+      "call_index": 59,
+      "decision_index": 53,
+      "transport_error": {
+        "type": "URLError"
+      },
+      "recovered_on_call": 60
+    },
+    {
+      "call_index": 61,
+      "decision_index": 54,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      },
+      "recovered_on_call": 62
+    },
+    {
+      "call_index": 66,
+      "decision_index": 58,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      },
+      "recovered_on_call": 67
+    },
+    {
+      "call_index": 68,
+      "decision_index": 59,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 69
+    },
+    {
+      "call_index": 70,
+      "decision_index": 60,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      },
+      "recovered_on_call": 71
+    },
+    {
+      "call_index": 79,
+      "decision_index": 68,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      },
+      "recovered_on_call": 80
+    }
+  ],
+  "recovered_transport_error_count": 10,
+  "transport_error_types": {
+    "HTTPError": 6,
+    "URLError": 1,
+    "RemoteDisconnected": 3
+  },
+  "validation_errors": [
+    {
+      "call_index": 17,
+      "decision_index": 17,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_024\"}}",
+      "recovered_on_call": 18
+    },
+    {
+      "call_index": 20,
+      "decision_index": 19,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_024\"}}",
+      "recovered_on_call": 21
+    }
+  ],
+  "validation_error_count": 2,
+  "recovered_validation_error_count": 2,
+  "terminal_cause": "evaluator_stop_then_bridge_NOT_RUNNING",
+  "terminal_model_request_failure": false,
+  "brain_reason": "BridgeError: turn: NOT_RUNNING",
+  "evaluator_stop": {
+    "version": "evaluator-requested-stop/v1",
+    "timestamp": "2026-09-25T09:13:19.350Z",
+    "reason": "Round 73 pick made a short alignment translation off the observed road, then refused grasp; current pick did not record a return path. Preserve the frozen run before correcting manipulation recovery.",
+    "task_success": false,
+    "source_changed_during_run": false,
+    "source_commit": "9d74652735b3834ea7db2c07c64cbbbfdc5ecec3",
+    "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+    "expression": "stopRequested = true; RobotBackend.status()",
+    "result": {
+      "running": true,
+      "healthy": true,
+      "tick": 17728,
+      "errors": []
+    },
+    "evidence": [
+      "map-05-run-1/brain/rounds.jsonl: rounds 72-74",
+      "map-05-run-1/brain/observations.jsonl: observations 375-385"
+    ],
+    "note": "One placement passed sensor judgment; this is not a two-ball success. Independent truth evaluation follows export. Source remains frozen."
+  },
+  "first_sensor_holding": {
+    "observation_index": 127,
+    "round": 27,
+    "simulation_seconds": 101.48
+  },
+  "first_offroad_observation": {
+    "observation_index": 207,
+    "round": 39,
+    "simulation_seconds": 199.4
+  },
+  "first_unrecovered_offroad_observation": {
+    "observation_index": 377,
+    "round": 73,
+    "simulation_seconds": 345.44
+  },
+  "offroad_observation_count": 31,
+  "offroad_observations_by_round": {
+    "39": 14,
+    "73": 2,
+    "74": 6,
+    "75": 2,
+    "76": 6,
+    "77": 1
+  },
+  "final_holding": false,
+  "final_held_object_id": null,
+  "pick_action_count": 2,
+  "place_action_count": 1,
+  "release_motion_count": 1,
+  "valid_deliveries": 1,
+  "timeline": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_024"
+      ],
+      "first_raw_seen": {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 306,
+          "y": 192,
+          "w": 34,
+          "h": 26
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 323.30623603480814,
+              "v": 205.54424459794765,
+              "depth_world": 6.393179548968487
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": {
+        "observation_index": 91,
+        "round": 21,
+        "frame_id": "91",
+        "tick": 3684,
+        "simulation_seconds": 73.68,
+        "track_id": "target_024"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 58,
+        "round": 14,
+        "frame_id": "58",
+        "tick": 2367,
+        "simulation_seconds": 47.34,
+        "track_id": "target_024",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": {
+        "event_index": 2,
+        "seq": 1692,
+        "type": "package_grabbed",
+        "tick": 5060,
+        "simulation_seconds": 101.2,
+        "package_id": "guangyang-target-1"
+      },
+      "first_delivered_truth_event": {
+        "event_index": 5,
+        "seq": 3219,
+        "type": "package_delivered",
+        "tick": 10103,
+        "simulation_seconds": 202.06,
+        "package_id": "guangyang-target-1"
+      },
+      "final_active_delivery_truth_event": {
+        "event_index": 5,
+        "seq": 3219,
+        "type": "package_delivered",
+        "tick": 10103,
+        "simulation_seconds": 202.06,
+        "package_id": "guangyang-target-1"
+      },
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_024",
+          "category": "red-ball",
+          "first_seen_s": 47.34,
+          "first_seen_round": 14,
+          "first_seen_frame_id": "58",
+          "confirmed_s": 73.68,
+          "picked_s": 104.68,
+          "delivered_s": 205.16,
+          "confirmed_round": 21,
+          "original_position_m": {
+            "x": -1.5519777880792622,
+            "z": 1.1048705466743114
+          },
+          "delivery_witness_id": null,
+          "delivered_position_m": {
+            "x": 0.9627737873156302,
+            "z": -0.11057754612504633
+          },
+          "accepted_hit_poses": [
+            {
+              "frame_id": "58",
+              "simulation_time_s": 47.34,
+              "x_m": -1.895,
+              "z_m": 0.325,
+              "heading_deg": -21.8
+            },
+            {
+              "frame_id": "76",
+              "simulation_time_s": 63.28,
+              "x_m": -2.206,
+              "z_m": 1.218,
+              "heading_deg": -71.7
+            },
+            {
+              "frame_id": "91",
+              "simulation_time_s": 73.68,
+              "x_m": -2.22,
+              "z_m": 1.374,
+              "heading_deg": -101.6
+            },
+            {
+              "frame_id": "99",
+              "simulation_time_s": 81.04,
+              "x_m": -2.032,
+              "z_m": 1.161,
+              "heading_deg": -97.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [
+        "target_049",
+        "target_098"
+      ],
+      "first_raw_seen": {
+        "observation_index": 104,
+        "round": 23,
+        "frame_id": "104",
+        "tick": 4314,
+        "simulation_seconds": 86.28,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 206,
+          "y": 188,
+          "w": 16,
+          "h": 16
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-2",
+            "projection": {
+              "u": 212.58608263949696,
+              "v": 196.90313377666524,
+              "depth_world": 9.9980520858243
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-2"
+      },
+      "first_confirmed": {
+        "observation_index": 355,
+        "round": 68,
+        "frame_id": "355",
+        "tick": 16651,
+        "simulation_seconds": 333.02,
+        "track_id": "target_098"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 164,
+        "round": 30,
+        "frame_id": "164",
+        "tick": 8233,
+        "simulation_seconds": 164.66,
+        "track_id": "target_049",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_049",
+          "category": "red-ball",
+          "first_seen_s": 164.66,
+          "first_seen_round": 30,
+          "first_seen_frame_id": "164",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "164",
+              "simulation_time_s": 164.66,
+              "x_m": -0.003,
+              "z_m": 0.524,
+              "heading_deg": 0.8
+            }
+          ]
+        },
+        {
+          "object_id": "target_098",
+          "category": "red-ball",
+          "first_seen_s": 326.22,
+          "first_seen_round": 67,
+          "first_seen_frame_id": "348",
+          "confirmed_s": 333.02,
+          "picked_s": null,
+          "delivered_s": null,
+          "confirmed_round": 68,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "348",
+              "simulation_time_s": 326.22,
+              "x_m": 0.45,
+              "z_m": 2.124,
+              "heading_deg": 110.6
+            },
+            {
+              "frame_id": "354",
+              "simulation_time_s": 331.94,
+              "x_m": 0.307,
+              "z_m": 2.053,
+              "heading_deg": 126.90000000000002
+            },
+            {
+              "frame_id": "355",
+              "simulation_time_s": 333.02,
+              "x_m": 0.18100000000000002,
+              "z_m": 1.954,
+              "heading_deg": 131.2
+            },
+            {
+              "frame_id": "359",
+              "simulation_time_s": 335.18,
+              "x_m": 0.031,
+              "z_m": 1.8219999999999998,
+              "heading_deg": 131.2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "position_error": {
+    "count": 75,
+    "mean_cm": 5.662065554201754,
+    "rmse_cm": 6.679918021321396,
+    "max_cm": 10.972707975947602
+  },
+  "unmatched_confirmed_count": 1,
+  "judge": {
+    "scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+    "report_only": true,
+    "counts": {
+      "match": 2,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 1,
+      "not_evaluated": 74,
+      "eligible_actions": 3
+    },
+    "rows": [
+      {
+        "round": 1,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 2,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 3,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 4,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 5,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 6,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 7,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 8,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 9,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 10,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 11,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 12,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 13,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 14,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 15,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 16,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 17,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 18,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 19,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 20,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 21,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 22,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 23,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 24,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 25,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 26,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 27,
+        "action": "pick",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 121,
+        "final_observation": 129,
+        "before_tick": 4883,
+        "final_tick": 5234
+      },
+      {
+        "round": 28,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 29,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 30,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 31,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 32,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 33,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 34,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 35,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 36,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 37,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 38,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 39,
+        "action": "place",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_024",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 206,
+        "final_observation": 225,
+        "before_tick": 9932,
+        "final_tick": 10459
+      },
+      {
+        "round": 40,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 41,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 42,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 43,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 44,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 45,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 46,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 47,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 48,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 49,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 50,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 51,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 52,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 53,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 54,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 55,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 56,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 57,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 58,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 59,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 60,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 61,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 62,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 63,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 64,
+        "action": "explore",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 65,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 66,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 67,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 68,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 69,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 70,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 71,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 72,
+        "action": "go_to",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 73,
+        "action": "pick",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "unverifiable",
+        "reason": "missing_actuator_motion_in_action_window",
+        "object_id": "target_098",
+        "truth_id": "guangyang-target-2"
+      },
+      {
+        "round": 74,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 75,
+        "action": "go_to",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 76,
+        "action": "look_around",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 77,
+        "action": "look_around",
+        "claimed_success": false,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      }
+    ]
+  },
+  "manipulation_motion_trace": [
+    {
+      "round": 27,
+      "method": "forward",
+      "params": {
+        "distanceCm": 6,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 121,
+      "after_observation": 122,
+      "motion_index": 69,
+      "before_simulation_seconds": 97.66,
+      "after_simulation_seconds": 98.3,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 27,
+      "method": "turn",
+      "params": {
+        "angleDeg": 3.5807521218591205,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 122,
+      "after_observation": 123,
+      "motion_index": 70,
+      "before_simulation_seconds": 98.3,
+      "after_simulation_seconds": 98.36,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 27,
+      "method": "forward",
+      "params": {
+        "distanceCm": 4.52059586491416,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 123,
+      "after_observation": 124,
+      "motion_index": 71,
+      "before_simulation_seconds": 98.36,
+      "after_simulation_seconds": 98.86,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 27,
+      "method": "grab",
+      "params": {},
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 124,
+      "after_observation": 125,
+      "motion_index": 72,
+      "before_simulation_seconds": 98.86,
+      "after_simulation_seconds": 99.76,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 27,
+      "method": "forward",
+      "params": {
+        "distanceCm": 6,
+        "speed": 20
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 125,
+      "after_observation": 126,
+      "motion_index": 73,
+      "before_simulation_seconds": 99.76,
+      "after_simulation_seconds": 100.72,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 27,
+      "method": "grab",
+      "params": {},
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 126,
+      "after_observation": 127,
+      "motion_index": 74,
+      "before_simulation_seconds": 100.72,
+      "after_simulation_seconds": 101.48,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": true
+    },
+    {
+      "round": 27,
+      "method": "backward",
+      "params": {
+        "distanceCm": 30,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 127,
+      "after_observation": 128,
+      "motion_index": 75,
+      "before_simulation_seconds": 101.48,
+      "after_simulation_seconds": 104.68,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 7,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 206,
+      "after_observation": 207,
+      "motion_index": 130,
+      "before_simulation_seconds": 198.64,
+      "after_simulation_seconds": 199.4,
+      "before_on_road": true,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "turn",
+      "params": {
+        "angleDeg": -3.5857494828805727,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 207,
+      "after_observation": 208,
+      "motion_index": 131,
+      "before_simulation_seconds": 199.4,
+      "after_simulation_seconds": 199.46,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 5.898326965863912,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 208,
+      "after_observation": 209,
+      "motion_index": 132,
+      "before_simulation_seconds": 199.46,
+      "after_simulation_seconds": 200.1,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 3.294514605401428,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 209,
+      "after_observation": 210,
+      "motion_index": 133,
+      "before_simulation_seconds": 200.1,
+      "after_simulation_seconds": 200.46,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 2.7190282433608637,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 210,
+      "after_observation": 211,
+      "motion_index": 134,
+      "before_simulation_seconds": 200.46,
+      "after_simulation_seconds": 200.76,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "turn",
+      "params": {
+        "angleDeg": -19.327137708467546,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 211,
+      "after_observation": 212,
+      "motion_index": 135,
+      "before_simulation_seconds": 200.76,
+      "after_simulation_seconds": 201.02,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "turn",
+      "params": {
+        "angleDeg": -6.912663265784602,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 212,
+      "after_observation": 213,
+      "motion_index": 136,
+      "before_simulation_seconds": 201.02,
+      "after_simulation_seconds": 201.12,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 1.9293573454716224,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 213,
+      "after_observation": 214,
+      "motion_index": 137,
+      "before_simulation_seconds": 201.12,
+      "after_simulation_seconds": 201.34,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "turn",
+      "params": {
+        "angleDeg": 4.684484406293535,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 214,
+      "after_observation": 215,
+      "motion_index": 138,
+      "before_simulation_seconds": 201.34,
+      "after_simulation_seconds": 201.4,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 1.5786776125057997,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 215,
+      "after_observation": 216,
+      "motion_index": 139,
+      "before_simulation_seconds": 201.4,
+      "after_simulation_seconds": 201.58,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 1.1541841999307891,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 216,
+      "after_observation": 217,
+      "motion_index": 140,
+      "before_simulation_seconds": 201.58,
+      "after_simulation_seconds": 201.72,
+      "before_on_road": false,
+      "after_on_road": true,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "turn",
+      "params": {
+        "angleDeg": 6.106104303989326,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 217,
+      "after_observation": 218,
+      "motion_index": 141,
+      "before_simulation_seconds": 201.72,
+      "after_simulation_seconds": 201.8,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": true
+    },
+    {
+      "round": 39,
+      "method": "release",
+      "params": {},
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 218,
+      "after_observation": 219,
+      "motion_index": 142,
+      "before_simulation_seconds": 201.8,
+      "after_simulation_seconds": 202.48,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 39,
+      "method": "backward",
+      "params": {
+        "distanceCm": 25,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 219,
+      "after_observation": 220,
+      "motion_index": 143,
+      "before_simulation_seconds": 202.48,
+      "after_simulation_seconds": 205.16,
+      "before_on_road": true,
+      "after_on_road": false,
+      "after_holding": false
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 7,
+        "speed": 20
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 220,
+      "after_observation": 221,
+      "motion_index": 144,
+      "before_simulation_seconds": 205.16,
+      "after_simulation_seconds": 206.28,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": false
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 7,
+        "speed": 20
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 221,
+      "after_observation": 222,
+      "motion_index": 145,
+      "before_simulation_seconds": 206.28,
+      "after_simulation_seconds": 207.4,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": false
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 7,
+        "speed": 20
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 222,
+      "after_observation": 223,
+      "motion_index": 146,
+      "before_simulation_seconds": 207.4,
+      "after_simulation_seconds": 208.52,
+      "before_on_road": false,
+      "after_on_road": false,
+      "after_holding": false
+    },
+    {
+      "round": 39,
+      "method": "forward",
+      "params": {
+        "distanceCm": 4.002499219237897,
+        "speed": 20
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 223,
+      "after_observation": 224,
+      "motion_index": 147,
+      "before_simulation_seconds": 208.52,
+      "after_simulation_seconds": 209.18,
+      "before_on_road": false,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 73,
+      "method": "turn",
+      "params": {
+        "angleDeg": 5.772809585996669,
+        "speed": 50
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 375,
+      "after_observation": 376,
+      "motion_index": 231,
+      "before_simulation_seconds": 345.08,
+      "after_simulation_seconds": 345.16,
+      "before_on_road": true,
+      "after_on_road": true,
+      "after_holding": false
+    },
+    {
+      "round": 73,
+      "method": "forward",
+      "params": {
+        "distanceCm": 2.578403875472599,
+        "speed": 30
+      },
+      "actuator_result": {
+        "completed": true
+      },
+      "before_observation": 376,
+      "after_observation": 377,
+      "motion_index": 232,
+      "before_simulation_seconds": 345.16,
+      "after_simulation_seconds": 345.44,
+      "before_on_road": true,
+      "after_on_road": false,
+      "after_holding": false
+    }
+  ],
+  "successful_place": {
+    "success": true,
+    "reason": "ball_observed_in_storage",
+    "evidence": {
+      "after_observation": 224,
+      "frame_id": 224,
+      "tick": 10459,
+      "holding": false,
+      "place_trajectory": [
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 7,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 29.1,
+            "rightCm": 101,
+            "headingDeg": -174.3,
+            "distanceCm": 1521.8,
+            "tick": 9932
+          },
+          "after": {
+            "forwardCm": 22.1,
+            "rightCm": 101.7,
+            "headingDeg": -174.3,
+            "distanceCm": 1528.8,
+            "tick": 9970
+          },
+          "before_observation": 206,
+          "after_observation": 207,
+          "before_on_road": true,
+          "after_on_road": false
+        },
+        {
+          "method": "turn",
+          "params": {
+            "angleDeg": -3.5857494828805727,
+            "speed": 50
+          },
+          "before": {
+            "forwardCm": 22.1,
+            "rightCm": 101.7,
+            "headingDeg": -174.3,
+            "distanceCm": 1528.8,
+            "tick": 9970
+          },
+          "after": {
+            "forwardCm": 22.1,
+            "rightCm": 101.7,
+            "headingDeg": -177.9,
+            "distanceCm": 1528.8,
+            "tick": 9973
+          },
+          "before_observation": 207,
+          "after_observation": 208,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 5.898326965863912,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 22.1,
+            "rightCm": 101.7,
+            "headingDeg": -177.9,
+            "distanceCm": 1528.8,
+            "tick": 9973
+          },
+          "after": {
+            "forwardCm": 16.2,
+            "rightCm": 101.9,
+            "headingDeg": -177.9,
+            "distanceCm": 1534.7,
+            "tick": 10005
+          },
+          "before_observation": 208,
+          "after_observation": 209,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 3.294514605401428,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 16.2,
+            "rightCm": 101.9,
+            "headingDeg": -177.9,
+            "distanceCm": 1534.7,
+            "tick": 10005
+          },
+          "after": {
+            "forwardCm": 13,
+            "rightCm": 102,
+            "headingDeg": -177.9,
+            "distanceCm": 1538,
+            "tick": 10023
+          },
+          "before_observation": 209,
+          "after_observation": 210,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 2.7190282433608637,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 13,
+            "rightCm": 102,
+            "headingDeg": -177.9,
+            "distanceCm": 1538,
+            "tick": 10023
+          },
+          "after": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": -177.9,
+            "distanceCm": 1540.7,
+            "tick": 10038
+          },
+          "before_observation": 210,
+          "after_observation": 211,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "turn",
+          "params": {
+            "angleDeg": -19.327137708467546,
+            "speed": 50
+          },
+          "before": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": -177.9,
+            "distanceCm": 1540.7,
+            "tick": 10038
+          },
+          "after": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": 162.7,
+            "distanceCm": 1540.7,
+            "tick": 10051
+          },
+          "before_observation": 211,
+          "after_observation": 212,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "turn",
+          "params": {
+            "angleDeg": -6.912663265784602,
+            "speed": 50
+          },
+          "before": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": 162.7,
+            "distanceCm": 1540.7,
+            "tick": 10051
+          },
+          "after": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": 155.8,
+            "distanceCm": 1540.7,
+            "tick": 10056
+          },
+          "before_observation": 212,
+          "after_observation": 213,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 1.9293573454716224,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 10.2,
+            "rightCm": 102.1,
+            "headingDeg": 155.8,
+            "distanceCm": 1540.7,
+            "tick": 10056
+          },
+          "after": {
+            "forwardCm": 8.5,
+            "rightCm": 101.3,
+            "headingDeg": 155.8,
+            "distanceCm": 1542.6,
+            "tick": 10067
+          },
+          "before_observation": 213,
+          "after_observation": 214,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "turn",
+          "params": {
+            "angleDeg": 4.684484406293535,
+            "speed": 50
+          },
+          "before": {
+            "forwardCm": 8.5,
+            "rightCm": 101.3,
+            "headingDeg": 155.8,
+            "distanceCm": 1542.6,
+            "tick": 10067
+          },
+          "after": {
+            "forwardCm": 8.5,
+            "rightCm": 101.3,
+            "headingDeg": 160.5,
+            "distanceCm": 1542.6,
+            "tick": 10070
+          },
+          "before_observation": 214,
+          "after_observation": 215,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 1.5786776125057997,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 8.5,
+            "rightCm": 101.3,
+            "headingDeg": 160.5,
+            "distanceCm": 1542.6,
+            "tick": 10070
+          },
+          "after": {
+            "forwardCm": 7,
+            "rightCm": 100.8,
+            "headingDeg": 160.5,
+            "distanceCm": 1544.2,
+            "tick": 10079
+          },
+          "before_observation": 215,
+          "after_observation": 216,
+          "before_on_road": false,
+          "after_on_road": false
+        },
+        {
+          "method": "forward",
+          "params": {
+            "distanceCm": 1.1541841999307891,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 7,
+            "rightCm": 100.8,
+            "headingDeg": 160.5,
+            "distanceCm": 1544.2,
+            "tick": 10079
+          },
+          "after": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 160.5,
+            "distanceCm": 1545.4,
+            "tick": 10086
+          },
+          "before_observation": 216,
+          "after_observation": 217,
+          "before_on_road": false,
+          "after_on_road": true
+        },
+        {
+          "method": "turn",
+          "params": {
+            "angleDeg": 6.106104303989326,
+            "speed": 50
+          },
+          "before": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 160.5,
+            "distanceCm": 1545.4,
+            "tick": 10086
+          },
+          "after": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 166.6,
+            "distanceCm": 1545.4,
+            "tick": 10090
+          },
+          "before_observation": 217,
+          "after_observation": 218,
+          "before_on_road": true,
+          "after_on_road": true
+        },
+        {
+          "method": "release",
+          "params": {},
+          "before": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 166.6,
+            "distanceCm": 1545.4,
+            "tick": 10090
+          },
+          "after": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 166.6,
+            "distanceCm": 1545.4,
+            "tick": 10124
+          },
+          "before_observation": 218,
+          "after_observation": 219,
+          "before_on_road": true,
+          "after_on_road": true
+        },
+        {
+          "method": "backward",
+          "params": {
+            "distanceCm": 25,
+            "speed": 30
+          },
+          "before": {
+            "forwardCm": 5.9,
+            "rightCm": 100.4,
+            "headingDeg": 166.6,
+            "distanceCm": 1545.4,
+            "tick": 10124
+          },
+          "after": {
+            "forwardCm": 30.2,
+            "rightCm": 106.2,
+            "headingDeg": 166.6,
+            "distanceCm": 1570.4,
+            "tick": 10258
+          },
+          "before_observation": 219,
+          "after_observation": 220,
+          "before_on_road": true,
+          "after_on_road": false
+        }
+      ],
+      "road_return": {
+        "success": true,
+        "reason": "returned_to_observed_road",
+        "on_road": true,
+        "anchor_observation": 219,
+        "after_observation": 224,
+        "motions": [
+          {
+            "method": "forward",
+            "distance_cm": 7,
+            "before_observation": 220,
+            "after_observation": 221,
+            "actuator_result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "forward",
+            "distance_cm": 7,
+            "before_observation": 221,
+            "after_observation": 222,
+            "actuator_result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "forward",
+            "distance_cm": 7,
+            "before_observation": 222,
+            "after_observation": 223,
+            "actuator_result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "forward",
+            "distance_cm": 4.002499219237897,
+            "before_observation": 223,
+            "after_observation": 224,
+            "actuator_result": {
+              "completed": true
+            }
+          }
+        ]
+      },
+      "object_id": "target_024",
+      "post_observation": 220,
+      "release_observation": {
+        "frame_id": 219,
+        "simulation_time_s": 202.48,
+        "preexisting_ball_ids": [
+          "target_049"
+        ]
+      },
+      "placement": {
+        "ball_track_id": null,
+        "ball_category": "red-ball",
+        "ball_position_m": {
+          "x": 0.9627737873156302,
+          "z": -0.11057754612504633
+        },
+        "ball_bbox": {
+          "x": 282.0,
+          "y": 208.0,
+          "w": 78.0,
+          "h": 64.0
+        },
+        "storage_bbox": {
+          "x": 58.0,
+          "y": 257.0,
+          "w": 358.0,
+          "h": 78.0
+        },
+        "frame_id": 220
+      },
+      "candidate_witnesses": 1,
+      "before_observation": 206,
+      "final_observation": 225
+    }
+  },
+  "failed_second_pick": {
+    "success": false,
+    "reason": "visual_alignment_did_not_converge",
+    "evidence": {
+      "after_observation": 377,
+      "frame_id": 377,
+      "tick": 17272,
+      "holding": false,
+      "attempts": [],
+      "detection": {
+        "category": "red-ball",
+        "source": "virtual-cv",
+        "confidence": 0.9129245283018868,
+        "bbox": {
+          "x": 268.0,
+          "y": 218.0,
+          "w": 106.0,
+          "h": 88.0
+        },
+        "frame_id": "377",
+        "fed_to_world_model": false,
+        "track_id": "target_098",
+        "method": "virtual-cv-published-width-formula+M5",
+        "raw_distance_cm": 27,
+        "raw_bearing_deg": 0.14,
+        "distance_cm": 34.28456903267375,
+        "bearing_deg": 0.11894687556651334,
+        "position_m": {
+          "x": -0.4095621960134427,
+          "z": 1.496350680097602
+        },
+        "reason": "near_field_visibility_for_existing_confirmation",
+        "visibility_refresh_only": true
+      },
+      "remembered_distance_cm": 21.99263146390738,
+      "before_observation": 375,
+      "final_observation": 378
+    }
+  },
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 77,
+    "replayed_calls": 89,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/summary.json": "80302620fbbabb2b25d027a535efea70abf53e929453f72bc9203e1560341479",
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/rounds.jsonl": "fa965c71be0d68ed0b01449a640e7c1812972d574071f3fe39cf2ef90e873446",
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/motions.jsonl": "a44bf5c301252c1f592705265f6108a456c4a433b0ef7bc5720a037aa84e5be5",
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/observations.jsonl": "b4505517665e1157111187c664cf0c3c775a0924fff51e5034be7b7a403119cf",
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/llm.jsonl": "4908c43c3c4d087f00f48cbc5b1e07b6c850604de51b796bb2dac5113196e21e",
+    "artifacts/autonomous-brain/map05-run-09/map-05-run-1/brain/bridge-calls.jsonl": "0bf5d95662e66a62f5866045cc1a0034703304c0f74b236954fb02d11497e51a",
+    "artifacts/autonomous-brain/map05-run-09/report/evaluation.json": "2bffe4ba152081f79bd9df472752f761a453394a75ca58ee503e01d86cd53d1b",
+    "artifacts/autonomous-brain/map05-run-09/evaluator-stop.json": "2e8837478d53346815a700f29861422c9118226034adbc6701d2c4255eeb7f94",
+    "artifacts/autonomous-brain/map05-run-09/llm-replay/replay-checks.json": "37d20b9181d1692baf9600f818cb903eeeb68d35b21b19554e9fb15f3c71beac",
+    "artifacts/autonomous-brain/map05-run-09/source-commit.json": "73f7cea6e37066956120da5332999850e8507e58f43475dea168a2a169ad9c24",
+    "artifacts/autonomous-brain/map05-run-09/archive-integrity.json": "e17e9aff80fd1e2f6fc272d09fc0e2f3146a18d73e4c5dfa55a8cad30f28208c"
+  },
+  "failed_second_pick_gate": {
+    "frozen_source": "9d74652735b3834ea7db2c07c64cbbbfdc5ecec3:autonomous_brain/actions.py:473",
+    "observation_index": 377,
+    "conditions": {
+      "remembered_distance_exceeds_22_5_cm": false,
+      "absolute_bearing_exceeds_3_deg": false,
+      "not_on_observed_road": true
+    },
+    "remembered_distance_cm": 21.99263146390738,
+    "fresh_distance_cm": 34.28456903267375,
+    "fresh_bearing_deg": 0.11894687556651334,
+    "road": {
+      "onRoad": false,
+      "lateralOffsetCm": 10.7,
+      "headingErrorDeg": 60.2,
+      "leftClearanceCm": 19.9,
+      "rightClearanceCm": -1.5,
+      "frontClearanceCm": 21.4,
+      "atJunction": false,
+      "atNode": false,
+      "exits": [],
+      "tick": 17272
+    },
+    "grab_requests_in_round": 0
+  }
+}

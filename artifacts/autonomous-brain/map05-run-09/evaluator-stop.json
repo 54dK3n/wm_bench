@@ -1,0 +1,21 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "timestamp": "2026-09-25T09:13:19.350Z",
+  "reason": "Round 73 pick made a short alignment translation off the observed road, then refused grasp; current pick did not record a return path. Preserve the frozen run before correcting manipulation recovery.",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "source_commit": "9d74652735b3834ea7db2c07c64cbbbfdc5ecec3",
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 17728,
+    "errors": []
+  },
+  "evidence": [
+    "map-05-run-1/brain/rounds.jsonl: rounds 72-74",
+    "map-05-run-1/brain/observations.jsonl: observations 375-385"
+  ],
+  "note": "One placement passed sensor judgment; this is not a two-ball success. Independent truth evaluation follows export. Source remains frozen."
+}
