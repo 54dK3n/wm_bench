@@ -1,0 +1,73 @@
+{
+  "scope": "offline_runner_termination_order",
+  "runtime_version": "autonomous-brain-runtime/v9",
+  "defect_reproduced": true,
+  "source_unchanged": true,
+  "source_sha256_before": {
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "1ba48fc350821b82b2c20dc5f0cc17354984b663309181876720716c9979e7eb",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/llm.py": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab",
+    "autonomous_brain/navigation.py": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+    "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+    "autonomous_brain/run.py": "87b54b52f589d0f8c8824fe0ecbe0570815fd869a69cd0269feff6f63c188039"
+  },
+  "source_sha256_after": {
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "1ba48fc350821b82b2c20dc5f0cc17354984b663309181876720716c9979e7eb",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/llm.py": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab",
+    "autonomous_brain/navigation.py": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+    "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+    "autonomous_brain/run.py": "87b54b52f589d0f8c8824fe0ecbe0570815fd869a69cd0269feff6f63c188039"
+  },
+  "cases": [
+    {
+      "max_rounds": 1,
+      "done_round": 1,
+      "actual_done_success": true,
+      "actual_done_reason": "explored_roads_and_observed_targets_completed",
+      "summary_status": "failed",
+      "summary_reason": "round_limit",
+      "runner_exit_code": 1,
+      "network_calls": 0,
+      "robot_calls": 0
+    },
+    {
+      "max_rounds": 2,
+      "done_round": 1,
+      "actual_done_success": true,
+      "actual_done_reason": "explored_roads_and_observed_targets_completed",
+      "summary_status": "done",
+      "summary_reason": "observation_completion",
+      "runner_exit_code": 0,
+      "network_calls": 0,
+      "robot_calls": 0
+    },
+    {
+      "max_rounds": 200,
+      "done_round": 199,
+      "actual_done_success": true,
+      "actual_done_reason": "explored_roads_and_observed_targets_completed",
+      "summary_status": "done",
+      "summary_reason": "observation_completion",
+      "runner_exit_code": 0,
+      "network_calls": 0,
+      "robot_calls": 0
+    },
+    {
+      "max_rounds": 200,
+      "done_round": 200,
+      "actual_done_success": true,
+      "actual_done_reason": "explored_roads_and_observed_targets_completed",
+      "summary_status": "failed",
+      "summary_reason": "round_limit",
+      "runner_exit_code": 1,
+      "network_calls": 0,
+      "robot_calls": 0
+    }
+  ],
+  "real_model_called": false,
+  "simulation_started": false,
+  "historical_failure_causation_claimed": false
+}

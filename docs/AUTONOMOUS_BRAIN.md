@@ -2,9 +2,9 @@
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
-最新正式[第十四局](../artifacts/autonomous-brain/map05-run-14/FAILURE_ANALYSIS.md)整体仍为**FAIL，实际有效交付2/2**：77轮、93次模型调用、580次观测、427条motion，模型请求累计3216.9288148789988秒，仿真455.90秒。target_029共2次grab，target_115跨两次pick共6次；两次release由原生事件和最终区内位置核验有效。r75第二次place的红框被识别为旧已送达球，零合格见证使target_115保留RELEASED_UNVERIFIED；这是1次独立Judge假阴性。其他抓放对照为2次一致、2次身份歧义无法核验、0次假阳性。最终未成功done，仍有34个未探索出口，评测方停止后r77收到NOT_RUNNING。15次动作失败和这1次外部停止错误分列；12次传输错误、4次状态校验错误均恢复。两球物理送达不能替代自主完成，十布局仍未开始。
+平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十七局已从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`启动，结果尚待独立评测。
 
-本局77轮/93调用严格离线转录回放、8文件冻结源码证明、4份gzip及envelope校验均通过；超限原record采用50MiB原始字节分片并完成逐字节恢复核验。全部历史结论保留，当前交付状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)。下一正式运行使用新目录`artifacts/autonomous-brain/map05-run-15`。
+最近完成的第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
 
 ## 平台入口
 
