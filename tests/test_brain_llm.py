@@ -31,9 +31,27 @@ def config(monkeypatch):
     monkeypatch.delenv("LLM_THINKING", raising=False)
 
 
-def response(content, **extra):
+def sse_response(chunks, *, done=True):
+    body = "".join("data: " + json.dumps(chunk, ensure_ascii=False) + "\n\n" for chunk in chunks)
+    return io.BytesIO((body + ("data: [DONE]\n\n" if done else "")).encode())
+
+
+def response(content, *, stream=True, **extra):
+    if stream:
+        return sse_response([{"model": "served-model", "choices": [
+            {"index": 0, "delta": {"content": content}, "finish_reason": "stop"}], **extra}])
     return io.BytesIO(json.dumps({"model": "served-model", "choices": [
         {"message": {"content": content}}], **extra}).encode())
+
+
+def legacy_record(saved, version):
+    saved["version"] = version
+    saved["request"].pop("stream", None)
+    saved["request_sha256"] = hashlib.sha256(json.dumps(saved["request"],
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    if version != "autonomous-brain-llm/v5":
+        saved.pop("transport_timeout_s", None)
+    return saved
 
 
 def records(path):
@@ -70,6 +88,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert request.full_url == "https://model.example/v1/chat/completions"
             assert request.headers["Authorization"] == "Bearer never-record-this-key"
             assert body["model"] == "configured-model"
+            assert body["stream"] is True
             assert body["temperature"] == 0
             assert type(body["temperature"]) is int
             assert "thinking" not in body
@@ -77,7 +96,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v5"
+            assert saved["version"] == "autonomous-brain-llm/v6"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
@@ -104,16 +123,132 @@ def test_explicit_transport_timeout_is_sent_logged_and_preserved_in_replay(tmp_p
         k: v for k, v in saved.items() if k != "mode"}
 
 
+def test_stream_assembles_unicode_content_only_and_preserves_raw_sse(tmp_path, state):
+    state["objects"][0]["id"] = "红球一"
+    raw = '{"action":"go_to","params":{"object_id":"红球一"}}'
+    chunks = [
+        {"model": "served-model", "choices": [{"index": 0, "delta": {"role": "assistant"}}]},
+        {"choices": [{"index": 0, "delta": {"reasoning_content": "不能执行这段思考", "content": raw[:31]}}]},
+        {"choices": [{"index": 0, "delta": {"content": raw[31:]}, "finish_reason": "stop"}]},
+        {"choices": [], "usage": {"total_tokens": 99}},
+    ]
+    body = (": heartbeat\n\n" + sse_response(chunks).getvalue().decode()).replace("\n", "\r\n")
+    path = tmp_path / "stream.jsonl"
+    with patch("urllib.request.urlopen", return_value=io.BytesIO(body.encode())) as send:
+        with LLMClient(path) as client:
+            assert client.decide(state) == json.loads(raw)
+            assert send.call_count == 1
+    saved = records(path)[0]
+    assert saved["response_body"] == body
+    assert saved["raw_output"] == raw
+    assert saved["response_model"] == "served-model"
+    assert saved["action"] == json.loads(raw)
+
+
+@pytest.mark.parametrize("raw", ['{"action":"look_around","params":{}}', '{"action":"look'])
+def test_stream_requires_done_even_after_valid_json_or_finish_reason(tmp_path, state, raw):
+    body = sse_response([{"model": "served-model", "choices": [
+        {"index": 0, "delta": {"content": raw}, "finish_reason": "stop"}]}], done=False).getvalue()
+    path = tmp_path / "incomplete-stream.jsonl"
+    with patch("urllib.request.urlopen", return_value=io.BytesIO(body)) as send:
+        with LLMClient(path) as client:
+            with pytest.raises(LLMRequestError, match="IncompleteStream"):
+                client.decide(state)
+            assert send.call_count == client.call_count == 1
+            with pytest.raises(RuntimeError, match="stopped"):
+                client.decide(state)
+    saved = records(path)[0]
+    assert saved["response_body"] == body.decode()
+    assert saved["raw_output"] == raw
+    assert saved["action"] is saved["validation_error"] is None
+    assert saved["transport_error"] == {"type": "IncompleteStream"}
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(LLMRequestError, match="IncompleteStream"):
+                replay.decide(state)
+            replay.assert_replay_consumed()
+    replayed = records(tmp_path / "replay.jsonl")[0]
+    assert {k: v for k, v in replayed.items() if k != "mode"} == {
+        k: v for k, v in saved.items() if k != "mode"}
+
+
+def test_stream_read_error_logs_preceding_events_and_exception_partial(tmp_path, state):
+    raw = '{"action":"look_around","params":{}}'
+    prefix = sse_response([{"model": "served-model", "choices": [
+        {"index": 0, "delta": {"content": raw}}]}], done=False).getvalue()
+    partial = b'data: {"choices":['
+
+    class InterruptedStream(io.BytesIO):
+        def readline(self, *args, **kwargs):
+            line = super().readline(*args, **kwargs)
+            if not line:
+                raise http.client.IncompleteRead(partial, 5)
+            return line
+
+    path = tmp_path / "read-error.jsonl"
+    with patch("urllib.request.urlopen", return_value=InterruptedStream(prefix)) as send:
+        with LLMClient(path) as client:
+            with pytest.raises(LLMRequestError, match="IncompleteRead"):
+                client.decide(state)
+            assert send.call_count == 1
+    saved = records(path)[0]
+    assert saved["response_body"] == (prefix + partial).decode()
+    assert saved["raw_output"] == raw
+    assert saved["response_model"] == "served-model"
+    assert saved["action"] is None
+    assert saved["transport_error"] == {"type": "IncompleteRead"}
+    with patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(LLMRequestError, match="IncompleteRead"):
+                replay.decide(state)
+            replay.assert_replay_consumed()
+    replayed = records(tmp_path / "replay.jsonl")[0]
+    assert {k: v for k, v in replayed.items() if k != "mode"} == {
+        k: v for k, v in saved.items() if k != "mode"}
+
+
+@pytest.mark.parametrize("chunk", [
+    {"choices": [{"index": 0, "delta": {"content": "{}"}}, {"index": 1, "delta": {"content": "{}"}}]},
+    {"choices": [{"index": 1, "delta": {"content": "{}"}}]},
+    {"choices": [{"index": 0, "delta": {"content": {"action": "done", "params": {}}}}]},
+    {"error": {"type": "server_error"}, "choices": []},
+])
+def test_invalid_stream_envelopes_never_produce_actions_and_only_repair_once(tmp_path, state, chunk):
+    with patch("urllib.request.urlopen", side_effect=[sse_response([chunk]), sse_response([chunk])]) as send:
+        with LLMClient(tmp_path / "invalid-stream.jsonl") as client:
+            with pytest.raises(LLMOutputError, match="one repair"):
+                client.decide(state)
+            assert send.call_count == client.call_count == 2
+    assert all(call["action"] is None for call in records(tmp_path / "invalid-stream.jsonl"))
+
+
+def test_explicit_nonstream_setting_is_restored_in_replay(tmp_path, state):
+    path = tmp_path / "nonstream.jsonl"
+    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}', stream=False)):
+        with LLMClient(path, stream=False) as live:
+            expected = live.decide(state)
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            assert replay.decide(state) == expected
+            replay.assert_replay_consumed()
+    saved, replayed = records(path)[0], records(tmp_path / "replay.jsonl")[0]
+    assert replayed["request"]["stream"] is False
+    assert {k: v for k, v in replayed.items() if k != "mode"} == {
+        k: v for k, v in saved.items() if k != "mode"}
+
+
 def test_old_v4_timeout_error_replays_without_new_timeout_metadata_or_retry(tmp_path, state):
     path = tmp_path / "v4-timeout.jsonl"
     with patch("urllib.request.urlopen", side_effect=TimeoutError("never-record-this-key")) as send:
-        with LLMClient(path, timeout_s=60) as live:
+        with LLMClient(path, timeout_s=60, stream=False) as live:
             with pytest.raises(LLMRequestError, match="TimeoutError") as original_error:
                 live.decide(state)
             assert send.call_count == live.call_count == 1
     saved = records(path)[0]
-    assert saved.pop("transport_timeout_s") == 60
-    saved["version"] = "autonomous-brain-llm/v4"
+    assert saved["transport_timeout_s"] == 60
+    legacy_record(saved, "autonomous-brain-llm/v4")
     path.write_text(json.dumps(saved) + "\n")
     with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
             patch("urllib.request.urlopen", side_effect=AssertionError("network")):
@@ -441,16 +576,15 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
 
 
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
-                                     "autonomous-brain-llm/v3", "autonomous-brain-llm/v4"])
+                                     "autonomous-brain-llm/v3", "autonomous-brain-llm/v4",
+                                     "autonomous-brain-llm/v5"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"
-    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}')):
-        with LLMClient(path) as client:
+    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}', stream=False)):
+        with LLMClient(path, stream=False) as client:
             client.decide(state)
-    saved = records(path)[0]
-    saved["version"] = version
-    saved.pop("transport_timeout_s")
+    saved = legacy_record(records(path)[0], version)
     assert type(saved["request"]["temperature"]) is int
     assert "thinking" not in saved["request"]
     path.write_text(json.dumps(saved) + "\n")
@@ -465,7 +599,7 @@ def test_old_transcripts_keep_version_and_integer_zero_without_environment(
 
 
 def test_bad_http_envelope_has_one_repair(tmp_path, state):
-    with patch("urllib.request.urlopen", side_effect=[io.BytesIO(b'{}'),
+    with patch("urllib.request.urlopen", side_effect=[sse_response([{}]),
                response('{"action":"look_around","params":{}}')]) as send:
         with LLMClient(tmp_path / "calls.jsonl") as client:
             assert client.decide(state)["action"] == "look_around"
@@ -473,9 +607,9 @@ def test_bad_http_envelope_has_one_repair(tmp_path, state):
 
 
 def test_no_tool_calls_are_executed(tmp_path, state):
-    payload = {"choices": [{"message": {"content": '{"action":"done","params":{}}',
+    payload = {"choices": [{"index": 0, "delta": {"content": '{"action":"done","params":{}}',
                 "tool_calls": [{"function": {"name": "mission"}}]}}]}
-    with patch("urllib.request.urlopen", side_effect=[io.BytesIO(json.dumps(payload).encode()),
+    with patch("urllib.request.urlopen", side_effect=[sse_response([payload]),
                response('{"action":"look_around","params":{}}')]):
         with LLMClient(tmp_path / "calls.jsonl") as client:
             assert client.decide(state)["action"] == "look_around"

@@ -1,0 +1,23 @@
+{
+  "version": "autonomous-brain-llm/v6",
+  "checks": [
+    {
+      "command": "python3 -m pytest tests/test_brain_actions.py tests/test_brain_perception.py tests/test_brain_llm.py tests/test_brain_evaluation.py tests/test_brain_navigation.py tests/test_brain_llm_stream_transport.py -q",
+      "exit_code": 0,
+      "stdout": "........................................................................ [ 38%]\n........................................................................ [ 76%]\n.............................................                            [100%]\n189 passed in 0.32s\n",
+      "passed": 189
+    }
+  ],
+  "live_model_used_for_tests": false,
+  "parameters": {
+    "temperature": 0.6,
+    "thinking": "disabled",
+    "timeout_s": 180,
+    "stream": true
+  },
+  "max_rounds": 200,
+  "max_simulation_seconds": 1200,
+  "network_retries": 0,
+  "invalid_output_repairs": 1,
+  "old_real_record_replay": "artifacts/autonomous-brain/llm-streaming-fix-20260925/v5-error-replay/replay-checks.json"
+}

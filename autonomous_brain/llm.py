@@ -20,8 +20,8 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v5"
-SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", "autonomous-brain-llm/v3", "autonomous-brain-llm/v4", VERSION}
+VERSION = "autonomous-brain-llm/v6"
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 7)}
 SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
@@ -79,9 +79,25 @@ def _finite_number(value: Any) -> bool:
         return False
 
 
-def _partial_response_text(error: BaseException) -> str | None:
+def _partial_response_text(error: BaseException, prefix: bytes = b"") -> str | None:
     partial = getattr(error, "partial", None)
-    return bytes(partial).decode("utf-8", errors="replace") if isinstance(partial, (bytes, bytearray)) else None
+    if isinstance(partial, (bytes, bytearray)):
+        return (prefix + bytes(partial)).decode("utf-8", errors="replace")
+    return prefix.decode("utf-8", errors="replace") if prefix else None
+
+
+def _sse_events(body: str):
+    data = []
+    for line in body.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if not line:
+            if data:
+                yield "\n".join(data)
+                data = []
+        elif line.startswith("data:"):
+            value = line[5:]
+            data.append(value[1:] if value.startswith(" ") else value)
+    if data:
+        yield "\n".join(data)
 
 
 def validate_action(action: Any, state: dict[str, Any]) -> dict[str, Any]:
@@ -150,7 +166,7 @@ class LLMClient:
     ``log_path`` is a new JSONL file, opened exclusively to prevent accidental
     mixing of runs. ``replay_path`` selects a recorded transcript and never
     reads API credentials or makes requests. Replay may use a live transcript
-    or another replay transcript. Compatible v1/v2 transcripts retain their
+    or another replay transcript. Compatible v1-v5 transcripts retain their
     recorded version when replayed; the code version is independently tracked
     by the run's source SHA256. Inputs and re-derived output validation must
     match exactly. Sampling settings are restored from the first request,
@@ -161,13 +177,17 @@ class LLMClient:
     a finite JSON number from 0 through 2. LLM_THINKING may be enabled or
     disabled; when unset, the request omits thinking entirely.
 
+    Live requests use SSE streaming by default. Only a stream terminated by
+    [DONE] can produce an action; raw SSE is retained for offline replay.
+
     Only invalid model outputs get one repair request. Transport and HTTP
     errors stop immediately (including unsupported JSON-mode errors); there
     are no hidden retries or fallback model/temperature/format settings.
     """
 
     def __init__(self, log_path: str | Path, replay_path: str | Path | None = None,
-                 timeout_s: float = 180, *, model: str | None = None) -> None:
+                 timeout_s: float = 180, *, model: str | None = None,
+                 stream: bool = True) -> None:
         if not _finite_number(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout_s must be positive and finite")
         self.timeout_s = timeout_s
@@ -200,6 +220,9 @@ class LLMClient:
                 raise ReplayError("Replay is missing its request object")
             first_request = self._replay[0]["request"]
             self.model = model or first_request.get("model")
+            self.stream = first_request.get("stream")
+            if "stream" in first_request and not isinstance(self.stream, bool):
+                raise ReplayError("Replay has invalid stream setting")
             messages = first_request.get("messages")
             if (not isinstance(messages, list) or not messages or not isinstance(messages[0], dict)
                     or messages[0].get("role") != "system"
@@ -220,6 +243,9 @@ class LLMClient:
             if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
                 raise ReplayError("Replay has invalid temperature")
         else:
+            if not isinstance(stream, bool):
+                raise ValueError("stream must be a boolean")
+            self.stream = stream
             self._base_url = os.environ.get("LLM_BASE_URL", "").rstrip("/")
             self._api_key = os.environ.get("LLM_API_KEY", "")
             self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
@@ -279,6 +305,44 @@ class LLMClient:
         except (ValueError, KeyError, TypeError, IndexError, AttributeError) as exc:
             raise ActionValidationError("Response must contain one textual JSON completion") from exc
 
+    @staticmethod
+    def _decode_stream(body: str) -> tuple[str | None, str | None, bool, str | None]:
+        pieces, model, done, error, saw_content = [], None, False, None, False
+        for event in _sse_events(body):
+            if event == "[DONE]":
+                done = True
+                break
+            try:
+                chunk = _strict_loads(event)
+                if not isinstance(chunk, dict) or "error" in chunk:
+                    raise ValueError("Invalid stream chunk")
+                if "model" in chunk:
+                    if not isinstance(chunk["model"], str) or (model is not None and model != chunk["model"]):
+                        raise ValueError("Inconsistent stream model")
+                    model = chunk["model"]
+                choices = chunk["choices"]
+                if choices == [] and isinstance(chunk.get("usage"), dict):
+                    continue
+                if not isinstance(choices, list) or len(choices) != 1:
+                    raise ValueError("Expected exactly one completion choice")
+                choice = choices[0]
+                if type(choice.get("index")) is not int or choice["index"] != 0:
+                    raise ValueError("Expected choice index zero")
+                delta = choice["delta"]
+                if not isinstance(delta, dict) or delta.get("tool_calls") or delta.get("function_call"):
+                    raise ValueError("Tool calls are not permitted")
+                content = delta.get("content")
+                if content is not None:
+                    if not isinstance(content, str):
+                        raise ValueError("Completion content must be text")
+                    saw_content = True
+                    pieces.append(content)
+            except (ValueError, KeyError, TypeError, IndexError, AttributeError):
+                error = "Response must contain one textual JSON completion"
+        if not saw_content:
+            error = "Response must contain one textual JSON completion"
+        return "".join(pieces) if saw_content else None, model, done, error
+
     def _call(self, request: dict[str, Any], state: dict[str, Any],
               attempt: int) -> dict[str, Any]:
         replay_record = None
@@ -316,9 +380,27 @@ class LLMClient:
                 headers={"Content-Type": "application/json",
                          "Authorization": f"Bearer {self._api_key}"}, method="POST")
             start = time.perf_counter()
+            received = bytearray()
             try:
                 with urllib.request.urlopen(outbound, timeout=self.timeout_s) as response:
-                    record["response_body"] = response.read().decode("utf-8")
+                    if request.get("stream"):
+                        event_data = []
+                        while True:
+                            line = response.readline()
+                            if not line:
+                                break
+                            received.extend(line)
+                            text = line.rstrip(b"\r\n")
+                            if not text:
+                                if b"\n".join(event_data) == b"[DONE]":
+                                    break
+                                event_data = []
+                            elif text.startswith(b"data:"):
+                                value = text[5:]
+                                event_data.append(value[1:] if value.startswith(b" ") else value)
+                        record["response_body"] = received.decode("utf-8")
+                    else:
+                        record["response_body"] = response.read().decode("utf-8")
             except urllib.error.HTTPError as exc:
                 record["transport_error"] = {"type": "HTTPError", "status": exc.code}
                 try:
@@ -327,19 +409,30 @@ class LLMClient:
                     record["response_body"] = _partial_response_text(read_error)
                     record["transport_error"]["body_read_error"] = type(read_error).__name__
             except http.client.HTTPException as exc:
-                record["response_body"] = _partial_response_text(exc)
+                record["response_body"] = _partial_response_text(exc, bytes(received))
                 record["transport_error"] = {"type": type(exc).__name__}
             except (urllib.error.URLError, TimeoutError, OSError, UnicodeError) as exc:
                 # Exception text may include endpoint credentials; log only its type.
+                record["response_body"] = _partial_response_text(exc, bytes(received))
                 record["transport_error"] = {"type": type(exc).__name__}
             finally:
                 record["elapsed_s"] = time.perf_counter() - start
 
-        if record["transport_error"] is None:
+        if request.get("stream") and isinstance(record["response_body"], str):
+            raw, response_model, done, error = self._decode_stream(record["response_body"])
+            record["raw_output"], record["response_model"] = raw, response_model
+            if record["transport_error"] is None:
+                if not done:
+                    record["transport_error"] = {"type": "IncompleteStream"}
+                else:
+                    record["validation_error"] = error
+        if record["transport_error"] is None and record["validation_error"] is None:
             try:
-                raw, response_model = self._decode_response(record["response_body"])
-                record["raw_output"] = raw
-                record["response_model"] = response_model
+                if not request.get("stream"):
+                    raw, response_model = self._decode_response(record["response_body"])
+                    record["raw_output"] = raw
+                    record["response_model"] = response_model
+                raw = record["raw_output"]
                 try:
                     parsed = _strict_loads(raw)
                 except (ValueError, TypeError) as exc:
@@ -348,7 +441,7 @@ class LLMClient:
             except ActionValidationError as exc:
                 record["validation_error"] = str(exc)
         if replay_record is not None:
-            for field in ("raw_output", "action", "validation_error", "response_model"):
+            for field in ("raw_output", "action", "validation_error", "response_model", "transport_error"):
                 if replay_record.get(field) != record[field]:
                     raise ReplayError(f"Replay output validation mismatch: {field}")
         self._write(record)
@@ -374,6 +467,8 @@ class LLMClient:
                            "messages": list(messages)}
                 if self.thinking is not None:
                     request["thinking"] = {"type": self.thinking}
+                if self.stream is not None:
+                    request["stream"] = self.stream
                 result = self._call(request, prepared, attempt)
                 if result["validation_error"] is None:
                     return result["action"]

@@ -65,6 +65,8 @@ python3 tools/evaluate_autonomous_brain.py \
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
 
+LLM v6 uses streaming transport and waits for `[DONE]` before validating a single action. Raw SSE and partial responses remain in `llm.jsonl`. No transport retry is added; legacy recordings retain their original non-streaming requests. See `artifacts/autonomous-brain/llm-streaming-fix-20260925/REPORT.md`.
+
 模型回放调试（不访问模型 API，仍使用本地机器人桥）：
 
 ```sh
