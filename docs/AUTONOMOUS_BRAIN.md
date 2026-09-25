@@ -1,6 +1,8 @@
 # WorldModel + 单动作大模型自主小车
 
-[公开观测行程接入](../artifacts/autonomous-brain/observed-route-link-fix-20260926/REPORT.md)已完成：navigation v5、runtime v11、actions v20、LLM v13，仅把实际走完的有向行程和至多三个当前出口建议提供给模型，原完成与动作门槛不变。707项完整回归通过；Run20公开日志回放得到81条行程，1376帧原v4记账逐一相同；200轮/216条模型记录严格离线回放通过。本地真实桥与假模型联调的14次观测全部与内部检测一致，四类检测均非空、导出完整；这是联调通过，不能替代正式任务验收。下一正式运行尚未启动。
+第二十一局已启动，目录`artifacts/autonomous-brain/map05-run-21`，生产源码与启动HEAD均冻结为`1d9b0a79aed7a67a539a03a2c7d5b181bbcbec21`。使用Kimi K2.6非思考模式、温度0.6和新增观测行程提示，正式200轮/1200仿真秒、无额外墙钟上限；运行中不改源码，结果尚未知。前20局结论保留，十布局仍须等正式map-05成功后才开始。
+
+[公开观测行程接入](../artifacts/autonomous-brain/observed-route-link-fix-20260926/REPORT.md)已完成：navigation v5、runtime v11、actions v20、LLM v13，仅把实际走完的有向行程和至多三个当前出口建议提供给模型，原完成与动作门槛不变。707项完整回归通过；Run20公开日志回放得到81条行程，1376帧原v4记账逐一相同；200轮/216条模型记录严格离线回放通过。本地真实桥与假模型联调的14次观测全部与内部检测一致，四类检测均非空、导出完整；这是联调通过，不能替代正式任务验收。第21局已从上述冻结提交启动。
 
 [第二十局](../artifacts/autonomous-brain/map05-run-20/FAILURE_ANALYSIS.md)已结束：**整体FAIL，实际有效交付2/2**。200轮、216次模型调用、1376次观测，仿真1077.68秒；模型耗时2591.529288086秒，另有1秒重试等待。两次原生交付分别在234.04秒和564.44秒，终态都在存放区且未持有；白名单外调用为0。结束原因是round_limit，未自主done；末态仍有13个未探索出口和一个待确认红球假设，没有外部停止、墙钟超时或未恢复模型错误。
 
@@ -28,10 +30,10 @@ driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第二十局实际启动命令，前置定向诊断已通过；重跑须改用尚不存在的新输出目录：
+driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第二十一局实际启动命令，前置定向诊断已通过；重跑须改用尚不存在的新输出目录：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-20
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-21
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
