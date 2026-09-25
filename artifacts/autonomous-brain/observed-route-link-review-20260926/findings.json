@@ -1,0 +1,212 @@
+{
+  "schema": "observed-route-link-review/v1",
+  "verification_status": "PASS",
+  "meaning": "Historical code/log assertions reproduced; no navigation fix, recovery, physical-identity equivalence, U retirement, or formal-run PASS is asserted.",
+  "frozen_commit": "6ee4abf464504eb297242df98dc9fadaaf7debfa",
+  "frozen_navigation_sha256": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+  "public_snapshot_sha256": "7fbd3bfd43044db659cb591d8b539b0b044651c6fe42540f0d8e15386e9b3139",
+  "checks": {
+    "run18_rebuilt_node_geometry_equals_saved_state126": true,
+    "readonly_route_query_does_not_mutate_memory": true,
+    "r126_has_only_completed_current_exits_but_pending_history": true,
+    "nearest_recorded_graph_candidate_is_junction16": true,
+    "chord_has_no_fresh_exit_match_under_existing_5deg_gate": true,
+    "recorded_departure_has_one_fresh_exit_match": true,
+    "first_graph_edge_is_actual737_to738_endpoints": true,
+    "historical_motion_is_take_exit_zero_relative": true,
+    "chord_length_is_not_travel_distance": true,
+    "obs681_nearest_within_15cm_is_existing_junction18": true,
+    "junction5_with_matching_signature_is_outside_15cm": true,
+    "mixed_node_six_headings_match_saved105": true,
+    "junction18_old_minus90_still_pending_in_r163": true,
+    "old_minus90_not_present_in_obs681_to684": true,
+    "obs556_outside_existing_node_gate_creates_junction25": true,
+    "two_fresh_three_exit_signatures_differ_at_most_point1deg": true,
+    "both_similar125deg_entries_still_pending": true,
+    "sampled_atnode_true_does_not_identify_one_junction": true
+  },
+  "checks_passed": 18,
+  "run18_chord_counterexample": {
+    "decision_round": 126,
+    "observation_index": 851,
+    "current_heading_deg": 90.7,
+    "current_fresh_relative_exits": [
+      179.3,
+      89.3,
+      -0.7,
+      -89.9
+    ],
+    "unexplored_exit_count": 29,
+    "nearest_candidate": {
+      "node_id": "junction-16",
+      "pending_headings_deg": [
+        90.0
+      ],
+      "recorded_graph_chord_weight_cm": 39.02839041172516,
+      "path_m": [
+        [
+          0.156,
+          0.27399999999999997
+        ],
+        [
+          -0.003,
+          0.524
+        ],
+        [
+          -0.002,
+          0.43
+        ]
+      ],
+      "endpoint_gap_cm": 0.0
+    },
+    "chord_absolute_heading_deg": 32.45636035239825,
+    "chord_relative_heading_deg": -58.24363964760175,
+    "chord_fresh_matches_within5deg": [],
+    "historical_departure_motion": {
+      "round": 109,
+      "method": "take_exit",
+      "params": {
+        "angleDeg": 0,
+        "speed": 50
+      },
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "distanceCm": 40.6,
+        "elapsedTicks": 186
+      },
+      "before_observation": 737,
+      "after_observation": 738
+    },
+    "historical_departure_absolute_heading_deg": 0.8000000000000114,
+    "historical_departure_relative_at_r126_deg": -89.89999999999999,
+    "departure_fresh_matches_within5deg": [
+      -89.9
+    ],
+    "first_edge_chord_length_cm": 29.62785851188034,
+    "historical_motion_distance_cm": 40.6,
+    "interpretation": "Graph chord direction is not the observed departure exit; graph chord cost is not actual travelled length."
+  },
+  "run19_mixed_view_node": {
+    "created_at_observation": 332,
+    "later_observation": 681,
+    "node_id": "junction-18",
+    "distance_to_node_centres_cm": {
+      "junction-5": 15.620499351813313,
+      "junction-18": 13.602940858505564
+    },
+    "original_headings_deg": [
+      8.9,
+      -90.0,
+      169.2
+    ],
+    "fresh681_headings_deg": [
+      -149.5,
+      90,
+      -11.3
+    ],
+    "saved105_headings_deg": [
+      8.9,
+      -90.0,
+      169.2,
+      -149.5,
+      90,
+      -11.3
+    ],
+    "r163_pending_old_entry": {
+      "heading_deg": -90.0,
+      "visits": 0,
+      "completed": false,
+      "blocked": false
+    },
+    "interpretation": "One spatial bucket contains different local exit sets; this does not prove that an old exit physically does not exist."
+  },
+  "run19_similar_node_candidates": {
+    "observation_indexes": [
+      523,
+      556
+    ],
+    "node_ids": [
+      "junction-24",
+      "junction-25"
+    ],
+    "node_centre_gap_cm": 15.456390264224032,
+    "fresh_absolute_headings_deg": [
+      [
+        -137.0,
+        125.5,
+        18.4
+      ],
+      [
+        -137,
+        125.6,
+        18.5
+      ]
+    ],
+    "nearest_heading_differences_deg": [
+      0.0,
+      0.09999999999999432,
+      0.09999999999999432
+    ],
+    "r163_pending_entries": [
+      {
+        "node_id": "junction-24",
+        "heading_deg": 125.5,
+        "visits": 0,
+        "completed": false,
+        "blocked": false
+      },
+      {
+        "node_id": "junction-25",
+        "heading_deg": 125.6,
+        "visits": 0,
+        "completed": false,
+        "blocked": false
+      }
+    ],
+    "interpretation": "Similar observed signatures and proximity are not physical-identity proof; neither obligation may be automatically cleared."
+  },
+  "sampled_node_continuity_counterexample": {
+    "observations": [
+      1,
+      2
+    ],
+    "both_at_node": true,
+    "fresh_absolute_headings_deg": [
+      [
+        0
+      ],
+      [
+        90,
+        0.8,
+        -90,
+        -180
+      ]
+    ],
+    "motion": {
+      "round": 1,
+      "method": "take_exit",
+      "params": {
+        "angleDeg": 0,
+        "speed": 50
+      },
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "distanceCm": 25,
+        "elapsedTicks": 81
+      },
+      "before_observation": 1,
+      "after_observation": 2
+    },
+    "interpretation": "Two endpoint samples with atNode=true do not establish continuous-time residence in one junction."
+  },
+  "safety_scope": {
+    "action_calls": 0,
+    "network_calls": 0,
+    "production_imports": 0,
+    "truth_or_layout_inputs": 0,
+    "changed_thresholds": [],
+    "completion_obligations_removed": 0
+  }
+}

@@ -1,0 +1,460 @@
+autonomous_brain/navigation.py:1-176
+1: """Odometry breadcrumbs and junction observations; no preloaded road graph."""
+2: from __future__ import annotations
+3: 
+4: import heapq
+5: import math
+6: 
+7: VERSION = "autonomous-brain-navigation/v4"
+8: 
+9: 
+10: def wrap(angle):
+11:     return (angle + 180) % 360 - 180
+12: 
+13: 
+14: def position(odo):
+15:     return (odo["rightCm"] / 100, odo["forwardCm"] / 100)
+16: 
+17: 
+18: def distance(a, b):
+19:     return math.hypot(a[0] - b[0], a[1] - b[1])
+20: 
+21: 
+22: def heading_to(a, b):
+23:     # Public odometry/turn: positive left; x right, z forward.
+24:     return -math.degrees(math.atan2(b[0] - a[0], b[1] - a[1]))
+25: 
+26: 
+27: class RoadMemory:
+28:     def __init__(self):
+29:         self.nodes = []
+30:         self.vertices = []
+31:         self.edges = {}
+32:         self.last_vertex = None
+33:         self.last_position = None
+34:         self.blocked = []
+35:         self.active_exit = None
+36: 
+37:     def update(self, odo, road):
+38:         p = position(odo)
+39:         if self.active_exit:
+40:             previous = self.active_exit["last_position"]
+41:             if distance(p, previous) > 1e-6:
+42:                 # The chord of a curved motion is not its arrival tangent.
+43:                 # Public headingErrorDeg is road heading minus robot heading.
+44:                 # Use the local tangent only when the measured displacement
+45:                 # establishes which direction was travelled along that road.
+46:                 reverse = heading_to(p, previous)
+47:                 error = road.get("headingErrorDeg")
+48:                 self.active_exit["reverse_heading"] = None
+49:                 if (road["onRoad"] and isinstance(error, (int, float))
+50:                         and not isinstance(error, bool) and math.isfinite(error)):
+51:                     tangent = wrap(odo["headingDeg"] + error)
+52:                     aligned = [angle for angle in (tangent, wrap(tangent + 180))
+53:                                if abs(wrap(angle - reverse)) < 45]
+54:                     if len(aligned) == 1:
+55:                         self.active_exit["reverse_heading"] = aligned[0]
+56:                 # Stationary turns/repeated frames retain this arrival evidence.
+57:                 self.active_exit["last_position"] = p
+58:         if road["onRoad"]:
+59:             choices = [(distance(p, vertex), i) for i, vertex in enumerate(self.vertices)]
+60:             closest = min(choices, default=(math.inf, None))
+61:             if closest[0] < 0.08:
+62:                 current = closest[1]
+63:             else:
+64:                 current = len(self.vertices)
+65:                 self.vertices.append(p)
+66:                 self.edges[current] = {}
+67:             if self.last_vertex is not None and current != self.last_vertex:
+68:                 gap = distance(self.vertices[current], self.vertices[self.last_vertex])
+69:                 # Edges encode only an actually traversed consecutive segment.
+70:                 if self.last_position is not None and distance(p, self.last_position) <= 0.60:
+71:                     self.edges[current][self.last_vertex] = gap
+72:                     self.edges[self.last_vertex][current] = gap
+73:             self.last_vertex = current
+74:         else:
+75:             self.last_vertex = None
+76:         self.last_position = p
+77:         if road.get("atNode") and road["exits"]:
+78:             node = self.current_node(odo)
+79:             if node is None:
+80:                 node = {"id": f"junction-{len(self.nodes)+1}", "position": p, "exits": []}
+81:                 self.nodes.append(node)
+82:             for raw in road["exits"]:
+83:                 heading = wrap(odo["headingDeg"] + raw["angleDeg"])
+84:                 if not any(abs(wrap(e["heading_deg"] - heading)) < 15 for e in node["exits"]):
+85:                     node["exits"].append({"heading_deg": heading, "visits": 0, "completed": False, "blocked": False})
+86:             if self.active_exit:
+87:                 origin = self.active_exit["node"]
+88:                 # A sensor step can cross the whole segment without observing
+89:                 # atNode=False. Distinct odometry positions establish arrival.
+90:                 if distance(node["position"], origin["position"]) >= 0.15:
+91:                     self.active_exit["exit"]["completed"] = True
+92:                     # Mark only a uniquely observed current reverse exit. Old
+93:                     # bearings retained at a merged node are not fresh evidence.
+94:                     reverse = self.active_exit["reverse_heading"]
+95:                     if reverse is not None and road["onRoad"]:
+96:                         current = [wrap(odo["headingDeg"] + raw["angleDeg"])
+97:                                    for raw in road["exits"]
+98:                                    if abs(wrap(odo["headingDeg"] + raw["angleDeg"] - reverse)) < 45]
+99:                         if len(current) == 1:
+100:                             saved = [e for e in node["exits"]
+101:                                      if abs(wrap(e["heading_deg"] - current[0])) < 15]
+102:                             if len(saved) == 1:
+103:                                 saved[0]["completed"] = True
+104:                     self.active_exit = None
+105:                 elif self.active_exit["departed"]:
+106:                     self.active_exit = None
+107:         elif self.active_exit:
+108:             self.active_exit["departed"] = True
+109: 
+110:     def current_node(self, odo):
+111:         p = position(odo)
+112:         # min keeps the first inserted node when distances are exactly tied.
+113:         node = min(self.nodes, key=lambda n: distance(p, n["position"]), default=None)
+114:         return node if node is not None and distance(p, node["position"]) < 0.15 else None
+115: 
+116:     def exits(self, odo, road):
+117:         node = self.current_node(odo)
+118:         result = []
+119:         for raw in road.get("exits", []):
+120:             heading = wrap(odo["headingDeg"] + raw["angleDeg"])
+121:             saved = next((e for e in (node or {}).get("exits", [])
+122:                           if abs(wrap(e["heading_deg"] - heading)) < 15), None)
+123:             result.append({"angle_deg": raw["angleDeg"], "heading_deg": heading,
+124:                            "visits": saved["visits"] if saved else 0,
+125:                            "completed": saved["completed"] if saved else False,
+126:                            "blocked": saved["blocked"] if saved else False})
+127:         return result
+128: 
+129:     def chosen(self, odo, angle, blocked=False):
+130:         node = self.current_node(odo)
+131:         if not node:
+132:             return
+133:         heading = wrap(odo["headingDeg"] + angle)
+134:         for exit in node["exits"]:
+135:             if abs(wrap(exit["heading_deg"] - heading)) < 15:
+136:                 exit["visits"] += 1
+137:                 exit["blocked"] |= blocked
+138:                 self.active_exit = {"node": node, "exit": exit, "departed": False,
+139:                                     "last_position": position(odo), "reverse_heading": None}
+140: 
+141:     def mark_blocked(self):
+142:         if self.active_exit:
+143:             self.active_exit["exit"]["blocked"] = True
+144:             self.active_exit = None
+145: 
+146:     def route_to(self, odo, target):
+147:         """Shortest recorded path to the visited road point nearest target."""
+148:         if not self.vertices:
+149:             return []
+150:         start = min(range(len(self.vertices)), key=lambda i: distance(position(odo), self.vertices[i]))
+151:         goal = min(range(len(self.vertices)), key=lambda i: distance(target, self.vertices[i]))
+152:         costs, previous, queue = {start: 0}, {}, [(0, start)]
+153:         while queue:
+154:             cost, node = heapq.heappop(queue)
+155:             if cost != costs[node]:
+156:                 continue
+157:             if node == goal:
+158:                 path = [node]
+159:                 while node != start:
+160:                     node = previous[node]
+161:                     path.append(node)
+162:                 return [self.vertices[i] for i in reversed(path)]
+163:             for other, length in self.edges[node].items():
+164:                 if cost + length < costs.get(other, math.inf):
+165:                     costs[other] = cost + length
+166:                     previous[other] = node
+167:                     heapq.heappush(queue, (cost + length, other))
+168:         return []
+169: 
+170:     def summary(self):
+171:         return [{"id": n["id"], "position_m": {"x": round(n["position"][0], 3), "z": round(n["position"][1], 3)},
+172:                  "exits": [dict(e, heading_deg=round(e["heading_deg"], 1)) for e in n["exits"]]}
+173:                 for n in self.nodes]
+174: 
+175:     def unexplored(self):
+176:         return sum(not e["completed"] and not e["blocked"] for n in self.nodes for e in n["exits"])
+
+autonomous_brain/actions.py:453-537
+453:         evidence = {"before_observation": start_observation,
+454:                     "after_observation": self.s["observation_index"],
+455:                     "wanted_heading_deg": wanted_heading}
+456:         if not road["onRoad"] or not road.get("atNode"):
+457:             return {"selection_error": "exit_junction_not_reobserved", **evidence}
+458:         relative = wrap(wanted_heading - odo["headingDeg"])
+459:         matches = [entry for entry in road.get("exits", [])
+460:                    if abs(wrap(entry["angleDeg"] - relative)) <= 5]
+461:         if len(matches) != 1:
+462:             return {"selection_error": "selected_exit_not_uniquely_reobserved",
+463:                     "observed_exit_angles": [entry["angleDeg"] for entry in road.get("exits", [])],
+464:                     **evidence}
+465:         fresh_angle = matches[0]["angleDeg"]
+466:         self.r.roads.chosen(odo, fresh_angle)
+467:         return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+468: 
+469:     def explore(self, exit_angle=None):
+470:         before_ids = {o["id"] for o in self.r.perception.objects()}
+471:         before_confirmed = {o["id"] for o in self.r.perception.objects() if o["state"] == "CONFIRMED"}
+472:         start = position(self.s["odometry"])
+473:         road, odo = self.s["road"], self.s["odometry"]
+474:         if not road["onRoad"]:
+475:             return self.result(False, "not_on_observed_road")
+476:         if exit_angle is not None and not road.get("atNode"):
+477:             return self.result(False, "exit_angle_requires_a_current_junction")
+478:         if road.get("atNode") and road["exits"]:
+479:             exits = self.r.roads.exits(odo, road)
+480:             if exit_angle is None:
+481:                 chosen = min(exits, key=lambda e: (e["blocked"], e["completed"], e["visits"], abs(e["angle_deg"])))
+482:             else:
+483:                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
+484:                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
+485:                     return self.result(False, "requested_exit_not_observed", available_exits=exits)
+486:             result = self.take_observed_exit(chosen["angle_deg"])
+487:             if result.get("selection_error"):
+488:                 return self.result(False, result["selection_error"], exit_selection=result)
+489:             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+490:                 return self.return_from_blocked_road(result)
+491:             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+492:                 return self.return_from_blocked_road(result)
+493:             confirmed = self.newly_confirmed(before_confirmed)
+494:             if confirmed:
+495:                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+496:             moved = distance(start, position(self.s["odometry"])) * 100
+497:             if self.observed_road_node() and moved >= .2:
+498:                 return self.result(True, "next_junction_observed")
+499:             if result.get("stoppedBy") == "junction":
+500:                 if self.observed_road_node():
+501:                     return self.result(False, "selected_exit_no_observed_progress", actuator_result=result)
+502:                 return self.recover_unobserved_junction(result)
+503:             if result.get("distanceCm", 0) < 0.2:
+504:                 self.r.roads.mark_blocked()
+505:                 return self.result(False, "selected_exit_blocked", actuator_result=result)
+506:         for step in range(12):
+507:             new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
+508:             if new:
+509:                 return self.result(True, "new_objects_observed", new_object_ids=new)
+510:             before = position(self.s["odometry"])
+511:             step_cm = 16 if self.fresh_tentative_views() else 20
+512:             result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
+513:             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
+514:                 return self.return_from_blocked_road(result)
+515:             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
+516:                 return self.return_from_blocked_road(result)
+517:             confirmed = self.newly_confirmed(before_confirmed)
+518:             if confirmed:
+519:                 return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+520:             if self.observed_road_node():
+521:                 return self.result(True, "next_junction_observed")
+522:             if result.get("stoppedBy") == "junction":
+523:                 return self.recover_unobserved_junction(result)
+524:             moved = distance(before, position(self.s["odometry"])) * 100
+525:             if moved < 0.2:
+526:                 return self.return_from_blocked_road(result)
+527:         return self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100)
+528: 
+529:     def visual_standoff(self, object_id):
+530:         """Close the existing standoff gate using fresh, identified camera views.
+531: 
+532:         A region's visible centre can differ from its stored WM centre. Keep
+533:         the memory unchanged and use bounded observed corrections at close range.
+534:         """
+535:         observed = None
+536:         for step in range(9):
+537:             observed = self.visible(object_id)
+
+autonomous_brain/actions.py:597-702
+597:     def go_to(self, object_id):
+598:         target = self.r.perception.confirmed(object_id)
+599:         if target is None:
+600:             return self.result(False, "object_not_confirmed")
+601:         goal = (target["position_m"]["x"], target["position_m"]["z"])
+602:         route, waypoint_index, previous_position = None, 0, None
+603:         visited_states = set()
+604:         reacquired_from = set()
+605:         for step in range(45):
+606:             if not self.s["road"]["onRoad"]:
+607:                 return self.result(False, "not_on_observed_road")
+608:             current = self.r.perception.get_object(object_id) or target
+609:             remaining, bearing = self.object_geometry(current)
+610:             observed = self.visible(object_id)
+611:             # A nearby remembered point can be behind the camera. Turning in
+612:             # place is observable and does not require inventing a road edge.
+613:             current_pose = position(self.s["odometry"])
+614:             if remaining <= 65 and observed is None and abs(bearing) >= 1 and current_pose not in reacquired_from:
+615:                 reacquired_from.add(current_pose)
+616:                 self.turn(-bearing)
+617:                 continue
+618:             if (observed is not None
+619:                     and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])
+620:                     and type(observed.get("distance_cm")) in (int, float)
+621:                     and math.isfinite(observed["distance_cm"]) and 0 < observed["distance_cm"] <= 65):
+622:                 return self.visual_standoff(object_id)
+623:             if 25 <= remaining <= 40:
+624:                 self.turn(-bearing)
+625:                 observed = self.visible(object_id)
+626:                 if observed is not None and 25 <= observed["distance_cm"] <= 40 and abs(observed["bearing_deg"]) <= 10:
+627:                     return self.result(True, "target_seen_at_standoff", object_id=object_id,
+628:                                        distance_cm=observed["distance_cm"], detection=observed)
+629:                 return self.result(False, "fresh_detection_does_not_verify_standoff", object_id=object_id,
+630:                                    detection=observed)
+631:             if remaining < 25:
+632:                 self.turn(-bearing)
+633:                 length, clearance = road_translation_limit(self.s["road"], "backward", min(10, 32 - remaining))
+634:                 if length < .1:
+635:                     return self.result(False, "final_approach_requires_road_reposition", road_clearance=clearance)
+636:                 result = self.move("backward", {"distanceCm": length, "speed": 30})
+637:                 if not self.s["road"]["onRoad"] or result.get("stoppedBy") in {
+638:                         "collision", "front_clearance", "off_road", "wrong_way"}:
+639:                     return self.result(False, "route_blocked", actuator_result=result)
+640:                 continue
+641:             road, odo = self.s["road"], self.s["odometry"]
+642:             if not road["onRoad"]:
+643:                 return self.result(False, "not_on_observed_road")
+644:             if route is None:
+645:                 # Keep the selected path through intermediate sensor junctions.
+646:                 # Replanning there can choose the old start as the nearest vertex.
+647:                 route = list(self.r.roads.route_to(odo, goal))
+648:             p = position(odo)
+649:             segment = ((p[0] - previous_position[0], p[1] - previous_position[1])
+650:                        if previous_position is not None else (0, 0))
+651:             segment_length_sq = segment[0] ** 2 + segment[1] ** 2
+652:             last_projection = -math.inf
+653:             while waypoint_index < len(route):
+654:                 waypoint = route[waypoint_index]
+655:                 projection = (((waypoint[0] - previous_position[0]) * segment[0]
+656:                                + (waypoint[1] - previous_position[1]) * segment[1]) / segment_length_sq
+657:                               if segment_length_sq else None)
+658:                 nearby = distance(p, waypoint) <= 0.15
+659:                 # A 25–40cm exit step can overshoot the current breadcrumb.
+660:                 # Use only the immediately preceding on-road movement and the
+661:                 # existing 15cm gate, in route order; never add graph edges.
+662:                 crossed = (projection is not None and last_projection <= projection <= 1
+663:                            and projection >= 0 and distance(waypoint, (
+664:                                previous_position[0] + projection * segment[0],
+665:                                previous_position[1] + projection * segment[1])) <= 0.15)
+666:                 if not nearby and not crossed:
+667:                     break
+668:                 if projection is not None and projection < last_projection:
+669:                     break
+670:                 waypoint_index += 1
+671:                 if projection is not None:
+672:                     last_projection = projection
+673:             waypoint = route[waypoint_index] if waypoint_index < len(route) else None
+674:             near_approach = remaining <= 65 and abs(bearing) <= 40
+675:             if waypoint is None and not near_approach:
+676:                 return self.result(False, "known_route_exhausted_needs_exploration", object_id=object_id)
+677:             state = (p, odo["headingDeg"], waypoint_index, waypoint)
+678:             if state in visited_states:
+679:                 return self.result(False, "route_no_progress", object_id=object_id, waypoint=waypoint)
+680:             visited_states.add(state)
+681:             previous_position = p
+682:             relative = wrap(heading_to(p, waypoint) - odo["headingDeg"]) if waypoint is not None else None
+683:             if waypoint is not None and road.get("atNode") and road["exits"] and remaining > 60:
+684:                 candidates = road["exits"]
+685:                 chosen = min(candidates, key=lambda e: abs(wrap(e["angleDeg"] - relative)))
+686:                 result = self.take_observed_exit(chosen["angleDeg"])
+687:                 if result.get("selection_error"):
+688:                     return self.result(False, result["selection_error"], exit_selection=result)
+689:             elif remaining <= 65 and abs(bearing) <= 40:
+690:                 # Final short approach is bounded by the remembered standoff,
+691:                 # observed road clearance, and a new camera reading each step.
+692:                 self.turn(-bearing)
+693:                 if not self.s["road"]["onRoad"]:
+694:                     return self.result(False, "final_approach_not_on_road")
+695:                 step_cm = min(10, remaining - 33)
+696:                 if step_cm <= 0:
+697:                     return self.result(False, "standoff_geometry_inconsistent")
+698:                 step_cm, clearance = road_translation_limit(self.s["road"], "forward", step_cm)
+699:                 if step_cm < .1:
+700:                     return self.result(False, "final_approach_requires_road_reposition", road_clearance=clearance)
+701:                 result = self.move("forward", {"distanceCm": step_cm, "speed": 30})
+702:             else:
+
+autonomous_brain/actions.py:1318-1326
+1318:     def done(self):
+1319:         completion = completion_evidence(self.r.perception.objects())
+1320:         if (self.s["holding"]["holding"] or completion["pending_objects"]
+1321:                 or not self.r.roads.nodes or self.r.roads.unexplored()):
+1322:             return self.result(False, "completion_not_supported_by_observations", **completion,
+1323:                                unexplored_exits=self.r.roads.unexplored())
+1324:         return self.result(True, "explored_roads_and_observed_targets_completed", **completion)
+1325: 
+1326:     def execute(self, action):
+
+autonomous_brain/run.py:182-225
+182:     def state(self):
+183:         objects = []
+184:         rows = self.perception.objects()
+185:         chains = reacquisition_chains(rows)
+186:         for row in rows:
+187:             objects.append({"id": row["id"], "category": row["category"],
+188:                             "position_m": {k: round(v, 3) for k, v in row["position_m"].items()},
+189:                             "confidence": round(row["confidence"], 3), "status": row["state"],
+190:                             "distance_cm": round(row["distance_cm"], 1),
+191:                             "bearing_deg": round(row["bearing_deg"], 1), "hit_count": row["hit_count"]})
+192:             for key in ("completion_classification", "ever_confirmed"):
+193:                 if key in row:
+194:                     objects[-1][key] = row[key]
+195:             if row["id"] in chains:
+196:                 objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
+197:         odo, road = self.snapshot["odometry"], self.snapshot["road"]
+198:         return {"task": self.config["task"], "round": self.round,
+199:                 "simulation_seconds": self.bridge.seconds,
+200:                 "coordinate_convention": {
+201:                     "position_frame": "initial_odometry",
+202:                     "position_axes": {"x": "right", "z": "forward"},
+203:                     "object_bearing_deg": {"frame": "robot_relative", "positive": "right",
+204:                                            "negative": "left", "zero": "forward"},
+205:                     "heading_deg": {"frame": "initial_odometry", "positive": "left",
+206:                                     "negative": "right", "zero": "initial_forward"},
+207:                     "exit_angle_deg": {"frame": "robot_relative", "positive": "left",
+208:                                        "negative": "right", "zero": "forward"},
+209:                     "object_bearing_to_relative_turn": "negate"},
+210:                 "objects": objects,
+211:                 "completion": completion_evidence(rows),
+212:                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
+213:                                     "heading_deg": odo["headingDeg"]},
+214:                           "holding": self.snapshot["holding"]["holding"],
+215:                           "held_object_id": self.held_object_id,
+216:                           "pending_grasp_object_id": (self.pending_grasp or {}).get("object_id"),
+217:                           "on_road": road["onRoad"], "at_junction": road["atJunction"],
+218:                           "at_node": road.get("atNode", False),
+219:                           "exit_angles": [e["angleDeg"] for e in road["exits"]],
+220:                           "exits": self.roads.exits(odo, road),
+221:                           "front_clearance_cm": road["frontClearanceCm"]},
+222:                 "junction_history": self.roads.summary(),
+223:                 "unexplored_exit_count": self.roads.unexplored(),
+224:                 "observed_junction_count": len(self.roads.nodes),
+225:                 "recent_actions": copy.deepcopy(self.recent[-5:])}
+
+autonomous_brain/llm.py:23-39
+23: VERSION = "autonomous-brain-llm/v12"
+24: SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 13)}
+25: RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
+26:                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
+27: RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
+28: SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
+29: 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
+30: 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
+31: 只有 robot.at_node 为 true 且 robot.exit_angles 非空时才能给 explore 提供 exit_angle，并且必须原样选择 robot.exit_angles 中的一个数值。其他位置的 explore 必须使用空 params {}。junction_history 中的 heading_deg 是历史绝对朝向，不是当前可选相对出口，禁止把它填入 exit_angle。
+32: 坐标约定见 coordinate_convention：位置使用初始里程计坐标系，x/right_cm 向右、z/forward_cm 向前。objects 中的 bearing_deg 相对当前车头，右为正、左为负，0°为正前方；robot.pose.heading_deg 和 junction_history 中的 heading_deg 是绝对朝向，左为正、右为负，0°为初始前方。robot.exit_angles 和 exits 中的 angle_deg 相对当前车头，也以左为正、右为负。朝向物体所需的相对转角为 -bearing_deg，不能直接把物体 bearing_deg 的符号当作出口角度；仍只能选择当前实际观测到的出口。
+33: explore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。
+34: 按任务选择物体。未持物且已有 CONFIRMED 的任务目标时，优先搬运该目标，不必等探索完所有路段；先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标。目标在身后也可交给 go_to 沿已记录道路导航。只有当前没有可处理的已确认任务目标，或其最近导航失败尚需寻找可达路线时，才继续探索和换位确认；不为与任务无关的球或障碍延迟已有目标的搬运。有持物时，依据当前 objects 中自己的 distance_cm，优先选择最近的 CONFIRMED 存放区，并结合 recent_actions 中对应物体的导航失败及观测证据判断是否可处理；先 go_to 再 place，不要只因另一个存放区先被确认就反复选择更远的区域。若某物体最近 go_to 返回 known_route_exhausted_needs_exploration，而此后没有换位或新增道路/视觉证据，不要机械重复同一已耗尽路线；可先 look_around 重获近处区域的观测、选择另一个已确认存放区，或根据现有出口探索可达路线。具体选择仍由你依据本轮状态决定。搬运完已知目标后继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
+35: completion 中的 retired_unconfirmed_hypotheses 保留已归档且从未确认的 LOST 红球假设及依据，objects 的 retired_unconfirmed_hypothesis 分类只表示该历史假设不再阻止完成，不代表已送达，也不代表物体不存在；当前 TENTATIVE/STALE/CONFIRMED、曾确认的 LOST、HELD 和 RELEASED_UNVERIFIED 红球仍须处理，后续新检测仍须正常确认。
+36: objects 中的 reacquired_as 仅表示 WorldModel 已依据原关联门控、双向唯一竞争检查和新轨迹自身的三个位点确认，记录了历史 LOST 身份到当前身份的重获绑定；历史对象和轨迹仍保留，不能自行猜测或合并物理身份。go_to/pick 只操作当前状态为 CONFIRMED 的身份，不操作历史 LOST ID。重获本身不等于送达；只有经过完整绑定链校验，且链终端真实状态已为 DELIVERED，completion.resolved_reacquired_identities 才会给出旧义务解除的 delivered_object_id 和 binding_chain 依据。终端未送达、证据不完整或有歧义时仍在 pending_objects；判断是否完成要检查 completion 的实际结果，不能因出现 reacquired_as 就 done。
+37: 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
+38: 
+39: 
+
+autonomous_brain/llm.py:181-190
+181: def _prepare_state(state: dict[str, Any]) -> dict[str, Any]:
+182:     if not isinstance(state, dict):
+183:         raise ValueError("state must be an object")
+184:     required = {"task", "objects", "robot", "junction_history", "recent_actions"}
+185:     missing = sorted(required - set(state))
+186:     if missing:
+187:         raise ValueError(f"state missing fields: {', '.join(missing)}")
+188:     if not isinstance(state["task"], str) or not state["task"].strip():
+189:         raise ValueError("state.task must be a non-empty string")
+190:     if (not isinstance(state["objects"], list)
