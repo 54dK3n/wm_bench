@@ -1,0 +1,143 @@
+{
+  "map": "map-05",
+  "run": 1,
+  "directory": "map-05-run-1",
+  "success": false,
+  "maxRounds": 200,
+  "maxSimulationSeconds": 1200,
+  "backendVersion": "robot-backend-v4-stage1-r2",
+  "process": {
+    "code": 1,
+    "signal": null,
+    "spawnError": null,
+    "interrupted": null,
+    "wallSeconds": 80.543,
+    "invocation": {
+      "module": "autonomous_brain.run",
+      "output": "artifacts/autonomous-brain/map05-run-04/map-05-run-1/brain",
+      "replay": null
+    },
+    "capabilityPassed": {
+      "schema": "autonomous-brain-robot-config/v1",
+      "origin": "<local robot bridge>",
+      "bridge_id": "<limited robot capability>",
+      "client_token": "<not recorded>",
+      "task": "把地图上的红球都送到绿色存放区",
+      "simulation_step_ms": 20,
+      "max_rounds": 200,
+      "max_simulation_seconds": 1200
+    }
+  },
+  "schema": "wm-autonomous-evaluation/v1",
+  "evaluationOnly": true,
+  "failures": [
+    "no_active_package_delivered_event:guangyang-target-1",
+    "final_position_outside_storage:guangyang-target-1",
+    "no_active_package_delivered_event:guangyang-target-2",
+    "final_position_outside_storage:guangyang-target-2",
+    "execution_or_controller_error"
+  ],
+  "expectedTargetIds": [
+    "guangyang-target-1",
+    "guangyang-target-2"
+  ],
+  "deliveredTargetIds": [],
+  "deliveryEvents": [],
+  "finalPositions": [
+    {
+      "id": "guangyang-target-1",
+      "finalSampleTick": 0,
+      "worldPosition": [
+        10.0849,
+        1.251
+      ],
+      "destination": [
+        -10.7336,
+        -8.0772
+      ],
+      "distanceWorldUnits": 22.812830983681092,
+      "radiusWorldUnits": 0.95,
+      "holding": false,
+      "finalInsideStorage": false,
+      "deliveredEventActive": false
+    },
+    {
+      "id": "guangyang-target-2",
+      "finalSampleTick": 0,
+      "worldPosition": [
+        0.5097,
+        4.4324
+      ],
+      "destination": [
+        -10.7336,
+        -8.0772
+      ],
+      "distanceWorldUnits": 16.819687483719786,
+      "radiusWorldUnits": 0.95,
+      "holding": false,
+      "finalInsideStorage": false,
+      "deliveredEventActive": false
+    }
+  ],
+  "simulationSeconds": 0,
+  "rejectedCalls": 0,
+  "nonwhitelistAcceptedCalls": 0,
+  "brainSummary": {
+    "version": "autonomous-brain/v1",
+    "status": "failed",
+    "reason": "LLMRequestError: LLM request failed: URLError; see transcript",
+    "task": "把地图上的红球都送到绿色存放区",
+    "rounds": 1,
+    "llm_calls": 1,
+    "llm_total_elapsed_s": 75.585421459,
+    "wall_elapsed_s": 80.435649417,
+    "simulation_seconds": 0,
+    "observations": 1,
+    "timeline": [],
+    "final_objects": [],
+    "held_object_id": null,
+    "pending_grasp": null,
+    "grab_attempts": {},
+    "action_evidence": [],
+    "junction_history": [
+      {
+        "id": "junction-1",
+        "position_m": {
+          "x": 0,
+          "z": 0
+        },
+        "exits": [
+          {
+            "heading_deg": 0,
+            "visits": 0,
+            "completed": false,
+            "blocked": false
+          }
+        ]
+      }
+    ],
+    "limits": {
+      "max_rounds": 200,
+      "max_simulation_seconds": 1200
+    },
+    "world_model": {
+      "upstream_main": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
+      "profile": "guangyang_static_world_model",
+      "max_range_m": 0.9
+    },
+    "source_sha256": {
+      "__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+      "actions.py": "0e1323a4f5e2f07d0f00d38df38db5adef904bfc49cea47a216c85d7573c7902",
+      "bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "llm.py": "6379457ca6797feaebce24af749ed9a500c2fc487051967c4f1353132b9d5165",
+      "navigation.py": "6d19436fbee9583849889fef9d946308e530e2e8ad63cfd70cbef725a17afaec",
+      "perception.py": "da4e1eaf4e9718db3ace90a0ddaae43d4232c444c5b4d4e1b683ff8bdda9d572",
+      "run.py": "f7158c6d73829808ec4d3b5c07341611a720a43007599701e930c61eb8979aac"
+    }
+  },
+  "note": "Success independently requires final truth positions and non-revoked package_delivered record events. No competition score or old strict determinism gate.",
+  "recordFrameCount": 1,
+  "captureCount": 1,
+  "controllerErrors": [],
+  "pageErrors": []
+}

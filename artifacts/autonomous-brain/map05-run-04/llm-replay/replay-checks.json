@@ -1,0 +1,71 @@
+{
+  "schema": "autonomous-brain-offline-llm-replay/v1",
+  "scope": "offline_llm_transcript_replay",
+  "task_acceptance": false,
+  "full_simulation_replayed": false,
+  "live_model_called": false,
+  "source_brain_directory": "artifacts/autonomous-brain/map05-run-04/map-05-run-1/brain",
+  "original_run": {
+    "status": "failed",
+    "reason": "LLMRequestError: LLM request failed: URLError; see transcript",
+    "rounds": 1,
+    "llm_calls": 1
+  },
+  "original_llm_client_sha256": "6379457ca6797feaebce24af749ed9a500c2fc487051967c4f1353132b9d5165",
+  "rows": [
+    {
+      "round": 1,
+      "expected_action": null,
+      "actual_action": null,
+      "expected_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: URLError; see transcript"
+      },
+      "actual_error": {
+        "type": "LLMRequestError",
+        "message": "LLM request failed: URLError; see transcript"
+      },
+      "replayed_call_count": 1,
+      "recorded_call_count": 1,
+      "recorded_execution_result": {
+        "success": false,
+        "reason": "LLM request failed: URLError; see transcript",
+        "error_type": "LLMRequestError"
+      },
+      "execution_failed_after_llm_success": false,
+      "exact_match": true
+    }
+  ],
+  "recorded_rounds": 1,
+  "replayed_rounds": 1,
+  "recorded_calls": 1,
+  "replayed_calls": 1,
+  "all_records_consumed": true,
+  "full_records_equal_except_mode": true,
+  "mismatched_record_indexes": [],
+  "replay_error": null,
+  "recorded_elapsed_s_replayed": 75.585421459,
+  "network_calls": 0,
+  "blocked_network_entry_points": {
+    "urllib.request.urlopen": 0,
+    "urllib.request.OpenerDirector.open": 0,
+    "http.client.HTTPConnection.request": 0,
+    "http.client.HTTPConnection.connect": 0,
+    "http.client.HTTPSConnection.connect": 0,
+    "socket.create_connection": 0,
+    "socket.socket.connect": 0,
+    "socket.socket.connect_ex": 0,
+    "socket.socket.sendto": 0,
+    "socket.getaddrinfo": 0
+  },
+  "environment_access_attempts": 0,
+  "source_sha256": {
+    "rounds": "c10aebcd9460ed03c500be910b1d177b3a891ca9ede9b1d163dd0dfc74af218f",
+    "original_llm": "908205de564a1a832baee0c746d635bf9006c70cb48e2ce58002489ea0e2e756",
+    "original_summary": "baff45c3917363ab68c7933f1694478900df6ed3b2b27a0609aad2e6225f459d",
+    "tool": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+    "llm_client": "6379457ca6797feaebce24af749ed9a500c2fc487051967c4f1353132b9d5165"
+  },
+  "source_evidence_unchanged": true,
+  "allPass": true
+}
