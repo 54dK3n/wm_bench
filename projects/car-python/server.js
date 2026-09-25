@@ -681,6 +681,7 @@ const TOP_LEVEL_STATIC_FILES = new Set([
   "competition-core.js",
   "vision-pixel-core.js",
   "robot-bridge-contract.js",
+  "robot-camera-detector.js",
   "robot-record.js",
   "storage-region-pixels.js",
   "robot-backend-runtime.js",

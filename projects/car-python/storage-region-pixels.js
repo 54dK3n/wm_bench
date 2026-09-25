@@ -5,7 +5,7 @@
   if (root) root.CarStorageRegionPixels = api;
 })(typeof globalThis === "object" ? globalThis : this, function createStorageRegionPixels() {
   "use strict";
-  const VERSION = "chenlong.storage-ground-pixels/v1";
+  const VERSION = "chenlong.storage-ground-pixels/v2";
   const DEFINITION = Object.freeze({ width: 640, height: 480,
     source: "source-camera-rgba8", color: Object.freeze([0, 255, 0, 255]), connectivity: 4,
     bounds: "visible-component-inclusive-pixels", confidence: "exact-chroma-membership" });
@@ -50,7 +50,7 @@
           }
         }
       }
-      regions.push({ category: "storage-zone", confidence: 1,
+      regions.push({ category: "storage-zone", confidence: 1, source: "storage-ground-pixels",
         bbox: { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 }, pixelCount: tail });
     }
     regions.sort((a, b) => b.pixelCount - a.pixelCount || a.bbox.y - b.bbox.y || a.bbox.x - b.bbox.x);

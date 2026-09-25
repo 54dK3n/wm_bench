@@ -4,7 +4,7 @@
  */
 (function installRobotBackend(root) {
   "use strict";
-  const VERSION = "robot-backend-v4-stage1-r1";
+  const VERSION = "robot-backend-v4-stage1-r2";
   let active = null;
   const clone = value => JSON.parse(JSON.stringify(value));
   const tick = () => deterministicSimulator?.tick ?? 0;
@@ -29,7 +29,7 @@
     } };
   }
 
-  async function observe(params) {
+  async function observe(params, requestId) {
     const frame = await startVirtualCameraVision();
     const status = root.CarVision.getStatus();
     if (!frame || !status.fresh || status.frameId !== frame.frameId) {
@@ -39,29 +39,16 @@
     // native evaluator record. Its old distance output is NOT sent to the brain.
     const args = [params.category ?? null, params.confidence ?? 0];
     addCompetitionVisionQuery("observe", args, projectSimpleVisionQuery("observe", args), frame.frameId);
-    const detections = [];
-    for (const item of root.CarVision.getDetections()) {
-      // Only detector output is a sensor; task-role labels are translated to
-      // appearance classes and taught templates are excluded.
-      if (item.source !== "yolo" || !item.box) continue;
-      const category = item.colorClass === "red" ? "red-ball" : item.colorClass === "blue" ? "blue-ball"
-        : item.category === "obstacle" ? "obstacle" : null;
-      if (!category || (params.category && category !== params.category)
-        || item.confidence < (params.confidence ?? 0)) continue;
-      // Frozen detector coordinates are a 640-square letterbox: padY = 80.
-      const x = Math.max(0, item.box.x), y = Math.max(0, item.box.y - 80);
-      const right = Math.min(640, item.box.x + item.box.width);
-      const bottom = Math.min(480, item.box.y + item.box.height - 80);
-      if (right <= x || bottom <= y) continue;
-      detections.push({ category, confidence: item.confidence,
-        bbox: { x, y, w: right - x, h: bottom - y } });
-    }
-    if (!params.category || params.category === "storage-zone") {
-      const pixels = virtualCameraContext.getImageData(0, 0, 640, 480);
-      for (const item of root.CarStorageRegionPixels.detectStorageRegions(pixels)) {
-        if (item.confidence >= (params.confidence ?? 0)) detections.push(item);
-      }
-    }
+    const visionDetections = root.CarVision.getDetections();
+    const pixels = virtualCameraContext.getImageData(0, 0, 640, 480);
+    const storageDetections = root.CarStorageRegionPixels.detectStorageRegions(pixels);
+    const robotDetections = root.RobotCameraDetector.detect(visionDetections, storageDetections);
+    // Evaluation-only raw detector evidence is captured BEFORE public filtering.
+    // It is not a robot bridge method and is never included in client responses.
+    active.sensorAudit.push(clone({ requestId, frameId: frame.frameId, tick: tick(), params,
+      visionDetections, storageDetections, robotDetections }));
+    const detections = robotDetections.filter(item => (!params.category || item.category === params.category)
+      && item.confidence >= (params.confidence ?? 0));
     return { frameId: frame.frameId, tick: tick(), width: 640, height: 480, detections };
   }
 
@@ -80,7 +67,7 @@
     }
     const { method, params } = command;
     switch (method) {
-      case "observe": return observe(params);
+      case "observe": return observe(params, command.requestId);
       case "camera_parameters": return cameraParameters();
       case "odometry": return readNavigationSensor("odometry");
       case "local_road": return localRoad();
@@ -208,7 +195,7 @@
     const recorder = new root.RobotRecord.RobotRunRecorder({ session: competitionSession,
       envelope: provenance });
     const context = { ...registration, url: `/api/v1/robot-bridge/controllers/${registration.bridgeId}`,
-      recorder, errors: [], abort: new AbortController(), closed: false, finalExport: null };
+      recorder, errors: [], sensorAudit: [], abort: new AbortController(), closed: false, finalExport: null };
     active = context;
     console.info(JSON.stringify({ event: "program_version", ...provenance }));
     competitionTick(true);
@@ -242,6 +229,7 @@
     const exported = context.recorder.finish();
     exported.record = root.RobotRecord.withBridgeCalls(exported.record, trace.events);
     exported.envelope.controllerErrors = clone(context.errors);
+    exported.sensorAudit = clone(context.sensorAudit);
     context.finalExport = exported;
     endSimulationVisionRun();
     running = false;
@@ -254,7 +242,7 @@
   let lastExport = null;
   root.RobotBackend = Object.freeze({ VERSION, start, stop,
     // Evaluation exports are a page-controller facility, not a bridge method.
-    exportEvaluation: () => clone(active?.recorder.export() || lastExport),
+    exportEvaluation: () => clone(active ? { ...active.recorder.export(), sensorAudit: active.sensorAudit } : lastExport),
     status: () => ({ running: Boolean(active), healthy: Boolean(active && !active.failed),
       tick: tick(), errors: clone(active?.errors || []) }) });
 })(globalThis);

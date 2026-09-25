@@ -10,6 +10,7 @@
     "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"]);
   // Sensor classes are appearance-based; task roles are never a camera output.
   const CATEGORIES = Object.freeze(["red-ball", "blue-ball", "obstacle", "storage-zone"]);
+  const DETECTOR_SOURCES = Object.freeze(["virtual-cv", "yolo", "storage-ground-pixels"]);
   const STOP_REASONS = Object.freeze(["max_distance", "junction", "road_end", "front_clearance", "off_road",
     "wrong_way", "entered_road", "not_at_junction", "invalid_exit", "collision", "safety_limit", "time_limit"]);
   const ERROR_CODES = Object.freeze(["ACTION_FAILED", "NOT_RUNNING", "INVALID_EXIT", "AMBIGUOUS_EXIT",
@@ -80,12 +81,12 @@
       if (v.width !== 640 || v.height !== 480 || !Array.isArray(v.detections)) fail();
       return { frameId: integer(v.frameId), tick: integer(v.tick), width: 640, height: 480,
         detections: v.detections.map(item => {
-          object(item); if (!CATEGORIES.includes(item.category)) fail();
+          object(item); if (!CATEGORIES.includes(item.category) || !DETECTOR_SOURCES.includes(item.source)) fail();
           const b = object(item.bbox);
           const x = number(b.x, 0, 640), y = number(b.y, 0, 480);
           const w = number(b.w, 0, 640 - x), h = number(b.h, 0, 480 - y);
           if (w === 0 || h === 0) fail();
-          return { category: item.category, confidence: number(item.confidence, 0, 1), bbox: { x, y, w, h } };
+          return { category: item.category, confidence: number(item.confidence, 0, 1), bbox: { x, y, w, h }, source: item.source };
         }) };
     }
     if (method === "camera_parameters") {

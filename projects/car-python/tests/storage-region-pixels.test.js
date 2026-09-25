@@ -21,11 +21,11 @@ test("ground detection uses source pixels, preserves input, and produces bridge-
   rectangle(frame, 130, 340, 20, 20, [255, 0, 0, 255]);
   const original = frame.data.slice();
   const result = detectStorageRegions(frame);
-  assert.deepEqual(result, [{ category: "storage-zone", confidence: 1,
+  assert.deepEqual(result, [{ category: "storage-zone", confidence: 1, source: "storage-ground-pixels",
     bbox: { x: 100, y: 320, w: 101, h: 61 }, pixelCount: 101 * 61 - 400 }]);
   assert.deepEqual(frame.data, original);
   assert.deepEqual(sanitizeResponse("observe", { frameId: 1, tick: 0, width: 640, height: 480, detections: result }).detections,
-    [{ category: "storage-zone", confidence: 1, bbox: { x: 100, y: 320, w: 101, h: 61 } }]);
+    [{ category: "storage-zone", confidence: 1, bbox: { x: 100, y: 320, w: 101, h: 61 }, source: "storage-ground-pixels" }]);
 });
 
 test("old upright green sign and all other chroma produce no ground detection", () => {

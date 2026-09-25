@@ -48,13 +48,27 @@ test("explicit response projection never reads hidden truth fields", () => {
 
 test("observe accepts source-image boxes only and removes all range and identity fields", () => {
   const v = { frameId: 7, tick: 20, width: 640, height: 480,
-    detections: [{ category: "storage-zone", confidence: 0.8, bbox: { x: 5, y: 3, w: 10, h: 20 },
+    detections: [{ category: "storage-zone", confidence: 0.8, source: "storage-ground-pixels", bbox: { x: 5, y: 3, w: 10, h: 20 },
       distanceCm: 66, bearingDeg: 30, objectId: "hidden" }], world: {} };
   const result = C.sanitizeResponse("observe", v);
-  assert.deepEqual(Object.keys(result.detections[0]), ["category", "confidence", "bbox"]);
+  assert.deepEqual(Object.keys(result.detections[0]), ["category", "confidence", "bbox", "source"]);
+  assert.equal(result.detections[0].source, "storage-ground-pixels");
   assert.throws(() => C.sanitizeResponse("observe", { ...v, height: 640 }));
   v.detections[0].bbox.y = 479;
   assert.throws(() => C.sanitizeResponse("observe", v));
+});
+
+test("observe preserves real detector provenance and rejects missing or unrecognized sources", () => {
+  const v = { frameId: 7, tick: 20, width: 640, height: 480,
+    detections: [{ category: "red-ball", confidence: 0.8, source: "virtual-cv", bbox: { x: 5, y: 3, w: 10, h: 20 } }] };
+  for (const source of ["virtual-cv", "yolo", "storage-ground-pixels"]) {
+    v.detections[0].source = source;
+    assert.equal(C.sanitizeResponse("observe", v).detections[0].source, source);
+  }
+  for (const source of [undefined, "teaching", "truth", ""]) {
+    v.detections[0].source = source;
+    assert.throws(() => C.sanitizeResponse("observe", v));
+  }
 });
 
 test("camera mount comes from runtime rig conversion, without world transform", () => {

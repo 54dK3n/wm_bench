@@ -42,7 +42,7 @@ otherwise unrestricted process or revoke unrelated credentials it already has.
 
 | Method | Params | Public result |
 | --- | --- | --- |
-| observe | `{category?,confidence?}` | `{frameId,tick,width:640,height:480,detections:[{category,confidence,bbox:{x,y,w,h}}]}` |
+| observe | `{category?,confidence?}` | `{frameId,tick,width:640,height:480,detections:[{category,confidence,bbox:{x,y,w,h},source}]}` |
 | camera_parameters | `{}` | `{width,height,fx,fy,cx,cy,verticalFovDeg,mount:{forwardCm,rightCm,upCm,pitchDeg}}` |
 | odometry | `{}` | `{forwardCm,rightCm,headingDeg,distanceCm,tick}` relative to run origin |
 | local_road | `{}` | `{onRoad,lateralOffsetCm,headingErrorDeg,leftClearanceCm,rightClearanceCm,frontClearanceCm,atJunction,atNode,exits:[{angleDeg}],tick}` |
@@ -55,9 +55,15 @@ otherwise unrestricted process or revoke unrelated credentials it already has.
 
 Categories are appearance classes: red-ball, blue-ball, obstacle and
 storage-zone; observe category may also be null. Task roles (target,
-distractor) are never a sensor output. Ball colour comes from the detector's
-sports-ball class plus a chroma ratio on its box; storage-zone is the visible
-#00ff00 ground region. Taught templates are not bridge detections. Confidence is 0–1. Basic travel is 0.1–500cm,
+distractor) are never a sensor output. The simulator uses `virtual-cv`:
+its red/blue pixel classifiers have legacy names `target`/`distractor`, which
+the adapter translates to `red-ball`/`blue-ball`; no scene-object role is read.
+On physical-camera YOLO output, ball colour comes from the sports-ball class
+plus a chroma ratio on its box. `source` is preserved as `virtual-cv` or `yolo`,
+never relabelled. The independent `storage-ground-pixels` detector reports the
+visible #00ff00 ground region and supplies that exact source value. Legacy
+upright storage and cleanup signs are excluded because they are not a ground
+storage region. Taught templates are not bridge detections. Confidence is 0–1. Basic travel is 0.1–500cm,
 road following 10–500cm, speed 10–100%, turn magnitude 1–360°, and exit relative
 angle −180–180°. These reuse existing platform argument bounds. Unknown methods,
 extra parameters and nonnumeric/nonfinite values are rejected. There is no
@@ -111,9 +117,25 @@ unrecognized native input types, or represent denied queries as manual controls.
 Native records, app logs (which can contain true grab geometry), global map
 metadata and top-down screenshots are not planner responses.
 
+From `robot-backend-v4-stage1-r2`, the page-controller-only evaluation export
+also contains `sensorAudit`. Each observe entry has
+`{requestId,frameId,tick,params,visionDetections,storageDetections,robotDetections}`.
+`visionDetections` preserves the complete unfiltered native camera detector
+output; `storageDetections` preserves the independent ground detector output;
+`robotDetections` is the four-class, 640×480 source-image projection before
+requested category/confidence filtering. These arrays retain raw confidence
+precision and detector order. Evaluation must independently map and project
+the raw arrays, explicitly report excluded legacy classes, and compare every
+entry to the bridge response. It must not use the adapter's own projection as
+the only oracle. `sensorAudit` is never returned by a bridge method.
+
+The earlier r1 empty-detection record equality and bridge-observe acceptance
+are invalidated. Only the new nonempty per-class, raw-content, expected-visible,
+pixel-hash and rejection checks can re-establish stage 1 acceptance.
+
 ## Offline checks
 
-Run `node --test tests/robot-bridge.test.js`. HTTP tests start only ephemeral
+Run `node --test tests/robot-bridge.test.js tests/robot-camera-detector.test.js tests/storage-region-pixels.test.js`. HTTP tests start only ephemeral
 loopback servers with temporary data directories; they do not load a browser or
 run a simulator. Tests cover authentication/capability separation, unchanged
 cross-origin rejection, exact allowed parameter sets, hidden-field getters,
