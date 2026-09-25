@@ -20,8 +20,8 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v7"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 8)}
+VERSION = "autonomous-brain-llm/v8"
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 9)}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -30,7 +30,7 @@ SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定�
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
 只有 robot.at_node 为 true 且 robot.exit_angles 非空时才能给 explore 提供 exit_angle，并且必须原样选择 robot.exit_angles 中的一个数值。其他位置的 explore 必须使用空 params {}。junction_history 中的 heading_deg 是历史绝对朝向，不是当前可选相对出口，禁止把它填入 exit_angle。
 explore 沿路前进至下一路口或发现新物体；有出口时优先选择尚未探索的出口。look_around 分次转向并观测；仅原地看不能取得确认所需的不同观测位置，应结合 explore 换位置。go_to 沿自建道路到目标前 25–40cm。go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。pick 先观测对准再抓，最多三次；是否抓到依据夹爪和再次观测。place 按当前观测的绿色存放区对准放下，是否送达依据夹爪和球在区内的观测证据。
-按任务选择物体；有持物时先寻找绿色存放区，确认后 go_to 再 place。继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
+按任务选择物体。未持物且已有 CONFIRMED 的任务目标时，优先搬运该目标，不必等探索完所有路段；先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标。目标在身后也可交给 go_to 沿已记录道路导航。只有当前没有可处理的已确认任务目标，或其最近导航失败尚需寻找可达路线时，才继续探索和换位确认；不为与任务无关的球或障碍延迟已有目标的搬运。有持物时优先寻找绿色存放区，确认后 go_to 再 place。搬运完已知目标后继续探索未知路口和出口，不能因为暂时没看见目标就 done。只有没有未探索路段、所有已确认的任务目标都已送达且没有待确认目标时才 done。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
 
 

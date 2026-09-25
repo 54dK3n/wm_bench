@@ -7,7 +7,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v5"
+VERSION = "autonomous-brain-actions/v6"
 
 
 def ball_inside_region(ball, region):
@@ -225,6 +225,8 @@ class Actions:
             return self.result(False, "object_not_confirmed")
         goal = (target["position_m"]["x"], target["position_m"]["z"])
         for step in range(45):
+            if not self.s["road"]["onRoad"]:
+                return self.result(False, "not_on_observed_road")
             current = self.r.perception.get_object(object_id) or target
             remaining, bearing = self.object_geometry(current)
             if 25 <= remaining <= 40:
@@ -237,14 +239,17 @@ class Actions:
                                    detection=observed)
             if remaining < 25:
                 self.turn(-bearing)
-                self.move("backward", {"distanceCm": max(0.1, 32 - remaining), "speed": 30})
+                result = self.move("backward", {"distanceCm": max(0.1, 32 - remaining), "speed": 30})
+                if not self.s["road"]["onRoad"] or result.get("stoppedBy") in {
+                        "collision", "front_clearance", "off_road", "wrong_way"}:
+                    return self.result(False, "route_blocked", actuator_result=result)
                 continue
             road, odo = self.s["road"], self.s["odometry"]
             if not road["onRoad"]:
                 return self.result(False, "not_on_observed_road")
             route = self.r.roads.route_to(odo, goal)
             waypoints = [p for p in route if distance(position(odo), p) > 0.15]
-            waypoint = waypoints[min(1, len(waypoints) - 1)] if waypoints else goal
+            waypoint = waypoints[0] if waypoints else goal
             desired = heading_to(position(odo), waypoint)
             relative = wrap(desired - odo["headingDeg"])
             if road.get("atNode") and road["exits"] and remaining > 60:
@@ -382,6 +387,9 @@ class Actions:
             self.move("forward", {"distanceCm": min(7, region["distance_cm"] - 18), "speed": 30})
         else:
             return self.result(False, "storage_alignment_did_not_converge")
+        # Another previously known ball cannot witness this object's release.
+        other_known_ball_ids = {row["id"] for row in self.r.perception.objects()
+                                if row["category"] == category and row["id"] != object_id}
         self.move("release", {})
         if self.s["holding"]["holding"]:
             return self.result(False, "release_did_not_empty_gripper")
@@ -391,6 +399,7 @@ class Actions:
         witnesses = [(ball, zone) for ball in detections for zone in detections
             if ball["category"] == category and "position_m" in ball and zone["category"] == "storage-zone"
             and not ball.get("known_delivered_object_id")
+            and ball.get("track_id") not in other_known_ball_ids
             and ball_inside_region(ball["bbox"], zone["bbox"])]
         placement = None
         if len(witnesses) == 1:

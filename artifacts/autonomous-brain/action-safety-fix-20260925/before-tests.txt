@@ -1,0 +1,88 @@
+FFFF.                                                                    [100%]
+=================================== FAILURES ===================================
+______ test_go_to_takes_exit_to_next_recorded_waypoint_before_later_bend _______
+
+    def test_go_to_takes_exit_to_next_recorded_waypoint_before_later_bend():
+        # The observed route first goes right, then bends forward. A straight
+        # exit also exists, but no recorded route connects that exit to the goal.
+        runtime = fake_runtime([target(.2, 1)], at_node=True, exits=(-90, 0),
+                               route=((0, 0), (.2, 0), (.2, .4), (.2, .8)))
+        Actions(runtime).go_to("red-1")
+        # The fake actuator stops at the first selected exit, keeping this test
+        # about route selection rather than simulating an entire road traversal.
+>       assert runtime.motions == [("take_exit", {"angleDeg": -90, "speed": 50})]
+E       AssertionError: assert [('take_exit'...'speed': 50})] == [('take_exit'...'speed': 50})]
+E         
+E         At index 0 diff: ('take_exit', {'angleDeg': 0, 'speed': 50}) != ('take_exit', {'angleDeg': -90, 'speed': 50})
+E         Use -v to get more diff
+
+tests/test_brain_actions_navigation_regression.py:93: AssertionError
+_______ test_go_to_does_not_reverse_when_current_sensor_reports_off_road _______
+
+    def test_go_to_does_not_reverse_when_current_sensor_reports_off_road():
+        runtime = fake_runtime([target()], on_road=False)
+        result = Actions(runtime).go_to("red-1")
+        assert result["success"] is False
+>       assert runtime.motions == [], "An off-road observation must prevent a standoff reverse command"
+E       AssertionError: An off-road observation must prevent a standoff reverse command
+E       assert [('backward',...d': 30}), ...] == []
+E         
+E         Left contains 45 more items, first extra item: ('backward', {'distanceCm': 12.0, 'speed': 30})
+E         Use -v to get more diff
+
+tests/test_brain_actions_navigation_regression.py:101: AssertionError
+______________ test_go_to_stops_after_standoff_reverse_is_blocked ______________
+
+    def test_go_to_stops_after_standoff_reverse_is_blocked():
+        runtime = fake_runtime([target()])
+        result = Actions(runtime).go_to("red-1")
+        assert result["success"] is False
+>       assert runtime.motions == [("backward", {"distanceCm": 12, "speed": 30})], (
+            "A blocked reverse must return to the decision loop instead of repeating the same motion")
+E       AssertionError: A blocked reverse must return to the decision loop instead of repeating the same motion
+E       assert [('backward',...d': 30}), ...] == [('backward',...'speed': 30})]
+E         
+E         Left contains 44 more items, first extra item: ('backward', {'distanceCm': 12.0, 'speed': 30})
+E         Use -v to get more diff
+
+tests/test_brain_actions_navigation_regression.py:108: AssertionError
+_ test_place_cannot_use_another_preexisting_ball_as_its_delivery_witness[other-known-ball] _
+
+witness_preexisted = True
+
+    @pytest.mark.parametrize("witness_preexisted", [True, False], ids=["other-known-ball", "new-post-release-track"])
+    def test_place_cannot_use_another_preexisting_ball_as_its_delivery_witness(witness_preexisted):
+        zone = {"category": "storage-zone", "distance_cm": 18, "bearing_deg": 0,
+                "bbox": {"x": 100, "y": 200, "w": 100, "h": 60}}
+        other = target(0, .8, object_id="red-2")
+        witness = {"category": "red-ball", "track_id": "red-2", "position_m": {"x": 0, "z": .8},
+                   "bbox": {"x": 145, "y": 210, "w": 10, "h": 20}}
+        objects = [target(state="HELD")]
+        if witness_preexisted:
+            objects.append(other)
+    
+        def actuator(runtime, method, params):
+            assert method in {"release", "backward"}
+            if method == "release":
+                runtime.snapshot["holding"]["holding"] = False
+                runtime.snapshot["perception"]["detections"] = [zone, witness]
+                runtime.perception.rows[other["id"]] = copy.deepcopy(other)
+            return {"accepted": True, "completed": True}
+    
+        runtime = fake_runtime(objects, holding=True,
+                               detections=[zone, witness] if witness_preexisted else [zone],
+                               actuator=actuator)
+        result = Actions(runtime).place()
+        assert runtime.motions == [("release", {}), ("backward", {"distanceCm": 25, "speed": 30})]
+        if witness_preexisted:
+>           assert result["success"] is False, "The only in-zone ball was already present before release"
+E           AssertionError: The only in-zone ball was already present before release
+E           assert True is False
+
+tests/test_brain_actions_navigation_regression.py:137: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_actions_navigation_regression.py::test_go_to_takes_exit_to_next_recorded_waypoint_before_later_bend
+FAILED tests/test_brain_actions_navigation_regression.py::test_go_to_does_not_reverse_when_current_sensor_reports_off_road
+FAILED tests/test_brain_actions_navigation_regression.py::test_go_to_stops_after_standoff_reverse_is_blocked
+FAILED tests/test_brain_actions_navigation_regression.py::test_place_cannot_use_another_preexisting_ball_as_its_delivery_witness[other-known-ball]
+4 failed, 1 passed in 0.17s

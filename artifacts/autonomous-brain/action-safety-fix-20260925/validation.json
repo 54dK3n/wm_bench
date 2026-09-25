@@ -1,0 +1,1539 @@
+{
+  "version": "autonomous-brain-action-safety-validation/v1",
+  "components": {
+    "actions": "autonomous-brain-actions/v6",
+    "llm": "autonomous-brain-llm/v8"
+  },
+  "source_sha256": {
+    "autonomous_brain/actions.py": "a28e75cb955d30a134f7f3a42b69b00d7fbd686433a742ea35d90c0dbfcc6152",
+    "autonomous_brain/llm.py": "bcddcd5f54da88d2a9460b7856f653a002546f4cca02a2b016b0a6a2dcf11961",
+    "tests/test_brain_actions_navigation_regression.py": "58fc3c7a0cbbafa0ff8280327c3a547c8efaebe9aeb0f30cdbe1b855da3b18da",
+    "tests/test_brain_llm.py": "d31d794d402b2da9e96efd419b9360fa6bd711f6129acdf890139d90ed250faa"
+  },
+  "validation": {
+    "command": "python3 -m pytest tests/test_brain_actions.py tests/test_brain_actions_navigation_regression.py tests/test_brain_navigation.py tests/test_brain_perception.py tests/test_brain_llm.py -q",
+    "exit_code": 0,
+    "passed": 207,
+    "elapsed_s": 0.27,
+    "execution_evidence": "root executed after applying fixes"
+  },
+  "offline_replay": {
+    "schema": "autonomous-brain-offline-llm-replay/v1",
+    "scope": "offline_llm_transcript_replay",
+    "task_acceptance": false,
+    "full_simulation_replayed": false,
+    "live_model_called": false,
+    "source_brain_directory": "artifacts/autonomous-brain/map05-run-05/map-05-run-1/brain",
+    "original_run": {
+      "status": "failed",
+      "reason": "BridgeError: take_exit: NOT_RUNNING",
+      "rounds": 42,
+      "llm_calls": 47
+    },
+    "original_llm_client_sha256": "59e6f6f4420159b73bdba8aa315ae9628863ebbd346132d7f4589481835063dd",
+    "rows": [
+      {
+        "round": 1,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 0
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 0
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 1,
+        "recorded_call_count": 1,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 2,
+            "frame_id": 2,
+            "tick": 81,
+            "holding": false,
+            "before_observation": 1,
+            "final_observation": 3
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 2,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 90
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 90
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 2,
+        "recorded_call_count": 2,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 5,
+            "frame_id": 5,
+            "tick": 198,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_001",
+              "obstacle_002",
+              "obstacle_003"
+            ],
+            "before_observation": 4,
+            "final_observation": 6
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 3,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 3,
+        "recorded_call_count": 3,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 8,
+            "frame_id": 8,
+            "tick": 252,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_004"
+            ],
+            "before_observation": 7,
+            "final_observation": 9
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 4,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 4,
+        "recorded_call_count": 4,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 14,
+            "frame_id": 14,
+            "tick": 480,
+            "holding": false,
+            "new_object_ids": [
+              "storage-zone_005",
+              "obstacle_006"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": 93.1,
+            "before_observation": 10,
+            "final_observation": 15
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 5,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 5,
+        "recorded_call_count": 5,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 17,
+            "frame_id": 17,
+            "tick": 533,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "distractor_001"
+            ],
+            "before_observation": 16,
+            "final_observation": 18
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 6,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 6,
+        "recorded_call_count": 6,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 20,
+            "frame_id": 20,
+            "tick": 585,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_007",
+              "obstacle_008",
+              "obstacle_009",
+              "obstacle_010"
+            ],
+            "before_observation": 19,
+            "final_observation": 21
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 7,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 7,
+        "recorded_call_count": 7,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 26,
+            "frame_id": 26,
+            "tick": 813,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_011",
+              "obstacle_012",
+              "obstacle_013",
+              "obstacle_014"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": 90,
+            "before_observation": 22,
+            "final_observation": 27
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 8,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 8,
+        "recorded_call_count": 8,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 30,
+            "frame_id": 30,
+            "tick": 873,
+            "holding": false,
+            "before_observation": 28,
+            "final_observation": 31
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 9,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 87.7
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 87.7
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 9,
+        "recorded_call_count": 9,
+        "recorded_execution_result": {
+          "success": false,
+          "reason": "road_blocked_returned_to_junction",
+          "evidence": {
+            "after_observation": 39,
+            "frame_id": 39,
+            "tick": 1536,
+            "holding": false,
+            "actuator_result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance",
+              "distanceCm": 13.8,
+              "elapsedTicks": 58
+            },
+            "recovery_result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "distanceCm": 3.2,
+              "elapsedTicks": 21
+            },
+            "recovery_steps": 3,
+            "before_observation": 32,
+            "final_observation": 40
+          }
+        },
+        "execution_failed_after_llm_success": true,
+        "exact_match": true
+      },
+      {
+        "round": 10,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 31.6
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 31.6
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 10,
+        "recorded_call_count": 10,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 42,
+            "frame_id": 42,
+            "tick": 1687,
+            "holding": false,
+            "before_observation": 41,
+            "final_observation": 43
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 11,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 59.5
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 59.5
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 11,
+        "recorded_call_count": 11,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 46,
+            "frame_id": 46,
+            "tick": 1865,
+            "holding": false,
+            "before_observation": 44,
+            "final_observation": 47
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 12,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 70.6
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 70.6
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 12,
+        "recorded_call_count": 12,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 49,
+            "frame_id": 49,
+            "tick": 2026,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_019"
+            ],
+            "before_observation": 48,
+            "final_observation": 50
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 13,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 13,
+        "recorded_call_count": 13,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 56,
+            "frame_id": 56,
+            "tick": 2367,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_020",
+              "target_021",
+              "obstacle_022"
+            ],
+            "reobservation_candidate": {
+              "object_id": "target_021",
+              "category": "red-ball",
+              "observation_index": 53,
+              "frame_id": 53,
+              "heading_deg": -21.8,
+              "road_heading_error_deg": 0,
+              "front_clearance_cm": 76.5
+            },
+            "final_heading_deg": -21.8,
+            "before_observation": 51,
+            "final_observation": 57
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 14,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 14,
+        "recorded_call_count": 14,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 59,
+            "frame_id": 59,
+            "tick": 2402,
+            "holding": false,
+            "before_observation": 58,
+            "final_observation": 60
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 15,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 40.1
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 40.1
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 15,
+        "recorded_call_count": 15,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 63,
+            "frame_id": 63,
+            "tick": 2607,
+            "holding": false,
+            "before_observation": 61,
+            "final_observation": 64
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 16,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 16,
+        "recorded_call_count": 16,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 69,
+            "frame_id": 69,
+            "tick": 2835,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_025"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": 28.8,
+            "before_observation": 65,
+            "final_observation": 70
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 17,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 31.7
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 31.7
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 17,
+        "recorded_call_count": 17,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 72,
+            "frame_id": 72,
+            "tick": 2994,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_026"
+            ],
+            "before_observation": 71,
+            "final_observation": 73
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 18,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 18,
+        "recorded_call_count": 18,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 78,
+            "frame_id": 78,
+            "tick": 3222,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_027"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": 18.3,
+            "before_observation": 74,
+            "final_observation": 79
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 19,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 19,
+        "recorded_call_count": 19,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 81,
+            "frame_id": 81,
+            "tick": 3286,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_028"
+            ],
+            "before_observation": 80,
+            "final_observation": 82
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 20,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 21,
+        "recorded_call_count": 21,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 84,
+            "frame_id": 84,
+            "tick": 3350,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_029"
+            ],
+            "before_observation": 83,
+            "final_observation": 85
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 21,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 22,
+        "recorded_call_count": 22,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 87,
+            "frame_id": 87,
+            "tick": 3420,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_030",
+              "obstacle_031"
+            ],
+            "before_observation": 86,
+            "final_observation": 88
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 22,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 23,
+        "recorded_call_count": 23,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 93,
+            "frame_id": 93,
+            "tick": 3648,
+            "holding": false,
+            "new_object_ids": [
+              "storage-zone_032"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": -56.3,
+            "before_observation": 89,
+            "final_observation": 94
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 23,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 24,
+        "recorded_call_count": 24,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 97,
+            "frame_id": 97,
+            "tick": 3788,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_033",
+              "distractor_034",
+              "distractor_035",
+              "obstacle_036"
+            ],
+            "before_observation": 95,
+            "final_observation": 98
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 24,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 27,
+        "recorded_call_count": 27,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 103,
+            "frame_id": 103,
+            "tick": 4070,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "obstacle_036"
+            ],
+            "before_observation": 99,
+            "final_observation": 104
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 25,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 78.4
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 78.4
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 28,
+        "recorded_call_count": 28,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 106,
+            "frame_id": 106,
+            "tick": 4239,
+            "holding": false,
+            "before_observation": 105,
+            "final_observation": 107
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 26,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": -180
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": -180
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 29,
+        "recorded_call_count": 29,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 109,
+            "frame_id": 109,
+            "tick": 4407,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "obstacle_024"
+            ],
+            "before_observation": 108,
+            "final_observation": 110
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 27,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 12.3
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 12.3
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 30,
+        "recorded_call_count": 30,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 112,
+            "frame_id": 112,
+            "tick": 4528,
+            "holding": false,
+            "before_observation": 111,
+            "final_observation": 113
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 28,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 25.4
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 25.4
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 31,
+        "recorded_call_count": 31,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 115,
+            "frame_id": 115,
+            "tick": 4627,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_038",
+              "obstacle_039"
+            ],
+            "before_observation": 114,
+            "final_observation": 116
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 29,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 32,
+        "recorded_call_count": 32,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 121,
+            "frame_id": 121,
+            "tick": 4855,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_040",
+              "obstacle_041"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": -133,
+            "before_observation": 117,
+            "final_observation": 122
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 30,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 33,
+        "recorded_call_count": 33,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 124,
+            "frame_id": 124,
+            "tick": 4933,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_042",
+              "obstacle_043"
+            ],
+            "before_observation": 123,
+            "final_observation": 125
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 31,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 34,
+        "recorded_call_count": 34,
+        "recorded_execution_result": {
+          "success": false,
+          "reason": "road_blocked_returned_to_junction",
+          "evidence": {
+            "after_observation": 130,
+            "frame_id": 130,
+            "tick": 5266,
+            "holding": false,
+            "actuator_result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance",
+              "distanceCm": 5.6,
+              "elapsedTicks": 18
+            },
+            "recovery_result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "distanceCm": 15,
+              "elapsedTicks": 83
+            },
+            "recovery_steps": 2,
+            "before_observation": 126,
+            "final_observation": 131
+          }
+        },
+        "execution_failed_after_llm_success": true,
+        "exact_match": true
+      },
+      {
+        "round": 32,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 176
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 176
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 35,
+        "recorded_call_count": 35,
+        "recorded_execution_result": {
+          "success": false,
+          "reason": "road_blocked_returned_to_junction",
+          "evidence": {
+            "after_observation": 138,
+            "frame_id": 138,
+            "tick": 5886,
+            "holding": false,
+            "actuator_result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance",
+              "distanceCm": 5.6,
+              "elapsedTicks": 18
+            },
+            "recovery_result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "distanceCm": 15,
+              "elapsedTicks": 83
+            },
+            "recovery_steps": 2,
+            "before_observation": 132,
+            "final_observation": 139
+          }
+        },
+        "execution_failed_after_llm_success": true,
+        "exact_match": true
+      },
+      {
+        "round": 33,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 78.6
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 78.6
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 36,
+        "recorded_call_count": 36,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 142,
+            "frame_id": 142,
+            "tick": 6131,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "distractor_001",
+              "obstacle_022"
+            ],
+            "before_observation": 140,
+            "final_observation": 143
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 34,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 37,
+        "recorded_call_count": 37,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 145,
+            "frame_id": 145,
+            "tick": 6190,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_048"
+            ],
+            "before_observation": 144,
+            "final_observation": 146
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 35,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 38,
+        "recorded_call_count": 38,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 151,
+            "frame_id": 151,
+            "tick": 6418,
+            "holding": false,
+            "new_object_ids": [],
+            "reobservation_candidate": null,
+            "final_heading_deg": 171.5,
+            "before_observation": 147,
+            "final_observation": 152
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 36,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 39,
+        "recorded_call_count": 39,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "next_junction_observed",
+          "evidence": {
+            "after_observation": 154,
+            "frame_id": 154,
+            "tick": 6448,
+            "holding": false,
+            "before_observation": 153,
+            "final_observation": 155
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 37,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 32.2
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 32.2
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 40,
+        "recorded_call_count": 40,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 157,
+            "frame_id": 157,
+            "tick": 6605,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "obstacle_016",
+              "distractor_017"
+            ],
+            "before_observation": 156,
+            "final_observation": 158
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 38,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 81
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 81
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 41,
+        "recorded_call_count": 41,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_confirmed",
+          "evidence": {
+            "after_observation": 160,
+            "frame_id": 160,
+            "tick": 6732,
+            "holding": false,
+            "newly_confirmed_object_ids": [
+              "obstacle_038"
+            ],
+            "before_observation": 159,
+            "final_observation": 161
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 39,
+        "expected_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 42,
+        "recorded_call_count": 42,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "four_views_observed",
+          "evidence": {
+            "after_observation": 166,
+            "frame_id": 166,
+            "tick": 6960,
+            "holding": false,
+            "new_object_ids": [
+              "obstacle_050"
+            ],
+            "reobservation_candidate": null,
+            "final_heading_deg": -89.8,
+            "before_observation": 162,
+            "final_observation": 167
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 40,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 43,
+        "recorded_call_count": 43,
+        "recorded_execution_result": {
+          "success": true,
+          "reason": "new_objects_observed",
+          "evidence": {
+            "after_observation": 169,
+            "frame_id": 169,
+            "tick": 7026,
+            "holding": false,
+            "new_object_ids": [
+              "distractor_051"
+            ],
+            "before_observation": 168,
+            "final_observation": 170
+          }
+        },
+        "execution_failed_after_llm_success": false,
+        "exact_match": true
+      },
+      {
+        "round": 41,
+        "expected_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {}
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 45,
+        "recorded_call_count": 45,
+        "recorded_execution_result": {
+          "success": false,
+          "reason": "road_blocked_returned_to_junction",
+          "evidence": {
+            "after_observation": 175,
+            "frame_id": 175,
+            "tick": 7376,
+            "holding": false,
+            "actuator_result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance",
+              "distanceCm": 2.5,
+              "elapsedTicks": 9
+            },
+            "recovery_result": {
+              "accepted": true,
+              "stoppedBy": "junction",
+              "distanceCm": 11.9,
+              "elapsedTicks": 64
+            },
+            "recovery_steps": 2,
+            "before_observation": 171,
+            "final_observation": 176
+          }
+        },
+        "execution_failed_after_llm_success": true,
+        "exact_match": true
+      },
+      {
+        "round": 42,
+        "expected_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 79.2
+          }
+        },
+        "actual_action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 79.2
+          }
+        },
+        "expected_error": null,
+        "actual_error": null,
+        "replayed_call_count": 47,
+        "recorded_call_count": 47,
+        "recorded_execution_result": {
+          "success": false,
+          "reason": "take_exit: NOT_RUNNING",
+          "error_type": "BridgeError"
+        },
+        "execution_failed_after_llm_success": true,
+        "exact_match": true
+      }
+    ],
+    "recorded_rounds": 42,
+    "replayed_rounds": 42,
+    "recorded_calls": 47,
+    "replayed_calls": 47,
+    "all_records_consumed": true,
+    "full_records_equal_except_mode": true,
+    "mismatched_record_indexes": [],
+    "replay_error": null,
+    "recorded_elapsed_s_replayed": 919.2099277099998,
+    "network_calls": 0,
+    "blocked_network_entry_points": {
+      "urllib.request.urlopen": 0,
+      "urllib.request.OpenerDirector.open": 0,
+      "http.client.HTTPConnection.request": 0,
+      "http.client.HTTPConnection.connect": 0,
+      "http.client.HTTPSConnection.connect": 0,
+      "socket.create_connection": 0,
+      "socket.socket.connect": 0,
+      "socket.socket.connect_ex": 0,
+      "socket.socket.sendto": 0,
+      "socket.getaddrinfo": 0
+    },
+    "environment_access_attempts": 0,
+    "source_sha256": {
+      "rounds": "25255b2a1788cdda2af9470727690eca56f9b8e3887a86640021a72e14c3e7ef",
+      "original_llm": "e61e120863496e07780855357afc6ecafdcee784b5f057a4ca43c08a22ab848f",
+      "original_summary": "4a7445103f7b3d799ce917cde221468f27b33e57fcd6575651f41efff634dd61",
+      "tool": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+      "llm_client": "bcddcd5f54da88d2a9460b7856f653a002546f4cca02a2b016b0a6a2dcf11961"
+    },
+    "source_evidence_unchanged": true,
+    "allPass": true
+  },
+  "evidence_packaging": {
+    "version": 1,
+    "tested": 31,
+    "scope": "synthetic temporary fixtures only; no evidence file packaged",
+    "source_sha256": {
+      "tools/evidence_chunks.py": "91bfc74e4415f0282e7d6bee297f4be8357f169b85b0902b8315e369016f6bd0",
+      "tests/test_evidence_chunks.py": "a33fe8bb1a098a0c9d0b52e038d03fd5b652dab0f836012fd9d81e2bb449d474",
+      "docs/EVIDENCE_CHUNKS.md": "8f115ce85f360e3aad61e62959bb3a32dfc4f13454381db1957d006a93fc9ef0"
+    },
+    "schema": "wm-evidence-chunks"
+  }
+}

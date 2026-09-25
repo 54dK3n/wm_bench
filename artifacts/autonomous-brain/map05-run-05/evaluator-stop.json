@@ -1,0 +1,20 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "reason": "offline_action_regressions_require_fix_before_grasp_validation",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 7376,
+    "errors": []
+  },
+  "evidence": [
+    "artifacts/autonomous-brain/action-safety-fix-20260925/before.json",
+    "artifacts/autonomous-brain/action-safety-fix-20260925/before-tests.txt"
+  ],
+  "note": "Offline defects were reproduced independently; this stop does not claim go_to or place defects were triggered in this live trial.",
+  "timestamp": "2026-09-25T06:41:08.078Z"
+}
