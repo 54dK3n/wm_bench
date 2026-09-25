@@ -86,6 +86,37 @@ class CompactActionResultTests(unittest.TestCase):
         self.assertNotIn("discard", json.dumps(evidence))
         self.assertNotIn("old_position_detections", evidence)
 
+    def test_road_clearance_and_rollback_measurements_survive_next_state_compaction(self):
+        clearance = {"requested_cm": 10.0, "permitted_cm": 3.125,
+                     "heading_error_deg": -42.6, "side": "right",
+                     "side_clearance_cm": 3.9, "front_clearance_cm": 18.2,
+                     "predicted_lateral_cm": 2.115, "reason": "side_clearance_budget"}
+        recovery = {"stoppedBy": "max_distance", "return_error_cm": .03125, "reversed_cm": 3.1}
+        source = {"success": False, "reason": "road_clearance_limited", "evidence": {
+            "road_clearance": {**clearance, "private_geometry": {"x": 999}},
+            "recovery_result": {**recovery, "private_path": [999]},
+            "actuator_result": {"stoppedBy": "front_clearance", "return_error_cm": 999}}}
+        original = copy.deepcopy(source)
+        evidence = self.compact(source)["evidence"]
+        self.assertEqual(evidence["road_clearance"], clearance)
+        self.assertEqual(evidence["recovery_result"], recovery)
+        self.assertEqual(evidence["actuator_result"], {"stoppedBy": "front_clearance"})
+        evidence["road_clearance"]["permitted_cm"] = 999
+        evidence["recovery_result"]["return_error_cm"] = 999
+        self.assertEqual(source, original)
+
+    def test_clearance_and_recovery_optional_values_stay_finite_and_bounded(self):
+        source = {"success": False, "reason": "road_clearance_unavailable", "evidence": {
+            "road_clearance": {"requested_cm": 10, "permitted_cm": float("nan"),
+                               "side_clearance_cm": float("inf"), "side": object(),
+                               "reason": "x" * 5000, "unknown": "discard"},
+            "recovery_result": {"stoppedBy": "collision", "return_error_cm": float("inf"),
+                                "reversed_cm": object(), "unknown": "discard"}}}
+        evidence = self.compact(source)["evidence"]
+        self.assertEqual(evidence["road_clearance"], {"requested_cm": 10, "reason": "x" * 256})
+        self.assertEqual(evidence["recovery_result"], {"stoppedBy": "collision"})
+        self.assertLess(len(json.dumps(evidence, allow_nan=False)), 512)
+
     def test_placement_keeps_small_pixel_witness_but_no_world_geometry(self):
         source = {"success": True, "reason": "ball_observed_in_storage", "evidence": {
             "object_id": "red-1", "holding": False, "candidate_witnesses": 1,
@@ -192,7 +223,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v2")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v3")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)
@@ -202,6 +233,32 @@ class NextModelStateTests(unittest.TestCase):
         self.assertTrue(all("evidence" in entry for entry in snapshot["recent_actions"]))
         snapshot["recent_actions"][-1]["evidence"]["detection"]["distance_cm"] = 99
         self.assertEqual(runtime.recent[-1]["evidence"]["detection"]["distance_cm"], 24.4818)
+
+    def test_coordinate_convention_is_explicit_without_converting_geometry_or_selecting_an_action(self):
+        _, runtime, _, _, _ = self.run_offline(1)
+        row = copy.deepcopy(runtime.perception.objects()[0])
+        row["bearing_deg"] = 27.5
+        runtime.perception.objects = lambda: [row]
+        runtime.snapshot["odometry"]["headingDeg"] = 90.0
+        runtime.snapshot["road"].update(atNode=True, exits=[{"angleDeg": 90.0}, {"angleDeg": -45.0}])
+        expected = {
+            "position_frame": "initial_odometry", "position_axes": {"x": "right", "z": "forward"},
+            "object_bearing_deg": {"frame": "robot_relative", "positive": "right", "negative": "left", "zero": "forward"},
+            "heading_deg": {"frame": "initial_odometry", "positive": "left", "negative": "right", "zero": "initial_forward"},
+            "exit_angle_deg": {"frame": "robot_relative", "positive": "left", "negative": "right", "zero": "forward"},
+            "object_bearing_to_relative_turn": "negate"}
+        state = runtime.state()
+        self.assertEqual(state["coordinate_convention"], expected)
+        self.assertEqual(state["objects"][0]["bearing_deg"], 27.5)
+        self.assertEqual(state["objects"][0]["position_m"], {"x": 0.0, "z": .32})
+        self.assertEqual(state["robot"]["pose"]["heading_deg"], 90.0)
+        self.assertEqual(state["robot"]["exit_angles"], [90.0, -45.0])
+        self.assertNotIn("action", state)
+        self.assertNotIn("selected_exit_angle", state["robot"])
+        self.assertEqual(row["bearing_deg"], 27.5)
+        state["coordinate_convention"]["position_axes"]["x"] = "changed"
+        state["coordinate_convention"]["object_bearing_deg"]["positive"] = "changed"
+        self.assertEqual(runtime.state()["coordinate_convention"], expected)
 
 
 if __name__ == "__main__":

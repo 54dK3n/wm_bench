@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v2"
+RUNTIME_VERSION = "autonomous-brain-runtime/v3"
 
 
 def dump(path, value):
@@ -61,7 +61,13 @@ def compact_action_result(number, action, result, after_observation):
     detection(raw, evidence)
     for name in ("actuator_result", "recovery_result"):
         if isinstance(raw.get(name), dict):
-            evidence[name] = fields(raw[name], ("stoppedBy",))
+            names = (("stoppedBy", "return_error_cm", "reversed_cm")
+                     if name == "recovery_result" else ("stoppedBy",))
+            evidence[name] = fields(raw[name], names)
+    if isinstance(raw.get("road_clearance"), dict):
+        evidence["road_clearance"] = fields(raw["road_clearance"], (
+            "requested_cm", "permitted_cm", "heading_error_deg", "side",
+            "side_clearance_cm", "front_clearance_cm", "predicted_lateral_cm", "reason"))
     if isinstance(raw.get("attempts"), list):
         evidence["attempts"] = []
         for attempt in raw["attempts"][-3:]:
@@ -139,6 +145,16 @@ class Runtime:
         odo, road = self.snapshot["odometry"], self.snapshot["road"]
         return {"task": self.config["task"], "round": self.round,
                 "simulation_seconds": self.bridge.seconds,
+                "coordinate_convention": {
+                    "position_frame": "initial_odometry",
+                    "position_axes": {"x": "right", "z": "forward"},
+                    "object_bearing_deg": {"frame": "robot_relative", "positive": "right",
+                                           "negative": "left", "zero": "forward"},
+                    "heading_deg": {"frame": "initial_odometry", "positive": "left",
+                                    "negative": "right", "zero": "initial_forward"},
+                    "exit_angle_deg": {"frame": "robot_relative", "positive": "left",
+                                       "negative": "right", "zero": "forward"},
+                    "object_bearing_to_relative_turn": "negate"},
                 "objects": objects,
                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
                                     "heading_deg": odo["headingDeg"]},

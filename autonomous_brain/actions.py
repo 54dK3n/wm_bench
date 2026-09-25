@@ -7,7 +7,36 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v8"
+VERSION = "autonomous-brain-actions/v9"
+
+
+def road_translation_limit(road, method, requested_cm):
+    """Bound a straight move using the current local tangent and clearances.
+
+    Sensors round centimetres and degrees to one decimal. Reserve 0.1 cm
+    and include the angular rounding bound; this is a motion constraint,
+    not an alteration of any perception or success threshold.
+    """
+    names = ("headingErrorDeg", "leftClearanceCm", "rightClearanceCm")
+    if not road.get("onRoad") or not all(
+            type(road.get(k)) in (int, float) and math.isfinite(road[k]) for k in names):
+        return 0, {"reason": "local_road_geometry_unavailable"}
+    error = road["headingErrorDeg"]
+    direction = 1 if method == "forward" else -1
+    lateral = direction * math.sin(math.radians(error))
+    side = "rightClearanceCm" if lateral >= 0 else "leftClearanceCm"
+    angular_bound = max(abs(math.sin(math.radians(error + d))) for d in (-.05, .05))
+    limit = max(0, road[side] - .1) / angular_bound if angular_bound > 1e-9 else math.inf
+    front = road.get("frontClearanceCm")
+    if method == "forward":
+        if type(front) not in (int, float) or not math.isfinite(front):
+            return 0, {"reason": "front_clearance_unavailable"}
+        limit = min(limit, max(0, front - .1))
+    permitted = min(requested_cm, limit)
+    return permitted, {"requested_cm": requested_cm, "permitted_cm": permitted,
+                       "heading_error_deg": error, "side": side,
+                       "side_clearance_cm": road[side], "front_clearance_cm": front,
+                       "predicted_lateral_cm": lateral * permitted}
 
 
 def ball_inside_region(ball, region):
@@ -248,13 +277,44 @@ class Actions:
                 self.turn(-bearing)
                 continue
             method = "backward" if d < 25 else "forward"
-            moved = self.move(method, {"distanceCm": min(10, abs(d - 32)), "speed": 30})
+            length, clearance = road_translation_limit(self.s["road"], method, min(10, abs(d - 32)))
+            if length < .1:
+                return self.result(False, "visual_standoff_requires_road_reposition", object_id=object_id,
+                                   detection=observed, road_clearance=clearance)
+            before_odo = dict(self.s["odometry"])
+            moved = self.move(method, {"distanceCm": length, "speed": 30})
+            if not self.s["road"]["onRoad"]:
+                recovery = self.reverse_last_straight_step(method, length, before_odo)
+                return self.result(False, "visual_standoff_left_road", object_id=object_id,
+                                   actuator_result=moved, detection=self.visible(object_id),
+                                   road_clearance=clearance, recovery_result=recovery)
             if not self.s["road"]["onRoad"] or moved.get("stoppedBy") in {
                     "collision", "front_clearance", "off_road", "wrong_way"}:
                 return self.result(False, "visual_standoff_blocked", object_id=object_id,
                                    actuator_result=moved, detection=self.visible(object_id))
         return self.result(False, "visual_standoff_did_not_converge", object_id=object_id,
                            detection=observed)
+
+    def reverse_last_straight_step(self, method, commanded_cm, before_odo):
+        """Undo only the immediately measured, bounded straight translation.
+
+        Curved road recovery still uses follow_road. No assumed reverse route,
+        earlier turn, or fixed-distance blind retreat is replayed here.
+        """
+        after = self.s["odometry"]
+        start, end = position(before_odo), position(after)
+        measured = distance(start, end) * 100
+        expected = before_odo["headingDeg"] + (180 if method == "backward" else 0)
+        if (not .1 <= measured <= min(10, commanded_cm) + .15
+                or abs(wrap(after["headingDeg"] - before_odo["headingDeg"])) > .1
+                or abs(wrap(heading_to(start, end) - expected)) > 2):
+            return {"stoppedBy": "last_translation_not_reversible_from_odometry"}
+        inverse = "backward" if method == "forward" else "forward"
+        result = self.move(inverse, {"distanceCm": measured, "speed": 20})
+        gap = distance(start, position(self.s["odometry"])) * 100
+        return {"stoppedBy": "recovered_observed_road" if self.s["road"]["onRoad"] and gap <= .2
+                else "road_recovery_not_verified", "return_error_cm": gap,
+                "reversed_cm": measured, "actuator_result": result}
 
     def go_to(self, object_id):
         target = self.r.perception.confirmed(object_id)
@@ -263,12 +323,20 @@ class Actions:
         goal = (target["position_m"]["x"], target["position_m"]["z"])
         route, waypoint_index, previous_position = None, 0, None
         visited_states = set()
+        reacquired_from = set()
         for step in range(45):
             if not self.s["road"]["onRoad"]:
                 return self.result(False, "not_on_observed_road")
             current = self.r.perception.get_object(object_id) or target
             remaining, bearing = self.object_geometry(current)
             observed = self.visible(object_id)
+            # A nearby remembered point can be behind the camera. Turning in
+            # place is observable and does not require inventing a road edge.
+            current_pose = position(self.s["odometry"])
+            if remaining <= 65 and observed is None and abs(bearing) >= 1 and current_pose not in reacquired_from:
+                reacquired_from.add(current_pose)
+                self.turn(-bearing)
+                continue
             if (remaining <= 65 and observed is not None
                     and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])):
                 return self.visual_standoff(object_id)
@@ -282,7 +350,10 @@ class Actions:
                                    detection=observed)
             if remaining < 25:
                 self.turn(-bearing)
-                result = self.move("backward", {"distanceCm": max(0.1, 32 - remaining), "speed": 30})
+                length, clearance = road_translation_limit(self.s["road"], "backward", min(10, 32 - remaining))
+                if length < .1:
+                    return self.result(False, "final_approach_requires_road_reposition", road_clearance=clearance)
+                result = self.move("backward", {"distanceCm": length, "speed": 30})
                 if not self.s["road"]["onRoad"] or result.get("stoppedBy") in {
                         "collision", "front_clearance", "off_road", "wrong_way"}:
                     return self.result(False, "route_blocked", actuator_result=result)
@@ -343,6 +414,9 @@ class Actions:
                 step_cm = min(10, remaining - 33)
                 if step_cm <= 0:
                     return self.result(False, "standoff_geometry_inconsistent")
+                step_cm, clearance = road_translation_limit(self.s["road"], "forward", step_cm)
+                if step_cm < .1:
+                    return self.result(False, "final_approach_requires_road_reposition", road_clearance=clearance)
                 result = self.move("forward", {"distanceCm": step_cm, "speed": 30})
             else:
                 if abs(relative) > 95:

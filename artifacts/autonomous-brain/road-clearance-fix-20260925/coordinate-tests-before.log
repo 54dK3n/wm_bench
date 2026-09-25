@@ -1,0 +1,32 @@
+F........                                                                [100%]
+=================================== FAILURES ===================================
+_ test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with_model _
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-104/test_live_prompt_explains_oppo0')
+state = {'junction_history': [], 'objects': [{'bearing_deg': -47.3, 'category': 'storage-zone', 'distance_cm': 47.2, 'id': 'ne...lding': True}, 'reason': 'known_route_exhausted_needs_exploration', 'round': 1, ...}], 'robot': {'holding': True}, ...}
+
+    def test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with_model(tmp_path, state):
+        state["robot"]["holding"] = True
+        state["objects"] = [
+            {"id": "near", "category": "storage-zone", "status": "CONFIRMED",
+             "distance_cm": 47.2, "bearing_deg": -47.3},
+            {"id": "far", "category": "storage-zone", "status": "CONFIRMED",
+             "distance_cm": 68.4, "bearing_deg": 117.6},
+        ]
+        state["recent_actions"] = [{"round": 1, "action": {"action": "go_to", "params": {"object_id": "far"}},
+                                    "success": False, "reason": "known_route_exhausted_needs_exploration",
+                                    "evidence": {"after_observation": 8, "holding": True}}]
+        # Prompt guidance cannot silently rewrite a valid model-selected object.
+        selected = {"action": "go_to", "params": {"object_id": "far"}}
+        with patch("urllib.request.urlopen", return_value=response(json.dumps(selected))) as send:
+            with LLMClient(tmp_path / "calls.jsonl") as client:
+                assert client.decide(state) == selected
+        request = json.loads(send.call_args.args[0].data)
+        prompt = request["messages"][0]["content"]
+>       assert "bearing_deg" in prompt and "右为正、左为负" in prompt
+E       assert ('bearing_deg' in '你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。\n只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代...查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。\n状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。')
+
+tests/test_brain_llm.py:98: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_llm.py::test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with_model
+1 failed, 8 passed, 154 deselected in 0.10s

@@ -1,0 +1,95 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_run07_visual_step_does_not_cross_observed_left_margin __________
+
+    def test_run07_visual_step_does_not_cross_observed_left_margin():
+        runtime, moves, camera = visual_runtime(40.653087623, 0)
+        road = runtime.snapshot["road"]
+        road.update(headingErrorDeg=-44.9, leftClearanceCm=4, rightClearanceCm=14.4)
+        runtime.snapshot["odometry"]["headingDeg"] = -173.8
+        original = runtime.bridge.call
+    
+        def call(method, params):
+            if method == "forward":
+                assert params["distanceCm"] * abs(math.sin(math.radians(44.9))) < 4
+            return original(method, params)
+    
+        runtime.bridge.call = call
+>       outcome = module.Actions(runtime).go_to("zone")
+
+tests/test_brain_road_clearance.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+historical-actions-v8.py:274: in go_to
+    ???
+historical-actions-v8.py:251: in visual_standoff
+    ???
+historical-actions-v8.py:47: in move
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+method = 'forward', params = {'distanceCm': 8.653087622999998, 'speed': 30}
+
+    def call(method, params):
+        if method == "forward":
+>           assert params["distanceCm"] * abs(math.sin(math.radians(44.9))) < 4
+E           assert (8.653087622999998 * 0.705871570678681) < 4
+E            +  where 0.705871570678681 = abs(0.705871570678681)
+E            +    where 0.705871570678681 = <built-in function sin>(0.783652834145454)
+E            +      where <built-in function sin> = math.sin
+E            +      and   0.783652834145454 = <built-in function radians>(44.9)
+E            +        where <built-in function radians> = math.radians
+
+tests/test_brain_road_clearance.py:19: AssertionError
+_____ test_near_target_behind_camera_is_reacquired_before_route_exhaustion _____
+
+    def test_near_target_behind_camera_is_reacquired_before_route_exhaustion():
+        runtime, moves, camera = visual_runtime(55, 139.6)
+        target = runtime.perception.get_object("zone")
+        angle = math.radians(139.6)
+        target["position_m"] = {"x": .55 * math.sin(angle), "z": .55 * math.cos(angle)}
+        runtime.snapshot["perception"]["detections"] = []
+        original = runtime.bridge.call
+    
+        def call(method, params):
+            result = original(method, params)
+            if method == "turn":
+                runtime.snapshot["perception"]["detections"] = [camera]
+            return result
+    
+        runtime.bridge.call = call
+        result = module.Actions(runtime).go_to("zone")
+>       assert result["success"]
+E       assert False
+
+tests/test_brain_road_clearance.py:74: AssertionError
+_______ test_curvature_departure_reverses_only_last_measured_short_step ________
+
+    def test_curvature_departure_reverses_only_last_measured_short_step():
+        runtime, moves, camera = visual_runtime(45)
+        original = runtime.bridge.call
+    
+        def call(method, params):
+            result = original(method, params)
+            if method == "forward":
+                runtime.snapshot["road"]["onRoad"] = False
+            elif method == "backward":
+                runtime.snapshot["road"]["onRoad"] = True
+            return result
+    
+        runtime.bridge.call = call
+        result = module.Actions(runtime).go_to("zone")
+        assert not result["success"]
+>       assert result["reason"] == "visual_standoff_left_road"
+E       AssertionError: assert 'visual_standoff_blocked' == 'visual_standoff_left_road'
+E         
+E         - visual_standoff_left_road
+E         ?                   ------
+E         + visual_standoff_blocked
+E         ?                 + +++
+
+tests/test_brain_road_clearance.py:95: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_road_clearance.py::test_run07_visual_step_does_not_cross_observed_left_margin
+FAILED tests/test_brain_road_clearance.py::test_near_target_behind_camera_is_reacquired_before_route_exhaustion
+FAILED tests/test_brain_road_clearance.py::test_curvature_departure_reverses_only_last_measured_short_step
+3 failed in 0.03s

@@ -14,7 +14,9 @@ def visual_runtime(range_cm, bearing=0, *, blocked=False, lose_on_turn=False):
     snapshot = {"observation_index": 1, "observation": {"frameId": 1},
                 "odometry": {"rightCm": 0, "forwardCm": 0, "headingDeg": 0, "tick": 0},
                 "holding": {"holding": True},
-                "road": {"onRoad": True, "atNode": False, "exits": []},
+                "road": {"onRoad": True, "atNode": False, "exits": [],
+                         "headingErrorDeg": 0, "leftClearanceCm": 20,
+                         "rightClearanceCm": 20, "frontClearanceCm": 100},
                 "perception": {"detections": [camera]}}
     moves = []
     runtime = SimpleNamespace(snapshot=snapshot, round=1,

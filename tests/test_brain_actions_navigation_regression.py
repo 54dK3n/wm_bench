@@ -48,6 +48,7 @@ def fake_runtime(objects, *, on_road=True, at_node=False, exits=(), route=(),
         "observation_index": 1, "observation": {"frameId": 1},
         "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0},
         "road": {"onRoad": on_road, "atNode": at_node,
+                 "headingErrorDeg": 0, "leftClearanceCm": 20, "rightClearanceCm": 20,
                  "exits": [{"angleDeg": value} for value in exits], "frontClearanceCm": 100},
         "holding": {"holding": holding},
         "perception": {"detections": copy.deepcopy(list(detections))},
@@ -105,7 +106,7 @@ def test_go_to_stops_after_standoff_reverse_is_blocked():
     runtime = fake_runtime([target()])
     result = Actions(runtime).go_to("red-1")
     assert result["success"] is False
-    assert runtime.motions == [("backward", {"distanceCm": 12, "speed": 30})], (
+    assert runtime.motions == [("backward", {"distanceCm": 10, "speed": 30})], (
         "A blocked reverse must return to the decision loop instead of repeating the same motion")
 
 

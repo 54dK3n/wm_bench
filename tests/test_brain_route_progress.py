@@ -46,6 +46,7 @@ class SensorRuntime:
     def set_pose(self, x, z, heading, *, exits=()):
         self.snapshot["odometry"].update(rightCm=x * 100, forwardCm=z * 100, headingDeg=heading)
         self.snapshot["road"] = {"onRoad": True, "atNode": bool(exits),
+                                 "headingErrorDeg": 0, "leftClearanceCm": 20, "rightClearanceCm": 20,
                                  "exits": [{"angleDeg": a} for a in exits],
                                  "frontClearanceCm": 200}
 
@@ -118,10 +119,11 @@ def test_exact_same_pose_and_waypoint_returns_without_45_duplicate_commands():
     assert runtime.motions == [("follow_road", {"distanceCm": 20, "speed": 50})]
 
 
-def test_near_angled_junction_stops_after_one_no_motion_follow_road():
+def test_near_angled_junction_reacquires_then_stops_after_one_no_motion_step():
     # Run06 round44 reported 49.13cm / 42.60deg: neither the >60cm exit
     # branch nor the <=40deg final-approach branch applies. The junction
-    # follower reports no movement, so reissuing it cannot make progress.
+    # After reacquiring by turning, a no-motion actuator result must still
+    # stop instead of issuing the previous 45 identical movement requests.
     goal = (.4913 * math.sin(math.radians(42.6)), .4913 * math.cos(math.radians(42.6)))
     runtime = SensorRuntime(goal=goal, exits=(-90, 0, 90), route=((0, 0), (0, 1)),
                             actuator=lambda *_: {"accepted": True, "distanceCm": 0,
@@ -129,8 +131,7 @@ def test_near_angled_junction_stops_after_one_no_motion_follow_road():
     result = Actions(runtime).go_to("zone-1")
     assert result["success"] is False
     assert result["reason"] == "route_no_progress"
-    assert len(runtime.motions) == 1
-    assert runtime.motions[0][0] == "follow_road"
+    assert [method for method, _ in runtime.motions] == ["turn", "forward"]
 
 
 def test_take_exit_can_overshoot_a_waypoint_and_continue_to_fresh_standoff():

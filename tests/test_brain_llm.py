@@ -46,14 +46,16 @@ def response(content, *, stream=True, **extra):
 
 def legacy_record(saved, version):
     saved["version"] = version
-    if version != "autonomous-brain-llm/v6":
+    number = int(version.rsplit("v", 1)[1])
+    if number < 6:
         saved["request"].pop("stream", None)
     saved["request_sha256"] = hashlib.sha256(json.dumps(saved["request"],
         ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
-    if version not in {"autonomous-brain-llm/v5", "autonomous-brain-llm/v6"}:
+    if number < 5:
         saved.pop("transport_timeout_s", None)
-    for key in ("transport_retry_limit", "transport_retry_index", "transport_retry_delay_s"):
-        saved.pop(key, None)
+    if number < 7:
+        for key in ("transport_retry_limit", "transport_retry_index", "transport_retry_delay_s"):
+            saved.pop(key, None)
     return saved
 
 
@@ -73,6 +75,62 @@ def test_replay_restores_recorded_prompt_after_live_prompt_revision(tmp_path, st
             assert replay.decide(state) == expected
             replay.assert_replay_consumed()
     assert records(tmp_path / "replay.jsonl")[0]["request"] == records(source)[0]["request"]
+
+
+def test_live_prompt_explains_opposite_angle_signs_and_storage_choice_stays_with_model(tmp_path, state):
+    state["robot"]["holding"] = True
+    state["objects"] = [
+        {"id": "near", "category": "storage-zone", "status": "CONFIRMED",
+         "distance_cm": 47.2, "bearing_deg": -47.3},
+        {"id": "far", "category": "storage-zone", "status": "CONFIRMED",
+         "distance_cm": 68.4, "bearing_deg": 117.6},
+    ]
+    state["recent_actions"] = [{"round": 1, "action": {"action": "go_to", "params": {"object_id": "far"}},
+                                "success": False, "reason": "known_route_exhausted_needs_exploration",
+                                "evidence": {"after_observation": 8, "holding": True}}]
+    # Prompt guidance cannot silently rewrite a valid model-selected object.
+    selected = {"action": "go_to", "params": {"object_id": "far"}}
+    with patch("urllib.request.urlopen", return_value=response(json.dumps(selected))) as send:
+        with LLMClient(tmp_path / "calls.jsonl") as client:
+            assert client.decide(state) == selected
+    request = json.loads(send.call_args.args[0].data)
+    prompt = request["messages"][0]["content"]
+    assert "bearing_deg" in prompt and "右为正、左为负" in prompt
+    assert "heading_deg" in prompt and "左为正、右为负" in prompt
+    assert "-bearing_deg" in prompt
+    assert "distance_cm" in prompt and "最近的 CONFIRMED 存放区" in prompt
+    assert "known_route_exhausted_needs_exploration" in prompt
+    assert "没有换位或新增道路/视觉证据" in prompt
+    assert json.loads(request["messages"][1]["content"]) == state
+
+
+@pytest.mark.parametrize("number", range(1, 9))
+def test_legacy_repair_replay_keeps_original_prompt_and_state_without_convention(tmp_path, state, number):
+    legacy_prompt = f"历史提示/v{number}：只按该轮记录的对象和出口选择一个动作。"
+    path = tmp_path / "legacy-repair.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[
+            response("invalid JSON", stream=False),
+            response('{"action":"look_around","params":{}}', stream=False)]):
+        with LLMClient(path, stream=False) as live:
+            live.system_prompt = legacy_prompt
+            expected = live.decide(state)
+    original = [legacy_record(row, f"autonomous-brain-llm/v{number}") for row in records(path)]
+    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in original))
+    assert "coordinate_convention" not in state
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("replay slept")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            assert replay.decide(state) == expected
+            replay.assert_replay_consumed()
+            assert replay.call_count == 2
+    replayed = records(tmp_path / "replay.jsonl")
+    assert [{k: v for k, v in row.items() if k != "mode"} for row in replayed] == [
+        {k: v for k, v in row.items() if k != "mode"} for row in original]
+    assert [row["attempt"] for row in replayed] == [1, 2]
+    assert all(row["request"]["messages"][0]["content"] == legacy_prompt for row in replayed)
+    assert all("coordinate_convention" not in json.loads(row["request"]["messages"][1]["content"])
+               for row in replayed)
 
 
 def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, state):
@@ -99,7 +157,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v8"
+            assert saved["version"] == "autonomous-brain-llm/v9"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
@@ -757,7 +815,8 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
 
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
                                      "autonomous-brain-llm/v3", "autonomous-brain-llm/v4",
-                                     "autonomous-brain-llm/v5", "autonomous-brain-llm/v6"])
+                                     "autonomous-brain-llm/v5", "autonomous-brain-llm/v6",
+                                     "autonomous-brain-llm/v7", "autonomous-brain-llm/v8"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"

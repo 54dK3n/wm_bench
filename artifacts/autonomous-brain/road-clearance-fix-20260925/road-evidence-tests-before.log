@@ -1,0 +1,42 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ CompactActionResultTests.test_clearance_and_recovery_optional_values_stay_finite_and_bounded _
+
+self = <test_brain_state_evidence.CompactActionResultTests testMethod=test_clearance_and_recovery_optional_values_stay_finite_and_bounded>
+
+    def test_clearance_and_recovery_optional_values_stay_finite_and_bounded(self):
+        source = {"success": False, "reason": "road_clearance_unavailable", "evidence": {
+            "road_clearance": {"requested_cm": 10, "permitted_cm": float("nan"),
+                               "side_clearance_cm": float("inf"), "side": object(),
+                               "reason": "x" * 5000, "unknown": "discard"},
+            "recovery_result": {"stoppedBy": "collision", "return_error_cm": float("inf"),
+                                "reversed_cm": object(), "unknown": "discard"}}}
+        evidence = self.compact(source)["evidence"]
+>       self.assertEqual(evidence["road_clearance"], {"requested_cm": 10, "reason": "x" * 256})
+E       KeyError: 'road_clearance'
+
+tests/test_brain_state_evidence.py:116: KeyError
+_ CompactActionResultTests.test_road_clearance_and_rollback_measurements_survive_next_state_compaction _
+
+self = <test_brain_state_evidence.CompactActionResultTests testMethod=test_road_clearance_and_rollback_measurements_survive_next_state_compaction>
+
+    def test_road_clearance_and_rollback_measurements_survive_next_state_compaction(self):
+        clearance = {"requested_cm": 10.0, "permitted_cm": 3.125,
+                     "heading_error_deg": -42.6, "side": "right",
+                     "side_clearance_cm": 3.9, "front_clearance_cm": 18.2,
+                     "predicted_lateral_cm": 2.115, "reason": "side_clearance_budget"}
+        recovery = {"stoppedBy": "max_distance", "return_error_cm": .03125, "reversed_cm": 3.1}
+        source = {"success": False, "reason": "road_clearance_limited", "evidence": {
+            "road_clearance": {**clearance, "private_geometry": {"x": 999}},
+            "recovery_result": {**recovery, "private_path": [999]},
+            "actuator_result": {"stoppedBy": "front_clearance", "return_error_cm": 999}}}
+        original = copy.deepcopy(source)
+        evidence = self.compact(source)["evidence"]
+>       self.assertEqual(evidence["road_clearance"], clearance)
+E       KeyError: 'road_clearance'
+
+tests/test_brain_state_evidence.py:101: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_brain_state_evidence.py::CompactActionResultTests::test_clearance_and_recovery_optional_values_stay_finite_and_bounded
+FAILED tests/test_brain_state_evidence.py::CompactActionResultTests::test_road_clearance_and_rollback_measurements_survive_next_state_compaction
+2 failed, 10 deselected in 0.04s

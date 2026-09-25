@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from autonomous_brain.llm import LLMClient, LLMOutputError, LLMRequestError
+from autonomous_brain.llm import LLMClient, LLMOutputError, LLMRequestError, VERSION
 
 
 FAKE_KEY = "local-stream-test-key-not-a-real-credential"
@@ -127,7 +127,7 @@ def test_real_http_sse_aggregates_deltas_usage_and_done(tmp_path, state):
             assert client.call_count == client.decision_count == len(requests) == 1
             saved = records(log_path)[0]  # The complete record is already flushed.
             assert_stream_request(requests[0])
-            assert saved["version"] == "autonomous-brain-llm/v8"
+            assert saved["version"] == VERSION
             assert saved["request"] == requests[0]["body"]
             assert saved["response_body"].rstrip() == payload.decode("utf-8").rstrip()
             assert '"choices":[],"usage":' in saved["response_body"]

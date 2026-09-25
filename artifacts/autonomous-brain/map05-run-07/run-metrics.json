@@ -1,0 +1,247 @@
+{
+  "schema": "autonomous-brain-run-metrics/v1",
+  "run": "map05-run-07",
+  "source_commit": "2e76b6f5de1789ba51d90f2ce5f9501e6307d64c",
+  "success": false,
+  "metrics": {
+    "rounds": 54,
+    "llm_calls": 57,
+    "llm_total_elapsed_s": 1211.691688041001,
+    "simulation_seconds": 249.92,
+    "observations": 266,
+    "failed_actions": 12,
+    "bridge_calls": 1225,
+    "nonwhitelist_brain_requests": 0
+  },
+  "motion_rows": 159,
+  "action_counts": {
+    "explore": 38,
+    "look_around": 9,
+    "go_to": 6,
+    "pick": 1
+  },
+  "motion_method_counts": {
+    "take_exit": 35,
+    "turn": 49,
+    "follow_road": 64,
+    "forward": 8,
+    "grab": 2,
+    "backward": 1
+  },
+  "transport_errors": [
+    {
+      "call_index": 35,
+      "decision_index": 35,
+      "transport_error": {
+        "type": "URLError"
+      }
+    },
+    {
+      "call_index": 42,
+      "decision_index": 41,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 54,
+      "decision_index": 52,
+      "transport_error": {
+        "type": "URLError"
+      }
+    }
+  ],
+  "recovered_transport_error_count": 3,
+  "terminal_cause": "evaluator_stop_then_bridge_NOT_RUNNING",
+  "terminal_model_request_failure": false,
+  "brain_reason": "BridgeError: turn: NOT_RUNNING",
+  "first_sensor_holding": {
+    "observation_index": 92,
+    "round": 20,
+    "simulation_seconds": 73.22
+  },
+  "first_offroad_observation": {
+    "observation_index": 250,
+    "round": 48,
+    "simulation_seconds": 245.36
+  },
+  "offroad_observation_count": 17,
+  "final_holding": true,
+  "final_held_object_id": "target_023",
+  "place_action_count": 0,
+  "release_motion_count": 0,
+  "valid_deliveries": 0,
+  "timeline": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_023"
+      ],
+      "first_raw_seen": {
+        "observation_index": 56,
+        "round": 14,
+        "frame_id": "56",
+        "tick": 2211,
+        "simulation_seconds": 44.22,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 440,
+          "y": 192,
+          "w": 32,
+          "h": 20
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 455.4398296560579,
+              "v": 201.83986135282905,
+              "depth_world": 7.562030960906971
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": {
+        "observation_index": 75,
+        "round": 18,
+        "frame_id": "75",
+        "tick": 3079,
+        "simulation_seconds": 61.58,
+        "track_id": "target_023"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 56,
+        "round": 14,
+        "frame_id": "56",
+        "tick": 2211,
+        "simulation_seconds": 44.22,
+        "track_id": "target_023",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": {
+        "event_index": 2,
+        "seq": 1215,
+        "type": "package_grabbed",
+        "tick": 3647,
+        "simulation_seconds": 72.94,
+        "package_id": "guangyang-target-1"
+      },
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_023",
+          "category": "red-ball",
+          "first_seen_s": 44.22,
+          "first_seen_round": 14,
+          "confirmed_s": 61.58,
+          "picked_s": 76.42,
+          "delivered_s": null,
+          "confirmed_round": 18,
+          "original_position_m": {
+            "x": -1.552686348926743,
+            "z": 1.0683314725842294
+          },
+          "accepted_hit_poses": [
+            {
+              "frame_id": "56",
+              "simulation_time_s": 44.22,
+              "x_m": -1.929,
+              "z_m": 0.131,
+              "heading_deg": -2.9
+            },
+            {
+              "frame_id": "62",
+              "simulation_time_s": 49.92,
+              "x_m": -1.91,
+              "z_m": 0.28800000000000003,
+              "heading_deg": -21.8
+            },
+            {
+              "frame_id": "75",
+              "simulation_time_s": 61.58,
+              "x_m": -2.206,
+              "z_m": 1.218,
+              "heading_deg": -71.7
+            },
+            {
+              "frame_id": "82",
+              "simulation_time_s": 67.32,
+              "x_m": -2.0580000000000003,
+              "z_m": 1.124,
+              "heading_deg": -98.6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [],
+      "first_raw_seen": {
+        "observation_index": 91,
+        "round": 20,
+        "frame_id": "91",
+        "tick": 3623,
+        "simulation_seconds": 72.46,
+        "detection_index": 1,
+        "category": "red-ball",
+        "bbox": {
+          "x": 198,
+          "y": 190,
+          "w": 12,
+          "h": 14
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-2",
+            "projection": {
+              "u": 203.14097218934774,
+              "v": 196.49055608935873,
+              "depth_world": 10.274667875234508
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-2"
+      },
+      "first_confirmed": null,
+      "first_logged_wm_presence": null,
+      "first_grabbed_truth_event": null,
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": [],
+      "brain_memory_timeline": []
+    }
+  ],
+  "position_error": {
+    "count": 17,
+    "mean_cm": 5.682208837836165,
+    "rmse_cm": 5.723675386117295,
+    "max_cm": 6.504194803011408
+  },
+  "unmatched_confirmed_count": 1,
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 54,
+    "replayed_calls": 57,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/summary.json": "e30340d6e756c154e1c66432ede9342e8d9dccac251820daec9aa7aaf51a7ea7",
+    "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/rounds.jsonl": "b08a3428737d2626e4b0ade46431572d2baf1495073eda31da71ec3319220faa",
+    "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/motions.jsonl": "2f1c56ec7a709d85c2a4427bed87b0bdc4836bf8711ab0cb8b1e8af2ad662b74",
+    "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/observations.jsonl": "e5d8c0013baba299f845670e5b8c20c3d2e7b34a3c5336df86d8536efffd77d3",
+    "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/llm.jsonl": "c61a6a55fcc1c6e55343c97e825ebf85a12739d996db1665ca305de7d441c690",
+    "artifacts/autonomous-brain/map05-run-07/report/evaluation.json": "5a3b146e15868160cb42c92212801f0fbb11977e900047ae53c563f32db564d8",
+    "artifacts/autonomous-brain/map05-run-07/evaluator-stop.json": "bc2ba8e473e905ecb9268160079a58f2bab62faa1710c7217ace94eb01d6b390",
+    "artifacts/autonomous-brain/map05-run-07/llm-replay/replay-checks.json": "39363a8e0e5b25027fd9bdefdff240bded732b2eb715d61b26aefbc7c5581f60"
+  }
+}

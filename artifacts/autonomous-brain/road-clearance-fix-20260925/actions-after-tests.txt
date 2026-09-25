@@ -1,0 +1,82 @@
+....................F......F...FF.                                       [100%]
+=================================== FAILURES ===================================
+______________ test_go_to_stops_after_standoff_reverse_is_blocked ______________
+
+    def test_go_to_stops_after_standoff_reverse_is_blocked():
+        runtime = fake_runtime([target()])
+        result = Actions(runtime).go_to("red-1")
+        assert result["success"] is False
+>       assert runtime.motions == [("backward", {"distanceCm": 12, "speed": 30})], (
+            "A blocked reverse must return to the decision loop instead of repeating the same motion")
+E       AssertionError: A blocked reverse must return to the decision loop instead of repeating the same motion
+E       assert [] == [('backward',...'speed': 30})]
+E         
+E         Right contains one more item: ('backward', {'distanceCm': 12, 'speed': 30})
+E         Use -v to get more diff
+
+tests/test_brain_actions_navigation_regression.py:108: AssertionError
+_______ test_near_angled_junction_stops_after_one_no_motion_follow_road ________
+
+    def test_near_angled_junction_stops_after_one_no_motion_follow_road():
+        # Run06 round44 reported 49.13cm / 42.60deg: neither the >60cm exit
+        # branch nor the <=40deg final-approach branch applies. The junction
+        # follower reports no movement, so reissuing it cannot make progress.
+        goal = (.4913 * math.sin(math.radians(42.6)), .4913 * math.cos(math.radians(42.6)))
+        runtime = SensorRuntime(goal=goal, exits=(-90, 0, 90), route=((0, 0), (0, 1)),
+                                actuator=lambda *_: {"accepted": True, "distanceCm": 0,
+                                                     "stoppedBy": "junction"})
+        result = Actions(runtime).go_to("zone-1")
+        assert result["success"] is False
+>       assert result["reason"] == "route_no_progress"
+E       AssertionError: assert 'final_approa...ad_reposition' == 'route_no_progress'
+E         
+E         - route_no_progress
+E         + final_approach_requires_road_reposition
+
+tests/test_brain_route_progress.py:131: AssertionError
+____________ test_empty_route_preserves_legal_close_approach[0.45] _____________
+
+distance_m = 0.45
+
+    @pytest.mark.parametrize("distance_m", [.45, .62])
+    def test_empty_route_preserves_legal_close_approach(distance_m):
+        def actuator(runtime, method, params):
+            assert method == "forward", "Close approach must remain a bounded forward step"
+            assert 0 < params["distanceCm"] <= 10
+            odo = runtime.snapshot["odometry"]
+            runtime.set_pose(0, odo["forwardCm"] / 100 + params["distanceCm"] / 100, 0)
+            runtime.show_target()
+            return {"accepted": True, "distanceCm": params["distanceCm"], "completed": True}
+    
+        runtime = SensorRuntime(goal=(0, distance_m), route=(), actuator=actuator)
+        result = Actions(runtime).go_to("zone-1")
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_route_progress.py:207: AssertionError
+____________ test_empty_route_preserves_legal_close_approach[0.62] _____________
+
+distance_m = 0.62
+
+    @pytest.mark.parametrize("distance_m", [.45, .62])
+    def test_empty_route_preserves_legal_close_approach(distance_m):
+        def actuator(runtime, method, params):
+            assert method == "forward", "Close approach must remain a bounded forward step"
+            assert 0 < params["distanceCm"] <= 10
+            odo = runtime.snapshot["odometry"]
+            runtime.set_pose(0, odo["forwardCm"] / 100 + params["distanceCm"] / 100, 0)
+            runtime.show_target()
+            return {"accepted": True, "distanceCm": params["distanceCm"], "completed": True}
+    
+        runtime = SensorRuntime(goal=(0, distance_m), route=(), actuator=actuator)
+        result = Actions(runtime).go_to("zone-1")
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_route_progress.py:207: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_actions_navigation_regression.py::test_go_to_stops_after_standoff_reverse_is_blocked
+FAILED tests/test_brain_route_progress.py::test_near_angled_junction_stops_after_one_no_motion_follow_road
+FAILED tests/test_brain_route_progress.py::test_empty_route_preserves_legal_close_approach[0.45]
+FAILED tests/test_brain_route_progress.py::test_empty_route_preserves_legal_close_approach[0.62]
+4 failed, 30 passed in 0.05s

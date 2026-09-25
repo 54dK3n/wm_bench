@@ -1,0 +1,496 @@
+{
+  "schema": "sensor-navigation-regressions/v1",
+  "run": "artifacts/autonomous-brain/map05-run-07",
+  "frozen_source_commit": "2e76b6f5de1789ba51d90f2ce5f9501e6307d64c",
+  "scope": "Brain-only logged sensor and motion evidence; no truth/layout/evaluator captures. Runtime fixes and proposed tests below were not run by this analysis.",
+  "files": {
+    "rounds": "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/rounds.jsonl",
+    "observations": "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/observations.jsonl",
+    "motions": "artifacts/autonomous-brain/map05-run-07/map-05-run-1/brain/motions.jsonl"
+  },
+  "line_number_convention": {
+    "rounds": "line equals round",
+    "observations": "line equals observation_index",
+    "motions": "one-based line"
+  },
+  "snapshot_counts": {
+    "rounds": 54,
+    "observations": 266,
+    "motions": 159
+  },
+  "cases": [
+    {
+      "id": "visual_approach_exceeds_lateral_clearance",
+      "round": 48,
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_053"
+        }
+      },
+      "result": {
+        "success": false,
+        "reason": "visual_standoff_blocked",
+        "evidence": {
+          "after_observation": 250,
+          "frame_id": 250,
+          "tick": 12268,
+          "holding": true,
+          "object_id": "storage-zone_053",
+          "actuator_result": {
+            "completed": true
+          },
+          "detection": {
+            "category": "storage-zone",
+            "source": "storage-ground-pixels",
+            "confidence": 1.0,
+            "bbox": {
+              "x": 128.0,
+              "y": 259.0,
+              "w": 429.0,
+              "h": 125.0
+            },
+            "frame_id": "250",
+            "fed_to_world_model": true,
+            "track_id": "storage-zone_053",
+            "method": "visible-ground-region-bbox-centre",
+            "distance_cm": 28.697686852962832,
+            "bearing_deg": 2.6148140839189633,
+            "position_m": {
+              "x": 1.0269453733092615,
+              "z": -0.03241523466439912
+            }
+          },
+          "before_observation": 239,
+          "final_observation": 251
+        }
+      },
+      "observations": [
+        {
+          "observation_index": 246,
+          "simulation_seconds": 242.78,
+          "odometry": {
+            "forwardCm": 44,
+            "rightCm": 101.1,
+            "headingDeg": 143.1,
+            "distanceCm": 2347.8,
+            "tick": 12139
+          },
+          "road": {
+            "onRoad": true,
+            "lateralOffsetCm": 0,
+            "headingErrorDeg": 0,
+            "leftClearanceCm": 9.2,
+            "rightClearanceCm": 9.2,
+            "frontClearanceCm": 115.6,
+            "atJunction": false,
+            "atNode": false,
+            "exits": [],
+            "tick": 12139
+          },
+          "holding": true,
+          "fresh_detection": {
+            "track_id": "storage-zone_053",
+            "frame_id": "246",
+            "distance_cm": 51.75353238164963,
+            "bearing_deg": -30.207777555011855,
+            "bbox": {
+              "x": 0.0,
+              "y": 245.0,
+              "w": 100.0,
+              "h": 42.0
+            }
+          }
+        },
+        {
+          "observation_index": 247,
+          "simulation_seconds": 243.16,
+          "odometry": {
+            "forwardCm": 44,
+            "rightCm": 101.1,
+            "headingDeg": 173.3,
+            "distanceCm": 2347.8,
+            "tick": 12158
+          },
+          "road": {
+            "onRoad": true,
+            "lateralOffsetCm": 0,
+            "headingErrorDeg": -30.2,
+            "leftClearanceCm": 9.2,
+            "rightClearanceCm": 9.2,
+            "frontClearanceCm": 93.1,
+            "atJunction": false,
+            "atNode": false,
+            "exits": [],
+            "tick": 12158
+          },
+          "holding": true,
+          "fresh_detection": {
+            "track_id": "storage-zone_053",
+            "frame_id": "247",
+            "distance_cm": 53.548721630943504,
+            "bearing_deg": -9.75786717643271,
+            "bbox": {
+              "x": 122.0,
+              "y": 233.0,
+              "w": 239.0,
+              "h": 38.0
+            }
+          }
+        },
+        {
+          "observation_index": 248,
+          "simulation_seconds": 244.24,
+          "odometry": {
+            "forwardCm": 34,
+            "rightCm": 100,
+            "headingDeg": 173.3,
+            "distanceCm": 2357.8,
+            "tick": 12212
+          },
+          "road": {
+            "onRoad": true,
+            "lateralOffsetCm": -5.2,
+            "headingErrorDeg": -32,
+            "leftClearanceCm": 4,
+            "rightClearanceCm": 14.4,
+            "frontClearanceCm": 83.1,
+            "atJunction": true,
+            "atNode": true,
+            "exits": [
+              {
+                "angleDeg": 149.8
+              },
+              {
+                "angleDeg": -9.3
+              },
+              {
+                "angleDeg": -85.9
+              }
+            ],
+            "tick": 12212
+          },
+          "holding": true,
+          "fresh_detection": {
+            "track_id": "storage-zone_053",
+            "frame_id": "248",
+            "distance_cm": 40.712210754399166,
+            "bearing_deg": -12.88291351204334,
+            "bbox": {
+              "x": 52.0,
+              "y": 244.0,
+              "w": 321.0,
+              "h": 68.0
+            }
+          }
+        },
+        {
+          "observation_index": 249,
+          "simulation_seconds": 244.42,
+          "odometry": {
+            "forwardCm": 34,
+            "rightCm": 100,
+            "headingDeg": -173.8,
+            "distanceCm": 2357.8,
+            "tick": 12221
+          },
+          "road": {
+            "onRoad": true,
+            "lateralOffsetCm": -5.2,
+            "headingErrorDeg": -44.9,
+            "leftClearanceCm": 4,
+            "rightClearanceCm": 14.4,
+            "frontClearanceCm": 83.1,
+            "atJunction": true,
+            "atNode": true,
+            "exits": [
+              {
+                "angleDeg": 136.9
+              },
+              {
+                "angleDeg": -22.2
+              },
+              {
+                "angleDeg": -98.8
+              }
+            ],
+            "tick": 12221
+          },
+          "holding": true,
+          "fresh_detection": {
+            "track_id": "storage-zone_053",
+            "frame_id": "249",
+            "distance_cm": 40.653087643952254,
+            "bearing_deg": 1.89404709881954,
+            "bbox": {
+              "x": 183.0,
+              "y": 244.0,
+              "w": 305.0,
+              "h": 63.0
+            }
+          }
+        },
+        {
+          "observation_index": 250,
+          "simulation_seconds": 245.36,
+          "odometry": {
+            "forwardCm": 25.4,
+            "rightCm": 100.9,
+            "headingDeg": -173.8,
+            "distanceCm": 2366.5,
+            "tick": 12268
+          },
+          "road": {
+            "onRoad": false,
+            "lateralOffsetCm": -11.3,
+            "headingErrorDeg": -43.1,
+            "leftClearanceCm": -2.1,
+            "rightClearanceCm": 20.4,
+            "frontClearanceCm": 74.4,
+            "atJunction": false,
+            "atNode": false,
+            "exits": [],
+            "tick": 12268
+          },
+          "holding": true,
+          "fresh_detection": {
+            "track_id": "storage-zone_053",
+            "frame_id": "250",
+            "distance_cm": 28.697686852962832,
+            "bearing_deg": 2.6148140839189633,
+            "bbox": {
+              "x": 128.0,
+              "y": 259.0,
+              "w": 429.0,
+              "h": 125.0
+            }
+          }
+        }
+      ],
+      "motions": [
+        {
+          "line": 152,
+          "round": 48,
+          "method": "turn",
+          "params": {
+            "angleDeg": 30.20777755501186,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 246,
+          "after_observation": 247
+        },
+        {
+          "line": 153,
+          "round": 48,
+          "method": "forward",
+          "params": {
+            "distanceCm": 10,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 247,
+          "after_observation": 248
+        },
+        {
+          "line": 154,
+          "round": 48,
+          "method": "turn",
+          "params": {
+            "angleDeg": 12.88291351204333,
+            "speed": 50
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 248,
+          "after_observation": 249
+        },
+        {
+          "line": 155,
+          "round": 48,
+          "method": "forward",
+          "params": {
+            "distanceCm": 8.653087643952254,
+            "speed": 30
+          },
+          "actuator_result": {
+            "completed": true
+          },
+          "before_observation": 249,
+          "after_observation": 250
+        }
+      ],
+      "calculation": {
+        "method": "Current local tangent projection, a conservative risk estimate rather than proof of curved-road topology.",
+        "forward_cm": 8.653087643952254,
+        "heading_error_deg": -44.9,
+        "predicted_signed_lateral_cm": -6.107968566456865,
+        "pre_left_clearance_cm": 4,
+        "pre_front_clearance_cm": 83.1,
+        "predicted_left_overrun_cm": 2.107968566456865,
+        "zero_margin_max_translation_cm": 5.666753225596098,
+        "actual_lateral_offset_change_cm": -6.1000000000000005,
+        "actual_odometry_translation_cm": 8.646964785403028
+      },
+      "diagnosis": "Two camera alignment turns increased road-heading error. Forward8.653cm projected6.108cm toward the left edge with only4cm left clearance. The post-move road check rejected success after leaving the road. Front clearance alone was insufficient.",
+      "acceptance": {
+        "distance_cm": [
+          25,
+          40
+        ],
+        "abs_bearing_max_deg": 10,
+        "go_to_requires_road": true,
+        "post_fresh_distance_cm": 28.697686852962832,
+        "post_fresh_bearing_deg": 2.6148140839189633,
+        "post_on_road": false
+      }
+    },
+    {
+      "id": "offroad_guard_no_translation_recovery",
+      "first_offroad_observation": 250,
+      "following_rounds": [
+        {
+          "round": 49,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "reason": "not_on_observed_road",
+          "final_observation": 253,
+          "motion_lines": [],
+          "translation_count": 0,
+          "tick": 12268
+        },
+        {
+          "round": 50,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "reason": "not_on_observed_road",
+          "final_observation": 255,
+          "motion_lines": [],
+          "translation_count": 0,
+          "tick": 12268
+        },
+        {
+          "round": 51,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "reason": "not_on_observed_road",
+          "final_observation": 257,
+          "motion_lines": [],
+          "translation_count": 0,
+          "tick": 12268
+        },
+        {
+          "round": 52,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "reason": "not_on_observed_road",
+          "final_observation": 259,
+          "motion_lines": [],
+          "translation_count": 0,
+          "tick": 12268
+        },
+        {
+          "round": 53,
+          "action": {
+            "action": "look_around",
+            "params": {}
+          },
+          "reason": "four_views_observed",
+          "final_observation": 265,
+          "motion_lines": [
+            156,
+            157,
+            158,
+            159
+          ],
+          "translation_count": 0,
+          "tick": 12496
+        },
+        {
+          "round": 54,
+          "action": {
+            "action": "look_around",
+            "params": {}
+          },
+          "reason": "turn: NOT_RUNNING",
+          "final_observation": null,
+          "motion_lines": [],
+          "translation_count": 0,
+          "tick": null
+        }
+      ],
+      "diagnosis": "Rounds49-52 explore reject off-road with no movement at tick12268. Round53 scans four90deg turns at the same position and returns to the same heading; this is rotation, not translation recovery. Round54 ends with turn: NOT_RUNNING. These observations do not prove all conceivable actions are permanently blocked."
+    }
+  ],
+  "bounded_recovery_review": {
+    "preferred": "Reject or conservatively shorten the unsafe translation before it occurs using fresh lateral clearance and road heading. Retain25-40cm/10deg success bounds;32cm is an internal aim point, not a required standoff.",
+    "local_geometry_limit": "The tangent projection is not a guarantee through a bend/junction; use a reserve and short fresh observations, not geometry-based graph connections.",
+    "inverse_last_translation_candidate": {
+      "pre_observation": 249,
+      "post_observation": 250,
+      "motion_line": 155,
+      "completed": true,
+      "unchanged_heading_deg": -173.8,
+      "command_cm": 8.653087643952254,
+      "measured_translation_cm": 8.646964785403028,
+      "candidate": "Immediately reverse only this recorded straight segment in bounded observed portions, stopping on recovered onRoad or at its recorded start pose. Not performed in this trial.",
+      "requirements": [
+        "Prior pose was onRoad and last movement completion/actual displacement are known.",
+        "No intervening turn or unrelated movement may be included in an assumed straight inverse.",
+        "Never exceed verified last-segment travel; no fixed30cm/48cm retreat.",
+        "Stop on obstruction or inconsistent evidence; report original failure and recovery separately."
+      ]
+    },
+    "task_boundary": "The road requirement analyzed here applies to go_to. It does not assert that user task definitions require pick/place themselves to stay onRoad."
+  },
+  "proposed_tests": [
+    {
+      "id": "logged_lateral_overrun",
+      "fixture": "obs249 + motion155",
+      "expectation": "Do not issue the unchanged8.653cm forward step. Reject/limit it by conservative observed side clearance while preserving the success gate."
+    },
+    {
+      "id": "recheck_after_turn",
+      "fixture": "obs248 -> turn154 -> obs249",
+      "expectation": "Recompute road-heading and side-clearance limits after the camera turn, including newly observed atNode."
+    },
+    {
+      "id": "signed_and_unknown_geometry",
+      "fixture": "left/right mirrored errors; backward direction; null/nonfinite road values",
+      "expectation": "Use movement sign and the consumed side correctly; unknown safety evidence cannot authorize unsafe translation; aligned centered motion remains possible."
+    },
+    {
+      "id": "visual_gate_does_not_override_offroad",
+      "fixture": "obs250 fresh28.6977cm/2.6148deg, onRoad=false",
+      "expectation": "Do not mark go_to successful from visual range/bearing alone."
+    },
+    {
+      "id": "bounded_exact_inverse",
+      "fixture": "obs249 -> completed forward155 -> obs250",
+      "expectation": "If implemented, inverse only the recorded final segment with fresh observations; stop as soon as road is recovered, and do not mark delivery or standoff from rollback alone."
+    },
+    {
+      "id": "reject_unverifiable_rollback",
+      "fixture": "missing pre-pose, unknown partial motion, intervening heading change, or obstacle during inverse",
+      "expectation": "No speculative path or fixed long reverse; stop safely when the return cannot be verified."
+    },
+    {
+      "id": "next_state_road_evidence",
+      "fixture": "r48 result -> r49 state",
+      "expectation": "Include compact side clearance, road-heading error, requested distance and observation references alongside fresh visual evidence and any recovery result."
+    }
+  ]
+}
