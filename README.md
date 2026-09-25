@@ -2,12 +2,14 @@
 
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
-当前执行 **v4 自主观测闭环**：平台只提供传感器和执行器，大脑在平台外运行。旧五阶段、比赛计分和比赛专用规则已作废，旧程序与结果仅作历史参考。2026-09-25 复核发现阶段 1 的机器人桥过滤了仿真物体检测，当前阶段门禁为 **FAIL / STOP**；后续阶段未实施或验收，尚无 v4 map-05 成功局。
+当前执行 **v4 自主观测闭环**：平台只提供传感器和执行器，大脑在平台外运行。旧五阶段、比赛计分和比赛专用规则已作废，旧程序与结果仅作历史参考。2026-09-25 已修复阶段 1 的 `virtual-cv` 检测适配并保留来源；新增内容验收发现应见漏检，当前阶段门禁仍为 **FAIL / STOP**。旧空检测下的「record 确定性」和「经桥 observe」通过结论作废；后续阶段未实施或验收，尚无 v4 map-05 成功局。
 
 ## 阅读入口
 
 - [当前 v4 执行状态](docs/NEXT_WORK_STATE.md)
 - [v4 平台实现与阶段门禁](docs/V4_AUTONOMOUS_LOOP.md)
+- [阶段 1 恢复验收报告](artifacts/inloop/v4/stage-1/restore-20260925/REPORT.md)
+- [内容验收口径与复算](docs/V4_STAGE1_ACCEPTANCE_RULES.md)
 - [阶段 1 复核失败证据](artifacts/inloop/v4/stage-1/review-20260925/REPORT.md)
 - [WorldModel 回流结果及 PR](artifacts/worldmodel-return/SUMMARY.md)
 - [重构第 1 轮：未通过及视觉输入差异](artifacts/inloop/refactor/SUMMARY.md)

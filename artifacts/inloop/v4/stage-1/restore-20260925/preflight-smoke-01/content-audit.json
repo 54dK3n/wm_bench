@@ -1,0 +1,88 @@
+{
+  "schema": "wm-v4-stage1-content-audit/v1",
+  "evaluationOnly": true,
+  "rules": {
+    "projection": "640x640 detector letterbox -> 640x480 source; scale=1,padX=0,padY=80; clip to source bounds",
+    "virtualAppearance": {
+      "target": "red-ball",
+      "distractor": "blue-ball",
+      "obstacle": "obstacle"
+    },
+    "realAppearance": "yolo: red/blue colorClass takes precedence, otherwise category obstacle",
+    "storage": "independent source-camera ground pixels; old upright storage/cleanup signs excluded",
+    "equality": "exact ordered detections, category, bbox, confidence and unchanged source; no tolerance or rounding",
+    "expected": "active true red/blue/obstacle, camera planar range inclusive 30..85 cm and abs(horizontal bearing)<=30 degrees",
+    "detected": "for each eligible truth object, at least one bridge detection of its category in that frame",
+    "instanceLimitation": "Class presence is not instance recall. One output may witness multiple eligible same-class objects; those frames are explicitly listed.",
+    "coverage": "across the complete suite each of four output classes and each of three eligible truth classes must have a nonzero count",
+    "checkpoints": "C-ENV-001: exact camera-render checkpoint fields recomputed with time=tick*stepMs/1000; paired fields and RGBA hashes equal"
+  },
+  "outputCounts": {
+    "red-ball": 0,
+    "blue-ball": 0,
+    "obstacle": 0,
+    "storage-zone": 0
+  },
+  "truthCounts": {
+    "red-ball": {
+      "expected": 0,
+      "detected": 0,
+      "misses": 0
+    },
+    "blue-ball": {
+      "expected": 0,
+      "detected": 0,
+      "misses": 0
+    },
+    "obstacle": {
+      "expected": 0,
+      "detected": 0,
+      "misses": 0
+    }
+  },
+  "runs": [],
+  "comparisons": [],
+  "checkpoint": {
+    "caseId": "C-ENV-001",
+    "signalSamples": 0,
+    "runsWithTickProgress": 0,
+    "stationaryPairs": []
+  },
+  "failures": [
+    {
+      "code": "ZERO_CLASS_OUTPUT",
+      "category": "red-ball"
+    },
+    {
+      "code": "ZERO_CLASS_OUTPUT",
+      "category": "blue-ball"
+    },
+    {
+      "code": "ZERO_CLASS_OUTPUT",
+      "category": "obstacle"
+    },
+    {
+      "code": "ZERO_CLASS_OUTPUT",
+      "category": "storage-zone"
+    },
+    {
+      "code": "ZERO_ELIGIBLE_TRUTH_COVERAGE",
+      "category": "red-ball"
+    },
+    {
+      "code": "ZERO_ELIGIBLE_TRUTH_COVERAGE",
+      "category": "blue-ball"
+    },
+    {
+      "code": "ZERO_ELIGIBLE_TRUTH_COVERAGE",
+      "category": "obstacle"
+    },
+    {
+      "code": "REQUIRES_THREE_LAYOUTS_TWO_RUNS"
+    },
+    {
+      "code": "C-ENV-001_NO_CHECKPOINT_SIGNALS"
+    }
+  ],
+  "allPass": false
+}

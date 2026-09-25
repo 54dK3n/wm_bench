@@ -1,0 +1,885 @@
+{
+  "schema": "wm-v4-checkpoint-diagnostic/v1",
+  "scope": {
+    "suite": "acceptance-02",
+    "map": "map-03",
+    "run": 1,
+    "onlyThisCompletedRun": true,
+    "otherRunsNotAnalyzed": true
+  },
+  "inputs": {
+    "captures": {
+      "path": "artifacts/inloop/v4/stage-1/restore-20260925/acceptance-02/map-03-run-1/captures.json",
+      "bytes": 1677812,
+      "sha256": "efd74ba46ed1ae5bc673fee4becafe954ed230408049586c5fab72a101f2f8cb"
+    },
+    "audit": {
+      "path": "artifacts/inloop/v4/stage-1/restore-20260925/acceptance-02/map-03-run-1/content-audit.json",
+      "bytes": 2903174,
+      "sha256": "df222ac54cbf790be40ee03925a0c34300037ad60b6ddf3b490f8cc78d7eee66"
+    }
+  },
+  "sourceReferences": {
+    "tools/v4_stage1_content_acceptance.js": {
+      "sha256": "e5c2e0fc634c16d840a4a392a9ff96689967ec2fe50dfa0d6aeadd31711e0067"
+    },
+    "tools/v4_stage1_content_audit.js": {
+      "sha256": "6cd139c4c9a2db135c0d39d6ff364981e6cfbd069bd47e22be8d00e11e514b3b"
+    },
+    "workspaces/guangyang-platform/projects/car-python/app.js": {
+      "sha256": "55acd2843d202f83c83549d4a2640f1d995358bc654546732cbaca500ae28c83"
+    }
+  },
+  "diagnosticRuntime": {
+    "node": "v26.7.0",
+    "v8": "14.6.202.34-node.28",
+    "platform": "darwin",
+    "arch": "arm64",
+    "browserInvoked": false,
+    "formalProcessTouched": false
+  },
+  "counts": {
+    "observations": 195,
+    "signalSamples": 1170,
+    "mismatchingFrames": 22,
+    "mismatchingSignals": 23,
+    "fieldMismatches": 35,
+    "elapsedTimeDifferences": 0,
+    "captureAuditBindingDifferences": 0,
+    "persistedExpectedRecomputeDifferences": 0,
+    "allWaveFieldsExplainedByOneAdjacentSinValue": 23,
+    "alternateMultiplyTimeExplainsAllAnimationFields": 0
+  },
+  "fieldStatistics": {
+    "index": {
+      "mismatches": 0,
+      "maxAbsoluteDifference": 0,
+      "maxUlpDistance": 0
+    },
+    "phase": {
+      "mismatches": 0,
+      "maxAbsoluteDifference": 0,
+      "maxUlpDistance": 0
+    },
+    "ringRotationZ": {
+      "mismatches": 0,
+      "maxAbsoluteDifference": 0,
+      "maxUlpDistance": 0
+    },
+    "ringOpacity": {
+      "mismatches": 10,
+      "maxAbsoluteDifference": 1.1102230246251565e-16,
+      "maxUlpDistance": 1
+    },
+    "beamOpacity": {
+      "mismatches": 20,
+      "maxAbsoluteDifference": 1.3877787807814457e-17,
+      "maxUlpDistance": 1
+    },
+    "coreY": {
+      "mismatches": 5,
+      "maxAbsoluteDifference": 5.551115123125783e-17,
+      "maxUlpDistance": 1
+    },
+    "coreRotationY": {
+      "mismatches": 0,
+      "maxAbsoluteDifference": 0,
+      "maxUlpDistance": 0
+    }
+  },
+  "stationaryPairs": [
+    {
+      "tick": 0,
+      "leftRequestId": "command-0005",
+      "rightRequestId": "command-0006",
+      "equal": true
+    },
+    {
+      "tick": 0,
+      "leftRequestId": "command-0005",
+      "rightRequestId": "command-0009",
+      "equal": true
+    }
+  ],
+  "mismatchingSignals": [
+    {
+      "frameId": 23,
+      "tick": 1696,
+      "requestId": "command-0095",
+      "signalIndex": 5,
+      "timeSeconds": 33.92,
+      "sinInput": 89.908,
+      "nodeSin": 0.9313805832185882,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": 0.9313805832185881
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8883346991471601,
+          "actual": 0.88833469914716,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.11742677187069706,
+          "actual": 0.11742677187069704,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        },
+        {
+          "field": "coreY",
+          "expected": 0.4758828349931153,
+          "actual": 0.47588283499311523,
+          "absoluteDifference": 5.551115123125783e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 33.92,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 33,
+      "tick": 2492,
+      "requestId": "command-0125",
+      "signalIndex": 4,
+      "timeSeconds": 49.84,
+      "sinInput": 126.416,
+      "nodeSin": 0.6833153544373094,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.6833153544373095
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8461636102543426,
+          "actual": 0.8461636102543427,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.10812432579139909,
+          "actual": 0.1081243257913991,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 49.84,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 35,
+      "tick": 2606,
+      "requestId": "command-0129",
+      "signalIndex": 1,
+      "timeSeconds": 52.12,
+      "sinInput": 126.788,
+      "nodeSin": 0.9019628966373625,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": 0.9019628966373624
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.11632360862390109,
+          "actual": 0.11632360862390108,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 52.120000000000005,
+        "differsFromDivideTime": true,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 43,
+      "tick": 3320,
+      "requestId": "command-0155",
+      "signalIndex": 0,
+      "timeSeconds": 66.4,
+      "sinInput": 159.36,
+      "nodeSin": 0.7586414469792946,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.7586414469792947
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8589690459864802,
+          "actual": 0.8589690459864803,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.11094905426172354,
+          "actual": 0.11094905426172355,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        },
+        {
+          "field": "coreY",
+          "expected": 0.4655184868187576,
+          "actual": 0.4655184868187577,
+          "absoluteDifference": 5.551115123125783e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 66.4,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 53,
+      "tick": 4067,
+      "requestId": "command-0185",
+      "signalIndex": 1,
+      "timeSeconds": 81.34,
+      "sinInput": 196.916,
+      "nodeSin": 0.8438064492557708,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.8438064492557709
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.11414274184709139,
+          "actual": 0.1141427418470914,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        },
+        {
+          "field": "coreY",
+          "expected": 0.4706283869553462,
+          "actual": 0.47062838695534626,
+          "absoluteDifference": 5.551115123125783e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 81.34,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 55,
+      "tick": 4221,
+      "requestId": "command-0191",
+      "signalIndex": 4,
+      "timeSeconds": 84.42,
+      "sinInput": 209.40800000000002,
+      "nodeSin": 0.8813480157234166,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.8813480157234167
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8798291626729808,
+          "actual": 0.879829162672981,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.11555055058962811,
+          "actual": 0.11555055058962813,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 84.42,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 56,
+      "tick": 4271,
+      "requestId": "command-0195",
+      "signalIndex": 0,
+      "timeSeconds": 85.42,
+      "sinInput": 205.008,
+      "nodeSin": -0.720468405555543,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.7204684055555429
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.05548243479166713,
+          "actual": 0.05548243479166714,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 85.42,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 58,
+      "tick": 4467,
+      "requestId": "command-0201",
+      "signalIndex": 0,
+      "timeSeconds": 89.34,
+      "sinInput": 214.416,
+      "nodeSin": 0.7087322374285947,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.7087322374285948
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8504844803628612,
+          "actual": 0.8504844803628613,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 89.34,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 71,
+      "tick": 5430,
+      "requestId": "command-0241",
+      "signalIndex": 5,
+      "timeSeconds": 108.6,
+      "sinInput": 269.14,
+      "nodeSin": -0.8608655119314179,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.8608655119314178
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.583652862971659,
+          "actual": 0.5836528629716591,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.050217543302571825,
+          "actual": 0.05021754330257183,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 108.60000000000001,
+        "differsFromDivideTime": true,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 74,
+      "tick": 5601,
+      "requestId": "command-0247",
+      "signalIndex": 4,
+      "timeSeconds": 112.02,
+      "sinInput": 275.64799999999997,
+      "nodeSin": -0.7257703395745188,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.7257703395745189
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.055283612265955545,
+          "actual": 0.05528361226595554,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 112.02,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 75,
+      "tick": 5676,
+      "requestId": "command-0251",
+      "signalIndex": 1,
+      "timeSeconds": 113.52,
+      "sinInput": 274.14799999999997,
+      "nodeSin": -0.7375527426864177,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.7375527426864178
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.05484177214925934,
+          "actual": 0.05484177214925933,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 113.52,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 79,
+      "tick": 6089,
+      "requestId": "command-0267",
+      "signalIndex": 4,
+      "timeSeconds": 121.78,
+      "sinInput": 299.072,
+      "nodeSin": -0.5816030320618943,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.5816030320618945
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.06068988629767896,
+          "actual": 0.060689886297678956,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        },
+        {
+          "field": "coreY",
+          "expected": 0.38510381807628635,
+          "actual": 0.3851038180762863,
+          "absoluteDifference": 5.551115123125783e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 121.78,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 88,
+      "tick": 6752,
+      "requestId": "command-0295",
+      "signalIndex": 1,
+      "timeSeconds": 135.04,
+      "sinInput": 325.79599999999994,
+      "nodeSin": -0.80140226026642,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.8014022602664199
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.052447415240009246,
+          "actual": 0.05244741524000925,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 135.04,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 88,
+      "tick": 6752,
+      "requestId": "command-0295",
+      "signalIndex": 4,
+      "timeSeconds": 135.04,
+      "sinInput": 330.89599999999996,
+      "nodeSin": -0.8566658219949211,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.856665821994921
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.05037503167519045,
+          "actual": 0.05037503167519046,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 135.04,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 99,
+      "tick": 7470,
+      "requestId": "command-0327",
+      "signalIndex": 3,
+      "timeSeconds": 149.4,
+      "sinInput": 363.66,
+      "nodeSin": -0.6923550557555047,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.6923550557555048
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.05653668540916857,
+          "actual": 0.05653668540916856,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 149.4,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 117,
+      "tick": 8878,
+      "requestId": "command-0383",
+      "signalIndex": 0,
+      "timeSeconds": 177.56,
+      "sinInput": 426.144,
+      "nodeSin": -0.8968521697446332,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.8968521697446331
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.04886804363457625,
+          "actual": 0.04886804363457626,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 177.56,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 121,
+      "tick": 9106,
+      "requestId": "command-0391",
+      "signalIndex": 4,
+      "timeSeconds": 182.12,
+      "sinInput": 443.88800000000003,
+      "nodeSin": -0.7976784233508141,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.7976784233508142
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.05258705912434447,
+          "actual": 0.052587059124344464,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 182.12,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 122,
+      "tick": 9243,
+      "requestId": "command-0395",
+      "signalIndex": 4,
+      "timeSeconds": 184.86,
+      "sinInput": 450.46400000000006,
+      "nodeSin": -0.937804271065366,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.9378042710653659
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.5705732739188878,
+          "actual": 0.5705732739188879,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 184.86,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 134,
+      "tick": 10118,
+      "requestId": "command-0435",
+      "signalIndex": 0,
+      "timeSeconds": 202.36,
+      "sinInput": 485.664,
+      "nodeSin": 0.9588323175683595,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.9588323175683596
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.11845621190881347,
+          "actual": 0.11845621190881349,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 202.36,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 145,
+      "tick": 11056,
+      "requestId": "command-0469",
+      "signalIndex": 5,
+      "timeSeconds": 221.12,
+      "sinInput": 539.188,
+      "nodeSin": -0.9191575864907988,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": -1,
+          "sine": -0.9191575864907987
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "beamOpacity",
+          "expected": 0.04803159050659504,
+          "actual": 0.04803159050659505,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 221.12,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 153,
+      "tick": 11756,
+      "requestId": "command-0491",
+      "signalIndex": 2,
+      "timeSeconds": 235.12,
+      "sinInput": 567.688,
+      "nodeSin": 0.8077174904595311,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": 0.8077174904595312
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.8673119733781203,
+          "actual": 0.8673119733781204,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.11278940589223241,
+          "actual": 0.11278940589223242,
+          "absoluteDifference": 1.3877787807814457e-17,
+          "ulpDistance": 1
+        },
+        {
+          "field": "coreY",
+          "expected": 0.46846304942757183,
+          "actual": 0.4684630494275719,
+          "absoluteDifference": 5.551115123125783e-17,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 235.12,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 174,
+      "tick": 13552,
+      "requestId": "command-0555",
+      "signalIndex": 5,
+      "timeSeconds": 271.04,
+      "sinInput": 658.996,
+      "nodeSin": -0.6731478401344713,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.6731478401344714
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.61556486717714,
+          "actual": 0.6155648671771399,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 271.04,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    },
+    {
+      "frameId": 194,
+      "tick": 15186,
+      "requestId": "command-0615",
+      "signalIndex": 3,
+      "timeSeconds": 303.72,
+      "sinInput": 734.028,
+      "nodeSin": -0.8933208448482267,
+      "matchingAdjacentSinCandidates": [
+        {
+          "ieee754BitOffset": 1,
+          "sine": -0.8933208448482268
+        }
+      ],
+      "fieldDifferences": [
+        {
+          "field": "ringOpacity",
+          "expected": 0.5781354563758015,
+          "actual": 0.5781354563758014,
+          "absoluteDifference": 1.1102230246251565e-16,
+          "ulpDistance": 1
+        },
+        {
+          "field": "beamOpacity",
+          "expected": 0.0490004683181915,
+          "actual": 0.04900046831819149,
+          "absoluteDifference": 6.938893903907228e-18,
+          "ulpDistance": 1
+        }
+      ],
+      "alternateMultiplyTime": {
+        "timeSeconds": 303.72,
+        "differsFromDivideTime": false,
+        "allAnimationFieldsMatch": false
+      }
+    }
+  ],
+  "reproducibleMethod": {
+    "eligibleSignals": "All checkpoint rows of all 195 captures in this one run; no rounding or tolerance applied.",
+    "expectedFormula": "time = simulationElapsedMs / 1000; sinInput = time * 2.4 + phase; wave = (Math.sin(sinInput) + 1) / 2; ringOpacity = 0.56 + wave * 0.34; beamOpacity = 0.045 + wave * 0.075; coreY = 0.36 + wave * 0.12; ringRotationZ = time * 0.55 + phase; coreRotationY = time * 1.2 + phase.",
+    "ulpMethod": "Read binary64 bytes with DataView.getBigUint64. For positive compared fields, the absolute integer encoding difference is the exact ULP distance.",
+    "neighborProbe": "Evaluate the three wave-dependent formulas with each immediately adjacent binary64 value to Node Math.sin(input); require all three fields to match exactly together. This is diagnosis only, not the acceptance gate.",
+    "alternateTimeProbe": "Recompute all five animation fields with simulationElapsedMs * 0.001 rather than / 1000, without tolerance."
+  },
+  "confirmedFacts": [
+    "The persisted expected fields are reproduced exactly in this diagnostic Node runtime for every signal.",
+    "All 1170 index/phase/ringRotationZ/coreRotationY observations match the tick-based expected values exactly.",
+    "Every mismatch is exactly one ULP in a wave-dependent field; all 23 mismatching signals can be reproduced exactly by changing only Node sin(input) to one adjacent binary64 value.",
+    "The two recorded same-tick stationary comparisons have identical checkpoint signals and RGBA hashes.",
+    "Source inspection shows captureVirtualCameraFrame calls animateSceneEffects, updates matrices and calls renderer.render in one synchronous segment; the evaluator snapshots at renderer entry. A requestAnimationFrame callback cannot interleave within that segment.",
+    "Multiplying milliseconds by 0.001 instead of dividing by 1000 explains none of the 23 mismatching signals across all five animation fields."
+  ],
+  "interpretation": "The evidence is consistent with a cross-runtime floating-point transcendental calculation difference. It does not establish a wall-clock-driven animation fault, and the synchronous capture path provides no mechanism for the proposed rAF overwrite.",
+  "limitations": [
+    "The log does not contain the browser raw Math.sin input/output, browser engine version, execution tier or native numerical implementation. A specific Chrome-versus-Node Math.sin root cause is therefore not proven.",
+    "Neighbor sine reconstruction is not a unique inverse of the rounded affine outputs and is not a replacement oracle.",
+    "Only map-03 run-1 is analyzed; paired-run phase/RGBA equality is not concluded from this single-run diagnostic.",
+    "This diagnostic does not waive exact equality, reclassify failures as passes, modify frozen source or mutate formal evidence."
+  ],
+  "acceptance": {
+    "frozenResultRemains": "FAIL",
+    "failureCode": "C-ENV-001_PHASE_MISMATCH",
+    "gateChanged": false,
+    "thresholdChanged": false
+  }
+}

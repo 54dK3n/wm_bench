@@ -2,11 +2,11 @@
 
 用户的 v4 指令已替代下述 A→D 计划、旧比赛规则与验收。历史程序、记录和失败结论保留原样，不再用旧门限决定 v4 的执行顺序。
 
-2026-09-25 复核阶段 1 **未通过，已停止后续阶段**。旧六局 record 两两相同和源文件 SHA256 均复核一致，但空检测没有覆盖传感器适配：运行时只允许 `source === "yolo"`，仿真却输出 `source === "virtual-cv"`，导致红球、蓝球和障碍全部被过滤。详细复现与版本见 [阶段 1 复核报告](../artifacts/inloop/v4/stage-1/review-20260925/REPORT.md)。
+2026-09-25 阶段 1 恢复验收 **FAIL / STOP，后续阶段保持停止**。平台已放行并保留 `virtual-cv`，新增评测逐帧核对内部原始检测、公开类别及相机坐标转换后的检测和桥结果，并检查应见、相机像素摘要、checkpoint 动画与拒绝调用。新日志存在应见漏检，没有修改门限。完整结果、逐帧失败和复算入口见 [阶段 1 恢复验收报告](../artifacts/inloop/v4/stage-1/restore-20260925/REPORT.md)。
 
-平台保持 `v4/robot-backend` 原版本，本次未修改实现或旧证据。为后续开发建立了干净的 `workspaces/octos_robots/` 和 `workspaces/WorldModel/` 独立工作副本；在复核发现阻塞后立即停止阶段 2 分工，没有新增大脑、技能、LLM 调用或阶段 2 验收。原 octos 目录的未提交改动保持原样。
+旧空检测下的「record 确定性」和「经桥 observe」通过结论已作废，历史证据原样保留。最初断链的复现仍见 [复核报告](../artifacts/inloop/v4/stage-1/review-20260925/REPORT.md)。平台分支 `v4/robot-backend` 与评测分支 `v4/autonomous-observation` 均交付到用户指定的 `54dK3n/wm_bench` 仓库；版本与 SHA256 见新报告。
 
-恢复路径：在阶段 1 内修复仿真像素检测到桥的适配及外观类别转换，补非空相机检测测试，再于新证据目录重跑阶段 1 全部验收。未通过之前不进入阶段 2。进度与复跑入口见 [v4 工作说明](V4_AUTONOMOUS_LOOP.md)。
+当前停在阶段 1，下一步应处理新日志中的应见漏检，并核查跨运行时严格动画公式复算差异；不能将它未经验证地归因为墙钟，也不能静默放宽门禁。再次验收必须新建证据目录。`workspaces/octos_robots/` 和 `workspaces/WorldModel/` 保持未开发状态，没有新增大脑、技能、LLM 调用或阶段 2 验收。原 octos 目录的未提交改动保持原样。进度与复跑入口见 [v4 工作说明](V4_AUTONOMOUS_LOOP.md)。
 
 ## 历史状态：A → B → C → D
 

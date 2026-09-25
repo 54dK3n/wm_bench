@@ -4,17 +4,19 @@
 
 执行顺序：平台后端 → 外部大脑与大模型记录/回放 → 感知与自建环境记忆 → 六个技能及观测 Judge → octos 全链路与 map-05 demo。每一阶段验收失败即停止，不进入后续阶段。
 
-阶段 1 平台工作副本在 `workspaces/guangyang-platform/`，分支 `v4/robot-backend`。原始平台文件夹不是 Git 仓库；工作副本的 `V4_SOURCE.json` 记录来源文件摘要，未猜测或绑定不存在的上游地址。工作目录与缓存不进入 wm_bench 提交；可复现源码将在交付时以 Git bundle 和摘要保存。
+阶段 1 平台工作副本在 `workspaces/guangyang-platform/`，分支 `v4/robot-backend`。原始平台文件夹不是 Git 仓库；工作副本的 `V4_SOURCE.json` 记录来源文件摘要。用户在恢复验收时指定平台也推送到 `54dK3n/wm_bench`，故平台源码与评测分别交付在同一 GitHub 仓库的两个独立分支。工作目录与缓存不进入评测分支；旧 Git bundle 保留原样，当前源码见 [平台分支](https://github.com/54dK3n/wm_bench/tree/v4/robot-backend)。
 
 平台只暴露相机像素检测及相机参数、里程计、局部道路感知、夹爪状态和基础运动。桥的客户端不能取得 mission、map_graph、task_state、release_preview、approach、全局道路标识或布局真值。浏览器控制端与评测 driver 单独持有初始化/导出权限；真值仅由评测保存。
 
 阶段 1 验收使用同一个外部脚本，在三个布局分别运行两次，比较完整 v4 record；运行管理标识和主机墙钟在数据模型中单独放入 envelope，不能靠比较时删字段掩盖差异。拒绝调用也写入记录。传感器读取本身不推进物理时钟。默认不设运行时间及视觉证据总量限制，可显式配置。
 
-当前状态（2026-09-25）：**阶段 1 复核 FAIL / STOP**。旧记录的确定性结论仍可复算，但运行时只放行 `yolo`，实际仿真检测器输出 `virtual-cv`；空检测验收未发现这一接口断链，阶段 1 不满足可用相机输入要求。详见 [复核报告及证据](../artifacts/inloop/v4/stage-1/review-20260925/REPORT.md)。已停止阶段 2 分工，不推进阶段 3–5。以下保留 2026-09-24 的历史验收结果，不改原始日志。
+当前状态（2026-09-25）：**阶段 1 恢复验收 FAIL / STOP**。`virtual-cv` 过滤断链已修复，来源未改标；旧空检测下的「record 确定性」和「经桥 observe」通过结论均已作废。新验收增加非空四类内容核对、30–85cm/±30° 应见统计、RGBA 像素摘要与 C-ENV-001 专项检查。应见漏检仍存在，严格动画公式复算也有末位数值差异，未改门限。见 [恢复验收报告](../artifacts/inloop/v4/stage-1/restore-20260925/REPORT.md)、[判定口径](V4_STAGE1_ACCEPTANCE_RULES.md) 和 [机器可读状态](../artifacts/inloop/v4/stage-1/ACCEPTANCE_STATUS.json)。不进入阶段 2–5。以下保留 2026-09-24 的历史结果，其原始日志不改写。
 
 GitHub 的 `54dK3n/octos_robots` 已核实为未归档状态；若用户指的是其他 octos 仓库，待其补充准确地址。现有本机 octos 工作目录包含未提交改动，后续开发不得覆盖这些文件。
 
 ## 2026-09-24 阶段 1 历史验收结果（当时判为通过）
+
+以下表格记录当时结论，不代表当前有效验收。其中「record 逐字段相同」和「经桥行驶 + observe + 里程计」两项通过结论已由用户作废，必须以恢复验收重新判定。
 
 证据：`artifacts/inloop/v4/stage-1/acceptance-01/`（`acceptance.json` 为总表；每局目录含 record、envelope、samples、HTTP 往返记录、评测侧地图选择；PNG 帧只留本地，按 SHA256 索引）。复跑：
 
