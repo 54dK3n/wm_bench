@@ -2,9 +2,9 @@
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
-平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十七局已从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`启动，结果尚待独立评测。
+平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
 
-最近完成的第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
+此前第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
 
 ## 平台入口
 
@@ -19,7 +19,7 @@
 driver v5 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-17
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-18
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
