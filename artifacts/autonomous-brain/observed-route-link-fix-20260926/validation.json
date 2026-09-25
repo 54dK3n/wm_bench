@@ -1,0 +1,53 @@
+{
+  "version": "observed-route-integration-validation/v1",
+  "runs": [
+    {
+      "stdout": "artifacts/autonomous-brain/observed-route-link-fix-20260926/focused-tests-v1.txt",
+      "exit_code": 1,
+      "passed": 108,
+      "failed": 1,
+      "failure_reason": "old literal runtime version assertion",
+      "sha256": "b6db2632289931dc620a4ac0beffba56317ba6b46089549322020231f113188e"
+    },
+    {
+      "stdout": "artifacts/autonomous-brain/observed-route-link-fix-20260926/focused-tests-v2.txt",
+      "exit_code": 0,
+      "passed": 109,
+      "failed": 0,
+      "failure_reason": null,
+      "sha256": "e13ad3e4bebac58645cdbb88ea7dfb291d3376456fab529dd7ddb4e0e332e09e"
+    },
+    {
+      "stdout": "artifacts/autonomous-brain/observed-route-link-fix-20260926/integrated-tests-v1.txt",
+      "exit_code": 1,
+      "passed": 706,
+      "failed": 1,
+      "failure_reason": "one test wrapper lacked the new motion keyword",
+      "sha256": "f74a8367ee8ddc0bc5a489cb69eeb4df4ada76fbee26c42a34da937963ce39f8"
+    },
+    {
+      "stdout": "artifacts/autonomous-brain/observed-route-link-fix-20260926/integrated-tests-v2.txt",
+      "exit_code": 0,
+      "passed": 707,
+      "failed": 0,
+      "failure_reason": null,
+      "sha256": "9cedb24fd389303a30340ff1ea702c519a934de869353a6ab81e78c94d7893d4"
+    }
+  ],
+  "public_replay": {
+    "script": "artifacts/autonomous-brain/observed-route-link-fix-20260926/replay_public_routes.py",
+    "output": "artifacts/autonomous-brain/observed-route-link-fix-20260926/public-replay-v1.json",
+    "exit_code": 0,
+    "observations": 1376,
+    "motions": 976,
+    "rounds": 200,
+    "legacy_state_equal_observations": 1376,
+    "completed_trip_count": 81
+  },
+  "diff_check": {
+    "passed": true,
+    "excluded_exact_raw_stdout": "artifacts/autonomous-brain/observed-route-link-fix-20260926/integrated-tests-v1.txt",
+    "reason": "Preserve original pytest failure formatting and bytes; only its whitespace is excluded."
+  },
+  "baseline_navigation_class_ast_identical_except_private_name": true
+}

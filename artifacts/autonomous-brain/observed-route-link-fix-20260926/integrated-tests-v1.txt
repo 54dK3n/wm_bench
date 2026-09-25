@@ -1,0 +1,53 @@
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 40%]
+........................................................................ [ 50%]
+........................................................................ [ 61%]
+........................................F............................... [ 71%]
+........................................................................ [ 81%]
+........................................................................ [ 91%]
+...........................................................              [100%]
+=================================== FAILURES ===================================
+_______ test_lost_holding_at_verification_cannot_establish_pick_success ________
+
+    def test_lost_holding_at_verification_cannot_establish_pick_success():
+        runtime, _, _, marked, controls, target = pick_runtime()
+        original_observe = runtime.observe
+    
+        def observe_dropped_ball():
+            original_observe()
+            if controls["withdrawn_cm"] >= 29.9:
+                runtime.snapshot["holding"]["holding"] = False
+                runtime.snapshot["perception"]["detections"] = []
+    
+        runtime.observe = observe_dropped_ball
+>       result = Actions(runtime).pick("target_098")
+
+tests/test_brain_pick_road_return.py:281: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:806: in pick
+    pick_turn(-bearing)
+autonomous_brain/actions.py:777: in pick_turn
+    pick_move("turn", {"angleDeg": angle, "speed": 50})
+autonomous_brain/actions.py:737: in pick_move
+    result = self.move(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <autonomous_brain.actions.Actions object at 0x10a7b7520>, method = 'turn'
+params = {'angleDeg': 5.77280958599664, 'speed': 50}
+
+    def move(self, method, params):
+        if self.r.bridge.seconds >= self.r.bridge.max_seconds:
+            raise SimulationLimit("simulation_time_limit")
+        before = self.s["observation_index"]
+        result = self.r.bridge.call(method, params)
+        motion = {"round": self.r.round, "method": method, "params": params,
+                  "actuator_result": result, "before_observation": before}
+>       self.r.observe(motion=motion)
+E       TypeError: observe_dropped_ball() got an unexpected keyword argument 'motion'
+
+autonomous_brain/actions.py:221: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_brain_pick_road_return.py::test_lost_holding_at_verification_cannot_establish_pick_success
+1 failed, 706 passed in 1.02s

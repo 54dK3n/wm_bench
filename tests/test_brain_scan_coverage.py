@@ -22,7 +22,7 @@ def scan_runtime(initial_heading=0, target_heading=None):
                 "distanceCm": 0}
     half_fov = math.degrees(math.atan(CAMERA["width"] / 2 / CAMERA["fx"]))
 
-    def observe():
+    def observe(*, motion=None):
         odometry["tick"] += 1
         runtime.bridge.seconds = odometry["tick"] * .02
         bearing = wrap(odometry["headingDeg"] - target_heading) if target_heading is not None else None

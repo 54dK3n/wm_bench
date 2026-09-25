@@ -36,7 +36,7 @@ def run_fixture(tmp_path, max_rounds, done_round, *, unexplored=0, holding=False
             self.actions = SimpleNamespace(execute=self.execute, grab_attempts={})
             runtimes.append(self)
 
-        def observe(self):
+        def observe(self, *, motion=None):
             self.observation_count += 1
             self.snapshot = {"observation_index": self.observation_count,
                 "observation": {"frameId": self.observation_count},

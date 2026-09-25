@@ -20,7 +20,7 @@ class ActionEvidenceTests(unittest.TestCase):
                                        visible=lambda oid: detected, objects=lambda: []),
             bridge=SimpleNamespace(seconds=0, max_seconds=1200),
             roads=SimpleNamespace(nodes=[{}], unexplored=lambda: 0))
-        def observe():
+        def observe(*, motion=None):
             runtime.snapshot["observation_index"] += 1
             runtime.snapshot["observation"]["frameId"] += 1
         runtime.observe = observe
@@ -38,7 +38,7 @@ class ActionEvidenceTests(unittest.TestCase):
 
     def test_done_uses_final_observation(self):
         runtime = self.runtime()
-        def observe():
+        def observe(*, motion=None):
             runtime.snapshot["observation_index"] = 2
             runtime.perception.objects = lambda: [{"id": "new-red", "category": "red-ball", "state": "TENTATIVE"}]
         runtime.observe = observe
@@ -144,7 +144,7 @@ class ScriptedActionCase(unittest.TestCase):
             pending.append(step)
             return step.get("result", {})
 
-        def observe():
+        def observe(*, motion=None):
             if pending:
                 step = pending.pop(0)
                 snapshot["odometry"].update(step.get("odometry", {}))

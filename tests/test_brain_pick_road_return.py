@@ -62,7 +62,7 @@ def pick_runtime(*, grab_results=(True,), old_position_present=False,
             detection["frame_id"] = str(snapshot["observation"]["frameId"])
         snapshot["perception"]["detections"] = detections
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1
@@ -271,8 +271,8 @@ def test_lost_holding_at_verification_cannot_establish_pick_success():
     runtime, _, _, marked, controls, target = pick_runtime()
     original_observe = runtime.observe
 
-    def observe_dropped_ball():
-        original_observe()
+    def observe_dropped_ball(*, motion=None):
+        original_observe(motion=motion)
         if controls["withdrawn_cm"] >= 29.9:
             runtime.snapshot["holding"]["holding"] = False
             runtime.snapshot["perception"]["detections"] = []

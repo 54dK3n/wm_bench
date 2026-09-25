@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v19"
+VERSION = "autonomous-brain-actions/v20"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -216,10 +216,10 @@ class Actions:
             raise SimulationLimit("simulation_time_limit")
         before = self.s["observation_index"]
         result = self.r.bridge.call(method, params)
-        self.r.observe()
-        self.r.motion_log.write({"round": self.r.round, "method": method, "params": params,
-                                 "actuator_result": result, "before_observation": before,
-                                 "after_observation": self.s["observation_index"]})
+        motion = {"round": self.r.round, "method": method, "params": params,
+                  "actuator_result": result, "before_observation": before}
+        self.r.observe(motion=motion)
+        self.r.motion_log.write(dict(motion, after_observation=self.s["observation_index"]))
         if self.r.bridge.seconds >= self.r.bridge.max_seconds:
             raise SimulationLimit("simulation_time_limit")
         return result
@@ -463,7 +463,7 @@ class Actions:
                     "observed_exit_angles": [entry["angleDeg"] for entry in road.get("exits", [])],
                     **evidence}
         fresh_angle = matches[0]["angleDeg"]
-        self.r.roads.chosen(odo, fresh_angle)
+        self.r.roads.chosen(odo, fresh_angle, observation_index=self.s["observation_index"])
         return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
 
     def explore(self, exit_angle=None):

@@ -199,11 +199,12 @@ class NextModelStateTests(unittest.TestCase):
                 self.bridge = SimpleNamespace(seconds=0, max_seconds=1200, log=mock.Mock())
                 self.observation_log = self.motion_log = mock.Mock()
                 self.perception = SimpleNamespace(objects=lambda: [row], timeline=lambda: [], action_evidence=lambda: [])
-                self.roads = SimpleNamespace(nodes=[], exits=lambda *args: [], summary=lambda: [], unexplored=lambda: 0)
+                self.roads = SimpleNamespace(nodes=[], exits=lambda *args: [], summary=lambda: [], unexplored=lambda: 0,
+                                             frontier_hints=lambda *args, **kwargs: [])
                 self.actions = SimpleNamespace(execute=self.execute, grab_attempts={})
                 self.snapshot = None
 
-            def observe(self):
+            def observe(self, *, motion=None):
                 self.observation_count += 1
                 self.snapshot = {"observation_index": self.observation_count,
                                  "odometry": {"rightCm": 0, "forwardCm": 0, "headingDeg": 0},
@@ -257,7 +258,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v10")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v11")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

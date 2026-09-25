@@ -47,7 +47,7 @@ def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_fi
         theta = math.radians(odo["headingDeg"])
         return math.cos(theta) * dx + math.sin(theta) * dz, -math.sin(theta) * dx + math.cos(theta) * dz
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1

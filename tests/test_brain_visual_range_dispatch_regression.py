@@ -35,7 +35,7 @@ def range_runtime(memory_cm, fresh_cm, *, actuator="progress", on_road=True):
         routes.append((dict(odometry), goal))
         return [(0, 0), (0, memory_cm / 100)]
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1

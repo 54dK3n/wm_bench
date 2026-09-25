@@ -1,0 +1,4345 @@
+{
+  "schema": "observed-directed-route-candidate-evidence/v1",
+  "candidate_only": true,
+  "baseline_sha256": "3238323babe95ac32cf45e6ce833ecba32857dd31a247b78ee5495ba768a7981",
+  "candidate_sha256": "8449018d1e318639ca6eb51c5f053cff9d0e5185785b4d1de3f06402a0362795",
+  "history": {
+    "real_completed_window_examples": [
+      {
+        "run": "run18",
+        "window": [
+          1,
+          2
+        ],
+        "departure": {
+          "observation_index": 1,
+          "tick": 0,
+          "node_id": "junction-1",
+          "position_m": [
+            0.0,
+            0.0
+          ],
+          "heading_deg": 0,
+          "odometer_cm": 0,
+          "fresh_relative_exits_deg": [
+            0
+          ],
+          "fresh_headings_deg": [
+            0
+          ]
+        },
+        "arrival": {
+          "observation_index": 2,
+          "tick": 81,
+          "node_id": "junction-2",
+          "position_m": [
+            0.0,
+            0.25
+          ],
+          "heading_deg": 0,
+          "odometer_cm": 25,
+          "fresh_relative_exits_deg": [
+            90,
+            0.8,
+            -90,
+            -180
+          ],
+          "fresh_headings_deg": [
+            90,
+            0.8000000000000114,
+            -90,
+            -180
+          ]
+        },
+        "travelled_cm": 25,
+        "motion_result": {
+          "accepted": true,
+          "stoppedBy": "entered_road",
+          "distanceCm": 25,
+          "elapsedTicks": 81
+        }
+      },
+      {
+        "run": "run19",
+        "window": [
+          1,
+          2
+        ],
+        "departure": {
+          "observation_index": 1,
+          "tick": 0,
+          "node_id": "junction-1",
+          "position_m": [
+            0.0,
+            0.0
+          ],
+          "heading_deg": 0,
+          "odometer_cm": 0,
+          "fresh_relative_exits_deg": [
+            0
+          ],
+          "fresh_headings_deg": [
+            0
+          ]
+        },
+        "arrival": {
+          "observation_index": 2,
+          "tick": 81,
+          "node_id": "junction-2",
+          "position_m": [
+            0.0,
+            0.25
+          ],
+          "heading_deg": 0,
+          "odometer_cm": 25,
+          "fresh_relative_exits_deg": [
+            90,
+            0.8,
+            -90,
+            -180
+          ],
+          "fresh_headings_deg": [
+            90,
+            0.8000000000000114,
+            -90,
+            -180
+          ]
+        },
+        "travelled_cm": 25,
+        "motion_result": {
+          "accepted": true,
+          "stoppedBy": "entered_road",
+          "distanceCm": 25,
+          "elapsedTicks": 81
+        }
+      }
+    ],
+    "run18_chord_counterexample": {
+      "round": 126,
+      "observation_index": 851,
+      "chord_relative_angle_deg": -58.24363964760175,
+      "chord_fresh_matches": [],
+      "actual_departure_absolute_deg": 0.8000000000000114,
+      "actual_departure_relative_deg": -89.89999999999999,
+      "actual_departure_fresh_matches": [
+        -89.9
+      ],
+      "first_edge_chord_cm": 29.62785851188034,
+      "public_odometer_delta_cm": 40.600000000000364,
+      "record_737_738": {
+        "recorded": false,
+        "status": "pending",
+        "reason": "arrival_node_not_observed"
+      },
+      "candidate_hints": [],
+      "limitation": "obs738 is not a node; no completed connection or extra motion was invented"
+    },
+    "run19_mixed_and_similar_memory": {
+      "unexplored_before_after": [
+        32,
+        32
+      ],
+      "mixed_anchor_observations": [
+        332,
+        681
+      ],
+      "mixed_query_hints": [
+        {
+          "kind": "current_fresh_unexplored",
+          "target_node_id": "junction-18",
+          "target_exit_index": 4,
+          "target_heading_deg": 90,
+          "next_exit_angle_deg": -45,
+          "target_observation_anchor": {
+            "observation_index": 681,
+            "tick": 24383,
+            "node_id": "junction-18",
+            "position_m": [
+              -1.169,
+              0.654
+            ],
+            "heading_deg": 135,
+            "odometer_cm": 3051.9,
+            "fresh_relative_exits_deg": [
+              75.5,
+              -45,
+              -146.3
+            ],
+            "fresh_headings_deg": [
+              -149.5,
+              90,
+              -11.300000000000011
+            ]
+          },
+          "arrival_anchor": {
+            "observation_index": 681,
+            "tick": 24383,
+            "node_id": "junction-18",
+            "position_m": [
+              -1.169,
+              0.654
+            ],
+            "heading_deg": 135,
+            "odometer_cm": 3051.9,
+            "fresh_relative_exits_deg": [
+              75.5,
+              -45,
+              -146.3
+            ],
+            "fresh_headings_deg": [
+              -149.5,
+              90,
+              -11.300000000000011
+            ]
+          },
+          "target_anchor_gap_cm": 0,
+          "recorded_travelled_cm": 0,
+          "traversal_ids": []
+        }
+      ],
+      "old_minus90_retained": {
+        "heading_deg": -90.0,
+        "visits": 0,
+        "completed": false,
+        "blocked": false
+      },
+      "similar_node_ids": [
+        "junction-24",
+        "junction-25"
+      ],
+      "similar_queries": [
+        [
+          {
+            "kind": "current_fresh_unexplored",
+            "target_node_id": "junction-24",
+            "target_exit_index": 1,
+            "target_heading_deg": 125.5,
+            "next_exit_angle_deg": -72.1,
+            "target_observation_anchor": {
+              "observation_index": 523,
+              "tick": 19046,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.865,
+                1.819
+              ],
+              "heading_deg": -162.4,
+              "odometer_cm": 2438.6,
+              "fresh_relative_exits_deg": [
+                25.4,
+                -72.1,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -137.0,
+                125.5,
+                18.399999999999977
+              ]
+            },
+            "arrival_anchor": {
+              "observation_index": 523,
+              "tick": 19046,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.865,
+                1.819
+              ],
+              "heading_deg": -162.4,
+              "odometer_cm": 2438.6,
+              "fresh_relative_exits_deg": [
+                25.4,
+                -72.1,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -137.0,
+                125.5,
+                18.399999999999977
+              ]
+            },
+            "target_anchor_gap_cm": 0,
+            "recorded_travelled_cm": 0,
+            "traversal_ids": []
+          }
+        ],
+        [
+          {
+            "kind": "current_fresh_unexplored",
+            "target_node_id": "junction-25",
+            "target_exit_index": 0,
+            "target_heading_deg": -137,
+            "next_exit_angle_deg": 176,
+            "target_observation_anchor": {
+              "observation_index": 556,
+              "tick": 20029,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.748,
+                1.7180000000000002
+              ],
+              "heading_deg": 47,
+              "odometer_cm": 2524.3,
+              "fresh_relative_exits_deg": [
+                176,
+                78.6,
+                -28.5
+              ],
+              "fresh_headings_deg": [
+                -137,
+                125.60000000000002,
+                18.5
+              ]
+            },
+            "arrival_anchor": {
+              "observation_index": 556,
+              "tick": 20029,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.748,
+                1.7180000000000002
+              ],
+              "heading_deg": 47,
+              "odometer_cm": 2524.3,
+              "fresh_relative_exits_deg": [
+                176,
+                78.6,
+                -28.5
+              ],
+              "fresh_headings_deg": [
+                -137,
+                125.60000000000002,
+                18.5
+              ]
+            },
+            "target_anchor_gap_cm": 0,
+            "recorded_travelled_cm": 0,
+            "traversal_ids": []
+          },
+          {
+            "kind": "current_fresh_unexplored",
+            "target_node_id": "junction-25",
+            "target_exit_index": 1,
+            "target_heading_deg": 125.60000000000002,
+            "next_exit_angle_deg": 78.6,
+            "target_observation_anchor": {
+              "observation_index": 556,
+              "tick": 20029,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.748,
+                1.7180000000000002
+              ],
+              "heading_deg": 47,
+              "odometer_cm": 2524.3,
+              "fresh_relative_exits_deg": [
+                176,
+                78.6,
+                -28.5
+              ],
+              "fresh_headings_deg": [
+                -137,
+                125.60000000000002,
+                18.5
+              ]
+            },
+            "arrival_anchor": {
+              "observation_index": 556,
+              "tick": 20029,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.748,
+                1.7180000000000002
+              ],
+              "heading_deg": 47,
+              "odometer_cm": 2524.3,
+              "fresh_relative_exits_deg": [
+                176,
+                78.6,
+                -28.5
+              ],
+              "fresh_headings_deg": [
+                -137,
+                125.60000000000002,
+                18.5
+              ]
+            },
+            "target_anchor_gap_cm": 0,
+            "recorded_travelled_cm": 0,
+            "traversal_ids": []
+          }
+        ]
+      ],
+      "aliases_created": 0
+    }
+  },
+  "run20_coverage": {
+    "scope": "Run20 completed public inputs only; no actions executed; v4 geometry verified at all 200 round starts; logged visits/completed/blocked synchronized at each round start, not inferred from missing action callbacks",
+    "rounds": 200,
+    "observations": 1376,
+    "motions": 976,
+    "take_exit_windows": 102,
+    "completed_trip_count": 81,
+    "completed_trips": [
+      {
+        "trip_id": "traversal-1",
+        "from": "junction-1",
+        "to": "junction-2",
+        "window": [
+          1,
+          2
+        ],
+        "travelled_cm": 25,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-2",
+        "from": "junction-2",
+        "to": "junction-3",
+        "window": [
+          5,
+          36
+        ],
+        "travelled_cm": 93.8,
+        "motion_count": 21,
+        "observation_count": 32
+      },
+      {
+        "trip_id": "traversal-3",
+        "from": "junction-4",
+        "to": "junction-5",
+        "window": [
+          61,
+          62
+        ],
+        "travelled_cm": 40.599999999999966,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-4",
+        "from": "junction-5",
+        "to": "junction-6",
+        "window": [
+          75,
+          79
+        ],
+        "travelled_cm": 49.0,
+        "motion_count": 2,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-5",
+        "from": "junction-6",
+        "to": "junction-7",
+        "window": [
+          82,
+          97
+        ],
+        "travelled_cm": 50.0,
+        "motion_count": 11,
+        "observation_count": 16
+      },
+      {
+        "trip_id": "traversal-6",
+        "from": "junction-7",
+        "to": "junction-8",
+        "window": [
+          100,
+          102
+        ],
+        "travelled_cm": 55.700000000000045,
+        "motion_count": 2,
+        "observation_count": 3
+      },
+      {
+        "trip_id": "traversal-7",
+        "from": "junction-8",
+        "to": "junction-9",
+        "window": [
+          115,
+          145
+        ],
+        "travelled_cm": 86.60000000000002,
+        "motion_count": 22,
+        "observation_count": 31
+      },
+      {
+        "trip_id": "traversal-8",
+        "from": "junction-10",
+        "to": "junction-9",
+        "window": [
+          188,
+          191
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-9",
+        "from": "junction-9",
+        "to": "junction-11",
+        "window": [
+          192,
+          194
+        ],
+        "travelled_cm": 55.799999999999955,
+        "motion_count": 2,
+        "observation_count": 3
+      },
+      {
+        "trip_id": "traversal-10",
+        "from": "junction-11",
+        "to": "junction-7",
+        "window": [
+          195,
+          198
+        ],
+        "travelled_cm": 50.0,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-11",
+        "from": "junction-7",
+        "to": "junction-12",
+        "window": [
+          199,
+          201
+        ],
+        "travelled_cm": 58.30000000000007,
+        "motion_count": 2,
+        "observation_count": 3
+      },
+      {
+        "trip_id": "traversal-12",
+        "from": "junction-12",
+        "to": "junction-13",
+        "window": [
+          202,
+          203
+        ],
+        "travelled_cm": 40.60000000000002,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-13",
+        "from": "junction-13",
+        "to": "junction-4",
+        "window": [
+          204,
+          207
+        ],
+        "travelled_cm": 40.59999999999991,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-14",
+        "from": "junction-4",
+        "to": "junction-14",
+        "window": [
+          208,
+          213
+        ],
+        "travelled_cm": 107.0,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-15",
+        "from": "junction-14",
+        "to": "junction-15",
+        "window": [
+          213,
+          216
+        ],
+        "travelled_cm": 50.0,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-16",
+        "from": "junction-15",
+        "to": "junction-1",
+        "window": [
+          217,
+          218
+        ],
+        "travelled_cm": 40.600000000000136,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-17",
+        "from": "junction-1",
+        "to": "junction-2",
+        "window": [
+          221,
+          222
+        ],
+        "travelled_cm": 27.399999999999864,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-18",
+        "from": "junction-2",
+        "to": "junction-16",
+        "window": [
+          224,
+          239
+        ],
+        "travelled_cm": 36.799999999999955,
+        "motion_count": 11,
+        "observation_count": 16
+      },
+      {
+        "trip_id": "traversal-19",
+        "from": "junction-16",
+        "to": "junction-1",
+        "window": [
+          239,
+          240
+        ],
+        "travelled_cm": 40.600000000000136,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-20",
+        "from": "junction-1",
+        "to": "junction-2",
+        "window": [
+          241,
+          242
+        ],
+        "travelled_cm": 27.399999999999864,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-21",
+        "from": "junction-2",
+        "to": "junction-17",
+        "window": [
+          243,
+          261
+        ],
+        "travelled_cm": 74.90000000000009,
+        "motion_count": 12,
+        "observation_count": 19
+      },
+      {
+        "trip_id": "traversal-22",
+        "from": "junction-17",
+        "to": "junction-18",
+        "window": [
+          264,
+          285
+        ],
+        "travelled_cm": 98.5,
+        "motion_count": 15,
+        "observation_count": 22
+      },
+      {
+        "trip_id": "traversal-23",
+        "from": "junction-19",
+        "to": "junction-15",
+        "window": [
+          326,
+          330
+        ],
+        "travelled_cm": 88.0,
+        "motion_count": 4,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-24",
+        "from": "junction-15",
+        "to": "junction-3",
+        "window": [
+          332,
+          383
+        ],
+        "travelled_cm": 107.0,
+        "motion_count": 37,
+        "observation_count": 52
+      },
+      {
+        "trip_id": "traversal-25",
+        "from": "junction-3",
+        "to": "junction-5",
+        "window": [
+          386,
+          387
+        ],
+        "travelled_cm": 40.59999999999991,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-26",
+        "from": "junction-5",
+        "to": "junction-20",
+        "window": [
+          390,
+          391
+        ],
+        "travelled_cm": 31.299999999999955,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-27",
+        "from": "junction-20",
+        "to": "junction-21",
+        "window": [
+          394,
+          395
+        ],
+        "travelled_cm": 36.30000000000018,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-28",
+        "from": "junction-21",
+        "to": "junction-10",
+        "window": [
+          398,
+          414
+        ],
+        "travelled_cm": 73.39999999999986,
+        "motion_count": 12,
+        "observation_count": 17
+      },
+      {
+        "trip_id": "traversal-29",
+        "from": "junction-10",
+        "to": "junction-11",
+        "window": [
+          417,
+          431
+        ],
+        "travelled_cm": 55.700000000000045,
+        "motion_count": 10,
+        "observation_count": 15
+      },
+      {
+        "trip_id": "traversal-30",
+        "from": "junction-11",
+        "to": "junction-12",
+        "window": [
+          434,
+          468
+        ],
+        "travelled_cm": 58.30000000000018,
+        "motion_count": 26,
+        "observation_count": 35
+      },
+      {
+        "trip_id": "traversal-31",
+        "from": "junction-12",
+        "to": "junction-20",
+        "window": [
+          471,
+          472
+        ],
+        "travelled_cm": 40.59999999999991,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-32",
+        "from": "junction-20",
+        "to": "junction-22",
+        "window": [
+          485,
+          500
+        ],
+        "travelled_cm": 45.69999999999982,
+        "motion_count": 11,
+        "observation_count": 16
+      },
+      {
+        "trip_id": "traversal-33",
+        "from": "junction-22",
+        "to": "junction-20",
+        "window": [
+          503,
+          504
+        ],
+        "travelled_cm": 40.59999999999991,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-34",
+        "from": "junction-20",
+        "to": "junction-13",
+        "window": [
+          507,
+          508
+        ],
+        "travelled_cm": 36.30000000000018,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-35",
+        "from": "junction-13",
+        "to": "junction-14",
+        "window": [
+          511,
+          518
+        ],
+        "travelled_cm": 97.69999999999982,
+        "motion_count": 5,
+        "observation_count": 8
+      },
+      {
+        "trip_id": "traversal-36",
+        "from": "junction-14",
+        "to": "junction-23",
+        "window": [
+          521,
+          535
+        ],
+        "travelled_cm": 59.0,
+        "motion_count": 10,
+        "observation_count": 15
+      },
+      {
+        "trip_id": "traversal-37",
+        "from": "junction-24",
+        "to": "junction-25",
+        "window": [
+          547,
+          564
+        ],
+        "travelled_cm": 64.79999999999973,
+        "motion_count": 11,
+        "observation_count": 18
+      },
+      {
+        "trip_id": "traversal-38",
+        "from": "junction-26",
+        "to": "junction-27",
+        "window": [
+          584,
+          638
+        ],
+        "travelled_cm": 174.80000000000018,
+        "motion_count": 38,
+        "observation_count": 55
+      },
+      {
+        "trip_id": "traversal-39",
+        "from": "junction-27",
+        "to": "junction-28",
+        "window": [
+          641,
+          649
+        ],
+        "travelled_cm": 86.59999999999991,
+        "motion_count": 6,
+        "observation_count": 9
+      },
+      {
+        "trip_id": "traversal-40",
+        "from": "junction-28",
+        "to": "junction-26",
+        "window": [
+          667,
+          670
+        ],
+        "travelled_cm": 43.59999999999991,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-41",
+        "from": "junction-26",
+        "to": "junction-29",
+        "window": [
+          671,
+          674
+        ],
+        "travelled_cm": 64.80000000000018,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-42",
+        "from": "junction-29",
+        "to": "junction-23",
+        "window": [
+          675,
+          678
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-43",
+        "from": "junction-23",
+        "to": "junction-29",
+        "window": [
+          679,
+          682
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-44",
+        "from": "junction-29",
+        "to": "junction-30",
+        "window": [
+          685,
+          690
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-45",
+        "from": "junction-30",
+        "to": "junction-24",
+        "window": [
+          690,
+          693
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-46",
+        "from": "junction-24",
+        "to": "junction-29",
+        "window": [
+          694,
+          697
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-47",
+        "from": "junction-29",
+        "to": "junction-23",
+        "window": [
+          698,
+          701
+        ],
+        "travelled_cm": 50,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-48",
+        "from": "junction-23",
+        "to": "junction-16",
+        "window": [
+          702,
+          704
+        ],
+        "travelled_cm": 59.09999999999991,
+        "motion_count": 2,
+        "observation_count": 3
+      },
+      {
+        "trip_id": "traversal-49",
+        "from": "junction-16",
+        "to": "junction-1",
+        "window": [
+          704,
+          705
+        ],
+        "travelled_cm": 40.59999999999991,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-50",
+        "from": "junction-1",
+        "to": "junction-2",
+        "window": [
+          706,
+          707
+        ],
+        "travelled_cm": 27.40000000000009,
+        "motion_count": 1,
+        "observation_count": 2
+      },
+      {
+        "trip_id": "traversal-51",
+        "from": "junction-2",
+        "to": "junction-17",
+        "window": [
+          708,
+          715
+        ],
+        "travelled_cm": 80.5,
+        "motion_count": 7,
+        "observation_count": 8
+      },
+      {
+        "trip_id": "traversal-52",
+        "from": "junction-19",
+        "to": "junction-31",
+        "window": [
+          736,
+          771
+        ],
+        "travelled_cm": 66.40000000000009,
+        "motion_count": 27,
+        "observation_count": 36
+      },
+      {
+        "trip_id": "traversal-53",
+        "from": "junction-32",
+        "to": "junction-18",
+        "window": [
+          813,
+          838
+        ],
+        "travelled_cm": 66.40000000000009,
+        "motion_count": 19,
+        "observation_count": 26
+      },
+      {
+        "trip_id": "traversal-54",
+        "from": "junction-18",
+        "to": "junction-15",
+        "window": [
+          851,
+          855
+        ],
+        "travelled_cm": 88.09999999999991,
+        "motion_count": 4,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-55",
+        "from": "junction-15",
+        "to": "junction-23",
+        "window": [
+          858,
+          872
+        ],
+        "travelled_cm": 59.09999999999991,
+        "motion_count": 10,
+        "observation_count": 15
+      },
+      {
+        "trip_id": "traversal-56",
+        "from": "junction-23",
+        "to": "junction-33",
+        "window": [
+          875,
+          880
+        ],
+        "travelled_cm": 113.90000000000055,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-57",
+        "from": "junction-32",
+        "to": "junction-34",
+        "window": [
+          921,
+          966
+        ],
+        "travelled_cm": 80.59999999999945,
+        "motion_count": 35,
+        "observation_count": 46
+      },
+      {
+        "trip_id": "traversal-58",
+        "from": "junction-34",
+        "to": "junction-35",
+        "window": [
+          979,
+          982
+        ],
+        "travelled_cm": 53.0,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-59",
+        "from": "junction-35",
+        "to": "junction-18",
+        "window": [
+          995,
+          1010
+        ],
+        "travelled_cm": 66.40000000000055,
+        "motion_count": 11,
+        "observation_count": 16
+      },
+      {
+        "trip_id": "traversal-60",
+        "from": "junction-19",
+        "to": "junction-15",
+        "window": [
+          1044,
+          1048
+        ],
+        "travelled_cm": 88.0,
+        "motion_count": 4,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-61",
+        "from": "junction-15",
+        "to": "junction-17",
+        "window": [
+          1061,
+          1077
+        ],
+        "travelled_cm": 88.09999999999945,
+        "motion_count": 12,
+        "observation_count": 17
+      },
+      {
+        "trip_id": "traversal-62",
+        "from": "junction-17",
+        "to": "junction-15",
+        "window": [
+          1080,
+          1084
+        ],
+        "travelled_cm": 88.0,
+        "motion_count": 4,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-63",
+        "from": "junction-15",
+        "to": "junction-17",
+        "window": [
+          1087,
+          1091
+        ],
+        "travelled_cm": 88.10000000000036,
+        "motion_count": 4,
+        "observation_count": 5
+      },
+      {
+        "trip_id": "traversal-64",
+        "from": "junction-17",
+        "to": "junction-31",
+        "window": [
+          1094,
+          1109
+        ],
+        "travelled_cm": 66.39999999999964,
+        "motion_count": 11,
+        "observation_count": 16
+      },
+      {
+        "trip_id": "traversal-65",
+        "from": "junction-31",
+        "to": "junction-30",
+        "window": [
+          1112,
+          1139
+        ],
+        "travelled_cm": 113.90000000000055,
+        "motion_count": 21,
+        "observation_count": 28
+      },
+      {
+        "trip_id": "traversal-66",
+        "from": "junction-30",
+        "to": "junction-16",
+        "window": [
+          1142,
+          1144
+        ],
+        "travelled_cm": 59.099999999999454,
+        "motion_count": 2,
+        "observation_count": 3
+      },
+      {
+        "trip_id": "traversal-67",
+        "from": "junction-16",
+        "to": "junction-17",
+        "window": [
+          1147,
+          1163
+        ],
+        "travelled_cm": 88.0,
+        "motion_count": 12,
+        "observation_count": 17
+      },
+      {
+        "trip_id": "traversal-68",
+        "from": "junction-19",
+        "to": "junction-31",
+        "window": [
+          1190,
+          1193
+        ],
+        "travelled_cm": 66.40000000000055,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-69",
+        "from": "junction-31",
+        "to": "junction-34",
+        "window": [
+          1196,
+          1199
+        ],
+        "travelled_cm": 80.59999999999945,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-70",
+        "from": "junction-34",
+        "to": "junction-35",
+        "window": [
+          1202,
+          1205
+        ],
+        "travelled_cm": 53.0,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-71",
+        "from": "junction-35",
+        "to": "junction-30",
+        "window": [
+          1207,
+          1212
+        ],
+        "travelled_cm": 113.90000000000055,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-72",
+        "from": "junction-30",
+        "to": "junction-25",
+        "window": [
+          1215,
+          1242
+        ],
+        "travelled_cm": 64.89999999999964,
+        "motion_count": 19,
+        "observation_count": 28
+      },
+      {
+        "trip_id": "traversal-73",
+        "from": "junction-25",
+        "to": "junction-36",
+        "window": [
+          1245,
+          1262
+        ],
+        "travelled_cm": 112.60000000000036,
+        "motion_count": 13,
+        "observation_count": 18
+      },
+      {
+        "trip_id": "traversal-74",
+        "from": "junction-36",
+        "to": "junction-27",
+        "window": [
+          1265,
+          1270
+        ],
+        "travelled_cm": 108.5,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-75",
+        "from": "junction-27",
+        "to": "junction-29",
+        "window": [
+          1273,
+          1276
+        ],
+        "travelled_cm": 64.89999999999964,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-76",
+        "from": "junction-24",
+        "to": "junction-33",
+        "window": [
+          1285,
+          1302
+        ],
+        "travelled_cm": 113.89999999999964,
+        "motion_count": 13,
+        "observation_count": 18
+      },
+      {
+        "trip_id": "traversal-77",
+        "from": "junction-33",
+        "to": "junction-34",
+        "window": [
+          1304,
+          1307
+        ],
+        "travelled_cm": 80.60000000000036,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-78",
+        "from": "junction-34",
+        "to": "junction-35",
+        "window": [
+          1310,
+          1313
+        ],
+        "travelled_cm": 53.0,
+        "motion_count": 3,
+        "observation_count": 4
+      },
+      {
+        "trip_id": "traversal-79",
+        "from": "junction-32",
+        "to": "junction-30",
+        "window": [
+          1323,
+          1328
+        ],
+        "travelled_cm": 113.90000000000055,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-80",
+        "from": "junction-30",
+        "to": "junction-33",
+        "window": [
+          1331,
+          1336
+        ],
+        "travelled_cm": 113.89999999999964,
+        "motion_count": 5,
+        "observation_count": 6
+      },
+      {
+        "trip_id": "traversal-81",
+        "from": "junction-33",
+        "to": "junction-18",
+        "window": [
+          1339,
+          1354
+        ],
+        "travelled_cm": 66.40000000000055,
+        "motion_count": 11,
+        "observation_count": 16
+      }
+    ],
+    "rejected_or_unfinished_count": 21,
+    "rejection_reasons": {
+      "motion_not_observed_accepted": 19,
+      "returned_to_origin_before_distinct_arrival": 1,
+      "unfinished_at_end_of_public_record": 1
+    },
+    "rejected_or_unfinished_windows": [
+      {
+        "start_observation": 39,
+        "end_observation": 54,
+        "start_round": 8,
+        "end_round": 10,
+        "motion_count": 11,
+        "observation_count": 16,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 39,
+            "after_observation": 40,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 42,
+            "after_observation": 43,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 43,
+            "after_observation": 44,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 44,
+            "after_observation": 45,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 45,
+            "after_observation": 46,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 46,
+            "after_observation": 47,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 47,
+            "after_observation": 48,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 48,
+            "after_observation": 49,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 49,
+            "after_observation": 50,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 52,
+            "after_observation": 53,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "max_distance"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 53,
+            "after_observation": 54,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 160,
+        "end_observation": 162,
+        "start_round": 26,
+        "end_round": 26,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 160,
+            "after_observation": 161,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 161,
+            "after_observation": 162,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 184,
+        "end_observation": 187,
+        "start_round": 29,
+        "end_round": 29,
+        "motion_count": 3,
+        "observation_count": 4,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 184,
+            "after_observation": 185,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 185,
+            "after_observation": 186,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 186,
+            "after_observation": 187,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "junction"
+            }
+          }
+        ],
+        "reason": "returned_to_origin_before_distinct_arrival"
+      },
+      {
+        "start_observation": 300,
+        "end_observation": 314,
+        "start_round": 43,
+        "end_round": 45,
+        "motion_count": 10,
+        "observation_count": 15,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 300,
+            "after_observation": 301,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 303,
+            "after_observation": 304,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 304,
+            "after_observation": 305,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 305,
+            "after_observation": 306,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 306,
+            "after_observation": 307,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 307,
+            "after_observation": 308,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 308,
+            "after_observation": 309,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 309,
+            "after_observation": 310,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 310,
+            "after_observation": 311,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 313,
+            "after_observation": 314,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 319,
+        "end_observation": 321,
+        "start_round": 46,
+        "end_round": 46,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 319,
+            "after_observation": 320,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 320,
+            "after_observation": 321,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 538,
+        "end_observation": 542,
+        "start_round": 82,
+        "end_round": 83,
+        "motion_count": 2,
+        "observation_count": 5,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 538,
+            "after_observation": 539,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 541,
+            "after_observation": 542,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 577,
+        "end_observation": 579,
+        "start_round": 89,
+        "end_round": 89,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 577,
+            "after_observation": 578,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 578,
+            "after_observation": 579,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 729,
+        "end_observation": 731,
+        "start_round": 107,
+        "end_round": 107,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 729,
+            "after_observation": 730,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 730,
+            "after_observation": 731,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 774,
+        "end_observation": 798,
+        "start_round": 113,
+        "end_round": 116,
+        "motion_count": 18,
+        "observation_count": 25,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 774,
+            "after_observation": 775,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 777,
+            "after_observation": 778,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 778,
+            "after_observation": 779,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 779,
+            "after_observation": 780,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 780,
+            "after_observation": 781,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 781,
+            "after_observation": 782,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 782,
+            "after_observation": 783,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 783,
+            "after_observation": 784,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 784,
+            "after_observation": 785,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 787,
+            "after_observation": 788,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 788,
+            "after_observation": 789,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 789,
+            "after_observation": 790,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 790,
+            "after_observation": 791,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 791,
+            "after_observation": 792,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 792,
+            "after_observation": 793,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 793,
+            "after_observation": 794,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 794,
+            "after_observation": 795,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 797,
+            "after_observation": 798,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 883,
+        "end_observation": 897,
+        "start_round": 128,
+        "end_round": 130,
+        "motion_count": 10,
+        "observation_count": 15,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 883,
+            "after_observation": 884,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 886,
+            "after_observation": 887,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 887,
+            "after_observation": 888,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 888,
+            "after_observation": 889,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 889,
+            "after_observation": 890,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 890,
+            "after_observation": 891,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 891,
+            "after_observation": 892,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 892,
+            "after_observation": 893,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 893,
+            "after_observation": 894,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 896,
+            "after_observation": 897,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 902,
+        "end_observation": 916,
+        "start_round": 131,
+        "end_round": 133,
+        "motion_count": 10,
+        "observation_count": 15,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 902,
+            "after_observation": 903,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 905,
+            "after_observation": 906,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 906,
+            "after_observation": 907,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 907,
+            "after_observation": 908,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 908,
+            "after_observation": 909,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 909,
+            "after_observation": 910,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 910,
+            "after_observation": 911,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 911,
+            "after_observation": 912,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "turn",
+            "before_observation": 912,
+            "after_observation": 913,
+            "result": {
+              "completed": true
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 915,
+            "after_observation": 916,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1013,
+        "end_observation": 1015,
+        "start_round": 146,
+        "end_round": 146,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1013,
+            "after_observation": 1014,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1014,
+            "after_observation": 1015,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1030,
+        "end_observation": 1032,
+        "start_round": 148,
+        "end_round": 148,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1030,
+            "after_observation": 1031,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1031,
+            "after_observation": 1032,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1037,
+        "end_observation": 1039,
+        "start_round": 149,
+        "end_round": 149,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1037,
+            "after_observation": 1038,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1038,
+            "after_observation": 1039,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1166,
+        "end_observation": 1168,
+        "start_round": 168,
+        "end_round": 168,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1166,
+            "after_observation": 1167,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1167,
+            "after_observation": 1168,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1183,
+        "end_observation": 1185,
+        "start_round": 170,
+        "end_round": 170,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1183,
+            "after_observation": 1184,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1184,
+            "after_observation": 1185,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1279,
+        "end_observation": 1281,
+        "start_round": 185,
+        "end_round": 185,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1279,
+            "after_observation": 1280,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1280,
+            "after_observation": 1281,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1316,
+        "end_observation": 1318,
+        "start_round": 191,
+        "end_round": 191,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1316,
+            "after_observation": 1317,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1317,
+            "after_observation": 1318,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1357,
+        "end_observation": 1361,
+        "start_round": 197,
+        "end_round": 198,
+        "motion_count": 2,
+        "observation_count": 5,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1357,
+            "after_observation": 1358,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1360,
+            "after_observation": 1361,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1366,
+        "end_observation": 1368,
+        "start_round": 199,
+        "end_round": 199,
+        "motion_count": 2,
+        "observation_count": 3,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1366,
+            "after_observation": 1367,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1367,
+            "after_observation": 1368,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "front_clearance"
+            }
+          }
+        ],
+        "recorded": false,
+        "status": "rejected",
+        "reason": "motion_not_observed_accepted"
+      },
+      {
+        "start_observation": 1373,
+        "end_observation": 1376,
+        "start_round": 200,
+        "end_round": 200,
+        "motion_count": 2,
+        "observation_count": 4,
+        "public_outcome_flags": [
+          {
+            "method": "take_exit",
+            "before_observation": 1373,
+            "after_observation": 1374,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "entered_road"
+            }
+          },
+          {
+            "method": "follow_road",
+            "before_observation": 1374,
+            "after_observation": 1375,
+            "result": {
+              "accepted": true,
+              "stoppedBy": "max_distance"
+            }
+          }
+        ],
+        "reason": "unfinished_at_end_of_public_record"
+      }
+    ],
+    "eligible_all_fresh_completed_rounds": 10,
+    "eligible_nonempty_hint_rounds": 6,
+    "eligible_empty_hint_rounds": 4,
+    "eligible_queries": [
+      {
+        "round": 30,
+        "observation_index": 220,
+        "unexplored_exit_count": 15,
+        "recorded_trips_available": 16,
+        "hint_count": 0,
+        "hints": [],
+        "current_anchor": {
+          "observation_index": 220,
+          "tick": 8951,
+          "node_id": "junction-1",
+          "position_m": [
+            0.0,
+            0.024
+          ],
+          "heading_deg": -180,
+          "odometer_cm": 1177.9,
+          "fresh_relative_exits_deg": [
+            -180
+          ],
+          "fresh_headings_deg": [
+            0
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-1",
+            "departure_observation": 1,
+            "position_gap_cm": 2.4,
+            "exact_position_and_context_compatible": false,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 140,
+        "observation_index": 968,
+        "unexplored_exit_count": 25,
+        "recorded_trips_available": 57,
+        "hint_count": 0,
+        "hints": [],
+        "current_anchor": {
+          "observation_index": 968,
+          "tick": 35989,
+          "node_id": "junction-34",
+          "position_m": [
+            1.7890000000000001,
+            0.865
+          ],
+          "heading_deg": -90,
+          "odometer_cm": 4315.7,
+          "fresh_relative_exits_deg": [
+            -180
+          ],
+          "fresh_headings_deg": [
+            90
+          ]
+        },
+        "same_node_recorded_departures": []
+      },
+      {
+        "round": 141,
+        "observation_index": 978,
+        "unexplored_exit_count": 25,
+        "recorded_trips_available": 57,
+        "hint_count": 0,
+        "hints": [],
+        "current_anchor": {
+          "observation_index": 978,
+          "tick": 36221,
+          "node_id": "junction-34",
+          "position_m": [
+            1.7890000000000001,
+            0.865
+          ],
+          "heading_deg": -90,
+          "odometer_cm": 4315.7,
+          "fresh_relative_exits_deg": [
+            -180
+          ],
+          "fresh_headings_deg": [
+            90
+          ]
+        },
+        "same_node_recorded_departures": []
+      },
+      {
+        "round": 151,
+        "observation_index": 1050,
+        "unexplored_exit_count": 27,
+        "recorded_trips_available": 60,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 0,
+            "target_heading_deg": -90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": -89.99999999999999
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-29",
+            "target_exit_index": 3,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -89.9,
+            "traversal_ids": [
+              "traversal-55",
+              "traversal-43"
+            ],
+            "recorded_travelled_cm": 109.09999999999991,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 698,
+              "tick": 26519,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": 179.3,
+              "odometer_cm": 3324,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -89.3,
+                -178.6
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                179.3,
+                90.0,
+                0.700000000000017
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 682,
+              "tick": 25465,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": -179.3,
+              "odometer_cm": 3174,
+              "fresh_relative_exits_deg": [
+                89.3,
+                -1.4,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -90.00000000000001,
+                179.29999999999995,
+                90.0,
+                0.6999999999999886
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1050,
+          "tick": 39501,
+          "node_id": "junction-15",
+          "position_m": [
+            0.156,
+            0.27399999999999997
+          ],
+          "heading_deg": 90.7,
+          "odometer_cm": 4688.1,
+          "fresh_relative_exits_deg": [
+            179.3,
+            89.3,
+            -0.7,
+            -89.9
+          ],
+          "fresh_headings_deg": [
+            -90.0,
+            -180.0,
+            90.0,
+            0.8000000000000114
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-16",
+            "departure_observation": 217,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-24",
+            "departure_observation": 332,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-55",
+            "departure_observation": 858,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 152,
+        "observation_index": 1060,
+        "unexplored_exit_count": 27,
+        "recorded_trips_available": 60,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 0,
+            "target_heading_deg": -90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": -89.99999999999999
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-29",
+            "target_exit_index": 3,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -89.9,
+            "traversal_ids": [
+              "traversal-55",
+              "traversal-43"
+            ],
+            "recorded_travelled_cm": 109.09999999999991,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 698,
+              "tick": 26519,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": 179.3,
+              "odometer_cm": 3324,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -89.3,
+                -178.6
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                179.3,
+                90.0,
+                0.700000000000017
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 682,
+              "tick": 25465,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": -179.3,
+              "odometer_cm": 3174,
+              "fresh_relative_exits_deg": [
+                89.3,
+                -1.4,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -90.00000000000001,
+                179.29999999999995,
+                90.0,
+                0.6999999999999886
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1060,
+          "tick": 39733,
+          "node_id": "junction-15",
+          "position_m": [
+            0.156,
+            0.27399999999999997
+          ],
+          "heading_deg": 90.7,
+          "odometer_cm": 4688.1,
+          "fresh_relative_exits_deg": [
+            179.3,
+            89.3,
+            -0.7,
+            -89.9
+          ],
+          "fresh_headings_deg": [
+            -90.0,
+            -180.0,
+            90.0,
+            0.8000000000000114
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-16",
+            "departure_observation": 217,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-24",
+            "departure_observation": 332,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-55",
+            "departure_observation": 858,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 156,
+        "observation_index": 1086,
+        "unexplored_exit_count": 27,
+        "recorded_trips_available": 62,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 0,
+            "target_heading_deg": -90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": -89.99999999999999
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-29",
+            "target_exit_index": 3,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -89.9,
+            "traversal_ids": [
+              "traversal-55",
+              "traversal-43"
+            ],
+            "recorded_travelled_cm": 109.09999999999991,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 698,
+              "tick": 26519,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": 179.3,
+              "odometer_cm": 3324,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -89.3,
+                -178.6
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                179.3,
+                90.0,
+                0.700000000000017
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 682,
+              "tick": 25465,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": -179.3,
+              "odometer_cm": 3174,
+              "fresh_relative_exits_deg": [
+                89.3,
+                -1.4,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -90.00000000000001,
+                179.29999999999995,
+                90.0,
+                0.6999999999999886
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1086,
+          "tick": 40991,
+          "node_id": "junction-15",
+          "position_m": [
+            0.156,
+            0.27399999999999997
+          ],
+          "heading_deg": 90.7,
+          "odometer_cm": 4864.2,
+          "fresh_relative_exits_deg": [
+            179.3,
+            89.3,
+            -0.7,
+            -89.9
+          ],
+          "fresh_headings_deg": [
+            -90.0,
+            -180.0,
+            90.0,
+            0.8000000000000114
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-16",
+            "departure_observation": 217,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-24",
+            "departure_observation": 332,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-55",
+            "departure_observation": 858,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-61",
+            "departure_observation": 1061,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 173,
+        "observation_index": 1201,
+        "unexplored_exit_count": 23,
+        "recorded_trips_available": 69,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-35",
+            "target_exit_index": 1,
+            "target_heading_deg": 90,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58"
+            ],
+            "recorded_travelled_cm": 53.0,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 995,
+              "tick": 36899,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 167.5,
+              "odometer_cm": 4368.7,
+              "fresh_relative_exits_deg": [
+                102.5,
+                0,
+                -77.5,
+                -167.5
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                167.5,
+                90.0,
+                0.0
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 982,
+              "tick": 36618,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 90,
+              "odometer_cm": 4368.7,
+              "fresh_relative_exits_deg": [
+                77.5,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                167.5,
+                90,
+                0,
+                -90
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-35",
+            "target_exit_index": 2,
+            "target_heading_deg": 0,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58"
+            ],
+            "recorded_travelled_cm": 53.0,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 995,
+              "tick": 36899,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 167.5,
+              "odometer_cm": 4368.7,
+              "fresh_relative_exits_deg": [
+                102.5,
+                0,
+                -77.5,
+                -167.5
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                167.5,
+                90.0,
+                0.0
+              ],
+              "observed_exit_heading_deg": 0.0
+            },
+            "arrival_anchor": {
+              "observation_index": 982,
+              "tick": 36618,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 90,
+              "odometer_cm": 4368.7,
+              "fresh_relative_exits_deg": [
+                77.5,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                167.5,
+                90,
+                0,
+                -90
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58",
+              "traversal-59",
+              "traversal-54",
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 312.3000000000004,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1147,
+              "tick": 43360,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 5191.7,
+              "fresh_relative_exits_deg": [
+                90.8,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.8000000000000114,
+                -90,
+                -180,
+                90
+              ],
+              "observed_exit_heading_deg": 90
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1201,
+          "tick": 45852,
+          "node_id": "junction-34",
+          "position_m": [
+            1.7890000000000001,
+            0.865
+          ],
+          "heading_deg": -90,
+          "odometer_cm": 5536.7,
+          "fresh_relative_exits_deg": [
+            -180
+          ],
+          "fresh_headings_deg": [
+            90
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-58",
+            "departure_observation": 979,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 183,
+        "observation_index": 1264,
+        "unexplored_exit_count": 20,
+        "recorded_trips_available": 73,
+        "hint_count": 0,
+        "hints": [],
+        "current_anchor": {
+          "observation_index": 1264,
+          "tick": 48038,
+          "node_id": "junction-36",
+          "position_m": [
+            0.601,
+            2.175
+          ],
+          "heading_deg": -75.1,
+          "odometer_cm": 5881.1,
+          "fresh_relative_exits_deg": [
+            175.1
+          ],
+          "fresh_headings_deg": [
+            100.0
+          ]
+        },
+        "same_node_recorded_departures": []
+      },
+      {
+        "round": 190,
+        "observation_index": 1309,
+        "unexplored_exit_count": 16,
+        "recorded_trips_available": 77,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-35",
+            "target_exit_index": 2,
+            "target_heading_deg": 0,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58"
+            ],
+            "recorded_travelled_cm": 53.0,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1207,
+              "tick": 46249,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 90,
+              "odometer_cm": 5589.7,
+              "fresh_relative_exits_deg": [
+                77.5,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                167.5,
+                90,
+                0,
+                -90
+              ],
+              "observed_exit_heading_deg": 0
+            },
+            "arrival_anchor": {
+              "observation_index": 982,
+              "tick": 36618,
+              "node_id": "junction-35",
+              "position_m": [
+                1.295,
+                0.865
+              ],
+              "heading_deg": 90,
+              "odometer_cm": 4368.7,
+              "fresh_relative_exits_deg": [
+                77.5,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                167.5,
+                90,
+                0,
+                -90
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-24",
+            "target_exit_index": 2,
+            "target_heading_deg": 179.3,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58",
+              "traversal-71",
+              "traversal-45"
+            ],
+            "recorded_travelled_cm": 216.90000000000055,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1285,
+              "tick": 49346,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.156,
+                0.865
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 6120.1,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.6999999999999886,
+                -90,
+                179.3,
+                90
+              ],
+              "observed_exit_heading_deg": 179.3
+            },
+            "arrival_anchor": {
+              "observation_index": 693,
+              "tick": 26125,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.156,
+                0.865
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 3274,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.6999999999999886,
+                -90,
+                179.3,
+                90
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -180,
+            "traversal_ids": [
+              "traversal-58",
+              "traversal-71",
+              "traversal-66"
+            ],
+            "recorded_travelled_cm": 226.0,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1147,
+              "tick": 43360,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 5191.7,
+              "fresh_relative_exits_deg": [
+                90.8,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.8000000000000114,
+                -90,
+                -180,
+                90
+              ],
+              "observed_exit_heading_deg": 90
+            },
+            "arrival_anchor": {
+              "observation_index": 1144,
+              "tick": 43304,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 5191.7,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1309,
+          "tick": 50205,
+          "node_id": "junction-34",
+          "position_m": [
+            1.7890000000000001,
+            0.865
+          ],
+          "heading_deg": -90,
+          "odometer_cm": 6314.6,
+          "fresh_relative_exits_deg": [
+            -180
+          ],
+          "fresh_headings_deg": [
+            90
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-58",
+            "departure_observation": 979,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-70",
+            "departure_observation": 1202,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 193,
+        "observation_index": 1330,
+        "unexplored_exit_count": 14,
+        "recorded_trips_available": 79,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-24",
+            "target_exit_index": 2,
+            "target_heading_deg": 179.3,
+            "next_exit_angle_deg": 0,
+            "traversal_ids": [
+              "traversal-45"
+            ],
+            "recorded_travelled_cm": 50,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1285,
+              "tick": 49346,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.156,
+                0.865
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 6120.1,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.6999999999999886,
+                -90,
+                179.3,
+                90
+              ],
+              "observed_exit_heading_deg": 179.3
+            },
+            "arrival_anchor": {
+              "observation_index": 693,
+              "tick": 26125,
+              "node_id": "junction-24",
+              "position_m": [
+                -0.156,
+                0.865
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 3274,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.6999999999999886,
+                -90,
+                179.3,
+                90
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-66"
+            ],
+            "recorded_travelled_cm": 59.099999999999454,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1147,
+              "tick": 43360,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -90,
+              "odometer_cm": 5191.7,
+              "fresh_relative_exits_deg": [
+                90.8,
+                0,
+                -90,
+                -180
+              ],
+              "fresh_headings_deg": [
+                0.8000000000000114,
+                -90,
+                -180,
+                90
+              ],
+              "observed_exit_heading_deg": 90
+            },
+            "arrival_anchor": {
+              "observation_index": 1144,
+              "tick": 43304,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 5191.7,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-25",
+            "target_exit_index": 2,
+            "target_heading_deg": -90.0,
+            "next_exit_angle_deg": -89.3,
+            "traversal_ids": [
+              "traversal-72"
+            ],
+            "recorded_travelled_cm": 64.89999999999964,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 1245,
+              "tick": 47406,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.002,
+                1.358
+              ],
+              "heading_deg": -7.2,
+              "odometer_cm": 5768.5,
+              "fresh_relative_exits_deg": [
+                97.2,
+                0,
+                -82.8,
+                -173.5
+              ],
+              "fresh_headings_deg": [
+                90.0,
+                -7.199999999999989,
+                -90.0,
+                179.3
+              ],
+              "observed_exit_heading_deg": -90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 1242,
+              "tick": 47401,
+              "node_id": "junction-25",
+              "position_m": [
+                -0.002,
+                1.358
+              ],
+              "heading_deg": -0.7,
+              "odometer_cm": 5768.5,
+              "fresh_relative_exits_deg": [
+                90.7,
+                -6.5,
+                -89.3,
+                -180
+              ],
+              "fresh_headings_deg": [
+                90.0,
+                -7.199999999999989,
+                -90.0,
+                179.3
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1330,
+          "tick": 51505,
+          "node_id": "junction-30",
+          "position_m": [
+            0.156,
+            0.865
+          ],
+          "heading_deg": 90,
+          "odometer_cm": 6532.8,
+          "fresh_relative_exits_deg": [
+            89.3,
+            0,
+            -89.3,
+            -180
+          ],
+          "fresh_headings_deg": [
+            179.3,
+            90,
+            0.6999999999999886,
+            -90
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-45",
+            "departure_observation": 690,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-66",
+            "departure_observation": 1142,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-72",
+            "departure_observation": 1215,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      }
+    ],
+    "requested_rounds_155_156": [
+      {
+        "round": 155,
+        "observation_index": 1079,
+        "unexplored_exit_count": 27,
+        "recorded_trips_available": 61,
+        "hint_count": 0,
+        "hints": [],
+        "current_anchor": {
+          "observation_index": 1079,
+          "tick": 40479,
+          "node_id": "junction-17",
+          "position_m": [
+            0.7240000000000001,
+            0.27699999999999997
+          ],
+          "heading_deg": -93.4,
+          "odometer_cm": 4776.2,
+          "fresh_relative_exits_deg": [
+            56.6,
+            -102.5,
+            -179.1
+          ],
+          "fresh_headings_deg": [
+            -36.80000000000001,
+            164.10000000000002,
+            87.5
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-22",
+            "departure_observation": 264,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      },
+      {
+        "round": 156,
+        "observation_index": 1086,
+        "unexplored_exit_count": 27,
+        "recorded_trips_available": 62,
+        "hint_count": 3,
+        "hints": [
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 0,
+            "target_heading_deg": -90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": -89.99999999999999
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-16",
+            "target_exit_index": 2,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": 89.3,
+            "traversal_ids": [
+              "traversal-16",
+              "traversal-17",
+              "traversal-18"
+            ],
+            "recorded_travelled_cm": 104.79999999999995,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 704,
+              "tick": 27213,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": -179.2,
+              "odometer_cm": 3433.1,
+              "fresh_relative_exits_deg": [
+                89.2,
+                -0.8,
+                -90.8,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -89.99999999999999,
+                -180.0,
+                90.0,
+                0.8000000000000114
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 239,
+              "tick": 9732,
+              "node_id": "junction-16",
+              "position_m": [
+                -0.002,
+                0.43
+              ],
+              "heading_deg": 179.9,
+              "odometer_cm": 1242.1,
+              "fresh_relative_exits_deg": [
+                90.1,
+                0.1,
+                -89.9,
+                -179.2
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                -180.0,
+                90.0,
+                0.700000000000017
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          },
+          {
+            "kind": "recorded_directed_route",
+            "target_node_id": "junction-29",
+            "target_exit_index": 3,
+            "target_heading_deg": 90.0,
+            "next_exit_angle_deg": -89.9,
+            "traversal_ids": [
+              "traversal-55",
+              "traversal-43"
+            ],
+            "recorded_travelled_cm": 109.09999999999991,
+            "cost_basis": "sum_public_odometry_distanceCm_differences",
+            "target_observation_anchor": {
+              "observation_index": 698,
+              "tick": 26519,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": 179.3,
+              "odometer_cm": 3324,
+              "fresh_relative_exits_deg": [
+                90.7,
+                0,
+                -89.3,
+                -178.6
+              ],
+              "fresh_headings_deg": [
+                -90.0,
+                179.3,
+                90.0,
+                0.700000000000017
+              ],
+              "observed_exit_heading_deg": 90.0
+            },
+            "arrival_anchor": {
+              "observation_index": 682,
+              "tick": 25465,
+              "node_id": "junction-29",
+              "position_m": [
+                -0.002,
+                1.021
+              ],
+              "heading_deg": -179.3,
+              "odometer_cm": 3174,
+              "fresh_relative_exits_deg": [
+                89.3,
+                -1.4,
+                -90.7,
+                -180
+              ],
+              "fresh_headings_deg": [
+                -90.00000000000001,
+                179.29999999999995,
+                90.0,
+                0.6999999999999886
+              ]
+            },
+            "target_anchor_gap_cm": 0.0,
+            "requires_fresh_arrival_and_exit_recheck": true
+          }
+        ],
+        "current_anchor": {
+          "observation_index": 1086,
+          "tick": 40991,
+          "node_id": "junction-15",
+          "position_m": [
+            0.156,
+            0.27399999999999997
+          ],
+          "heading_deg": 90.7,
+          "odometer_cm": 4864.2,
+          "fresh_relative_exits_deg": [
+            179.3,
+            89.3,
+            -0.7,
+            -89.9
+          ],
+          "fresh_headings_deg": [
+            -90.0,
+            -180.0,
+            90.0,
+            0.8000000000000114
+          ]
+        },
+        "same_node_recorded_departures": [
+          {
+            "trip_id": "traversal-16",
+            "departure_observation": 217,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-24",
+            "departure_observation": 332,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-55",
+            "departure_observation": 858,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          },
+          {
+            "trip_id": "traversal-61",
+            "departure_observation": 1061,
+            "position_gap_cm": 0.0,
+            "exact_position_and_context_compatible": true,
+            "within_15cm_and_context_compatible": true
+          }
+        ]
+      }
+    ],
+    "all_query_rounds_with_hints": [
+      1,
+      2,
+      8,
+      11,
+      12,
+      13,
+      15,
+      18,
+      19,
+      20,
+      25,
+      26,
+      27,
+      28,
+      29,
+      31,
+      37,
+      41,
+      43,
+      46,
+      47,
+      48,
+      56,
+      57,
+      58,
+      59,
+      62,
+      65,
+      70,
+      71,
+      72,
+      75,
+      76,
+      77,
+      79,
+      82,
+      84,
+      88,
+      89,
+      90,
+      99,
+      101,
+      102,
+      103,
+      105,
+      107,
+      108,
+      113,
+      117,
+      118,
+      122,
+      123,
+      124,
+      127,
+      128,
+      131,
+      134,
+      142,
+      143,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      156,
+      157,
+      160,
+      164,
+      165,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      180,
+      184,
+      185,
+      186,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      197,
+      199,
+      200
+    ],
+    "interpretation": "Offline hint coverage only; no claim of improved decisions, convergence, U reduction, physical junction equivalence, or formal success"
+  },
+  "production_modified": false,
+  "action_calls": 0,
+  "truth_inputs": 0,
+  "network_calls": 0
+}

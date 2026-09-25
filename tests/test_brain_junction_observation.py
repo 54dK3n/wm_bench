@@ -59,7 +59,7 @@ def junction_runtime(steps, *, road=None):
         default = JUNCTION_STOP if method in {"follow_road", "take_exit"} else {"completed": True}
         return copy.deepcopy(step.get("result", default))
 
-    def observe():
+    def observe(*, motion=None):
         events.append("observe")
         assert pending, "this fixture expects one fresh observation per primitive"
         step, params = pending.pop(0)

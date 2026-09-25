@@ -47,7 +47,7 @@ def exit_runtime(*, start_pose=(93.6, .4, -145.2), selected_angle=-147.2,
             confirmed=lambda oid: target, get_object=lambda oid: target,
             visible=lambda oid: next(iter(snapshot["perception"]["detections"]), None)),
         roads=SimpleNamespace(exits=exits, blocked=[], mark_blocked=lambda: None,
-            chosen=lambda odo, angle: chosen.append((dict(odo), angle)),
+            chosen=lambda odo, angle, *, observation_index=None: chosen.append((dict(odo), angle)),
             route_to=lambda odo, goal: [position(odo), waypoint]),
         bridge=SimpleNamespace(seconds=210.74, max_seconds=1200),
         motion_log=SimpleNamespace(write=logs.append))
@@ -92,7 +92,7 @@ def exit_runtime(*, start_pose=(93.6, .4, -145.2), selected_angle=-147.2,
                         "road": {"atNode": True}, "show_target": not blocked_result and cm > 0})
         return result
 
-    def observe():
+    def observe(*, motion=None):
         events.append("observe")
         update = pending.pop(0) if pending else {}
         if "heading" in update:

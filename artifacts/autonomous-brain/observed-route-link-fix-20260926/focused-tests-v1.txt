@@ -1,0 +1,31 @@
+........................................................................ [ 66%]
+............F........................                                    [100%]
+=================================== FAILURES ===================================
+_ NextModelStateTests.test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry _
+
+self = <test_brain_state_evidence.NextModelStateTests testMethod=test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry>
+
+    def test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry(self):
+        states, runtime, results, summary, logged_rounds = self.run_offline(2)
+        recent = states[1]["recent_actions"][-1]
+        self.assertFalse(recent["success"])
+        self.assertEqual(recent["reason"], "fresh_detection_does_not_verify_standoff")
+        self.assertIn("evidence", recent)
+        self.assertEqual(recent["evidence"]["detection"]["distance_cm"], 24.4818)
+        self.assertEqual(recent["evidence"]["detection"]["bearing_deg"], 1.410)
+        self.assertEqual(states[1]["objects"][0]["distance_cm"], 32.0)
+        self.assertEqual(states[1]["objects"][0]["position_m"], {"x": 0.0, "z": .32})
+        self.assertEqual(recent["after_observation"], 2)
+        self.assertEqual(recent["evidence"]["final_observation"], 2)
+        self.assertEqual(logged_rounds[0]["result"], results[0])
+>       self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v10")
+E       AssertionError: 'autonomous-brain-runtime/v11' != 'autonomous-brain-runtime/v10'
+E       - autonomous-brain-runtime/v11
+E       ?                            ^
+E       + autonomous-brain-runtime/v10
+E       ?                            ^
+
+tests/test_brain_state_evidence.py:261: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_state_evidence.py::NextModelStateTests::test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry
+1 failed, 108 passed in 0.15s

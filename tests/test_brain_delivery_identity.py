@@ -69,7 +69,7 @@ class DeliveryRuntime:
         self.phase = "after_retreat"
         return {"accepted": True, "stoppedBy": "max_distance", "distanceCm": 25}
 
-    def observe(self):
+    def observe(self, *, motion=None):
         self.frame += 1
         converted = observe(self.perception, self.frame, self.forward,
                             items=self.public_detections(), time=self.bridge.seconds)

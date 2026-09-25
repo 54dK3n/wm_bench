@@ -179,7 +179,7 @@ def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness
             before_release.append(copy.deepcopy(snapshot["odometry"]))
         return original_call(method, params)
 
-    def observe():
+    def observe(*, motion=None):
         original_observe()
         if snapshot["holding"]["holding"]:
             # This new green box is deliberately unrelated to the initial

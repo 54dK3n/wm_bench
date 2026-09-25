@@ -39,7 +39,7 @@ class SensorRuntime:
             get_object=lambda oid: self.target if oid == "zone-1" else None,
             visible=lambda oid: self.detection if oid == "zone-1" else None,
         )
-        def chosen(odo, angle):
+        def chosen(odo, angle, *, observation_index=None):
             self.selected_exits.append(angle)
             self.selected_headings.append(wrap(odo["headingDeg"] + angle))
         self.roads = SimpleNamespace(route_to=self.route_to, chosen=chosen)
@@ -69,7 +69,7 @@ class SensorRuntime:
             return self._actuator(self, method, params)
         return {"accepted": True, "distanceCm": 0, "stoppedBy": "front_clearance"}
 
-    def observe(self):
+    def observe(self, *, motion=None):
         self.snapshot["observation_index"] += 1
         self.snapshot["observation"]["frameId"] += 1
         self.snapshot["odometry"]["tick"] += 1

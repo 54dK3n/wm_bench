@@ -59,11 +59,11 @@ def fake_runtime(objects, *, on_road=True, at_node=False, exits=(), route=(),
         pending_grasp=None, held_object_id=objects[0]["id"] if holding else None,
         bridge=SimpleNamespace(seconds=0, max_seconds=1200),
         roads=SimpleNamespace(route_to=lambda odo, target: list(route),
-                              chosen=lambda odo, angle: selected_exits.append(angle)),
+                              chosen=lambda odo, angle, *, observation_index=None: selected_exits.append(angle)),
         motion_log=SimpleNamespace(write=motion_log.append),
     )
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1

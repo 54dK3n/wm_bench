@@ -1,0 +1,136 @@
+{
+  "schema": "observed-route-diagnostic-archive/v1",
+  "diagnostic": true,
+  "task_acceptance": false,
+  "real_model_used": false,
+  "checks": [
+    {
+      "check": "exactly_one_completed_trip_at_observation_2",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "trip_matches_original_motion_once",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "trip_endpoint_indices_and_sensor_ticks_bound",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "distinct_observed_nodes_and_actual_25cm",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "departure_heading_is_original_fresh_exit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "next_round_has_three_actual_fresh_hints",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "all_llm_states_preserve_logged_hints",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "hints_are_compact_and_do_not_mark_done",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "all_14_public_observations_match_bridge_results",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "all_observations_nonempty",
+      "passed": true,
+      "detail": {
+        "blue-ball": 5,
+        "obstacle": 49,
+        "red-ball": 1,
+        "storage-zone": 3
+      }
+    },
+    {
+      "check": "expected_diagnostic_failure_not_task_acceptance",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "all_export_datasets_complete",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "record_compressed_and_expanded_integrity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "samples_compressed_and_expanded_integrity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "sensorAudit_compressed_and_expanded_integrity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "captures_compressed_and_expanded_integrity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "envelope_compressed_and_expanded_integrity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "all_original_files_unchanged",
+      "passed": true,
+      "detail": 30
+    },
+    {
+      "check": "all_brain_sources_match_frozen_manifest",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "offline_replay_complete_and_exact",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "archive_privacy_and_size_scan",
+      "passed": true,
+      "detail": {
+        "files": 45,
+        "expanded_gzip_files": 4,
+        "absolute_home_paths": [],
+        "provider_key_patterns": [],
+        "unexpected_sensitive_values": [],
+        "diagnostic_or_redacted_values": 3,
+        "over_100MiB": []
+      }
+    }
+  ],
+  "allPass": true,
+  "simulation_seconds": 6.26,
+  "completed_trips": 1,
+  "recorded_path_cm": 25,
+  "next_round_hint_angles": [
+    90,
+    0.8,
+    -90
+  ],
+  "coverage_limit": "Only fresh-frontier hints occur in this short fixture; recorded-route hints are covered by separate saved Run20 replay, not this smoke."
+}

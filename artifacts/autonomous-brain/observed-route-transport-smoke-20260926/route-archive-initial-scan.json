@@ -1,0 +1,35 @@
+{
+  "observed_initial_stdout": {
+    "allPass": false,
+    "checks": 21,
+    "failed": [
+      {
+        "check": "archive_privacy_and_size_scan",
+        "passed": false,
+        "detail": {
+          "files": 38,
+          "expanded_gzip_files": 4,
+          "absolute_home_paths": [],
+          "provider_key_patterns": [],
+          "unexpected_sensitive_values": [
+            {
+              "file": "summary.json",
+              "key": "client_token"
+            },
+            {
+              "file": "progress.json",
+              "key": "client_token"
+            },
+            {
+              "file": "map-05-run-1/evaluation.json",
+              "key": "client_token"
+            }
+          ],
+          "diagnostic_or_redacted_values": 0,
+          "over_100MiB": []
+        }
+      }
+    ]
+  },
+  "correction_basis": "tools/autonomous_brain_driver.js:530 writes the literal <not recorded>; structural scan now allows only exact equality to that constant. No original artifact was edited."
+}

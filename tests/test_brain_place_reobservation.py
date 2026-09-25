@@ -121,7 +121,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             objects.setdefault("fresh", {"id": "fresh", "category": "red-ball",
                                          "state": "TENTATIVE", "position_m": {"x": 0, "z": .18}})
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1

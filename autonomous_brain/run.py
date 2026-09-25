@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v10"
+RUNTIME_VERSION = "autonomous-brain-runtime/v11"
 
 
 def dump(path, value):
@@ -161,7 +161,7 @@ class Runtime:
         self.snapshot = None
         self.actions = Actions(self)
 
-    def observe(self):
+    def observe(self, *, motion=None):
         odo = self.bridge.call("odometry")
         road = self.bridge.call("local_road")
         holding = self.bridge.call("holding")
@@ -170,12 +170,17 @@ class Runtime:
             raise RuntimeError("sensor snapshots do not share a simulation tick")
         perception = self.perception.update(observation, odo,
             simulation_time_s=self.bridge.seconds, round_index=self.round)
-        self.roads.update(odo, road)
+        self.roads.update(odo, road, observation_index=self.observation_count + 1)
         self.observation_count += 1
         self.snapshot = {"observation_index": self.observation_count, "round": self.round,
                          "simulation_seconds": self.bridge.seconds, "odometry": odo,
                          "road": road, "holding": holding, "observation": observation,
                          "perception": perception, "objects": self.perception.objects()}
+        finalized_motion = (dict(motion, after_observation=self.observation_count)
+                            if motion is not None else None)
+        traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
+        if traversal_events:
+            self.snapshot["road_traversal_events"] = traversal_events
         self.observation_log.write(self.snapshot)
         return self.snapshot
 
@@ -220,6 +225,12 @@ class Runtime:
                           "exits": self.roads.exits(odo, road),
                           "front_clearance_cm": road["frontClearanceCm"]},
                 "junction_history": self.roads.summary(),
+                "exploration_hints": [{key: value for key, value in hint.items() if key in {
+                    "kind", "target_node_id", "target_exit_index", "target_heading_deg",
+                    "next_exit_angle_deg", "recorded_travelled_cm", "cost_basis", "traversal_ids",
+                    "target_anchor_gap_cm", "requires_fresh_arrival_and_exit_recheck"}}
+                    for hint in self.roads.frontier_hints(odo, road,
+                        observation_index=self.snapshot["observation_index"])],
                 "unexplored_exit_count": self.roads.unexplored(),
                 "observed_junction_count": len(self.roads.nodes),
                 "recent_actions": copy.deepcopy(self.recent[-5:])}

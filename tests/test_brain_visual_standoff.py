@@ -26,7 +26,7 @@ def visual_runtime(range_cm, bearing=0, *, blocked=False, lose_on_turn=False):
         bridge=SimpleNamespace(seconds=0, max_seconds=1200),
         motion_log=SimpleNamespace(write=lambda row: None))
 
-    def observe():
+    def observe(*, motion=None):
         snapshot["observation_index"] += 1
         snapshot["observation"]["frameId"] += 1
         snapshot["odometry"]["tick"] += 1
