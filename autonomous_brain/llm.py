@@ -1,8 +1,9 @@
 """One-action decisions, complete JSONL transcripts, and network-free replay.
 
-Configuration follows octos: LLM_BASE_URL, LLM_API_KEY and LLM_MODEL.  The
-orchestrator is deliberately not imported.  Call ``decide(state)`` once per
-observation round and execute its returned ``{action, params}`` elsewhere.
+Configuration follows octos: LLM_BASE_URL, LLM_API_KEY and LLM_MODEL, with
+optional LLM_TEMPERATURE and LLM_THINKING. The orchestrator is deliberately
+not imported. Call ``decide(state)`` once per observation round and execute
+its returned ``{action, params}`` elsewhere.
 """
 
 from __future__ import annotations
@@ -19,8 +20,8 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v2"
-SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", VERSION}
+VERSION = "autonomous-brain-llm/v3"
+SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", VERSION}
 SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
@@ -148,10 +149,16 @@ class LLMClient:
     ``log_path`` is a new JSONL file, opened exclusively to prevent accidental
     mixing of runs. ``replay_path`` selects a recorded transcript and never
     reads API credentials or makes requests. Replay may use a live transcript
-    or another replay transcript. Compatible v1 transcripts retain their
+    or another replay transcript. Compatible v1/v2 transcripts retain their
     recorded version when replayed; the code version is independently tracked
     by the run's source SHA256. Inputs and re-derived output validation must
-    match exactly. Call ``assert_replay_consumed`` at the end of a full replay.
+    match exactly. Sampling settings are restored from the first request,
+    without reading the environment. Call ``assert_replay_consumed`` at the
+    end of a full replay.
+
+    Live requests default to integer temperature 0. LLM_TEMPERATURE may set
+    a finite JSON number from 0 through 2. LLM_THINKING may be enabled or
+    disabled; when unset, the request omits thinking entirely.
 
     Only invalid model outputs get one repair request. Transport and HTTP
     errors stop immediately (including unsupported JSON-mode errors); there
@@ -189,13 +196,36 @@ class LLMClient:
                 raise ReplayError("Replay transcript version is unsupported")
             if not isinstance(self._replay[0].get("request"), dict):
                 raise ReplayError("Replay is missing its request object")
-            self.model = model or self._replay[0].get("request", {}).get("model")
+            first_request = self._replay[0]["request"]
+            self.model = model or first_request.get("model")
+            # Preserve the recorded int/float representation for exact hashes,
+            # including the integer zero emitted by v1/v2 clients.
+            self.temperature = first_request.get("temperature")
+            self.thinking = None
+            if "thinking" in first_request:
+                thinking = first_request["thinking"]
+                if not isinstance(thinking, dict) or set(thinking) != {"type"}:
+                    raise ReplayError("Replay has invalid thinking settings")
+                self.thinking = thinking["type"]
+                if self.thinking not in ("enabled", "disabled"):
+                    raise ReplayError("Replay has invalid thinking settings")
+            if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
+                raise ReplayError("Replay has invalid temperature")
         else:
             self._base_url = os.environ.get("LLM_BASE_URL", "").rstrip("/")
             self._api_key = os.environ.get("LLM_API_KEY", "")
             self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
             if not self._base_url or not self._api_key:
                 raise ValueError("Set LLM_BASE_URL and LLM_API_KEY before a live run")
+            try:
+                self.temperature = _strict_loads(os.environ.get("LLM_TEMPERATURE", "0"))
+            except (TypeError, ValueError) as exc:
+                raise ValueError("LLM_TEMPERATURE must be a finite number from 0 through 2") from exc
+            if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
+                raise ValueError("LLM_TEMPERATURE must be a finite number from 0 through 2")
+            self.thinking = os.environ.get("LLM_THINKING")
+            if self.thinking is not None and self.thinking not in ("enabled", "disabled"):
+                raise ValueError("LLM_THINKING must be enabled or disabled when set")
         if not isinstance(self.model, str) or not self.model.strip():
             raise ValueError("LLM_MODEL must be a non-empty string")
         destination = Path(log_path)
@@ -328,9 +358,11 @@ class LLMClient:
         self.decision_count += 1
         try:
             for attempt in (1, 2):
-                request = {"model": self.model, "temperature": 0,
+                request = {"model": self.model, "temperature": self.temperature,
                            "response_format": {"type": "json_object"},
                            "messages": list(messages)}
+                if self.thinking is not None:
+                    request["thinking"] = {"type": self.thinking}
                 result = self._call(request, prepared, attempt)
                 if result["validation_error"] is None:
                     return result["action"]

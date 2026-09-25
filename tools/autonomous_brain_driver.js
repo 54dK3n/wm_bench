@@ -11,8 +11,10 @@ const crypto = require("node:crypto");
 const {gzipSync, gunzipSync} = require("node:zlib");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v3";
+const VERSION = "wm-autonomous-brain-driver/v4";
 const ROOT = path.resolve(__dirname, "..");
+const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
+const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
 const TASK = "R2-GYI-MVP-02";
 const PUBLIC_METHODS = ["observe", "camera_parameters", "odometry", "local_road", "holding", "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"];
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -21,6 +23,41 @@ const relative = file => path.relative(ROOT, file);
 const json = value => JSON.stringify(value, null, 2).split(ROOT + path.sep).join("") + "\n";
 const writeJson = (file, value) => fs.writeFileSync(file, json(value));
 const readJson = file => JSON.parse(fs.readFileSync(file, "utf8"));
+
+function parseLocalLLMConfig(source) {
+  const values = Object.create(null);
+  for (const [index, rawLine] of source.split(/\r?\n/).entries()) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const assignment = /^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!assignment) throw new Error(`Invalid local LLM config assignment at line ${index + 1}`);
+    const [, key, rawValue] = assignment;
+    if (!LLM_CONFIG_KEYS.has(key)) continue;
+    let value;
+    if (rawValue.startsWith('"') || rawValue.startsWith("'")) {
+      const quoted = /^(?:"([^"]*)"|'([^']*)')\s*(?:#.*)?$/.exec(rawValue);
+      if (!quoted) throw new Error(`Invalid ${key} quoting at line ${index + 1}`);
+      value = quoted[1] ?? quoted[2];
+    } else {
+      value = rawValue.replace(/\s+#.*$/, "").trimEnd();
+    }
+    values[key] = value;
+  }
+  return values;
+}
+
+function loadLocalLLMConfig(file = path.join(ROOT, ".env.local"), env = process.env) {
+  let source;
+  try { source = fs.readFileSync(file, "utf8"); }
+  catch (error) {
+    if (error.code === "ENOENT") return;
+    throw new Error("Unable to read local LLM config file");
+  }
+  const values = parseLocalLLMConfig(source);
+  for (const [key, value] of Object.entries(values)) {
+    if (!Object.hasOwn(env, key)) env[key] = value;
+  }
+}
 
 function parseArgs(argv) {
   const options = {maps: ["map-05"], runs: 1,
@@ -286,10 +323,11 @@ async function runBrain(options, directory, capability, origin, evaluate) {
 
 async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
+  if (!options.replay) loadLocalLLMConfig();
   const gate = verifyPreflightGate({platformRoot: options.platformRoot});
   assert.equal(gate.allPass, true, 'platform two-gate check failed; brain must not start');
   assert.ok(!fs.existsSync(options.out), 'refusing to reuse an output directory');
-  if (!options.replay) for (const name of ['LLM_BASE_URL', 'LLM_API_KEY', 'LLM_MODEL']) assert.ok(process.env[name], `${name} must be configured before running`);
+  if (!options.replay) for (const name of LLM_REQUIRED_KEYS) assert.ok(process.env[name], `${name} must be configured in .env.local or the process environment before running`);
   assert.ok(fs.existsSync(path.join(ROOT, 'autonomous_brain/run.py')), 'brain module is not ready');
   let map05Passed = options.map05Success ? previousMap05Success(options.map05Success) : false;
   assert.ok(map05Passed || options.maps[0] === 'map-05', 'map-05 must succeed before other layouts');
@@ -430,5 +468,5 @@ async function main(argv = process.argv.slice(2)) {
   process.exitCode = summary.success ? 0 : 1;
   return summary;
 }
-module.exports = {VERSION, parseArgs, installEvaluationCapture, evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
+module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, parseArgs, installEvaluationCapture, evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

@@ -1,0 +1,51 @@
+{
+  "version": "kimi-config-validation/v1",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_brain_actions.py",
+        "tests/test_brain_perception.py",
+        "tests/test_brain_llm.py",
+        "tests/test_brain_evaluation.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/kimi-setup-20260925/check-01.txt",
+      "sha256": "2b7168aa8cfff2a220d3cd227e2e53cb655f48f43c3a89cc6f5ff5d1f8be1aaa"
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "tools/tests/test_autonomous_brain_config.js"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/kimi-setup-20260925/check-02.txt",
+      "sha256": "00cd19f81444575167d3d76d6308db23620d098c7ca1d472f006c07e85df242b"
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tools/autonomous_brain_driver.js"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/kimi-setup-20260925/check-03.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "node",
+        "tools/fresh_map05_platform_gate.js",
+        "--preflight-check"
+      ],
+      "exit_code": 0,
+      "output": "artifacts/autonomous-brain/kimi-setup-20260925/check-04.txt",
+      "sha256": "a286577e3265b1e70768848fc97f2f28f25abcef49b401baaf1935f1d78aa0ca"
+    }
+  ],
+  "all_pass": true
+}

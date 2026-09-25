@@ -1,5 +1,6 @@
 """LLM boundary tests with an in-process HTTP mock; never contact a model."""
 
+import hashlib
 import io
 import http.client
 import json
@@ -26,6 +27,8 @@ def config(monkeypatch):
     monkeypatch.setenv("LLM_BASE_URL", "https://model.example/v1/")
     monkeypatch.setenv("LLM_API_KEY", "never-record-this-key")
     monkeypatch.setenv("LLM_MODEL", "configured-model")
+    monkeypatch.delenv("LLM_TEMPERATURE", raising=False)
+    monkeypatch.delenv("LLM_THINKING", raising=False)
 
 
 def response(content, **extra):
@@ -53,14 +56,135 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert request.headers["Authorization"] == "Bearer never-record-this-key"
             assert body["model"] == "configured-model"
             assert body["temperature"] == 0
+            assert type(body["temperature"]) is int
+            assert "thinking" not in body
             assert body["response_format"] == {"type": "json_object"}
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
+            assert saved["version"] == "autonomous-brain-llm/v3"
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
             assert saved["response_model"] == "served-model"
             assert "never-record-this-key" not in path.read_text()
+
+
+@pytest.mark.parametrize("temperature", ["0", "0.0", "0.7", "2"])
+@pytest.mark.parametrize("thinking", [None, "enabled", "disabled"])
+def test_explicit_sampling_settings_are_sent_and_logged_on_every_attempt(
+        tmp_path, state, monkeypatch, temperature, thinking):
+    monkeypatch.setenv("LLM_TEMPERATURE", temperature)
+    if thinking is not None:
+        monkeypatch.setenv("LLM_THINKING", thinking)
+    path = tmp_path / "calls.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[response("invalid"),
+               response('{"action":"look_around","params":{}}')]) as send:
+        with LLMClient(path) as client:
+            assert client.decide(state) == {"action": "look_around", "params": {}}
+            assert send.call_count == client.call_count == 2
+    for call, saved in zip(send.call_args_list, records(path)):
+        body = json.loads(call.args[0].data)
+        assert body["temperature"] == json.loads(temperature)
+        assert type(body["temperature"]) is type(json.loads(temperature))
+        if thinking is None:
+            assert "thinking" not in body
+        else:
+            assert body["thinking"] == {"type": thinking}
+        assert saved["request"] == body
+        assert saved["request_sha256"] == hashlib.sha256(call.args[0].data).hexdigest()
+
+
+@pytest.mark.parametrize("value", ["true", "false", "null", "NaN", "Infinity",
+    "-Infinity", "1e999", "-0.1", "2.1", '"0.7"', "{}", "[]", "", "invalid"])
+def test_invalid_temperature_fails_before_network_or_log_creation(tmp_path, monkeypatch, value):
+    monkeypatch.setenv("LLM_TEMPERATURE", value)
+    path = tmp_path / "calls.jsonl"
+    with patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with pytest.raises(ValueError, match="LLM_TEMPERATURE"):
+            LLMClient(path)
+    assert not path.exists()
+
+
+@pytest.mark.parametrize("value", ["", "true", "false", "Enabled", " enabled", "auto"])
+def test_invalid_thinking_fails_before_network_or_log_creation(tmp_path, monkeypatch, value):
+    monkeypatch.setenv("LLM_THINKING", value)
+    path = tmp_path / "calls.jsonl"
+    with patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with pytest.raises(ValueError, match="LLM_THINKING"):
+            LLMClient(path)
+    assert not path.exists()
+
+
+@pytest.mark.parametrize("temperature", ["0", "0.0", "0.7"])
+@pytest.mark.parametrize("thinking", [None, "enabled", "disabled"])
+def test_replay_restores_sampling_settings_without_environment_or_network(
+        tmp_path, state, monkeypatch, temperature, thinking):
+    monkeypatch.setenv("LLM_TEMPERATURE", temperature)
+    if thinking is not None:
+        monkeypatch.setenv("LLM_THINKING", thinking)
+    path = tmp_path / "live.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[response("invalid"),
+               response('{"action":"look_around","params":{}}')]):
+        with LLMClient(path) as live:
+            expected = live.decide(state)
+    replay_path = tmp_path / "replay.jsonl"
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(replay_path, replay_path=path) as replay:
+            assert replay.decide(state) == expected
+            replay.assert_replay_consumed()
+    for original, replayed in zip(records(path), records(replay_path)):
+        assert {k: v for k, v in replayed.items() if k != "mode"} == {
+            k: v for k, v in original.items() if k != "mode"}
+        assert type(replayed["request"]["temperature"]) is type(json.loads(temperature))
+
+
+@pytest.mark.parametrize("change", ["temperature", "thinking", "hash"])
+def test_replay_checks_settings_and_hash_for_each_call(tmp_path, state, monkeypatch, change):
+    monkeypatch.setenv("LLM_TEMPERATURE", "0.7")
+    monkeypatch.setenv("LLM_THINKING", "disabled")
+    path = tmp_path / "live.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[response("invalid"),
+               response('{"action":"look_around","params":{}}')]):
+        with LLMClient(path) as live:
+            live.decide(state)
+    calls = records(path)
+    if change == "hash":
+        calls[1]["request_sha256"] = "0" * 64
+    else:
+        calls[1]["request"][change] = 0.8 if change == "temperature" else {"type": "enabled"}
+        calls[1]["request_sha256"] = hashlib.sha256(json.dumps(
+            calls[1]["request"], ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    path.write_text("".join(json.dumps(call) + "\n" for call in calls))
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(ReplayError, match="input mismatch: request"):
+                replay.decide(state)
+            assert replay.call_count == 1
+
+
+@pytest.mark.parametrize("settings", [
+    {"temperature": True}, {"temperature": -0.1}, {"temperature": 2.1},
+    {"temperature": "0.7"}, {"thinking": None}, {"thinking": "disabled"},
+    {"thinking": {"type": "auto"}}, {"thinking": {"type": "enabled", "budget": 3}},
+])
+def test_replay_rejects_invalid_recorded_sampling_settings_before_opening_log(
+        tmp_path, state, settings):
+    path = tmp_path / "live.jsonl"
+    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}')):
+        with LLMClient(path) as live:
+            live.decide(state)
+    saved = records(path)[0]
+    saved["request"].update(settings)
+    path.write_text(json.dumps(saved) + "\n")
+    replay_path = tmp_path / "replay.jsonl"
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with pytest.raises(ReplayError, match="Replay has invalid"):
+            LLMClient(replay_path, replay_path=path)
+    assert not replay_path.exists()
 
 
 @pytest.mark.parametrize("action", [
@@ -254,19 +378,25 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
     assert saved["transport_error"] == {"type": "BadStatusLine"}
 
 
-def test_v1_transcripts_remain_replayable_without_rewriting_their_version(tmp_path, state):
-    path = tmp_path / "v1.jsonl"
+@pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2"])
+def test_old_transcripts_keep_version_and_integer_zero_without_environment(
+        tmp_path, state, version):
+    path = tmp_path / "legacy.jsonl"
     with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}')):
         with LLMClient(path) as client:
             client.decide(state)
     saved = records(path)[0]
-    saved["version"] = "autonomous-brain-llm/v1"
+    saved["version"] = version
+    assert type(saved["request"]["temperature"]) is int
+    assert "thinking" not in saved["request"]
     path.write_text(json.dumps(saved) + "\n")
-    with patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
         with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as client:
             assert client.decide(state) == {"action": "look_around", "params": {}}
             client.assert_replay_consumed()
     replayed = records(tmp_path / "replay.jsonl")[0]
+    assert type(replayed["request"]["temperature"]) is int
     assert {k: v for k, v in replayed.items() if k != "mode"} == {k: v for k, v in saved.items() if k != "mode"}
 
 

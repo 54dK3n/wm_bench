@@ -10,11 +10,15 @@
 
 ## 运行
 
-检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。配置 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL` 后运行：
+检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
+
+driver v4 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`，随后运行：
 
 ```sh
 node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-01
 ```
+
+`.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
 
 输出目录必须不存在。driver 在平台外启动 `python3 -m autonomous_brain.run`，通过 stdin 仅传客户端能力、自然语言指令和运行上限。布局选择、真值捕获和成绩核验全在评测侧。大脑不接收地图名称或球的总数。
 
@@ -22,7 +26,7 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 
 上限为 200 轮和仿真 1200 秒，到限失败。driver 同时给平台设置 1200 秒硬上限。`--max-rounds`、`--max-simulation-seconds` 只允许降低上限，供联调使用；联调结果不充当正式成功局。
 
-大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 固定 0，要求 JSON 对象。仅不合法输出重试一次，仍非法停止；网络或 HTTP 错误立即停止，不自动降级模型、温度或输出格式。日志不记录 API 密钥或机器人凭证。
+大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。任务要求仍以用户最新授权为准，模型不接受原参数时不能自动换温度。仅不合法输出重试一次，仍非法停止；网络或 HTTP 错误立即停止，不自动降级模型、温度或输出格式。日志记录实际请求参数，不记录 API 密钥或机器人凭证；回放从记录恢复采样参数。
 
 ## 大脑模块
 
