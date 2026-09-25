@@ -119,12 +119,32 @@ def test_local_projection_uses_left_positive_heading_and_public_odometry(heading
     assert calls == [(350, 250)]
 
 
-@pytest.mark.parametrize("detections", [[], [region()],
+@pytest.mark.parametrize("detections", [[region()],
     [region(), occupied(delivered=False)],
     [region(), occupied(category="blue-ball")]])
-def test_no_current_delivered_red_leaves_original_place_aim_unchanged(detections):
+def test_no_current_delivered_red_freezes_the_complete_region_center(detections):
     runtime, calls = aim_runtime(detections)
-    assert Actions(runtime).choose_release_aim() is None
+    result = Actions(runtime).choose_release_aim()
+    assert not result.get("error")
+    assert result["mode"] == "observed_storage_center_ground_point"
+    assert result["pixel"] == {"u": 300, "v": 250}
+    assert calls == [(300, 250)]
+
+
+@pytest.mark.parametrize("regions", [[], [region(x=0)], [region(y=380)],
+                                       [region(), region(x=410)]])
+def test_first_release_also_requires_unique_complete_initial_green(regions):
+    runtime, calls = aim_runtime(regions)
+    assert Actions(runtime).choose_release_aim()["error"] == "complete_storage_region_not_unique"
+    assert calls == []
+
+
+@pytest.mark.parametrize("category", ["red-ball", "blue-ball", "obstacle"])
+def test_first_release_does_not_select_an_occupied_center_or_switch_to_a_quarter(category):
+    runtime, calls = aim_runtime([region(), occupied(x=290, y=240, w=20, h=20,
+                                                     category=category, delivered=False)])
+    result = Actions(runtime).choose_release_aim()
+    assert result["error"] == "storage_center_point_occupied"
     assert calls == []
 
 
@@ -137,11 +157,12 @@ def test_aim_evidence_is_detached_from_later_sensor_mutation():
     assert result == before
 
 
-def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness=True):
+def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness=True,
+                        with_old=True, later_clipped=False):
     runtime, motions, logs, objects, delivered = place_runtime([(18, 0)])
     snapshot = runtime.snapshot
     old = occupied()
-    snapshot["perception"]["detections"] = [region(), old]
+    snapshot["perception"]["detections"] = [region()] + ([old] if with_old else [])
     calls, before_release = [], []
 
     def project(u, v):
@@ -164,7 +185,8 @@ def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness
             # This new green box is deliberately unrelated to the initial
             # quarter. Its distance/bearing would invite an immediate release.
             snapshot["perception"]["detections"] = ([] if lose_green else [
-                {**region(x=410, y=310, w=60, h=40), "distance_cm": 18., "bearing_deg": 0.,
+                {**region(x=410, y=400 if later_clipped else 310, w=60,
+                           h=80 if later_clipped else 40), "distance_cm": 18., "bearing_deg": 0.,
                  "frame_id": str(snapshot["observation"]["frameId"])}])
         elif not post_witness:
             snapshot["perception"]["detections"] = [region()]
@@ -174,11 +196,14 @@ def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness
                            delivered=delivered, projections=calls, before_release=before_release)
 
 
-def test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_gate():
-    f = aimed_place_runtime()
+@pytest.mark.parametrize("with_old", [False, True], ids=["first-release", "delivered-occupant"])
+@pytest.mark.parametrize("later_clipped", [False, True], ids=["changed-box", "clipped-box"])
+def test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_gate(with_old, later_clipped):
+    f = aimed_place_runtime(with_old=with_old, later_clipped=later_clipped)
     result = Actions(f.runtime).place()
     assert result["success"] is True
     assert len(f.projections) == 1
+    assert f.projections == [(350 if with_old else 300, 250)]
     assert len(f.before_release) == 1
     pose = f.before_release[0]
     dx, dz = .04 - pose["rightCm"] / 100, .30 - pose["forwardCm"] / 100
@@ -194,8 +219,9 @@ def test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_g
     assert f.objects["held"]["state"] == "DELIVERED"
 
 
-def test_losing_current_green_during_aim_approach_keeps_ball_held():
-    f = aimed_place_runtime(lose_green=True)
+@pytest.mark.parametrize("with_old", [False, True])
+def test_losing_current_green_during_aim_approach_keeps_ball_held(with_old):
+    f = aimed_place_runtime(lose_green=True, with_old=with_old)
     result = Actions(f.runtime).place()
     assert result["success"] is False
     assert f.runtime.snapshot["holding"]["holding"] is True
@@ -229,8 +255,9 @@ def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
     assert f.objects["held"]["state"] == "HELD"
 
 
-def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release():
-    f = aimed_place_runtime(projection=(.04, .60))
+@pytest.mark.parametrize("with_old", [False, True])
+def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release(with_old):
+    f = aimed_place_runtime(projection=(.04, .60), with_old=with_old)
     original_call = f.runtime.bridge.call
 
     def partial_translation(method, params):
@@ -257,8 +284,9 @@ def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release():
     assert len(f.projections) == 1
 
 
-def test_free_release_aim_does_not_replace_the_original_postrelease_pixel_witness():
-    f = aimed_place_runtime(post_witness=False)
+@pytest.mark.parametrize("with_old", [False, True])
+def test_free_release_aim_does_not_replace_the_original_postrelease_pixel_witness(with_old):
+    f = aimed_place_runtime(post_witness=False, with_old=with_old)
     result = Actions(f.runtime).place()
     assert len(f.before_release) == 1
     assert result["success"] is False
@@ -267,11 +295,43 @@ def test_free_release_aim_does_not_replace_the_original_postrelease_pixel_witnes
     assert f.objects["held"]["state"] == "RELEASED_UNVERIFIED"
 
 
-def test_no_delivered_pixels_retains_original_place_motion_sequence():
+def test_first_release_already_aligned_to_its_fixed_center_preserves_short_motion_sequence():
     runtime, motions, _, _, evidence = place_runtime([(18, 0)])
+    projections = []
     runtime.perception.ground_camera = SimpleNamespace(
-        project_pixel_to_ground=lambda *_: pytest.fail("no calibration needed for the original path"))
+        project_pixel_to_ground=lambda *pixel: projections.append(pixel) or (0., .18))
     result = Actions(runtime).place()
     assert result["success"] is True
+    assert projections == [(150, 230)]
     assert [method for method, _ in motions] == ["release", "backward"]
     assert evidence[0]["post_observation"] == 3
+
+
+def test_run17_first_complete_region_produces_one_fixed_ground_aim_from_public_calibration():
+    from test_brain_perception import CAMERA
+    from autonomous_brain.perception import Perception
+
+    runtime, _ = aim_runtime([region(x=153, y=253, w=373, h=94)],
+                             right=100.6, forward=28.5, heading=-173.8)
+    runtime.perception = Perception(CAMERA)
+    aim = Actions(runtime).choose_release_aim()
+    assert aim["pixel"] == {"u": 339.5, "v": 300}
+    assert aim["position_m"] == pytest.approx({"x": 1.0284221940211042, "z": -.04553616318970216})
+    # This checks the aim at a recorded public pose; it is not a counterfactual
+    # simulation or proof that a different physical release would pass.
+    snapshot = runtime.snapshot
+    snapshot["odometry"].update(rightCm=101.7, forwardCm=13.2, headingDeg=-177.1)
+    target = aim["position_m"]
+    gap = math.hypot(target["x"] - 1.017, target["z"] - .132) * 100
+    wanted = math.degrees(math.atan2(-(target["x"] - 1.017), target["z"] - .132))
+    error = (-177.1 - wanted + 180) % 360 - 180
+    assert gap == pytest.approx(17.790321224794286)
+    assert abs(error) < 3 and gap <= 19
+
+
+def test_run17_postrelease_pixel_witness_remains_rejected_under_original_ellipse():
+    from autonomous_brain.actions import ball_inside_region
+    ball_box = {"x": 282, "y": 208, "w": 78, "h": 64}
+    green_box = {"x": 45, "y": 258, "w": 374, "h": 86}
+    assert (89 / 187) ** 2 + (-29 / 43) ** 2 == pytest.approx(.6813553675084635)
+    assert not ball_inside_region(ball_box, green_box)

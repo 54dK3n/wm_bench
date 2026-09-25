@@ -137,9 +137,13 @@ def test_place_cannot_use_another_preexisting_ball_as_its_delivery_witness(witne
             runtime.perception.rows[other["id"]] = copy.deepcopy(other)
         return {"accepted": True, "completed": True}
 
+    # Keep the already-known other ball clear of the initial aiming pixel;
+    # it enters the region after release and still cannot witness this ID.
+    initial_witness = dict(witness, bbox={"x": 20, "y": 100, "w": 10, "h": 20})
     runtime = fake_runtime(objects, holding=True,
-                           detections=[zone, witness] if witness_preexisted else [zone],
+                           detections=[zone, initial_witness] if witness_preexisted else [zone],
                            actuator=actuator)
+    runtime.perception.ground_camera = SimpleNamespace(project_pixel_to_ground=lambda u, v: (0., .18))
     result = Actions(runtime).place()
     assert runtime.motions == [("release", {}), ("backward", {"distanceCm": 25, "speed": 30})]
     if witness_preexisted:

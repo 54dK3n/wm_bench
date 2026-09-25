@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-c",
+    "from pathlib import Path\nimport pytest\nimport autonomous_brain.actions as module\nsource = Path(\"artifacts/autonomous-brain/first-release-fixed-aim-fix-20260926/actions-v17.py.txt\")\nexec(compile(source.read_text(), str(source), \"exec\"), module.__dict__)\nraise SystemExit(pytest.main([\"-q\", \"-p\", \"no:cacheprovider\", \"tests/test_brain_release_aim.py\", \"-k\", \"first_release or no_current_delivered or run17_first\"]))\n"
+  ],
+  "exit_code": 1,
+  "test_sha256": "b674d11ce23a01950fb25314b1f2660d0aa48a3a73a273eb43aa2342e99fc895"
+}

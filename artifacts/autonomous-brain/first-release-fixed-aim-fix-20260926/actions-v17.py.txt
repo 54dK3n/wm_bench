@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v18"
+VERSION = "autonomous-brain-actions/v17"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -1002,17 +1002,15 @@ class Actions:
         return finish("bounded_viewpoints_without_unique_witness")
 
     def choose_release_aim(self):
-        """Freeze a ground aim from a complete currently observed green region.
+        """Aim beside observed delivered balls using only current image space.
 
-        The first release uses its centre; visible delivered balls retain the
-        free-quarter choice. This is a manipulation target, not a delivery
-        witness, and stays fixed as the green box changes through occlusion.
+        This chooses a manipulation target, not a delivery witness. The chosen
+        ground point stays fixed as the green box changes through occlusion.
         """
         detections = self.s["perception"]["detections"]
-        old_visible = any(d["category"] == "red-ball" and d.get("known_delivered_object_id")
-                          for d in detections)
-        evidence = {"mode": "observed_free_ground_point" if old_visible else "observed_storage_center_ground_point",
-                    "source_frame": self.s["observation"]["frameId"]}
+        if not any(d["category"] == "red-ball" and d.get("known_delivered_object_id") for d in detections):
+            return None
+        evidence = {"mode": "observed_free_ground_point", "source_frame": self.s["observation"]["frameId"]}
         zones = [d for d in detections if d["category"] == "storage-zone"
                  and d["bbox"]["x"] > 0 and d["bbox"]["y"] > 0
                  and d["bbox"]["x"] + d["bbox"]["w"] < 640
@@ -1028,29 +1026,20 @@ class Actions:
                     if d["category"] in {"red-ball", "blue-ball", "obstacle"}]
         evidence["occupied_boxes"] = occupied
         box = zone["bbox"]
-
-        def occupied_pixel(u, v):
-            # Reserve another half observed box on each side, unchanged from
-            # the observed free-quarter rule; no platform geometry is used.
-            return any(b["x"] - b["w"] / 2 <= u <= b["x"] + 1.5 * b["w"]
-                       and b["y"] - b["h"] / 2 <= v <= b["y"] + 1.5 * b["h"] for b in occupied)
-
-        if old_visible:
-            candidates = []
-            for fraction in (.25, .75):
-                u, v = box["x"] + box["w"] * fraction, box["y"] + box["h"] / 2
-                if occupied_pixel(u, v):
-                    continue
-                score = min(math.hypot((u - b["x"] - b["w"] / 2) / b["w"],
-                                       (v - b["y"] - b["h"] / 2) / b["h"]) for b in occupied)
-                candidates.append((score, u, v))
-            if not candidates:
-                return dict(evidence, error="storage_free_point_not_observed")
-            _, u, v = max(candidates, key=lambda candidate: (candidate[0], -candidate[1]))
-        else:
-            u, v = box["x"] + box["w"] / 2, box["y"] + box["h"] / 2
-            if occupied_pixel(u, v):
-                return dict(evidence, error="storage_center_point_occupied")
+        candidates = []
+        for fraction in (.25, .75):
+            u, v = box["x"] + box["w"] * fraction, box["y"] + box["h"] / 2
+            # Reserve another half observed box on each side. This margin
+            # comes from the current image extent, not a simulator snap radius.
+            if any(b["x"] - b["w"] / 2 <= u <= b["x"] + 1.5 * b["w"]
+                   and b["y"] - b["h"] / 2 <= v <= b["y"] + 1.5 * b["h"] for b in occupied):
+                continue
+            score = min(math.hypot((u - b["x"] - b["w"] / 2) / b["w"],
+                                   (v - b["y"] - b["h"] / 2) / b["h"]) for b in occupied)
+            candidates.append((score, u, v))
+        if not candidates:
+            return dict(evidence, error="storage_free_point_not_observed")
+        _, u, v = max(candidates, key=lambda candidate: (candidate[0], -candidate[1]))
         evidence["pixel"] = {"u": u, "v": v}
         try:
             local_x, local_z = self.r.perception.ground_camera.project_pixel_to_ground(u, v)

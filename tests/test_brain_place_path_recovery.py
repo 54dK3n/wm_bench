@@ -7,10 +7,21 @@ import pytest
 from autonomous_brain.actions import Actions
 
 
-def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_first_cm=None):
+def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_first_cm=None,
+                  approach_step_cm=None, turn_fraction=1):
+    """Observe a fixed initial ground point after actual synthetic motions.
+
+    The first view supplies its initial polar coordinates. Subsequent entries
+    control visibility only; they cannot teleport the target during approach.
+    Partial responses affect approach primitives, while recovery follows the
+    measured segments with the default actuator response.
+    """
     objects = {"held": {"id": "held", "category": "red-ball", "state": "HELD",
                          "position_m": {"x": 0, "z": .18}}}
     views = list(views)
+    initial_distance, initial_bearing = views[0]
+    target = (initial_distance * math.sin(math.radians(initial_bearing)) / 100,
+              initial_distance * math.cos(math.radians(initial_bearing)) / 100)
     snapshot = {"observation_index": 1, "observation": {"frameId": 1},
                 "odometry": {"rightCm": 0., "forwardCm": 0., "headingDeg": 0., "tick": 0},
                 "road": {"onRoad": True, "frontClearanceCm": 100}, "holding": {"holding": True},
@@ -19,12 +30,22 @@ def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_fi
     released = False
 
     def set_view(view):
+        odo = snapshot["odometry"]
+        dx, dz = target[0] * 100 - odo["rightCm"], target[1] * 100 - odo["forwardCm"]
+        bearing = (odo["headingDeg"] + math.degrees(math.atan2(dx, dz)) + 180) % 360 - 180
         snapshot["perception"]["detections"] = [] if view is None else [{
-            "category": "storage-zone", "distance_cm": view[0], "bearing_deg": view[1],
+            "category": "storage-zone", "distance_cm": math.hypot(dx, dz), "bearing_deg": bearing,
             "bbox": {"x": 100, "y": 200, "w": 100, "h": 60}}]
 
     set_view(views.pop(0))
     snapshot["road"]["onRoad"] = road(snapshot["odometry"])
+
+    def project(u, v):
+        assert (u, v) == (150, 230)
+        odo = snapshot["odometry"]
+        dx, dz = target[0] - odo["rightCm"] / 100, target[1] - odo["forwardCm"] / 100
+        theta = math.radians(odo["headingDeg"])
+        return math.cos(theta) * dx + math.sin(theta) * dz, -math.sin(theta) * dx + math.cos(theta) * dz
 
     def observe():
         snapshot["observation_index"] += 1
@@ -55,16 +76,20 @@ def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_fi
             released = True
             snapshot["holding"]["holding"] = False
         elif method == "turn":
-            odo["headingDeg"] = (odo["headingDeg"] + params["angleDeg"] + 180) % 360 - 180
+            fraction = turn_fraction if not released and snapshot["perception"]["detections"] else 1
+            odo["headingDeg"] = (odo["headingDeg"] + params["angleDeg"] * fraction + 180) % 360 - 180
         else:
             assert method in {"forward", "backward"}
             cm = actual_first_cm if actual_first_cm is not None and len(motions) == 1 else params["distanceCm"]
+            if method == "forward" and params["speed"] == 30 and approach_step_cm is not None:
+                cm = min(cm, approach_step_cm)
             signed = cm if method == "forward" else -cm
             theta = math.radians(odo["headingDeg"])
             odo["rightCm"] -= math.sin(theta) * signed
             odo["forwardCm"] += math.cos(theta) * signed
-        if not released and views:
-            set_view(views.pop(0))
+        if not released:
+            view = views.pop(0) if views else True if snapshot["perception"]["detections"] else None
+            set_view(view)
         elif released and method == "backward":
             snapshot["perception"]["detections"] = [
                 {"category": "storage-zone", "distance_cm": 40, "bearing_deg": 0,
@@ -78,23 +103,21 @@ def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_fi
         bridge=SimpleNamespace(seconds=0, max_seconds=1200, call=call), observe=observe,
         motion_log=SimpleNamespace(write=logs.append),
         perception=SimpleNamespace(objects=lambda: list(objects.values()),
-            get_object=objects.get, mark_delivered=mark_delivered, mark_release_unverified=mark_unverified))
+            get_object=objects.get, mark_delivered=mark_delivered, mark_release_unverified=mark_unverified,
+            ground_camera=SimpleNamespace(project_pixel_to_ground=project)))
     return runtime, motions, logs, objects, delivery_evidence
 
 
-def test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget():
-    # Run08 r47's observed distance/bearing sequence through its eighth motion,
-    # followed by two explicitly synthetic views that allow a sixth approach.
-    views = [(33.8865303, 2.5651), (23.8832029, 3.5857), (23.898327, -1.2347),
-             (21.2945146, 0), (20.7190282, 0), (21.3470637, 19.3271),
-             (20.2543594, 6.9127), (19.9293573, -1.1816), (19.5021733, -4.6845),
-             (19.4, 0), (18, 0)]
-    runtime, motions, _, objects, evidence = place_runtime(views)
+def test_observed_alignment_turns_do_not_spend_the_translation_budget():
+    # Real partial turns and translations require more than eight primitives,
+    # while every alignment still refers to the same initial ground point.
+    runtime, motions, _, objects, evidence = place_runtime(
+        [(30, 30)], approach_step_cm=1.5, turn_fraction=.7)
     result = Actions(runtime).place()
     assert result["success"] is True
     before_release = motions[:next(i for i, row in enumerate(motions) if row[0] == "release")]
-    assert sum(method == "forward" for method, _ in before_release) == 6
-    assert sum(method == "turn" for method, _ in before_release) == 4
+    assert sum(method == "forward" for method, _ in before_release) == 8
+    assert sum(method == "turn" for method, _ in before_release) >= 3
     assert all(params["distanceCm"] <= 7 for method, params in before_release if method == "forward")
     assert objects["held"]["state"] == "DELIVERED"
     assert evidence[0]["placement"]["ball_track_id"] == "fresh-release"
@@ -102,36 +125,45 @@ def test_five_translations_and_three_turns_do_not_exhaust_the_translation_budget
 
 
 def test_eighth_translation_gets_a_fresh_gate_check_before_failing():
-    runtime, motions, _, _, _ = place_runtime([(30, 0)] * 8 + [(18, 0)])
+    runtime, motions, _, _, _ = place_runtime([(30, 0)], approach_step_cm=1.5)
     result = Actions(runtime).place()
     assert result["success"] is True
     assert sum(method == "forward" for method, _ in motions) == 8
+    assert result["evidence"]["release_aim"]["last_alignment"]["frame_id"] == 9
+    assert result["evidence"]["release_aim"]["last_alignment"]["distance_cm"] == pytest.approx(18)
 
 
 def test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge():
-    runtime, motions, _, _, _ = place_runtime([(30, 0)])
+    runtime, motions, _, objects, _ = place_runtime([(30, 0)], approach_step_cm=1)
     result = Actions(runtime).place()
     assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
     assert [method for method, _ in motions] == ["forward"] * 8
-    assert result["evidence"]["detection"]["distance_cm"] == 30
+    assert result["evidence"]["detection"]["distance_cm"] == pytest.approx(22)
     assert result["evidence"]["detection"]["bearing_deg"] == 0
     assert str(result["evidence"]["detection"]["frame_id"]) == str(runtime.snapshot["observation"]["frameId"])
+    assert runtime.snapshot["odometry"]["forwardCm"] == 8
+    assert runtime.snapshot["holding"]["holding"] is True and objects["held"]["state"] == "HELD"
 
 
 def test_alignment_stops_after_three_observed_turns_without_translation():
-    runtime, motions, _, _, _ = place_runtime([(30, 10)])
+    runtime, motions, _, _, _ = place_runtime([(30, 10)], turn_fraction=.1)
     result = Actions(runtime).place()
     assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
     assert [method for method, _ in motions] == ["turn"] * 3
+    assert runtime.snapshot["odometry"]["headingDeg"] == pytest.approx(-2.71)
+    assert result["evidence"]["release_aim"]["last_alignment"]["bearing_deg"] == pytest.approx(7.29)
+    assert runtime.snapshot["holding"]["holding"] is True
 
 
 def test_failed_multiturn_approach_retraces_actual_segments_to_road():
     near_origin = lambda odo: math.hypot(odo["rightCm"], odo["forwardCm"]) < .01
-    runtime, motions, logs, _, _ = place_runtime([(30, 0), (28, 30), (26, 0), None], road=near_origin)
+    # A small initial angular error grows after translation, requiring a real
+    # corrective turn before the next segment. The ground target never moves.
+    runtime, motions, logs, _, _ = place_runtime([(30, 2.5), True, True, None], road=near_origin)
     result = Actions(runtime).place()
     assert result["success"] is False and result["reason"] == "storage_region_not_observed"
     assert [method for method, _ in motions] == ["forward", "turn", "forward", "backward", "turn", "backward"]
-    assert motions[-2][1]["angleDeg"] == pytest.approx(30)
+    assert motions[-2][1]["angleDeg"] == pytest.approx(-motions[1][1]["angleDeg"])
     assert result["evidence"]["road_return"]["success"] is True
     assert near_origin(runtime.snapshot["odometry"])
     assert runtime.snapshot["holding"]["holding"] is True
@@ -186,10 +218,12 @@ def test_offroad_entry_without_recorded_road_anchor_never_invents_a_return():
 
 
 def test_failed_gate_keeps_its_detection_frame_separate_from_return_observations():
-    runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: abs(odo["forwardCm"]) < .01)
+    runtime, motions, _, _, _ = place_runtime([(30, 0)], road=lambda odo: abs(odo["forwardCm"]) < .01,
+                                            approach_step_cm=1)
     result = Actions(runtime).place()
     assert result["success"] is False
     assert result["evidence"]["detection"]["frame_id"] == "9"
+    assert result["evidence"]["detection"]["distance_cm"] == pytest.approx(22)
     assert result["evidence"]["frame_id"] > 9
     assert result["evidence"]["road_return"]["success"] is True
     assert len(motions) == 16

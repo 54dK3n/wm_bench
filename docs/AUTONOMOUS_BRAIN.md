@@ -63,6 +63,8 @@ v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-re
 
 当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，当时全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；严格仿真诊断取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式第十五局实际交付1/2，第十六局0/2；两局均因连续模型服务错误耗尽旧重试而结束，完整导出与失败结论保留。下一正式局采用navigation v4、LLM v12/runtime v9的有限网络恢复，其余感知与动作策略不变。
 
+actions v18把固定地面瞄准点扩展到首次放置：当前完整、面积唯一最大的绿色框中心经公开相机参数和里程计投影后保持不变；中心落入当前球/障碍的既有扩展占用框则持物失败。有已送达旧球可见时保留v17左右候选规则。每步仍须新绿色检测，19cm/3°、8次平移、放后唯一新球见证均不变。全套632项brain测试通过；旧Run17的放置假阴性不回写。见[first-release-fixed-aim-fix-20260926](../artifacts/autonomous-brain/first-release-fixed-aim-fix-20260926/REPORT.md)。runtime v10另修复最后允许轮成功done误判round_limit，未增加轮数上限。
+
 ## 日志与复算
 
 每局 `brain/` 保存：

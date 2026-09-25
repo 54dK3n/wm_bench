@@ -49,7 +49,9 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             zones.extend({**copy.deepcopy(zone), "track_id": f"fragment-{i}",
                           "bbox": {"x": 420. + i * 5, "y": 310., "w": 2., "h": 1.}}
                          for i in range(9))
-        elif green_components == "tied":
+        elif green_components == "tied" and state["retreated"]:
+            # This fixture tests ambiguous *post-release* aiming. The initial
+            # release still has a unique complete region and calibrated aim.
             zones.append({**copy.deepcopy(zone), "track_id": "equal-area-green",
                           "bbox": {"x": 410., "y": 200., "w": 200., "h": 100.}})
         if mode == "empty":
@@ -183,7 +185,8 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
         bridge=bridge, observe=observe, motion_log=SimpleNamespace(write=logs.append),
         perception=SimpleNamespace(objects=lambda: copy.deepcopy(list(objects.values())),
             get_object=lambda oid: copy.deepcopy(objects[oid]), mark_delivered=mark_delivered,
-            mark_release_unverified=mark_unverified))
+            mark_release_unverified=mark_unverified,
+            ground_camera=SimpleNamespace(project_pixel_to_ground=lambda u, v: (0., .18))))
     refresh()
     return SimpleNamespace(runtime=runtime, motions=motions, logs=logs, marks=marks,
                            unresolved=unresolved, objects=objects, views=views, state=state)
