@@ -57,7 +57,7 @@ actions v16增加同次place内的有限复观测：仅在释放后夹爪为空�
 
 v16修复的[严格75轮仿真诊断](../artifacts/autonomous-brain/placement-reobservation-replay-01/DIAGNOSTIC.md)已完成，90条原调用全部输入匹配、无新模型调用，但仅完成一个15.940812099cm视点，仍只识别旧球，诊断FAIL。离线堆叠分析不能作为脑的状态输入或补判依据。
 
-当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；新严格仿真诊断待跑，正式下一局为map05-run-15。
+当前actions v17在place开始观察到旧已送达红球时，从完整绿色分量内选择避开当前球和障碍框的候选释放瞄准点，使用相机参数投影并以里程计保持地面目标固定。候选仅用于接近；不改原19cm/3°对准预算，不将框内空白推断等同于真实无物，也不替代放后原像素见证。无候选/无有效投影则持物失败，源代码不读取平台堆叠阈值。见[选位修复报告](../artifacts/autonomous-brain/release-free-point-fix-20260925/REPORT.md)。新增36项回归，全部[556项brain测试通过](../artifacts/autonomous-brain/release-free-point-fix-20260925/integrated-tests-v1.txt)；新严格仿真诊断已取得第二球的独立像素见证及2/2真实交付，但按75轮诊断上限结束，不能视为正式自主成功。正式map05-run-15已启动，源码冻结于`9b2cc8486ec9b870cf1219b977ea36387565331a`。
 
 ## 日志与复算
 

@@ -1,0 +1,79 @@
+{
+  "schema": "sensor-release-aim-check/v1",
+  "command": "python3 artifacts/autonomous-brain/release-free-point-fix-20260925/sensor_aim_check.py",
+  "scope": "offline sensor-only computation; no simulator, network, evaluation, sample or layout reads",
+  "versions": {
+    "actions": "autonomous-brain-actions/v17",
+    "perception": "autonomous-brain-perception/v7"
+  },
+  "source_sha256": {
+    "artifacts/autonomous-brain/release-free-point-fix-20260925/sensor_aim_check.py": "b34c13bceda5334221786e3355dcf5e2a4f1b1277d6c1b232ed743aaa638e8fe",
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "1ba48fc350821b82b2c20dc5f0cc17354984b663309181876720716c9979e7eb",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/navigation.py": "a7f26802bbb847137bddac74a8cb6d1c9dc645d82a61fb13dab18f1ed7ab9cf1",
+    "autonomous_brain/perception.py": "5c266e7cd9c87fbc322333691b28d0014cbd08553ed8046f2073b0be4802ba89",
+    "vendor/wm_kit_opt2/world_model/__init__.py": "0a54890df57e639c4c2941e8bab43071edcc2533538854121efa3ba4ed7a4183",
+    "vendor/wm_kit_opt2/world_model/adapters.py": "b3e0c46d30e0f6cf387f744db68090a3ac987fc98b109aebffe4ddb9e90322e8",
+    "vendor/wm_kit_opt2/world_model/aliases.py": "1cc8fbb3ad34b4cfe98727bc1c57c4eed9fac41461c7229c9f929b34808508af",
+    "vendor/wm_kit_opt2/world_model/association.py": "4b926292e279538a7d9c9a157f93b87494431a7c89e742ef278a0543ff21276f",
+    "vendor/wm_kit_opt2/world_model/calibration.py": "e7f34a4d6e81c8eae994aca721fbac1a3d7b540373a4a85a6adfe616a801bb48",
+    "vendor/wm_kit_opt2/world_model/core.py": "aa1eca6d6c6a75a1dd0be9259b7dd9bf979319fdb81adba515ae8e790358c0ba",
+    "vendor/wm_kit_opt2/world_model/decay.py": "c57f3d41af752b89692ac8db54e4b937894afc2323cf8924c767628cfd3b25b4",
+    "vendor/wm_kit_opt2/world_model/providers/__init__.py": "adeb6e2b11f380380bcb62f9f2f1a52707681342933db8cfdc120ed8ca70134d",
+    "vendor/wm_kit_opt2/world_model/providers/base.py": "741c4908203bc8af5e693f0c2fe86bbd55c8d57c92654827a9b3374ff25f12c6",
+    "vendor/wm_kit_opt2/world_model/providers/guangyang.py": "a33dc24781eca797875f6291b0e1da08ae8751293e15d89dd6a57cd7911d128f",
+    "vendor/wm_kit_opt2/world_model/providers/mock.py": "d4610355b2d6aad8c1d551750739b3c88d86b8ba5d68a2336c31ce6a9822aefb",
+    "vendor/wm_kit_opt2/world_model/raw.py": "c72720be2335e8fe35d039b322caa14fd63a27e19848055fe850502fbaf672f2",
+    "vendor/wm_kit_opt2/world_model/size_policy.py": "4359a771a16809a307e7db56dd28c0ea6314fa3cf8b003ab314f43327649e6b9",
+    "vendor/wm_kit_opt2/world_model/types.py": "8953a9f9733423549e7bcdac72708635192c738957116480aad24dc22dd25d31"
+  },
+  "inputs": [
+    {
+      "path": "artifacts/autonomous-brain/map05-run-14/map-05-run-1/brain/observations.jsonl",
+      "sha256": "0984b7f3bd3e805344447bda29f70a6808007c475bdbc5df903f6122b779b25d",
+      "selected_record_sha256": "7b780cad5e07c4b132139ecad5c0acd1003b99160e6ee371ea21b07927a07b20"
+    },
+    {
+      "path": "artifacts/autonomous-brain/map05-run-14/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "654b493b19bde9511bb28c7b8131ec665cf681a3b3610e64026d21fdfa2b34e0",
+      "selected_record_sha256": "61c721ee74641351c6b5e96da714fe8f0001c6b02118c98107feaa7a1837d5e4"
+    }
+  ],
+  "source_observation": 545,
+  "source_frame": 545,
+  "camera_parameters": {
+    "width": 640,
+    "height": 480,
+    "fx": 415.69219381653056,
+    "fy": 415.69219381653056,
+    "cx": 320,
+    "cy": 240,
+    "verticalFovDeg": 60,
+    "mount": {
+      "forwardCm": 5.375,
+      "rightCm": 0,
+      "upCm": 8.0625,
+      "pitchDeg": -8
+    }
+  },
+  "mode": "observed_free_ground_point",
+  "error": null,
+  "selected_pixel": {
+    "u": 258.5,
+    "v": 279.0
+  },
+  "source_region_bbox": {
+    "x": 182.0,
+    "y": 251.0,
+    "w": 306.0,
+    "h": 56.0
+  },
+  "occupied_box_count": 5,
+  "relative_distance_cm": 39.65801812428788,
+  "relative_bearing_deg": -7.446482457271031,
+  "direct_camera_distance_cm": 39.65801812428789,
+  "direct_camera_bearing_deg": -7.446482457271033,
+  "projection_agrees": true,
+  "limitation": "Demonstrates sensor provenance and coordinate conversion, not successful placement or guaranteed free ground."
+}

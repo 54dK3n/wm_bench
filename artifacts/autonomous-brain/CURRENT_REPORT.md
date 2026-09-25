@@ -14,6 +14,6 @@ r75第二次place的实际判断帧是obs557：夹爪为空，唯一红框通过
 
 新的[放置前选位修复](release-free-point-fix-20260925/REPORT.md)仅用当前相机框、相机参数和里程计，从完整绿色分量内部选择避开已有球/障碍框的候选地面点，并固定接近目标，避免绿色框因遮挡变化而使目标漂移。没有观测支持的候选时不释放。放后仍要求空夹爪与唯一非旧球在完整绿色区域内的原像素见证；v16有限复观测的旧身份同帧可见护栏保留。候选选位不等于成功证据，原WorldModel、M5、三位置确认、19cm/3°对准及200轮/1200秒上限不变。
 
-新增36项选位回归；全部[556项brain测试通过](release-free-point-fix-20260925/integrated-tests-v1.txt)，[测试前后源码哈希一致](release-free-point-fix-20260925/integrated-tests-v1.json)。同一前75轮模型记录的第二次严格仿真诊断待跑；任何诊断都不充当正式成功局。
+新增36项选位回归；全部[556项brain测试通过](release-free-point-fix-20260925/integrated-tests-v1.txt)，[测试前后源码哈希一致](release-free-point-fix-20260925/integrated-tests-v1.json)。同一前75轮模型记录的第二次严格仿真诊断已完成：放置后观测551同时识别旧球及独立新球，原放置判据通过，原生评测记录2/2实际送达。诊断按预设75轮上限终止，仍不是自主完成或正式成功局；完整归档在`release-free-point-replay-01/`。
 
-下一正式目录为`artifacts/autonomous-brain/map05-run-15`。只有正式自主完成且独立评测通过后，才运行十布局一次并报告成败。
+第十五局正式运行已启动，目录为`artifacts/autonomous-brain/map05-run-15`，冻结源码提交`9b2cc8486ec9b870cf1219b977ea36387565331a`，保持200轮/1200秒上限。只有正式自主完成且独立评测通过后，才运行十布局一次并报告成败。
