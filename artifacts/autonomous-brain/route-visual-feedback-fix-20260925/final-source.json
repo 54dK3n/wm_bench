@@ -1,0 +1,13 @@
+{
+  "version": "autonomous-brain-route-visual-feedback-validation/v1",
+  "source_sha256": {
+    "autonomous_brain/actions.py": "70a958080d4e21ffdff928d515ebe8251d398b45e173280432981d9ac4408fff"
+  },
+  "after_suite_change": "Include the measured old_position_matches count in successful/ambiguous pick results; compact runtime helper already retains it. No motion or decision logic changed.",
+  "validation": {
+    "command": "python3 -m pytest tests/test_brain_actions.py tests/test_brain_visual_standoff.py tests/test_brain_actions_navigation_regression.py tests/test_brain_state_evidence.py -q",
+    "exit_code": 0,
+    "passed": 43,
+    "elapsed_s": 0.07
+  }
+}

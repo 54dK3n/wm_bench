@@ -1,0 +1,133 @@
+FFFFFF.....                                                              [100%]
+=================================== FAILURES ===================================
+________ test_intermediate_junction_keeps_the_unfinished_next_waypoint _________
+
+    def test_intermediate_junction_keeps_the_unfinished_next_waypoint():
+        # Run06 sensor poses A (obs125) -> C (obs126). The remembered next
+        # waypoint B is still 21.4cm ahead of C, outside the existing 15cm gate.
+        a, b, c = (-1.177, .498), (-1.090, .121), (-1.086, .335)
+    
+        def actuator(runtime, method, params):
+            assert method == "take_exit"
+            if len(runtime.motions) == 1:
+                runtime.set_pose(*c, -156.6, exits=(171.6, 66.6, -25.7))
+                return {"accepted": True, "distanceCm": 31.3, "stoppedBy": "junction"}
+            # Stop after the second decision so a wrong selected exit is exposed
+            # without modeling additional road movement.
+            return {"accepted": True, "distanceCm": 0, "stoppedBy": "front_clearance"}
+    
+        runtime = SensorRuntime(goal=(1.477, -.307), pose=(*a, 30.5),
+                                exits=(59.5, -41.8, -180), route=(a, b), actuator=actuator)
+        Actions(runtime).go_to("zone-1")
+>       assert runtime.selected_exits == [-180, -25.7], (
+            "The second exit must continue toward B; 171.6 degrees returns to A")
+E       AssertionError: The second exit must continue toward B; 171.6 degrees returns to A
+E       assert [-180, 171.6] == [-180, -25.7]
+E         
+E         At index 1 diff: 171.6 != -25.7
+E         Use -v to get more diff
+
+tests/test_brain_route_progress.py:95: AssertionError
+_ test_exhausted_known_route_requires_exploration_without_goal_vector_motion[no-known-route] _
+
+route = ()
+
+    @pytest.mark.parametrize("route", [(), ((0, 0),)], ids=["no-known-route", "only-start-vertex"])
+    def test_exhausted_known_route_requires_exploration_without_goal_vector_motion(route):
+        # Run06 obs179 has only a return exit. The target is about 1.5m away;
+        # the singleton route says nothing about how to reach it from this point.
+        runtime = SensorRuntime(goal=(1.477, -.307), pose=(0, .024, -179.2),
+                                exits=(179.2,), route=route)
+        result = Actions(runtime).go_to("zone-1")
+>       assert runtime.motions == [], "Route exhaustion must not invent a new leg toward the object"
+E       AssertionError: Route exhaustion must not invent a new leg toward the object
+E       assert [('take_exit'...'speed': 50})] == []
+E         
+E         Left contains one more item: ('take_exit', {'angleDeg': 179.2, 'speed': 50})
+E         Use -v to get more diff
+
+tests/test_brain_route_progress.py:106: AssertionError
+_ test_exhausted_known_route_requires_exploration_without_goal_vector_motion[only-start-vertex] _
+
+route = ((0, 0),)
+
+    @pytest.mark.parametrize("route", [(), ((0, 0),)], ids=["no-known-route", "only-start-vertex"])
+    def test_exhausted_known_route_requires_exploration_without_goal_vector_motion(route):
+        # Run06 obs179 has only a return exit. The target is about 1.5m away;
+        # the singleton route says nothing about how to reach it from this point.
+        runtime = SensorRuntime(goal=(1.477, -.307), pose=(0, .024, -179.2),
+                                exits=(179.2,), route=route)
+        result = Actions(runtime).go_to("zone-1")
+>       assert runtime.motions == [], "Route exhaustion must not invent a new leg toward the object"
+E       AssertionError: Route exhaustion must not invent a new leg toward the object
+E       assert [('take_exit'...'speed': 50})] == []
+E         
+E         Left contains one more item: ('take_exit', {'angleDeg': 179.2, 'speed': 50})
+E         Use -v to get more diff
+
+tests/test_brain_route_progress.py:106: AssertionError
+___ test_exact_same_pose_and_waypoint_returns_without_45_duplicate_commands ____
+
+    def test_exact_same_pose_and_waypoint_returns_without_45_duplicate_commands():
+        runtime = SensorRuntime(goal=(0, 2), route=((0, 0), (0, 1)),
+                                actuator=lambda *_: {"accepted": True, "distanceCm": 0,
+                                                     "stoppedBy": "junction"})
+        result = Actions(runtime).go_to("zone-1")
+        assert result["success"] is False
+>       assert result["reason"] == "route_no_progress"
+E       AssertionError: assert 'remembered_r..._reach_target' == 'route_no_progress'
+E         
+E         - route_no_progress
+E         + remembered_route_did_not_reach_target
+
+tests/test_brain_route_progress.py:117: AssertionError
+_______ test_near_angled_junction_stops_after_one_no_motion_follow_road ________
+
+    def test_near_angled_junction_stops_after_one_no_motion_follow_road():
+        # Run06 round44 reported 49.13cm / 42.60deg: neither the >60cm exit
+        # branch nor the <=40deg final-approach branch applies. The junction
+        # follower reports no movement, so reissuing it cannot make progress.
+        goal = (.4913 * math.sin(math.radians(42.6)), .4913 * math.cos(math.radians(42.6)))
+        runtime = SensorRuntime(goal=goal, exits=(-90, 0, 90), route=((0, 0), (0, 1)),
+                                actuator=lambda *_: {"accepted": True, "distanceCm": 0,
+                                                     "stoppedBy": "junction"})
+        result = Actions(runtime).go_to("zone-1")
+        assert result["success"] is False
+>       assert result["reason"] == "route_no_progress"
+E       AssertionError: assert 'remembered_r..._reach_target' == 'route_no_progress'
+E         
+E         - route_no_progress
+E         + remembered_route_did_not_reach_target
+
+tests/test_brain_route_progress.py:131: AssertionError
+____ test_take_exit_can_overshoot_a_waypoint_and_continue_to_fresh_standoff ____
+
+    def test_take_exit_can_overshoot_a_waypoint_and_continue_to_fresh_standoff():
+        def actuator(runtime, method, params):
+            assert method == "take_exit"
+            if params["angleDeg"] != 0:
+                return {"accepted": True, "distanceCm": 0, "stoppedBy": "front_clearance"}
+            z = .40 if len(runtime.motions) == 1 else .75
+            runtime.set_pose(0, z, 0, exits=(0, -180))
+            if z == .75:
+                runtime.show_target()
+            return {"accepted": True, "distanceCm": 40 if z == .40 else 35,
+                    "stoppedBy": "junction"}
+    
+        # A 40cm sensor step crosses the 18cm waypoint and ends 22cm beyond it.
+        # Keeping that crossed waypoint indefinitely would select the reverse exit.
+        runtime = SensorRuntime(goal=(0, 1.07), exits=(0, -180),
+                                route=((0, 0), (0, .18), (0, .75)), actuator=actuator)
+        result = Actions(runtime).go_to("zone-1")
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_route_progress.py:153: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_route_progress.py::test_intermediate_junction_keeps_the_unfinished_next_waypoint
+FAILED tests/test_brain_route_progress.py::test_exhausted_known_route_requires_exploration_without_goal_vector_motion[no-known-route]
+FAILED tests/test_brain_route_progress.py::test_exhausted_known_route_requires_exploration_without_goal_vector_motion[only-start-vertex]
+FAILED tests/test_brain_route_progress.py::test_exact_same_pose_and_waypoint_returns_without_45_duplicate_commands
+FAILED tests/test_brain_route_progress.py::test_near_angled_junction_stops_after_one_no_motion_follow_road
+FAILED tests/test_brain_route_progress.py::test_take_exit_can_overshoot_a_waypoint_and_continue_to_fresh_standoff
+6 failed, 5 passed in 0.04s

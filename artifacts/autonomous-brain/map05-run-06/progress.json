@@ -1,0 +1,4146 @@
+{
+  "schema": "wm-autonomous-brain-driver/v4",
+  "status": "running",
+  "maps": [
+    "map-05"
+  ],
+  "runsPerMap": 1,
+  "maxRounds": 200,
+  "maxSimulationSeconds": 1200,
+  "task": "把地图上的红球都送到绿色存放区",
+  "platformGatePass": true,
+  "trials": [
+    {
+      "map": "map-05",
+      "run": 1,
+      "directory": "map-05-run-1",
+      "success": false,
+      "maxRounds": 200,
+      "maxSimulationSeconds": 1200,
+      "backendVersion": "robot-backend-v4-stage1-r2",
+      "process": {
+        "code": 1,
+        "signal": null,
+        "spawnError": null,
+        "interrupted": null,
+        "wallSeconds": 1087.828,
+        "invocation": {
+          "module": "autonomous_brain.run",
+          "output": "artifacts/autonomous-brain/map05-run-06/map-05-run-1/brain",
+          "replay": null
+        },
+        "capabilityPassed": {
+          "schema": "autonomous-brain-robot-config/v1",
+          "origin": "<local robot bridge>",
+          "bridge_id": "<limited robot capability>",
+          "client_token": "<not recorded>",
+          "task": "把地图上的红球都送到绿色存放区",
+          "simulation_step_ms": 20,
+          "max_rounds": 200,
+          "max_simulation_seconds": 1200
+        }
+      },
+      "schema": "wm-autonomous-evaluation/v1",
+      "evaluationOnly": true,
+      "failures": [
+        "no_active_package_delivered_event:guangyang-target-1",
+        "final_position_outside_storage:guangyang-target-1",
+        "no_active_package_delivered_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "execution_or_controller_error"
+      ],
+      "expectedTargetIds": [
+        "guangyang-target-1",
+        "guangyang-target-2"
+      ],
+      "deliveredTargetIds": [],
+      "deliveryEvents": [],
+      "finalPositions": [
+        {
+          "id": "guangyang-target-1",
+          "finalSampleTick": 28369,
+          "worldPosition": [
+            10.0849,
+            1.251
+          ],
+          "destination": [
+            -10.7336,
+            -8.0772
+          ],
+          "distanceWorldUnits": 22.812830983681092,
+          "radiusWorldUnits": 0.95,
+          "holding": true,
+          "finalInsideStorage": false,
+          "deliveredEventActive": false
+        },
+        {
+          "id": "guangyang-target-2",
+          "finalSampleTick": 28369,
+          "worldPosition": [
+            0.5097,
+            4.4324
+          ],
+          "destination": [
+            -10.7336,
+            -8.0772
+          ],
+          "distanceWorldUnits": 16.819687483719786,
+          "radiusWorldUnits": 0.95,
+          "holding": false,
+          "finalInsideStorage": false,
+          "deliveredEventActive": false
+        }
+      ],
+      "simulationSeconds": 567.38,
+      "rejectedCalls": 0,
+      "nonwhitelistAcceptedCalls": 0,
+      "brainSummary": {
+        "version": "autonomous-brain/v1",
+        "status": "failed",
+        "reason": "BridgeError: follow_road: NOT_RUNNING",
+        "task": "把地图上的红球都送到绿色存放区",
+        "rounds": 46,
+        "llm_calls": 49,
+        "llm_total_elapsed_s": 878.0715114609999,
+        "wall_elapsed_s": 1087.6897047500001,
+        "simulation_seconds": 567.38,
+        "observations": 386,
+        "timeline": [
+          {
+            "object_id": "distractor_001",
+            "category": "blue-ball",
+            "first_seen_s": 3.96,
+            "first_seen_round": 2,
+            "confirmed_s": 10.66,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 5,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "17",
+                "simulation_time_s": 10.66,
+                "x_m": -0.57,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              },
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_002",
+            "category": "obstacle",
+            "first_seen_s": 3.96,
+            "first_seen_round": 2,
+            "confirmed_s": 21.06,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 8,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_003",
+            "category": "obstacle",
+            "first_seen_s": 3.96,
+            "first_seen_round": 2,
+            "confirmed_s": 21.06,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 8,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_004",
+            "category": "blue-ball",
+            "first_seen_s": 5.04,
+            "first_seen_round": 3,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "17",
+                "simulation_time_s": 10.66,
+                "x_m": -0.57,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "object_id": "storage-zone_005",
+            "category": "storage-zone",
+            "first_seen_s": 7.32,
+            "first_seen_round": 4,
+            "confirmed_s": 233.38,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 24,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "12",
+                "simulation_time_s": 7.32,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -86.9
+              },
+              {
+                "frame_id": "119",
+                "simulation_time_s": 111.98,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              },
+              {
+                "frame_id": "159",
+                "simulation_time_s": 233.38,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "168",
+                "simulation_time_s": 239.22,
+                "x_m": -0.619,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "170",
+                "simulation_time_s": 241.8,
+                "x_m": -0.22,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "281",
+                "simulation_time_s": 516.5,
+                "x_m": 0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90.9
+              },
+              {
+                "frame_id": "282",
+                "simulation_time_s": 517.84,
+                "x_m": 0.45,
+                "z_m": 0.275,
+                "heading_deg": -88.9
+              },
+              {
+                "frame_id": "288",
+                "simulation_time_s": 523.74,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -115.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_006",
+            "category": "obstacle",
+            "first_seen_s": 8.46,
+            "first_seen_round": 4,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "13",
+                "simulation_time_s": 8.46,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 3.1
+              },
+              {
+                "frame_id": "162",
+                "simulation_time_s": 234.52,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_007",
+            "category": "blue-ball",
+            "first_seen_s": 11.7,
+            "first_seen_round": 6,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_008",
+            "category": "obstacle",
+            "first_seen_s": 11.7,
+            "first_seen_round": 6,
+            "confirmed_s": 54.42,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 16,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_009",
+            "category": "obstacle",
+            "first_seen_s": 11.7,
+            "first_seen_round": 6,
+            "confirmed_s": 54.42,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 16,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "76",
+                "simulation_time_s": 62.16,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -161.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_010",
+            "category": "obstacle",
+            "first_seen_s": 11.7,
+            "first_seen_round": 6,
+            "confirmed_s": 54.42,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 16,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_011",
+            "category": "obstacle",
+            "first_seen_s": 21.06,
+            "first_seen_round": 8,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_012",
+            "category": "obstacle",
+            "first_seen_s": 21.06,
+            "first_seen_round": 8,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_013",
+            "category": "obstacle",
+            "first_seen_s": 21.06,
+            "first_seen_round": 8,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_014",
+            "category": "blue-ball",
+            "first_seen_s": 23.48,
+            "first_seen_round": 8,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              },
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_015",
+            "category": "blue-ball",
+            "first_seen_s": 25.74,
+            "first_seen_round": 8,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_016",
+            "category": "obstacle",
+            "first_seen_s": 35.96,
+            "first_seen_round": 11,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "43",
+                "simulation_time_s": 35.96,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": 158.2
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_017",
+            "category": "obstacle",
+            "first_seen_s": 37.1,
+            "first_seen_round": 12,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "46",
+                "simulation_time_s": 37.1,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -111.80000000000001
+              },
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              }
+            ]
+          },
+          {
+            "object_id": "target_018",
+            "category": "red-ball",
+            "first_seen_s": 38.24,
+            "first_seen_round": 12,
+            "confirmed_s": 69.14,
+            "picked_s": 85.16,
+            "delivered_s": null,
+            "confirmed_round": 20,
+            "original_position_m": {
+              "x": -1.5502561283228269,
+              "z": 1.1063471303165398
+            },
+            "accepted_hit_poses": [
+              {
+                "frame_id": "47",
+                "simulation_time_s": 38.24,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -21.8
+              },
+              {
+                "frame_id": "77",
+                "simulation_time_s": 63.3,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -71.7
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "94",
+                "simulation_time_s": 76.2,
+                "x_m": -2.0580000000000003,
+                "z_m": 1.133,
+                "heading_deg": -93.4
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_019",
+            "category": "obstacle",
+            "first_seen_s": 38.24,
+            "first_seen_round": 12,
+            "confirmed_s": 77.28,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 21,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "47",
+                "simulation_time_s": 38.24,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -21.8
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_020",
+            "category": "obstacle",
+            "first_seen_s": 43.48,
+            "first_seen_round": 13,
+            "confirmed_s": 74.2,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 21,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "53",
+                "simulation_time_s": 43.48,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -28.8
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_021",
+            "category": "obstacle",
+            "first_seen_s": 43.48,
+            "first_seen_round": 13,
+            "confirmed_s": 78.8,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 22,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "53",
+                "simulation_time_s": 43.48,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -28.8
+              },
+              {
+                "frame_id": "68",
+                "simulation_time_s": 55.56,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -61.20000000000001
+              },
+              {
+                "frame_id": "100",
+                "simulation_time_s": 78.8,
+                "x_m": -1.82,
+                "z_m": 1.119,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_022",
+            "category": "blue-ball",
+            "first_seen_s": 46.9,
+            "first_seen_round": 14,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "58",
+                "simulation_time_s": 46.9,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -118.79999999999998
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_023",
+            "category": "obstacle",
+            "first_seen_s": 54.42,
+            "first_seen_round": 16,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_024",
+            "category": "blue-ball",
+            "first_seen_s": 59.88,
+            "first_seen_round": 17,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "72",
+                "simulation_time_s": 59.88,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": 18.3
+              },
+              {
+                "frame_id": "81",
+                "simulation_time_s": 65.72,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -11.6
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_025",
+            "category": "obstacle",
+            "first_seen_s": 63.3,
+            "first_seen_round": 18,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "77",
+                "simulation_time_s": 63.3,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -71.7
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_026",
+            "category": "blue-ball",
+            "first_seen_s": 65.72,
+            "first_seen_round": 19,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "81",
+                "simulation_time_s": 65.72,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -11.6
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_027",
+            "category": "obstacle",
+            "first_seen_s": 69.14,
+            "first_seen_round": 20,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              }
+            ]
+          },
+          {
+            "object_id": "storage-zone_028",
+            "category": "storage-zone",
+            "first_seen_s": 74.2,
+            "first_seen_round": 21,
+            "confirmed_s": 81.2,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 22,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "103",
+                "simulation_time_s": 81.2,
+                "x_m": -1.71,
+                "z_m": 1.1179999999999999,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "object_id": "storage-zone_029",
+            "category": "storage-zone",
+            "first_seen_s": 74.2,
+            "first_seen_round": 21,
+            "confirmed_s": 105.36,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 23,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "96",
+                "simulation_time_s": 78.12,
+                "x_m": -1.88,
+                "z_m": 1.122,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "116",
+                "simulation_time_s": 105.36,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "object_id": "storage-zone_030",
+            "category": "storage-zone",
+            "first_seen_s": 74.2,
+            "first_seen_round": 21,
+            "confirmed_s": 111.98,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 23,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "96",
+                "simulation_time_s": 78.12,
+                "x_m": -1.88,
+                "z_m": 1.122,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "119",
+                "simulation_time_s": 111.98,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_031",
+            "category": "obstacle",
+            "first_seen_s": 77.28,
+            "first_seen_round": 21,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "103",
+                "simulation_time_s": 81.2,
+                "x_m": -1.71,
+                "z_m": 1.1179999999999999,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_032",
+            "category": "obstacle",
+            "first_seen_s": 79.34,
+            "first_seen_round": 22,
+            "confirmed_s": 383.22,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 30,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "101",
+                "simulation_time_s": 79.34,
+                "x_m": -1.77,
+                "z_m": 1.119,
+                "heading_deg": -90.40000000000002
+              },
+              {
+                "frame_id": "105",
+                "simulation_time_s": 85.16,
+                "x_m": -2.01,
+                "z_m": 1.12,
+                "heading_deg": -90.40000000000002
+              },
+              {
+                "frame_id": "229",
+                "simulation_time_s": 383.22,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_033",
+            "category": "obstacle",
+            "first_seen_s": 95.18,
+            "first_seen_round": 23,
+            "confirmed_s": 235.66,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 25,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "111",
+                "simulation_time_s": 95.18,
+                "x_m": -1.9069999999999998,
+                "z_m": 0.835,
+                "heading_deg": -155.8
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              },
+              {
+                "frame_id": "163",
+                "simulation_time_s": 235.66,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_034",
+            "category": "blue-ball",
+            "first_seen_s": 113.18,
+            "first_seen_round": 23,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "120",
+                "simulation_time_s": 113.18,
+                "x_m": -1.365,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_035",
+            "category": "obstacle",
+            "first_seen_s": 122.94,
+            "first_seen_round": 23,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              },
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_036",
+            "category": "blue-ball",
+            "first_seen_s": 153.34,
+            "first_seen_round": 23,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "133",
+                "simulation_time_s": 153.34,
+                "x_m": -1.177,
+                "z_m": 0.498,
+                "heading_deg": 30.5
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_037",
+            "category": "obstacle",
+            "first_seen_s": 233.38,
+            "first_seen_round": 24,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "159",
+                "simulation_time_s": 233.38,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_038",
+            "category": "blue-ball",
+            "first_seen_s": 234.52,
+            "first_seen_round": 25,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "162",
+                "simulation_time_s": 234.52,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_039",
+            "category": "obstacle",
+            "first_seen_s": 236.8,
+            "first_seen_round": 25,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "object_id": "target_040",
+            "category": "red-ball",
+            "first_seen_s": 245.4,
+            "first_seen_round": 27,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "174",
+                "simulation_time_s": 245.4,
+                "x_m": -0.003,
+                "z_m": 0.524,
+                "heading_deg": 0.8
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_041",
+            "category": "blue-ball",
+            "first_seen_s": 248.3,
+            "first_seen_round": 28,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "178",
+                "simulation_time_s": 248.3,
+                "x_m": -0.002,
+                "z_m": 0.43,
+                "heading_deg": 179.4
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_042",
+            "category": "obstacle",
+            "first_seen_s": 306.68,
+            "first_seen_round": 28,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "198",
+                "simulation_time_s": 306.68,
+                "x_m": 0,
+                "z_m": 0.25,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_043",
+            "category": "obstacle",
+            "first_seen_s": 380.02,
+            "first_seen_round": 29,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "226",
+                "simulation_time_s": 380.02,
+                "x_m": -0.002,
+                "z_m": 0.7090000000000001,
+                "heading_deg": 0.1
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_044",
+            "category": "obstacle",
+            "first_seen_s": 380.02,
+            "first_seen_round": 29,
+            "confirmed_s": 567.38,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 45,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "226",
+                "simulation_time_s": 380.02,
+                "x_m": -0.002,
+                "z_m": 0.7090000000000001,
+                "heading_deg": 0.1
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_045",
+            "category": "blue-ball",
+            "first_seen_s": 385.48,
+            "first_seen_round": 31,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          },
+          {
+            "object_id": "target_046",
+            "category": "red-ball",
+            "first_seen_s": 391.54,
+            "first_seen_round": 31,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "235",
+                "simulation_time_s": 391.54,
+                "x_m": -0.003,
+                "z_m": 0.615,
+                "heading_deg": -0.8
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_047",
+            "category": "obstacle",
+            "first_seen_s": 391.54,
+            "first_seen_round": 31,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "235",
+                "simulation_time_s": 391.54,
+                "x_m": -0.003,
+                "z_m": 0.615,
+                "heading_deg": -0.8
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_048",
+            "category": "blue-ball",
+            "first_seen_s": 397.2,
+            "first_seen_round": 31,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "238",
+                "simulation_time_s": 397.2,
+                "x_m": -0.002,
+                "z_m": 0.43,
+                "heading_deg": -179.2
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_049",
+            "category": "obstacle",
+            "first_seen_s": 508.3,
+            "first_seen_round": 31,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "276",
+                "simulation_time_s": 508.3,
+                "x_m": 0,
+                "z_m": 0.25,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "object_id": "storage-zone_050",
+            "category": "storage-zone",
+            "first_seen_s": 517.84,
+            "first_seen_round": 32,
+            "confirmed_s": 523.36,
+            "picked_s": null,
+            "delivered_s": null,
+            "confirmed_round": 33,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "282",
+                "simulation_time_s": 517.84,
+                "x_m": 0.45,
+                "z_m": 0.275,
+                "heading_deg": -88.9
+              },
+              {
+                "frame_id": "285",
+                "simulation_time_s": 519.14,
+                "x_m": 0.65,
+                "z_m": 0.27699999999999997,
+                "heading_deg": -89.9
+              },
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_051",
+            "category": "obstacle",
+            "first_seen_s": 523.36,
+            "first_seen_round": 33,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_052",
+            "category": "obstacle",
+            "first_seen_s": 523.36,
+            "first_seen_round": 33,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_053",
+            "category": "obstacle",
+            "first_seen_s": 523.36,
+            "first_seen_round": 33,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_054",
+            "category": "obstacle",
+            "first_seen_s": 526.02,
+            "first_seen_round": 34,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "292",
+                "simulation_time_s": 526.02,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": 64.3
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_055",
+            "category": "blue-ball",
+            "first_seen_s": 527.16,
+            "first_seen_round": 34,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "293",
+                "simulation_time_s": 527.16,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": 154.3
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_056",
+            "category": "obstacle",
+            "first_seen_s": 529.86,
+            "first_seen_round": 35,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "298",
+                "simulation_time_s": 529.86,
+                "x_m": 0.805,
+                "z_m": 0.10800000000000001,
+                "heading_deg": -123.9
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_057",
+            "category": "obstacle",
+            "first_seen_s": 533.28,
+            "first_seen_round": 36,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "303",
+                "simulation_time_s": 533.28,
+                "x_m": 0.805,
+                "z_m": 0.10800000000000001,
+                "heading_deg": 146.1
+              }
+            ]
+          },
+          {
+            "object_id": "obstacle_058",
+            "category": "obstacle",
+            "first_seen_s": 559.96,
+            "first_seen_round": 43,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "332",
+                "simulation_time_s": 559.96,
+                "x_m": 0.63,
+                "z_m": 0.27699999999999997,
+                "heading_deg": 90.6
+              }
+            ]
+          },
+          {
+            "object_id": "distractor_059",
+            "category": "blue-ball",
+            "first_seen_s": 567.38,
+            "first_seen_round": 45,
+            "confirmed_s": null,
+            "picked_s": null,
+            "delivered_s": null,
+            "accepted_hit_poses": [
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          }
+        ],
+        "final_objects": [
+          {
+            "id": "distractor_001",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.156013467454654,
+              "z": 0.6388998602093262
+            },
+            "confidence": 0.09591237601989677,
+            "state": "LOST",
+            "distance_cm": 225.50709418781355,
+            "bearing_deg": -100.40906823791909,
+            "hit_count": 5,
+            "source": "virtual-cv",
+            "last_seen_s": 25.74,
+            "hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "17",
+                "simulation_time_s": 10.66,
+                "x_m": -0.57,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              },
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "id": "obstacle_002",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.9932833099771877,
+              "z": -0.03246979510257996
+            },
+            "confidence": 0.14595915355036748,
+            "state": "LOST",
+            "distance_cm": 220.23315300806732,
+            "bearing_deg": -118.18917617456559,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 21.06,
+            "hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_003",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.9594517535757007,
+              "z": -0.1361762743772335
+            },
+            "confidence": 0.4280206908265447,
+            "state": "STALE",
+            "distance_cm": 220.52626870593707,
+            "bearing_deg": -121.02451472385546,
+            "hit_count": 4,
+            "source": "virtual-cv",
+            "last_seen_s": 236.8,
+            "hit_poses": [
+              {
+                "frame_id": "5",
+                "simulation_time_s": 3.96,
+                "x_m": -0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90.9
+              },
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              }
+            ]
+          },
+          {
+            "id": "distractor_004",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.3441972596850698,
+              "z": -0.16653456890879112
+            },
+            "confidence": 0.13948608151784547,
+            "state": "LOST",
+            "distance_cm": 257.7621364290105,
+            "bearing_deg": -118.58541836514358,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 10.66,
+            "hit_poses": [
+              {
+                "frame_id": "8",
+                "simulation_time_s": 5.04,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 93.1
+              },
+              {
+                "frame_id": "17",
+                "simulation_time_s": 10.66,
+                "x_m": -0.57,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "id": "storage-zone_005",
+            "category": "storage-zone",
+            "position_m": {
+              "x": 1.2516697338275928,
+              "z": -0.121505135737565
+            },
+            "confidence": 0.38073189305087235,
+            "state": "STALE",
+            "distance_cm": 79.13711350901058,
+            "bearing_deg": 158.87687566321193,
+            "hit_count": 9,
+            "source": "storage-ground-pixels",
+            "last_seen_s": 528.42,
+            "hit_poses": [
+              {
+                "frame_id": "12",
+                "simulation_time_s": 7.32,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -86.9
+              },
+              {
+                "frame_id": "119",
+                "simulation_time_s": 111.98,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              },
+              {
+                "frame_id": "159",
+                "simulation_time_s": 233.38,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "168",
+                "simulation_time_s": 239.22,
+                "x_m": -0.619,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "170",
+                "simulation_time_s": 241.8,
+                "x_m": -0.22,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "281",
+                "simulation_time_s": 516.5,
+                "x_m": 0.25,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90.9
+              },
+              {
+                "frame_id": "282",
+                "simulation_time_s": 517.84,
+                "x_m": 0.45,
+                "z_m": 0.275,
+                "heading_deg": -88.9
+              },
+              {
+                "frame_id": "288",
+                "simulation_time_s": 523.74,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -115.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_006",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.42511379429589946,
+              "z": 0.9947204041407915
+            },
+            "confidence": 0.13110833926043214,
+            "state": "LOST",
+            "distance_cm": 156.15161897824262,
+            "bearing_deg": -87.43435460516835,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 234.52,
+            "hit_poses": [
+              {
+                "frame_id": "13",
+                "simulation_time_s": 8.46,
+                "x_m": -0.41,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 3.1
+              },
+              {
+                "frame_id": "162",
+                "simulation_time_s": 234.52,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "id": "distractor_007",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.5795302315970539,
+              "z": 0.7979710957590196
+            },
+            "confidence": 0.13808619681907258,
+            "state": "LOST",
+            "distance_cm": 268.2343180094952,
+            "bearing_deg": -96.94464000042599,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 11.7,
+            "hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "id": "obstacle_008",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.569187411622212,
+              "z": 0.12073167409734098
+            },
+            "confidence": 0.3976132163724006,
+            "state": "STALE",
+            "distance_cm": 272.11517244729424,
+            "bearing_deg": -111.32295738894643,
+            "hit_count": 4,
+            "source": "virtual-cv",
+            "last_seen_s": 235.66,
+            "hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              }
+            ]
+          },
+          {
+            "id": "obstacle_009",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.6596851179365784,
+              "z": 0.40624492531739664
+            },
+            "confidence": 0.2887584676275297,
+            "state": "STALE",
+            "distance_cm": 276.9877735046278,
+            "bearing_deg": -105.15251785349575,
+            "hit_count": 4,
+            "source": "virtual-cv",
+            "last_seen_s": 95.18,
+            "hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "76",
+                "simulation_time_s": 62.16,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -161.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_010",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.6318417734886355,
+              "z": -0.030385442556075785
+            },
+            "confidence": 0.33768373551842396,
+            "state": "STALE",
+            "distance_cm": 281.5537248323727,
+            "bearing_deg": -114.08905400706209,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 95.18,
+            "hit_poses": [
+              {
+                "frame_id": "20",
+                "simulation_time_s": 11.7,
+                "x_m": -0.73,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "23",
+                "simulation_time_s": 12.74,
+                "x_m": -0.89,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              },
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              }
+            ]
+          },
+          {
+            "id": "obstacle_011",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.7749221960845781,
+              "z": -0.15258158320526638
+            },
+            "confidence": 0.12638247233404457,
+            "state": "LOST",
+            "distance_cm": 204.05323840877344,
+            "bearing_deg": -123.31400813737817,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 21.06,
+            "hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_012",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.41622259172971376,
+              "z": -0.525600674902097
+            },
+            "confidence": 0.13452534134902935,
+            "state": "LOST",
+            "distance_cm": 192.0863726573907,
+            "bearing_deg": -137.92429173893134,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 236.8,
+            "hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "id": "obstacle_013",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.4681516443581718,
+              "z": 0.21577487526185837
+            },
+            "confidence": 0.28824421618966944,
+            "state": "STALE",
+            "distance_cm": 162.75389355145262,
+            "bearing_deg": -115.65657483077314,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 23.48,
+            "hit_poses": [
+              {
+                "frame_id": "30",
+                "simulation_time_s": 21.06,
+                "x_m": -1.357,
+                "z_m": -0.198,
+                "heading_deg": -76.7
+              },
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              }
+            ]
+          },
+          {
+            "id": "distractor_014",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -0.9425988084304062,
+              "z": 0.6928932593972585
+            },
+            "confidence": 0.10488543721716412,
+            "state": "LOST",
+            "distance_cm": 204.19504385984015,
+            "bearing_deg": -98.93667915354767,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 26.16,
+            "hit_poses": [
+              {
+                "frame_id": "31",
+                "simulation_time_s": 23.48,
+                "x_m": -1.202,
+                "z_m": -0.081,
+                "heading_deg": -36.9
+              },
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "id": "distractor_015",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -0.9796683170885399,
+              "z": 0.9588042984880325
+            },
+            "confidence": 0.14948427764703845,
+            "state": "LOST",
+            "distance_cm": 210.07520139815426,
+            "bearing_deg": -91.6849031447065,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 26.16,
+            "hit_poses": [
+              {
+                "frame_id": "32",
+                "simulation_time_s": 25.74,
+                "x_m": -1.101,
+                "z_m": 0.091,
+                "heading_deg": -24.2
+              }
+            ]
+          },
+          {
+            "id": "obstacle_016",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.848362051123956,
+              "z": -0.6755799183363456
+            },
+            "confidence": 0.38647689846064526,
+            "state": "STALE",
+            "distance_cm": 323.3788177893779,
+            "bearing_deg": -124.29668841571429,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 99.28,
+            "hit_poses": [
+              {
+                "frame_id": "43",
+                "simulation_time_s": 35.96,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": 158.2
+              }
+            ]
+          },
+          {
+            "id": "obstacle_017",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.2269095318845067,
+              "z": -0.41950248981069954
+            },
+            "confidence": 0.41442647128005033,
+            "state": "STALE",
+            "distance_cm": 256.21106047789186,
+            "bearing_deg": -124.79556243323267,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 230.8,
+            "hit_poses": [
+              {
+                "frame_id": "46",
+                "simulation_time_s": 37.1,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -111.80000000000001
+              },
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              }
+            ]
+          },
+          {
+            "id": "target_018",
+            "category": "red-ball",
+            "position_m": {
+              "x": -1.5502561283228269,
+              "z": 1.1063471303165398
+            },
+            "confidence": 0,
+            "state": "HELD",
+            "distance_cm": 268.74285600739285,
+            "bearing_deg": -90.33149143598189,
+            "hit_count": 4,
+            "source": "virtual-cv",
+            "last_seen_s": 81.2,
+            "hit_poses": [
+              {
+                "frame_id": "47",
+                "simulation_time_s": 38.24,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -21.8
+              },
+              {
+                "frame_id": "77",
+                "simulation_time_s": 63.3,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -71.7
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "94",
+                "simulation_time_s": 76.2,
+                "x_m": -2.0580000000000003,
+                "z_m": 1.133,
+                "heading_deg": -93.4
+              }
+            ]
+          },
+          {
+            "id": "obstacle_019",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.4147557493621625,
+              "z": 0.8939133077367063
+            },
+            "confidence": 0.12669702371332545,
+            "state": "LOST",
+            "distance_cm": 252.5083669121683,
+            "bearing_deg": -94.57078151823079,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 102.24,
+            "hit_poses": [
+              {
+                "frame_id": "47",
+                "simulation_time_s": 38.24,
+                "x_m": -1.895,
+                "z_m": 0.325,
+                "heading_deg": -21.8
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              }
+            ]
+          },
+          {
+            "id": "obstacle_020",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.6889230294772335,
+              "z": 0.9154551057606062
+            },
+            "confidence": 0.13006505868168644,
+            "state": "LOST",
+            "distance_cm": 280.00627993683077,
+            "bearing_deg": -94.66276893837507,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 102.24,
+            "hit_poses": [
+              {
+                "frame_id": "53",
+                "simulation_time_s": 43.48,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -28.8
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              },
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              }
+            ]
+          },
+          {
+            "id": "obstacle_021",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.319466568295218,
+              "z": 1.2621996271472709
+            },
+            "confidence": 0.12646471016415364,
+            "state": "LOST",
+            "distance_cm": 249.3526003307251,
+            "bearing_deg": -85.90617725192149,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 102.24,
+            "hit_poses": [
+              {
+                "frame_id": "53",
+                "simulation_time_s": 43.48,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -28.8
+              },
+              {
+                "frame_id": "68",
+                "simulation_time_s": 55.56,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -61.20000000000001
+              },
+              {
+                "frame_id": "100",
+                "simulation_time_s": 78.8,
+                "x_m": -1.82,
+                "z_m": 1.119,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "id": "distractor_022",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.2976191646384423,
+              "z": -0.4645809463609115
+            },
+            "confidence": 0.1404438195668208,
+            "state": "LOST",
+            "distance_cm": 264.52305978433446,
+            "bearing_deg": -125.03963579306975,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 46.9,
+            "hit_poses": [
+              {
+                "frame_id": "58",
+                "simulation_time_s": 46.9,
+                "x_m": -1.8559999999999999,
+                "z_m": 0.41100000000000003,
+                "heading_deg": -118.79999999999998
+              }
+            ]
+          },
+          {
+            "id": "obstacle_023",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.4695286806936672,
+              "z": 0.2938582294499616
+            },
+            "confidence": 0.3938106108426519,
+            "state": "STALE",
+            "distance_cm": 259.3793160986814,
+            "bearing_deg": -108.00346943819154,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 96.18,
+            "hit_poses": [
+              {
+                "frame_id": "67",
+                "simulation_time_s": 54.42,
+                "x_m": -1.949,
+                "z_m": 0.919,
+                "heading_deg": -151.2
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              }
+            ]
+          },
+          {
+            "id": "distractor_024",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -2.4285238009944363,
+              "z": 2.056039901656869
+            },
+            "confidence": 0.1485322084577062,
+            "state": "LOST",
+            "distance_cm": 379.5568069817339,
+            "bearing_deg": -78.33832250042957,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 89.06,
+            "hit_poses": [
+              {
+                "frame_id": "72",
+                "simulation_time_s": 59.88,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": 18.3
+              },
+              {
+                "frame_id": "81",
+                "simulation_time_s": 65.72,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -11.6
+              }
+            ]
+          },
+          {
+            "id": "obstacle_025",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.5105103855775046,
+              "z": 1.607232958745294
+            },
+            "confidence": 0.3904649178652222,
+            "state": "STALE",
+            "distance_cm": 277.78214593738153,
+            "bearing_deg": -79.95253573313344,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 75.12,
+            "hit_poses": [
+              {
+                "frame_id": "77",
+                "simulation_time_s": 63.3,
+                "x_m": -2.206,
+                "z_m": 1.218,
+                "heading_deg": -71.7
+              },
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              }
+            ]
+          },
+          {
+            "id": "distractor_026",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -2.2090191820827783,
+              "z": 2.3037699166524153
+            },
+            "confidence": 0.14789246755284258,
+            "state": "LOST",
+            "distance_cm": 369.6137598505448,
+            "bearing_deg": -73.50759686445625,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 70.28,
+            "hit_poses": [
+              {
+                "frame_id": "81",
+                "simulation_time_s": 65.72,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -11.6
+              }
+            ]
+          },
+          {
+            "id": "obstacle_027",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.7872344377936027,
+              "z": 1.1237477944142367
+            },
+            "confidence": 0.12479660906525725,
+            "state": "LOST",
+            "distance_cm": 292.4050910068763,
+            "bearing_deg": -90.77524494675086,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 69.14,
+            "hit_poses": [
+              {
+                "frame_id": "86",
+                "simulation_time_s": 69.14,
+                "x_m": -2.22,
+                "z_m": 1.374,
+                "heading_deg": -101.6
+              }
+            ]
+          },
+          {
+            "id": "storage-zone_028",
+            "category": "storage-zone",
+            "position_m": {
+              "x": 1.4771099236815082,
+              "z": -0.3074650532949512
+            },
+            "confidence": 0.19091474418819238,
+            "state": "STALE",
+            "distance_cm": 103.40725763699999,
+            "bearing_deg": 148.5523331521913,
+            "hit_count": 3,
+            "source": "storage-ground-pixels",
+            "last_seen_s": 85.16,
+            "hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "103",
+                "simulation_time_s": 81.2,
+                "x_m": -1.71,
+                "z_m": 1.1179999999999999,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "id": "storage-zone_029",
+            "category": "storage-zone",
+            "position_m": {
+              "x": 1.540645491121519,
+              "z": -0.2233437523471484
+            },
+            "confidence": 0.19657749755210202,
+            "state": "STALE",
+            "distance_cm": 98.3126892682342,
+            "bearing_deg": 143.30600797759251,
+            "hit_count": 3,
+            "source": "storage-ground-pixels",
+            "last_seen_s": 119.2,
+            "hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "96",
+                "simulation_time_s": 78.12,
+                "x_m": -1.88,
+                "z_m": 1.122,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "116",
+                "simulation_time_s": 105.36,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "id": "storage-zone_030",
+            "category": "storage-zone",
+            "position_m": {
+              "x": 1.6156014375818037,
+              "z": -0.17255695349526143
+            },
+            "confidence": 0.31041941646562715,
+            "state": "STALE",
+            "distance_cm": 97.5565249785961,
+            "bearing_deg": 138.02557765710958,
+            "hit_count": 3,
+            "source": "storage-ground-pixels",
+            "last_seen_s": 111.98,
+            "hit_poses": [
+              {
+                "frame_id": "91",
+                "simulation_time_s": 74.2,
+                "x_m": -2.1919999999999997,
+                "z_m": 1.18,
+                "heading_deg": -141.5
+              },
+              {
+                "frame_id": "96",
+                "simulation_time_s": 78.12,
+                "x_m": -1.88,
+                "z_m": 1.122,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "119",
+                "simulation_time_s": 111.98,
+                "x_m": -1.5419999999999998,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_031",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.9783222544824215,
+              "z": 1.6350154636678067
+            },
+            "confidence": 0.41098337615083835,
+            "state": "STALE",
+            "distance_cm": 229.68887778897687,
+            "bearing_deg": -74.74353196671352,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 85.16,
+            "hit_poses": [
+              {
+                "frame_id": "95",
+                "simulation_time_s": 77.28,
+                "x_m": -1.9580000000000002,
+                "z_m": 1.127,
+                "heading_deg": -93.4
+              },
+              {
+                "frame_id": "103",
+                "simulation_time_s": 81.2,
+                "x_m": -1.71,
+                "z_m": 1.1179999999999999,
+                "heading_deg": -90.40000000000002
+              }
+            ]
+          },
+          {
+            "id": "obstacle_032",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.8833637245783152,
+              "z": 0.9737052945824474
+            },
+            "confidence": 0.5401643323867842,
+            "state": "CONFIRMED",
+            "distance_cm": 200.78194643241446,
+            "bearing_deg": -90.86669260812933,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 383.22,
+            "hit_poses": [
+              {
+                "frame_id": "101",
+                "simulation_time_s": 79.34,
+                "x_m": -1.77,
+                "z_m": 1.119,
+                "heading_deg": -90.40000000000002
+              },
+              {
+                "frame_id": "105",
+                "simulation_time_s": 85.16,
+                "x_m": -2.01,
+                "z_m": 1.12,
+                "heading_deg": -90.40000000000002
+              },
+              {
+                "frame_id": "229",
+                "simulation_time_s": 383.22,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "id": "obstacle_033",
+            "category": "obstacle",
+            "position_m": {
+              "x": -1.7235386448455239,
+              "z": -0.038931278872138764
+            },
+            "confidence": 0.501682086675614,
+            "state": "CONFIRMED",
+            "distance_cm": 290.65899300457795,
+            "bearing_deg": -113.81242964973069,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 235.66,
+            "hit_poses": [
+              {
+                "frame_id": "111",
+                "simulation_time_s": 95.18,
+                "x_m": -1.9069999999999998,
+                "z_m": 0.835,
+                "heading_deg": -155.8
+              },
+              {
+                "frame_id": "112",
+                "simulation_time_s": 96.18,
+                "x_m": -1.841,
+                "z_m": 0.698,
+                "heading_deg": -153.4
+              },
+              {
+                "frame_id": "163",
+                "simulation_time_s": 235.66,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 90
+              }
+            ]
+          },
+          {
+            "id": "distractor_034",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -0.7555426156172947,
+              "z": 0.9318039253469952
+            },
+            "confidence": 0.11949073265700919,
+            "state": "LOST",
+            "distance_cm": 187.5086325006969,
+            "bearing_deg": -91.51085907386918,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 119.84,
+            "hit_poses": [
+              {
+                "frame_id": "120",
+                "simulation_time_s": 113.18,
+                "x_m": -1.365,
+                "z_m": 0.552,
+                "heading_deg": -90.7
+              }
+            ]
+          },
+          {
+            "id": "obstacle_035",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.9577038502682207,
+              "z": -0.6722090170094719
+            },
+            "confidence": 0.5052317114820365,
+            "state": "TENTATIVE",
+            "distance_cm": 244.77570350301053,
+            "bearing_deg": -132.83450760416503,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 236.8,
+            "hit_poses": [
+              {
+                "frame_id": "124",
+                "simulation_time_s": 122.94,
+                "x_m": -1.0859999999999999,
+                "z_m": 0.335,
+                "heading_deg": -155.8
+              },
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "id": "distractor_036",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.5711873352568086,
+              "z": 1.1602728633765682
+            },
+            "confidence": 0.09226063016464722,
+            "state": "LOST",
+            "distance_cm": 271.75726433401206,
+            "bearing_deg": -89.28475801541546,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 153.34,
+            "hit_poses": [
+              {
+                "frame_id": "133",
+                "simulation_time_s": 153.34,
+                "x_m": -1.177,
+                "z_m": 0.498,
+                "heading_deg": 30.5
+              }
+            ]
+          },
+          {
+            "id": "obstacle_037",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.15287141494063916,
+              "z": 0.8639244531397132
+            },
+            "confidence": 0.14533929779882143,
+            "state": "LOST",
+            "distance_cm": 96.892142436121,
+            "bearing_deg": -87.54775605483317,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 237.94,
+            "hit_poses": [
+              {
+                "frame_id": "159",
+                "simulation_time_s": 233.38,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "id": "distractor_038",
+            "category": "blue-ball",
+            "position_m": {
+              "x": -1.1506274949959727,
+              "z": 0.8075371673488105
+            },
+            "confidence": 0.14794871417154742,
+            "state": "LOST",
+            "distance_cm": 225.4792995745874,
+            "bearing_deg": -96.12096720451402,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 234.52,
+            "hit_poses": [
+              {
+                "frame_id": "162",
+                "simulation_time_s": 234.52,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "id": "obstacle_039",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.2409776667170801,
+              "z": -0.6160741294853143
+            },
+            "confidence": 0.1431688090149768,
+            "state": "LOST",
+            "distance_cm": 184.69351883451134,
+            "bearing_deg": -143.48836172284035,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 236.8,
+            "hit_poses": [
+              {
+                "frame_id": "164",
+                "simulation_time_s": 236.8,
+                "x_m": -0.8190000000000001,
+                "z_m": 0.27399999999999997,
+                "heading_deg": -180
+              }
+            ]
+          },
+          {
+            "id": "target_040",
+            "category": "red-ball",
+            "position_m": {
+              "x": -0.2367462314971398,
+              "z": 1.2805714021089605
+            },
+            "confidence": 0.10693703912493303,
+            "state": "LOST",
+            "distance_cm": 147.49771435840563,
+            "bearing_deg": -74.90484931925484,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 378.78,
+            "hit_poses": [
+              {
+                "frame_id": "174",
+                "simulation_time_s": 245.4,
+                "x_m": -0.003,
+                "z_m": 0.524,
+                "heading_deg": 0.8
+              }
+            ]
+          },
+          {
+            "id": "distractor_041",
+            "category": "blue-ball",
+            "position_m": {
+              "x": 0.0069742556825917856,
+              "z": -0.4732697004580004
+            },
+            "confidence": 0.14753880602017988,
+            "state": "LOST",
+            "distance_cm": 157.01951290281013,
+            "bearing_deg": -145.9352094563357,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 248.3,
+            "hit_poses": [
+              {
+                "frame_id": "178",
+                "simulation_time_s": 248.3,
+                "x_m": -0.002,
+                "z_m": 0.43,
+                "heading_deg": 179.4
+              }
+            ]
+          },
+          {
+            "id": "obstacle_042",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.0036637682318523095,
+              "z": 1.0512598060904406
+            },
+            "confidence": 0.14345889302286338,
+            "state": "LOST",
+            "distance_cm": 117.17035545282354,
+            "bearing_deg": -80.23329084269534,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 306.68,
+            "hit_poses": [
+              {
+                "frame_id": "198",
+                "simulation_time_s": 306.68,
+                "x_m": 0,
+                "z_m": 0.25,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "id": "obstacle_043",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.3384870571713733,
+              "z": 1.318488802914548
+            },
+            "confidence": 0.6332171887513441,
+            "state": "TENTATIVE",
+            "distance_cm": 100.92558287187832,
+            "bearing_deg": -58.89781489000217,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 392.18,
+            "hit_poses": [
+              {
+                "frame_id": "226",
+                "simulation_time_s": 380.02,
+                "x_m": -0.002,
+                "z_m": 0.7090000000000001,
+                "heading_deg": 0.1
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              }
+            ]
+          },
+          {
+            "id": "obstacle_044",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.5469250063815638,
+              "z": 1.5062332037223611
+            },
+            "confidence": 0.7434138258167381,
+            "state": "CONFIRMED",
+            "distance_cm": 101.45860070483089,
+            "bearing_deg": -42.96579021859142,
+            "hit_count": 3,
+            "source": "virtual-cv",
+            "last_seen_s": 567.38,
+            "hit_poses": [
+              {
+                "frame_id": "226",
+                "simulation_time_s": 380.02,
+                "x_m": -0.002,
+                "z_m": 0.7090000000000001,
+                "heading_deg": 0.1
+              },
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          },
+          {
+            "id": "distractor_045",
+            "category": "blue-ball",
+            "position_m": {
+              "x": 0.8178513369512814,
+              "z": 1.2862076952533916
+            },
+            "confidence": 0.76464,
+            "state": "TENTATIVE",
+            "distance_cm": 69.09903944927022,
+            "bearing_deg": -34.00885443539886,
+            "hit_count": 2,
+            "source": "virtual-cv",
+            "last_seen_s": 567.38,
+            "hit_poses": [
+              {
+                "frame_id": "232",
+                "simulation_time_s": 385.48,
+                "x_m": -0.25,
+                "z_m": 0.865,
+                "heading_deg": -90
+              },
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          },
+          {
+            "id": "target_046",
+            "category": "red-ball",
+            "position_m": {
+              "x": -0.1898720736536123,
+              "z": 1.1119448537827672
+            },
+            "confidence": 0.14745703011292838,
+            "state": "LOST",
+            "distance_cm": 136.7475711536668,
+            "bearing_deg": -80.47901535840344,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 391.54,
+            "hit_poses": [
+              {
+                "frame_id": "235",
+                "simulation_time_s": 391.54,
+                "x_m": -0.003,
+                "z_m": 0.615,
+                "heading_deg": -0.8
+              }
+            ]
+          },
+          {
+            "id": "obstacle_047",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.2776807900771075,
+              "z": 1.255539447160841
+            },
+            "confidence": 0.5996176198125158,
+            "state": "TENTATIVE",
+            "distance_cm": 150.19645885850895,
+            "bearing_deg": -76.43207630233043,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 391.54,
+            "hit_poses": [
+              {
+                "frame_id": "235",
+                "simulation_time_s": 391.54,
+                "x_m": -0.003,
+                "z_m": 0.615,
+                "heading_deg": -0.8
+              }
+            ]
+          },
+          {
+            "id": "distractor_048",
+            "category": "blue-ball",
+            "position_m": {
+              "x": 0.00852907668322961,
+              "z": -0.47307097039258944
+            },
+            "confidence": 0.14738162929088197,
+            "state": "LOST",
+            "distance_cm": 156.8971302746423,
+            "bearing_deg": -145.97096105368283,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 397.2,
+            "hit_poses": [
+              {
+                "frame_id": "238",
+                "simulation_time_s": 397.2,
+                "x_m": -0.002,
+                "z_m": 0.43,
+                "heading_deg": -179.2
+              }
+            ]
+          },
+          {
+            "id": "obstacle_049",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.000965718542476491,
+              "z": 1.09200798788063
+            },
+            "confidence": 0.6308858606778772,
+            "state": "TENTATIVE",
+            "distance_cm": 118.35964529518255,
+            "bearing_deg": -78.33245295823713,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 508.3,
+            "hit_poses": [
+              {
+                "frame_id": "276",
+                "simulation_time_s": 508.3,
+                "x_m": 0,
+                "z_m": 0.25,
+                "heading_deg": 0
+              }
+            ]
+          },
+          {
+            "id": "storage-zone_050",
+            "category": "storage-zone",
+            "position_m": {
+              "x": 1.0707837831733662,
+              "z": -0.0710209744101578
+            },
+            "confidence": 0.9488216034193976,
+            "state": "CONFIRMED",
+            "distance_cm": 72.65690677254865,
+            "bearing_deg": 172.22563393989333,
+            "hit_count": 3,
+            "source": "storage-ground-pixels",
+            "last_seen_s": 562.86,
+            "hit_poses": [
+              {
+                "frame_id": "282",
+                "simulation_time_s": 517.84,
+                "x_m": 0.45,
+                "z_m": 0.275,
+                "heading_deg": -88.9
+              },
+              {
+                "frame_id": "285",
+                "simulation_time_s": 519.14,
+                "x_m": 0.65,
+                "z_m": 0.27699999999999997,
+                "heading_deg": -89.9
+              },
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "id": "obstacle_051",
+            "category": "obstacle",
+            "position_m": {
+              "x": 1.00705326640732,
+              "z": -0.7667588353087968
+            },
+            "confidence": 0.7241766831315384,
+            "state": "TENTATIVE",
+            "distance_cm": 142.4728882137577,
+            "bearing_deg": 173.70022931036726,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 551.54,
+            "hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "id": "obstacle_052",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.9980012902681729,
+              "z": -0.5618193900613806
+            },
+            "confidence": 0.7392736747353579,
+            "state": "TENTATIVE",
+            "distance_cm": 122.10037540469907,
+            "bearing_deg": 174.74480056985283,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 551.54,
+            "hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "id": "obstacle_053",
+            "category": "obstacle",
+            "position_m": {
+              "x": 1.0980188705574987,
+              "z": -0.654632295435614
+            },
+            "confidence": 0.7738032166643053,
+            "state": "TENTATIVE",
+            "distance_cm": 130.96326629490184,
+            "bearing_deg": 170.04292393054948,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 551.54,
+            "hit_poses": [
+              {
+                "frame_id": "287",
+                "simulation_time_s": 523.36,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": -145
+              }
+            ]
+          },
+          {
+            "id": "obstacle_054",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.4484610594664372,
+              "z": 0.34497634600930605
+            },
+            "confidence": 0.6717748709842627,
+            "state": "TENTATIVE",
+            "distance_cm": 72.0635538385578,
+            "bearing_deg": -125.4808033686443,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 536.7,
+            "hit_poses": [
+              {
+                "frame_id": "292",
+                "simulation_time_s": 526.02,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": 64.3
+              }
+            ]
+          },
+          {
+            "id": "distractor_055",
+            "category": "blue-ball",
+            "position_m": {
+              "x": 0.07781579071735245,
+              "z": -0.5406326311220518
+            },
+            "confidence": 0.6516204031210571,
+            "state": "TENTATIVE",
+            "distance_cm": 157.2372277131617,
+            "bearing_deg": -149.4995158737205,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 527.16,
+            "hit_poses": [
+              {
+                "frame_id": "293",
+                "simulation_time_s": 527.16,
+                "x_m": 0.9159999999999999,
+                "z_m": 0.033,
+                "heading_deg": 154.3
+              }
+            ]
+          },
+          {
+            "id": "obstacle_056",
+            "category": "obstacle",
+            "position_m": {
+              "x": 1.3354695462762967,
+              "z": -0.6284756510928946
+            },
+            "confidence": 0.506036421404481,
+            "state": "TENTATIVE",
+            "distance_cm": 130.50776196320462,
+            "bearing_deg": 159.560805343737,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 538.98,
+            "hit_poses": [
+              {
+                "frame_id": "298",
+                "simulation_time_s": 529.86,
+                "x_m": 0.805,
+                "z_m": 0.10800000000000001,
+                "heading_deg": -123.9
+              }
+            ]
+          },
+          {
+            "id": "obstacle_057",
+            "category": "obstacle",
+            "position_m": {
+              "x": 0.3624842869465437,
+              "z": -0.6581366795982504
+            },
+            "confidence": 0.7461284840590008,
+            "state": "TENTATIVE",
+            "distance_cm": 150.5584051084814,
+            "bearing_deg": -160.7126848829413,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 537.84,
+            "hit_poses": [
+              {
+                "frame_id": "303",
+                "simulation_time_s": 533.28,
+                "x_m": 0.805,
+                "z_m": 0.10800000000000001,
+                "heading_deg": 146.1
+              }
+            ]
+          },
+          {
+            "id": "obstacle_058",
+            "category": "obstacle",
+            "position_m": {
+              "x": -0.22347812236655962,
+              "z": -0.2974493785975744
+            },
+            "confidence": 0.7835591015181759,
+            "state": "TENTATIVE",
+            "distance_cm": 162.975709936453,
+            "bearing_deg": -135.76145151246786,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 559.96,
+            "hit_poses": [
+              {
+                "frame_id": "332",
+                "simulation_time_s": 559.96,
+                "x_m": 0.63,
+                "z_m": 0.27699999999999997,
+                "heading_deg": 90.6
+              }
+            ]
+          },
+          {
+            "id": "distractor_059",
+            "category": "blue-ball",
+            "position_m": {
+              "x": 1.584156152377556,
+              "z": 1.4438477264822085
+            },
+            "confidence": 0.8315686274509804,
+            "state": "TENTATIVE",
+            "distance_cm": 92.60978499953141,
+            "bearing_deg": 21.592295683349192,
+            "hit_count": 1,
+            "source": "virtual-cv",
+            "last_seen_s": 567.38,
+            "hit_poses": [
+              {
+                "frame_id": "384",
+                "simulation_time_s": 567.38,
+                "x_m": 1.099,
+                "z_m": 0.655,
+                "heading_deg": -10
+              }
+            ]
+          }
+        ],
+        "held_object_id": "target_018",
+        "pending_grasp": null,
+        "grab_attempts": {
+          "target_018": 2
+        },
+        "action_evidence": [
+          {
+            "action": "pick",
+            "object_id": "target_018",
+            "simulation_time_s": 85.16,
+            "holding": true,
+            "original_position_absent": true,
+            "evidence": {
+              "holding": true,
+              "post_observation": 105,
+              "old_position_detections": [],
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "before_observation": 101,
+                  "after_observation": 102,
+                  "holding": false,
+                  "alignment": {
+                    "mode": "camera_bearing+confirmed_position_odometry",
+                    "detection": {
+                      "category": "red-ball",
+                      "source": "virtual-cv",
+                      "confidence": 0.9335252032520325,
+                      "bbox": {
+                        "x": 244,
+                        "y": 254,
+                        "w": 164,
+                        "h": 150
+                      },
+                      "frame_id": "101",
+                      "fed_to_world_model": false,
+                      "track_id": "target_018",
+                      "method": "virtual-cv-published-width-formula+M5",
+                      "raw_distance_cm": 19,
+                      "raw_bearing_deg": 0.83,
+                      "distance_cm": 26.136496790421,
+                      "bearing_deg": 0.6662792384797734,
+                      "position_m": {
+                        "x": -1.5086802907345827,
+                        "z": 1.1141362568934554
+                      },
+                      "reason": "near_field_visibility_for_existing_confirmation",
+                      "visibility_refresh_only": true
+                    },
+                    "remembered_distance_cm": 22.010784686353315,
+                    "bearing_deg": 0.6662792384797734
+                  }
+                },
+                {
+                  "attempt": 2,
+                  "before_observation": 103,
+                  "after_observation": 104,
+                  "holding": true,
+                  "alignment": {
+                    "mode": "camera_bearing+confirmed_position_odometry",
+                    "detection": {
+                      "category": "red-ball",
+                      "source": "virtual-cv",
+                      "confidence": 0.9288548318433376,
+                      "bbox": {
+                        "x": 168,
+                        "y": 306,
+                        "w": 324,
+                        "h": 174
+                      },
+                      "frame_id": "103",
+                      "fed_to_world_model": false,
+                      "track_id": "target_018",
+                      "method": "virtual-cv-published-width-formula+M5",
+                      "raw_distance_cm": 12,
+                      "raw_bearing_deg": 1.38,
+                      "distance_cm": 19.00645683447365,
+                      "bearing_deg": 1.005694111169222,
+                      "position_m": {
+                        "x": -1.5199926303041007,
+                        "z": 1.1133374254625956
+                      },
+                      "reason": "near_field_visibility_for_existing_confirmation",
+                      "visibility_refresh_only": true
+                    },
+                    "remembered_distance_cm": 16.01683299228435,
+                    "bearing_deg": 1.005694111169222
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "junction_history": [
+          {
+            "id": "junction-1",
+            "position_m": {
+              "x": 0,
+              "z": 0
+            },
+            "exits": [
+              {
+                "heading_deg": 0,
+                "visits": 43,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-2",
+            "position_m": {
+              "x": 0,
+              "z": 0.25
+            },
+            "exits": [
+              {
+                "heading_deg": 90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 0.8,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -180,
+                "visits": 40,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-3",
+            "position_m": {
+              "x": -0.914,
+              "z": 0.274
+            },
+            "exits": [
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 177.7,
+                "visits": 1,
+                "completed": false,
+                "blocked": true
+              },
+              {
+                "heading_deg": 14.9,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-4",
+            "position_m": {
+              "x": -1.09,
+              "z": 0.121
+            },
+            "exits": [
+              {
+                "heading_deg": 14.9,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 177.7,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-5",
+            "position_m": {
+              "x": -1.177,
+              "z": 0.498
+            },
+            "exits": [
+              {
+                "heading_deg": 90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -11.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.5,
+                "visits": 16,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-6",
+            "position_m": {
+              "x": -1.636,
+              "z": 0.552
+            },
+            "exits": [
+              {
+                "heading_deg": 160.6,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 11.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-7",
+            "position_m": {
+              "x": -1.856,
+              "z": 0.411
+            },
+            "exits": [
+              {
+                "heading_deg": 11.3,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 160.6,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-8",
+            "position_m": {
+              "x": -1.949,
+              "z": 0.919
+            },
+            "exits": [
+              {
+                "heading_deg": 60.5,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -68.8,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.1,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-9",
+            "position_m": {
+              "x": -2.157,
+              "z": 1.139
+            },
+            "exits": [
+              {
+                "heading_deg": -68.8,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.1,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 60.5,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-10",
+            "position_m": {
+              "x": -1.958,
+              "z": 1.127
+            },
+            "exits": [
+              {
+                "heading_deg": 60.5,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -68.8,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.1,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-11",
+            "position_m": {
+              "x": -1.841,
+              "z": 0.698
+            },
+            "exits": [
+              {
+                "heading_deg": 11.3,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 160.6,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-12",
+            "position_m": {
+              "x": -1.365,
+              "z": 0.552
+            },
+            "exits": [
+              {
+                "heading_deg": -11.3,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -149.5,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-13",
+            "position_m": {
+              "x": -1.086,
+              "z": 0.335
+            },
+            "exits": [
+              {
+                "heading_deg": 14.9,
+                "visits": 16,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 177.7,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-14",
+            "position_m": {
+              "x": -0.156,
+              "z": 0.274
+            },
+            "exits": [
+              {
+                "heading_deg": 0.8,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -180,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-15",
+            "position_m": {
+              "x": -0.002,
+              "z": 0.43
+            },
+            "exits": [
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -180,
+                "visits": 2,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 0.8,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-16",
+            "position_m": {
+              "x": -0.002,
+              "z": 0.709
+            },
+            "exits": [
+              {
+                "heading_deg": 179.3,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 0.7,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-17",
+            "position_m": {
+              "x": -0.156,
+              "z": 0.865
+            },
+            "exits": [
+              {
+                "heading_deg": 0.7,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": -90,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 179.3,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 90,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-18",
+            "position_m": {
+              "x": 0.724,
+              "z": 0.277
+            },
+            "exits": [
+              {
+                "heading_deg": -36.9,
+                "visits": 1,
+                "completed": false,
+                "blocked": false
+              },
+              {
+                "heading_deg": 164.1,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 87.5,
+                "visits": 0,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-19",
+            "position_m": {
+              "x": 0.958,
+              "z": 0.029
+            },
+            "exits": [
+              {
+                "heading_deg": 67.6,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 164.1,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": 87.5,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              },
+              {
+                "heading_deg": -36.9,
+                "visits": 0,
+                "completed": false,
+                "blocked": false
+              }
+            ]
+          },
+          {
+            "id": "junction-20",
+            "position_m": {
+              "x": 1.066,
+              "z": -0.081
+            },
+            "exits": [
+              {
+                "heading_deg": 67.6,
+                "visits": 1,
+                "completed": true,
+                "blocked": false
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "max_rounds": 200,
+          "max_simulation_seconds": 1200
+        },
+        "world_model": {
+          "upstream_main": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
+          "profile": "guangyang_static_world_model",
+          "max_range_m": 0.9
+        },
+        "source_sha256": {
+          "__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+          "actions.py": "a28e75cb955d30a134f7f3a42b69b00d7fbd686433a742ea35d90c0dbfcc6152",
+          "bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+          "llm.py": "bcddcd5f54da88d2a9460b7856f653a002546f4cca02a2b016b0a6a2dcf11961",
+          "navigation.py": "6d19436fbee9583849889fef9d946308e530e2e8ad63cfd70cbef725a17afaec",
+          "perception.py": "da4e1eaf4e9718db3ace90a0ddaae43d4232c444c5b4d4e1b683ff8bdda9d572",
+          "run.py": "40bf6b80212643cafed44eda5e590728bdcff439897528894c89d3ce4ee3b491"
+        }
+      },
+      "note": "Success independently requires final truth positions and non-revoked package_delivered record events. No competition score or old strict determinism gate.",
+      "recordFrameCount": 386,
+      "captureCount": 386,
+      "controllerErrors": [
+        {
+          "tick": 28369,
+          "requestId": "brain-001841",
+          "message": "RobotBridgeContractError: NOT_RUNNING\n    at execute (http://127.0.0.1:60204/robot-backend-runtime.js?v=robot-backend-v4-stage1-r2:66:13)\n    at controlLoop (http://127.0.0.1:60204/robot-backend-runtime.js?v=robot-backend-v4-stage1-r2:127:90)"
+        }
+      ],
+      "pageErrors": []
+    }
+  ],
+  "map05SuccessBeforeRun": false
+}

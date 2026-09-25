@@ -1,0 +1,20 @@
+{
+  "version": "evaluator-requested-stop/v1",
+  "reason": "observed_route_oscillations_and_unconsumed_fresh_standoff_evidence",
+  "task_success": false,
+  "source_changed_during_run": false,
+  "method": "set existing simulator stopRequested flag; let pending LLM call complete and driver export normally",
+  "expression": "stopRequested = true; RobotBackend.status()",
+  "result": {
+    "running": true,
+    "healthy": true,
+    "tick": 28369,
+    "errors": []
+  },
+  "evidence": [
+    "map-05-run-1/brain/rounds.jsonl: rounds 23, 28, 31, 33, 35, 37, 39",
+    "map-05-run-1/brain/observations.jsonl: observations 125-128, 179-182, 288, 298"
+  ],
+  "note": "First red-ball grasp observed at round 22; no place action or delivery success claimed. Preserve failures and fix route progress, visual standoff control and next-state evidence before a new trial.",
+  "timestamp": "2026-09-25T07:05:48.916Z"
+}

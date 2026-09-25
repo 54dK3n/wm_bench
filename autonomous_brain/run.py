@@ -5,6 +5,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -21,9 +22,76 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
+RUNTIME_VERSION = "autonomous-brain-runtime/v2"
+
 
 def dump(path, value):
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+
+
+def compact_action_result(number, action, result, after_observation):
+    """Carry bounded observed evidence forward, separately from WM geometry."""
+    def fields(source, names):
+        compact = {}
+        if isinstance(source, dict):
+            for name in names:
+                if name not in source:
+                    continue
+                value = source[name]
+                if value is None or type(value) in (bool, int, str) or (
+                        type(value) is float and math.isfinite(value)):
+                    compact[name] = value[:256] if isinstance(value, str) else value
+        return compact
+
+    detection_fields = ("track_id", "category", "source", "frame_id",
+                        "distance_cm", "bearing_deg", "raw_distance_cm")
+
+    def detection(source, target):
+        if "detection" in source and source["detection"] is None:
+            target["detection"] = None
+        elif isinstance(source.get("detection"), dict):
+            target["detection"] = fields(source["detection"], detection_fields)
+
+    raw = result.get("evidence")
+    raw = raw if isinstance(raw, dict) else {}
+    evidence = fields(raw, ("object_id", "holding", "frame_id", "tick", "before_observation",
+                            "after_observation", "final_observation", "post_observation",
+                            "distance_cm", "remembered_distance_cm", "bearing_deg",
+                            "candidate_witnesses", "recovery_steps", "unexplored_exits"))
+    detection(raw, evidence)
+    for name in ("actuator_result", "recovery_result"):
+        if isinstance(raw.get(name), dict):
+            evidence[name] = fields(raw[name], ("stoppedBy",))
+    if isinstance(raw.get("attempts"), list):
+        evidence["attempts"] = []
+        for attempt in raw["attempts"][-3:]:
+            if not isinstance(attempt, dict):
+                continue
+            compact = fields(attempt, ("attempt", "holding", "before_observation", "after_observation"))
+            if isinstance(attempt.get("alignment"), dict):
+                alignment = fields(attempt["alignment"], ("mode", "remembered_distance_cm", "bearing_deg"))
+                detection(attempt["alignment"], alignment)
+                compact["alignment"] = alignment
+            evidence["attempts"].append(compact)
+    for name in ("old_position_matches", "old_position_detections"):
+        matches = raw.get(name)
+        if isinstance(matches, list) or (type(matches) is int and matches >= 0):
+            evidence["old_position_matches"] = len(matches) if isinstance(matches, list) else matches
+            break
+    if "placement" in raw and raw["placement"] is None:
+        evidence["placement"] = None
+    elif isinstance(raw.get("placement"), dict):
+        placement = fields(raw["placement"], ("frame_id",))
+        for name in ("ball_bbox", "storage_bbox"):
+            if isinstance(raw["placement"].get(name), dict):
+                placement[name] = fields(raw["placement"][name], ("x", "y", "w", "h"))
+        evidence["placement"] = placement
+    compact_action = fields(action, ("action",))
+    compact_action["params"] = fields(action.get("params"), ("object_id", "exit_angle"))
+    summary = fields({"round": number, "success": result["success"], "reason": result["reason"],
+                      "after_observation": after_observation},
+                     ("round", "success", "reason", "after_observation"))
+    return {**summary, "action": compact_action, "evidence": evidence}
 
 
 class Runtime:
@@ -149,9 +217,8 @@ def main(argv=None):
                           "llm_output": llm.last_record, "result": result,
                           "simulation_seconds": runtime.bridge.seconds,
                           "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
-            runtime.recent.append({"round": number, "action": action, "success": result["success"],
-                                   "reason": result["reason"],
-                                   "after_observation": runtime.snapshot["observation_index"]})
+            runtime.recent.append(compact_action_result(number, action, result,
+                                                        runtime.snapshot["observation_index"]))
             runtime.recent = runtime.recent[-5:]
             print(json.dumps({"round": number, "action": action["action"], "success": result["success"],
                               "reason": result["reason"], "simulation_seconds": runtime.bridge.seconds}), flush=True)
@@ -166,7 +233,7 @@ def main(argv=None):
     except Exception as exc:
         status, reason = "failed", f"{type(exc).__name__}: {exc}"
     finally:
-        summary = {"version": VERSION, "status": status, "reason": reason,
+        summary = {"version": VERSION, "runtime_version": RUNTIME_VERSION, "status": status, "reason": reason,
                    "task": config["task"], "rounds": count,
                    "llm_calls": llm.call_count if llm else 0,
                    "llm_total_elapsed_s": llm.total_elapsed_s if llm else 0,

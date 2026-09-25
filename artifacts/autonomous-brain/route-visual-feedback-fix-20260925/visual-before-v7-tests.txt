@@ -1,0 +1,58 @@
+FFFF.                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_memory_standoff_is_corrected_until_current_camera_verifies_it[24.481849625163253] _
+
+range_cm = 24.481849625163253
+
+    @pytest.mark.parametrize("range_cm", [24.481849625163253, 45])
+    def test_memory_standoff_is_corrected_until_current_camera_verifies_it(range_cm):
+        runtime, moves, camera = visual_runtime(range_cm, 1.4101447726265872)
+        result = Actions(runtime).execute({"action": "go_to", "params": {"object_id": "zone"}})
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_visual_standoff.py:58: AssertionError
+____ test_memory_standoff_is_corrected_until_current_camera_verifies_it[45] ____
+
+range_cm = 45
+
+    @pytest.mark.parametrize("range_cm", [24.481849625163253, 45])
+    def test_memory_standoff_is_corrected_until_current_camera_verifies_it(range_cm):
+        runtime, moves, camera = visual_runtime(range_cm, 1.4101447726265872)
+        result = Actions(runtime).execute({"action": "go_to", "params": {"object_id": "zone"}})
+>       assert result["success"] is True
+E       assert False is True
+
+tests/test_brain_visual_standoff.py:58: AssertionError
+________________ test_visual_reverse_stops_on_observed_blockage ________________
+
+    def test_visual_reverse_stops_on_observed_blockage():
+        runtime, moves, camera = visual_runtime(24.481849625163253, blocked=True)
+        result = Actions(runtime).go_to("zone")
+        assert result["success"] is False
+>       assert [method for method, _ in moves] == ["backward"]
+E       AssertionError: assert [] == ['backward']
+E         
+E         Right contains one more item: 'backward'
+E         Use -v to get more diff
+
+tests/test_brain_visual_standoff.py:71: AssertionError
+_________ test_turn_then_target_disappears_does_not_translate_blindly __________
+
+    def test_turn_then_target_disappears_does_not_translate_blindly():
+        runtime, moves, _ = visual_runtime(32, 24, lose_on_turn=True)
+        result = Actions(runtime).go_to("zone")
+        assert result["success"] is False
+>       assert [method for method, _ in moves] == ["turn"]
+E       AssertionError: assert [] == ['turn']
+E         
+E         Right contains one more item: 'turn'
+E         Use -v to get more diff
+
+tests/test_brain_visual_standoff.py:79: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_visual_standoff.py::test_memory_standoff_is_corrected_until_current_camera_verifies_it[24.481849625163253]
+FAILED tests/test_brain_visual_standoff.py::test_memory_standoff_is_corrected_until_current_camera_verifies_it[45]
+FAILED tests/test_brain_visual_standoff.py::test_visual_reverse_stops_on_observed_blockage
+FAILED tests/test_brain_visual_standoff.py::test_turn_then_target_disappears_does_not_translate_blindly
+4 failed, 1 passed in 0.03s

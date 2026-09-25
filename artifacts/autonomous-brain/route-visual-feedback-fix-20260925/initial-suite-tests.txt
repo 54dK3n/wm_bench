@@ -1,0 +1,33 @@
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+............................................................F........... [ 84%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+_____________ test_real_http_sse_aggregates_deltas_usage_and_done ______________
+
+tmp_path = PosixPath('/private/var/folders/ts/_2grm7dx5t15rqk1ydqmm1b40000gn/T/pytest-of-ken/pytest-102/test_real_http_sse_aggregates_0')
+state = {'junction_history': [], 'objects': [{'category': 'red-ball', 'id': 'wm-1', 'status': 'CONFIRMED'}, {'category': 'storage-zone', 'id': 'wm-2', 'status': 'tentative'}], 'recent_actions': [], 'robot': {'holding': False}, ...}
+
+    def test_real_http_sse_aggregates_deltas_usage_and_done(tmp_path, state):
+        parts = ['{"action":', '"look_around",', '"params":{}}']
+        raw = "".join(parts)
+        payload = stream_body(parts, usage=True)
+        log_path = tmp_path / "complete-stream.jsonl"
+        with local_stream_server([payload]) as requests:
+            with LLMClient(log_path=log_path, timeout_s=3) as client:
+                assert client.decide(state) == {"action": "look_around", "params": {}}
+                assert client.call_count == client.decision_count == len(requests) == 1
+                saved = records(log_path)[0]  # The complete record is already flushed.
+                assert_stream_request(requests[0])
+>               assert saved["version"] == "autonomous-brain-llm/v6"
+E               AssertionError: assert 'autonomous-brain-llm/v8' == 'autonomous-brain-llm/v6'
+E                 
+E                 - autonomous-brain-llm/v6
+E                 ?                       ^
+E                 + autonomous-brain-llm/v8
+E                 ?                       ^
+
+tests/test_brain_llm_stream_transport.py:130: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_llm_stream_transport.py::test_real_http_sse_aggregates_deltas_usage_and_done
+1 failed, 255 passed in 0.45s

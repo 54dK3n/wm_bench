@@ -1,0 +1,441 @@
+{
+  "schema": "sensor-navigation-regressions/v1",
+  "run": "artifacts/autonomous-brain/map05-run-06",
+  "frozen_source_commit": "ffeacc9a597d4d523ec1a98066e6dfa04ff081f2",
+  "scope": "sensor logs and frozen navigation/action source analysis; no truth/layout used for navigation",
+  "fix_validation": "not run in this trial; suggested behaviors are regression expectations, not passing test results",
+  "files": {
+    "rounds": "artifacts/autonomous-brain/map05-run-06/map-05-run-1/brain/rounds.jsonl",
+    "observations": "artifacts/autonomous-brain/map05-run-06/map-05-run-1/brain/observations.jsonl",
+    "motions": "artifacts/autonomous-brain/map05-run-06/map-05-run-1/brain/motions.jsonl"
+  },
+  "line_number_convention": {
+    "rounds": "line equals round",
+    "observations": "line equals observation_index",
+    "motions": "one-based JSONL line"
+  },
+  "metrics": {
+    "rounds": 46,
+    "llm_calls": 49,
+    "llm_total_elapsed_s": 878.071511461,
+    "simulation_seconds": 567.38,
+    "observations": 386
+  },
+  "terminal": {
+    "round": 46,
+    "reason": "follow_road: NOT_RUNNING",
+    "observation": 386,
+    "holding": true,
+    "on_road_all_observations": true,
+    "place_actions": 0,
+    "release_motions": 0,
+    "evaluator_requested_stop": true,
+    "caps_reached": false
+  },
+  "cases": [
+    {
+      "id": "new_intermediate_node_replanning_cycle",
+      "round": 23,
+      "object_id": "storage-zone_028",
+      "outcome": {
+        "round": 23,
+        "result": "remembered_route_did_not_reach_target",
+        "before_observation": 107,
+        "final_observation": 157
+      },
+      "loop_motion_lines": [
+        80,
+        111
+      ],
+      "loop_observations": [
+        125,
+        156
+      ],
+      "loop_motion_count": 32,
+      "endpoint_pairs": 16,
+      "A": {
+        "right_cm": -117.7,
+        "forward_cm": 49.8,
+        "heading_deg": 30.5,
+        "tick": 6319
+      },
+      "C": {
+        "right_cm": -108.6,
+        "forward_cm": 33.5,
+        "heading_deg": -156.6,
+        "tick": 6485
+      },
+      "remembered_B_m": [
+        -1.09,
+        0.121
+      ],
+      "reconstructed_next_waypoints": [
+        {
+          "observation": 125,
+          "next_m": [
+            -1.09,
+            0.121
+          ],
+          "relative_deg": 162.49461679191654,
+          "chosen_exit_deg": -180,
+          "actual_next_observation": 126
+        },
+        {
+          "observation": 126,
+          "next_m": [
+            -1.177,
+            0.498
+          ],
+          "relative_deg": -174.22615407617252,
+          "chosen_exit_deg": 171.6,
+          "actual_next_observation": 127
+        }
+      ],
+      "target_distance_at_A_cm": 277.3639024650486,
+      "target_distance_at_C_cm": 264.2403039958119,
+      "diagnosis": "Old traversed A-B edge does not include newly observed intermediate C. Per-step replanning selects C->A->B while executing A->B stops at C.",
+      "recovery": {
+        "round": 24,
+        "action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 66.6
+          }
+        },
+        "result": "new_objects_confirmed"
+      },
+      "suggested_regression": "Retain planned next waypoint across intermediate arrival; detect short cycles. Do not infer graph connectivity solely by projecting onto a curved or crossing edge."
+    },
+    {
+      "id": "exhausted_known_route_target_fallback_cycle",
+      "round": 28,
+      "object_id": "storage-zone_028",
+      "outcome": {
+        "round": 28,
+        "result": "remembered_route_did_not_reach_target",
+        "before_observation": 176,
+        "final_observation": 223
+      },
+      "loop_motion_lines": [
+        125,
+        167
+      ],
+      "loop_observations": [
+        179,
+        222
+      ],
+      "route_exhausted_context": {
+        "observation": 179,
+        "pose": {
+          "right_cm": 0,
+          "forward_cm": 2.4,
+          "heading_deg": -179.2,
+          "tick": 12549
+        },
+        "road": {
+          "onRoad": true,
+          "atNode": true,
+          "exits": [
+            {
+              "angleDeg": 179.2
+            }
+          ]
+        },
+        "target": {
+          "id": "storage-zone_028",
+          "state": "CONFIRMED",
+          "distance_cm": 151.3843719871446,
+          "bearing_deg": -76.55228309257772
+        },
+        "holding": true
+      },
+      "exhausted_route_m": [
+        [
+          0,
+          0
+        ]
+      ],
+      "other_endpoint_context": {
+        "observation": 180,
+        "pose": {
+          "right_cm": 0,
+          "forward_cm": 25,
+          "heading_deg": 0,
+          "tick": 12697
+        },
+        "road": {
+          "onRoad": true,
+          "atNode": true,
+          "exits": [
+            {
+              "angleDeg": 90
+            },
+            {
+              "angleDeg": 0.8
+            },
+            {
+              "angleDeg": -90
+            },
+            {
+              "angleDeg": -180
+            }
+          ]
+        },
+        "target": {
+          "id": "storage-zone_028",
+          "state": "CONFIRMED",
+          "distance_cm": 157.88036648942557,
+          "bearing_deg": 110.6766345306948
+        },
+        "holding": true
+      },
+      "other_endpoint_next_waypoint_m": [
+        0,
+        0
+      ],
+      "repeated_exit_angles_deg": [
+        179.7,
+        -180
+      ],
+      "nominal_motion_cm": 27.4,
+      "diagnosis": "At nearest visited road point, empty remaining waypoint list falls back to target direction despite unknown route to target; only exit returns to a node that replans back.",
+      "recovery": {
+        "round": 29,
+        "action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 0.8
+          }
+        },
+        "result": "next_junction_observed"
+      },
+      "repeat": {
+        "round": 31,
+        "observations": [
+          231,
+          279
+        ],
+        "motion_lines": [
+          171,
+          217
+        ],
+        "result": "remembered_route_did_not_reach_target",
+        "recovery_round": 32
+      },
+      "suggested_regression": "Known-route exhaustion outside valid visual standoff must end with need-to-explore evidence rather than continue a target-vector loop."
+    },
+    {
+      "id": "near_target_junction_zero_motion",
+      "round": 44,
+      "object_id": "storage-zone_050",
+      "outcome": {
+        "round": 44,
+        "result": "remembered_route_did_not_reach_target",
+        "before_observation": 334,
+        "final_observation": 381
+      },
+      "context": {
+        "observation": 336,
+        "pose": {
+          "right_cm": 72.4,
+          "forward_cm": 27.7,
+          "heading_deg": -92.5,
+          "tick": 28143
+        },
+        "road": {
+          "onRoad": true,
+          "atNode": true,
+          "exits": [
+            {
+              "angleDeg": 55.7
+            },
+            {
+              "angleDeg": -103.4
+            },
+            {
+              "angleDeg": -180
+            }
+          ]
+        },
+        "target": {
+          "id": "storage-zone_050",
+          "state": "CONFIRMED",
+          "distance_cm": 49.13019345590122,
+          "bearing_deg": 42.602022561917096
+        },
+        "holding": true
+      },
+      "zero_motion_lines": [
+        250,
+        293
+      ],
+      "zero_motion_observations": [
+        337,
+        380
+      ],
+      "zero_motion_count": 44,
+      "requested_distance_cm": 16.130193455901214,
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "junction",
+        "distanceCm": 0,
+        "elapsedTicks": 0
+      },
+      "diagnosis": "remaining<=60 skips take_exit; abs(bearing)>40 skips final approach; follow_road stops at junction with zero distance/ticks on every iteration.",
+      "recovery": {
+        "round": 45,
+        "action": {
+          "action": "explore",
+          "params": {
+            "exit_angle": 55.7
+          }
+        },
+        "result": "new_objects_confirmed",
+        "motion_lines": [
+          294,
+          295
+        ]
+      },
+      "suggested_regression": "Handle near-target node when direct approach is unavailable, and terminate repeated zero-progress movement immediately with evidence."
+    },
+    {
+      "id": "fresh_standoff_disagrees_with_memory",
+      "original_acceptance": {
+        "distance_cm": [
+          25,
+          40
+        ],
+        "max_abs_bearing_deg": 10
+      },
+      "observed_failures": [
+        {
+          "round": 33,
+          "object_id": "storage-zone_005",
+          "evidence_observation": 288,
+          "final_observation": 289,
+          "motion_lines": [
+            220,
+            221,
+            222,
+            223
+          ],
+          "memory": {
+            "distance_cm": 36.95213216814024,
+            "bearing_deg": -0.983897659488207
+          },
+          "fresh": {
+            "track_id": "storage-zone_005",
+            "frame_id": "288",
+            "distance_cm": 20.8108048892177,
+            "bearing_deg": -16.071869481359165
+          },
+          "result": "fresh_detection_does_not_verify_standoff"
+        },
+        {
+          "round": 35,
+          "object_id": "storage-zone_050",
+          "evidence_observation": 298,
+          "final_observation": 299,
+          "motion_lines": [
+            228,
+            229
+          ],
+          "memory": {
+            "distance_cm": 32.045206923455694,
+            "bearing_deg": 0.06257939061922002
+          },
+          "fresh": {
+            "track_id": "storage-zone_050",
+            "frame_id": "298",
+            "distance_cm": 24.481849625163253,
+            "bearing_deg": 1.4101447726265872
+          },
+          "result": "fresh_detection_does_not_verify_standoff"
+        },
+        {
+          "round": 37,
+          "object_id": "storage-zone_050",
+          "evidence_observation": 306,
+          "final_observation": 307,
+          "motion_lines": [],
+          "memory": {
+            "distance_cm": 32.045206923455694,
+            "bearing_deg": 0.06257939061922002
+          },
+          "fresh": {
+            "track_id": "storage-zone_050",
+            "frame_id": "306",
+            "distance_cm": 24.481849625163253,
+            "bearing_deg": 1.4101447726265872
+          },
+          "result": "fresh_detection_does_not_verify_standoff"
+        },
+        {
+          "round": 39,
+          "object_id": "storage-zone_005",
+          "evidence_observation": 317,
+          "final_observation": 318,
+          "motion_lines": [
+            238,
+            239,
+            240
+          ],
+          "memory": {
+            "distance_cm": 32.99904672104212,
+            "bearing_deg": -0.06495352886955175
+          },
+          "fresh": {
+            "track_id": "storage-zone_050",
+            "frame_id": "317",
+            "distance_cm": 19.375567158765477,
+            "bearing_deg": -10.643564810246255
+          },
+          "result": "fresh_detection_does_not_verify_standoff"
+        }
+      ],
+      "diagnosis": "Memory standoff entry causes return after fresh failure; no bounded fresh-visual correction. Round37 repeats identical failure without a motion.",
+      "suggested_regression": "Use fresh visual correction within existing success bounds; preserve memory and fresh identities/distances separately, including round39 requested005 versus detected050."
+    },
+    {
+      "id": "next_state_omits_fresh_action_evidence",
+      "result_rounds": [
+        35,
+        37
+      ],
+      "next_state_rounds": [
+        36,
+        38
+      ],
+      "missing_fresh_distance_cm": 24.481849625163253,
+      "memory_distance_cm": 32.045206923455694,
+      "actual_recent_entries": [
+        {
+          "round": 35,
+          "action": {
+            "action": "go_to",
+            "params": {
+              "object_id": "storage-zone_050"
+            }
+          },
+          "success": false,
+          "reason": "fresh_detection_does_not_verify_standoff",
+          "after_observation": 299
+        },
+        {
+          "round": 37,
+          "action": {
+            "action": "go_to",
+            "params": {
+              "object_id": "storage-zone_050"
+            }
+          },
+          "success": false,
+          "reason": "fresh_detection_does_not_verify_standoff",
+          "after_observation": 307
+        }
+      ],
+      "diagnosis": "Only success/reason/after_observation reach recent_actions; result detection distance/bearing stay in logs and are absent from the next model state.",
+      "suggested_regression": "Pass compact action evidence with object/frame/observation IDs and fresh range/bearing; do not replace WM geometry with a fresh reading."
+    }
+  ]
+}

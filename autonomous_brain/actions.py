@@ -7,7 +7,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v6"
+VERSION = "autonomous-brain-actions/v8"
 
 
 def ball_inside_region(ball, region):
@@ -219,16 +219,59 @@ class Actions:
                 return self.return_from_blocked_road(result)
         return self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100)
 
+    def visual_standoff(self, object_id):
+        """Close the existing standoff gate using fresh, identified camera views.
+
+        A region's visible centre can differ from its stored WM centre. Keep
+        the memory unchanged and use bounded observed corrections at close range.
+        """
+        observed = None
+        for step in range(9):
+            observed = self.visible(object_id)
+            if (observed is None
+                    or str(observed.get("frame_id")) != str(self.s["observation"]["frameId"])):
+                return self.result(False, "visual_standoff_target_not_observed", object_id=object_id,
+                                   detection=observed)
+            d, bearing = observed.get("distance_cm"), observed.get("bearing_deg")
+            if not all(isinstance(value, (int, float)) and not isinstance(value, bool)
+                       and math.isfinite(value) for value in (d, bearing)) or not 0 < d <= 65:
+                return self.result(False, "visual_standoff_range_not_supported", object_id=object_id,
+                                   detection=observed)
+            if not self.s["road"]["onRoad"]:
+                return self.result(False, "not_on_observed_road", object_id=object_id, detection=observed)
+            if 25 <= d <= 40 and abs(bearing) <= 10:
+                return self.result(True, "target_seen_at_standoff", object_id=object_id,
+                                   distance_cm=d, detection=observed)
+            if step == 8:
+                break
+            if abs(bearing) > 10:
+                self.turn(-bearing)
+                continue
+            method = "backward" if d < 25 else "forward"
+            moved = self.move(method, {"distanceCm": min(10, abs(d - 32)), "speed": 30})
+            if not self.s["road"]["onRoad"] or moved.get("stoppedBy") in {
+                    "collision", "front_clearance", "off_road", "wrong_way"}:
+                return self.result(False, "visual_standoff_blocked", object_id=object_id,
+                                   actuator_result=moved, detection=self.visible(object_id))
+        return self.result(False, "visual_standoff_did_not_converge", object_id=object_id,
+                           detection=observed)
+
     def go_to(self, object_id):
         target = self.r.perception.confirmed(object_id)
         if target is None:
             return self.result(False, "object_not_confirmed")
         goal = (target["position_m"]["x"], target["position_m"]["z"])
+        route, waypoint_index, previous_position = None, 0, None
+        visited_states = set()
         for step in range(45):
             if not self.s["road"]["onRoad"]:
                 return self.result(False, "not_on_observed_road")
             current = self.r.perception.get_object(object_id) or target
             remaining, bearing = self.object_geometry(current)
+            observed = self.visible(object_id)
+            if (remaining <= 65 and observed is not None
+                    and str(observed.get("frame_id")) == str(self.s["observation"]["frameId"])):
+                return self.visual_standoff(object_id)
             if 25 <= remaining <= 40:
                 self.turn(-bearing)
                 observed = self.visible(object_id)
@@ -247,12 +290,46 @@ class Actions:
             road, odo = self.s["road"], self.s["odometry"]
             if not road["onRoad"]:
                 return self.result(False, "not_on_observed_road")
-            route = self.r.roads.route_to(odo, goal)
-            waypoints = [p for p in route if distance(position(odo), p) > 0.15]
-            waypoint = waypoints[0] if waypoints else goal
-            desired = heading_to(position(odo), waypoint)
-            relative = wrap(desired - odo["headingDeg"])
-            if road.get("atNode") and road["exits"] and remaining > 60:
+            if route is None:
+                # Keep the selected path through intermediate sensor junctions.
+                # Replanning there can choose the old start as the nearest vertex.
+                route = list(self.r.roads.route_to(odo, goal))
+            p = position(odo)
+            segment = ((p[0] - previous_position[0], p[1] - previous_position[1])
+                       if previous_position is not None else (0, 0))
+            segment_length_sq = segment[0] ** 2 + segment[1] ** 2
+            last_projection = -math.inf
+            while waypoint_index < len(route):
+                waypoint = route[waypoint_index]
+                projection = (((waypoint[0] - previous_position[0]) * segment[0]
+                               + (waypoint[1] - previous_position[1]) * segment[1]) / segment_length_sq
+                              if segment_length_sq else None)
+                nearby = distance(p, waypoint) <= 0.15
+                # A 25–40cm exit step can overshoot the current breadcrumb.
+                # Use only the immediately preceding on-road movement and the
+                # existing 15cm gate, in route order; never add graph edges.
+                crossed = (projection is not None and last_projection <= projection <= 1
+                           and projection >= 0 and distance(waypoint, (
+                               previous_position[0] + projection * segment[0],
+                               previous_position[1] + projection * segment[1])) <= 0.15)
+                if not nearby and not crossed:
+                    break
+                if projection is not None and projection < last_projection:
+                    break
+                waypoint_index += 1
+                if projection is not None:
+                    last_projection = projection
+            waypoint = route[waypoint_index] if waypoint_index < len(route) else None
+            near_approach = remaining <= 65 and abs(bearing) <= 40
+            if waypoint is None and not near_approach:
+                return self.result(False, "known_route_exhausted_needs_exploration", object_id=object_id)
+            state = (p, odo["headingDeg"], waypoint_index, waypoint)
+            if state in visited_states:
+                return self.result(False, "route_no_progress", object_id=object_id, waypoint=waypoint)
+            visited_states.add(state)
+            previous_position = p
+            relative = wrap(heading_to(p, waypoint) - odo["headingDeg"]) if waypoint is not None else None
+            if waypoint is not None and road.get("atNode") and road["exits"] and remaining > 60:
                 candidates = road["exits"]
                 chosen = min(candidates, key=lambda e: abs(wrap(e["angleDeg"] - relative)))
                 self.r.roads.chosen(odo, chosen["angleDeg"])
@@ -348,7 +425,8 @@ class Actions:
                     self.r.pending_grasp = {"object_id": object_id, "original_position_m": original,
                                             "category": target["category"], "attempts": attempts}
                 return self.result(marked, "grasp_observed" if marked else "holding_but_original_position_ambiguous",
-                                   object_id=object_id, attempts=attempts)
+                                   object_id=object_id, attempts=attempts,
+                                   old_position_matches=len(old_position_detections))
             if attempt < 3:
                 result = self.move("forward", {"distanceCm": 6, "speed": 20})
                 if result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}:

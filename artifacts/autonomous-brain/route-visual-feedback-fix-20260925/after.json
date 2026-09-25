@@ -1,0 +1,47 @@
+{
+  "version": "autonomous-brain-route-visual-feedback-validation/v1",
+  "components": {
+    "actions": "autonomous-brain-actions/v8",
+    "runtime": "autonomous-brain-runtime/v2",
+    "llm": "autonomous-brain-llm/v8"
+  },
+  "exit_code": 0,
+  "source_unchanged_during_tests": true,
+  "command": [
+    "python3",
+    "-m",
+    "pytest",
+    "tests/test_brain_actions.py",
+    "tests/test_brain_actions_navigation_regression.py",
+    "tests/test_brain_evaluation.py",
+    "tests/test_brain_llm.py",
+    "tests/test_brain_llm_stream_transport.py",
+    "tests/test_brain_navigation.py",
+    "tests/test_brain_perception.py",
+    "tests/test_brain_route_progress.py",
+    "tests/test_brain_state_evidence.py",
+    "tests/test_brain_visual_standoff.py",
+    "-q"
+  ],
+  "source_sha256": {
+    "autonomous_brain/__init__.py": "6a7be928b1ec205eca3e5d6e3b351c20eb8ddd60cb1965882f4f5f77754ed3b9",
+    "autonomous_brain/actions.py": "65d2bd2ac830290b7f411995b68362dbcffd00fb87a72d8fd15a1c3c29c0594a",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/llm.py": "bcddcd5f54da88d2a9460b7856f653a002546f4cca02a2b016b0a6a2dcf11961",
+    "autonomous_brain/navigation.py": "6d19436fbee9583849889fef9d946308e530e2e8ad63cfd70cbef725a17afaec",
+    "autonomous_brain/perception.py": "da4e1eaf4e9718db3ace90a0ddaae43d4232c444c5b4d4e1b683ff8bdda9d572",
+    "autonomous_brain/run.py": "d56ea48680e49ec0d432d45ab1a9f0d5dd073e4d086b41b2060da3a3ac8e0b6f"
+  },
+  "test_sha256": {
+    "tests/test_brain_actions.py": "452dd85abbb7b98383a5eacc7e99803373410102c556c778def02ae45f15990e",
+    "tests/test_brain_actions_navigation_regression.py": "58fc3c7a0cbbafa0ff8280327c3a547c8efaebe9aeb0f30cdbe1b855da3b18da",
+    "tests/test_brain_evaluation.py": "7eebbd84ea949fca7c9cee77769ec01b7cb37efe61b4b93974e1707e1cc0d230",
+    "tests/test_brain_llm.py": "d31d794d402b2da9e96efd419b9360fa6bd711f6129acdf890139d90ed250faa",
+    "tests/test_brain_llm_stream_transport.py": "f83123d73c185f5df7ae75157f8c7b9e030d6d59099a2ea7202f3b533f3c537c",
+    "tests/test_brain_navigation.py": "890310e731acd3e5f28d5b570a37325b141d151bf39b33aaf583905efaebbf76",
+    "tests/test_brain_perception.py": "48465963f5af445a3451c78157270f80c5428bf895cf8b4c58724185c5d289da",
+    "tests/test_brain_route_progress.py": "013007afbd7b2c3ad04ea45d1ccf87bc9a4dfea32829a260522585e148f1971d",
+    "tests/test_brain_state_evidence.py": "e793b31ab9eb3f837009d2702d5244177fd6e7ded44526faa8140845122f4e47",
+    "tests/test_brain_visual_standoff.py": "37c9e2324d33bcace2b851a16cc7c616a41d7add39780663320aabc80cf55deb"
+  }
+}

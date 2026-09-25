@@ -10,7 +10,8 @@
 - 第二局第 8 轮模型请求超时，第三局第 2 轮连接提前关闭，均为 FAIL、0 抓取和送达。完整日志、独立评测和来源哈希见[真实运行记录](../artifacts/autonomous-brain/LIVE_RUNS.md)。近路口修复已由第二局实际观测验证；不能把连接失败解释为新动作逻辑失败，也不能当作动作通过。
 - 第四局首请求为 URLError，无动作；随后同配置模型列表检查返回 HTTP 200。四局完整证据已保存。LLM v7 在流式接收基础上加入正式大脑显式启用的两次瞬态连接重试，每次调用、错误和等待均记录；154 项客户端测试通过，旧失败记录回放不变。
 - 第五局已导出 FAIL：42 轮、47 次调用、147.52 仿真秒，首球确认但没有抓放。47 次模型调用离线回放一致；运行中源码未变。停止原因为离线复现动作边界缺陷，不能误记为未执行的 go_to/place 在该局失败。Actions v6 修复下一路点选择、离路/受阻后退及另一已知球误作放置见证；LLM v8 提示优先处理已确认任务目标。207 项相关测试通过，[修复证据](../artifacts/autonomous-brain/action-safety-fix-20260925/REPORT.md)。
-- 下一局使用新目录 `artifacts/autonomous-brain/map05-run-06`。M5、WorldModel、确认/抓放几何规则、模型参数与每局上限不变；只有正式 map-05 成功后才能跑十布局。
+- 第六局已导出 FAIL：46 轮、49 次调用、567.38 仿真秒；首个红球抓取成功，但导航循环、停靠观测冲突及下一状态缺少具体依据阻碍送达。完整证据见[失败分析](../artifacts/autonomous-brain/map05-run-06/FAILURE_ANALYSIS.md)。49 次模型调用离线回放一致。Actions v8 保留路线进度、识别路线尽头与重复状态，并按实时视觉作有界停靠校正；Runtime v2 补齐下一状态的观测依据。256 项整体测试通过，补充抓取证据字段后 43 项复验通过；[修复记录](../artifacts/autonomous-brain/route-visual-feedback-fix-20260925/REPORT.md)。
+- 下一局使用新目录 `artifacts/autonomous-brain/map05-run-07`。M5、WorldModel、确认/抓放几何规则、模型参数与每局上限不变；只有正式 map-05 成功后才能跑十布局。
 
 ## 历史状态：v4 严格阶段验收
 
