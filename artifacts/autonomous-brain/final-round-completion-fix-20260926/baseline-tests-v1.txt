@@ -1,0 +1,26 @@
+FFFF...                                                                  [100%]
+=================================== FAILURES ===================================
+______ test_observed_done_is_accepted_through_the_last_allowed_round[1-1] ______
+tests/test_brain_runner_completion.py:86: in test_observed_done_is_accepted_through_the_last_allowed_round
+    assert code == 0
+E   assert 1 == 0
+______ test_observed_done_is_accepted_through_the_last_allowed_round[2-1] ______
+tests/test_brain_runner_completion.py:91: in test_observed_done_is_accepted_through_the_last_allowed_round
+    assert runtime.observation_count > done_round * 2
+E   assert 2 > (1 * 2)
+E    +  where 2 = <test_brain_runner_completion.run_fixture.<locals>.SensorRuntime object at 0x1065089d0>.observation_count
+____ test_observed_done_is_accepted_through_the_last_allowed_round[200-199] ____
+tests/test_brain_runner_completion.py:91: in test_observed_done_is_accepted_through_the_last_allowed_round
+    assert runtime.observation_count > done_round * 2
+E   assert 398 > (199 * 2)
+E    +  where 398 = <test_brain_runner_completion.run_fixture.<locals>.SensorRuntime object at 0x1065008e0>.observation_count
+____ test_observed_done_is_accepted_through_the_last_allowed_round[200-200] ____
+tests/test_brain_runner_completion.py:86: in test_observed_done_is_accepted_through_the_last_allowed_round
+    assert code == 0
+E   assert 1 == 0
+=========================== short test summary info ============================
+FAILED tests/test_brain_runner_completion.py::test_observed_done_is_accepted_through_the_last_allowed_round[1-1]
+FAILED tests/test_brain_runner_completion.py::test_observed_done_is_accepted_through_the_last_allowed_round[2-1]
+FAILED tests/test_brain_runner_completion.py::test_observed_done_is_accepted_through_the_last_allowed_round[200-199]
+FAILED tests/test_brain_runner_completion.py::test_observed_done_is_accepted_through_the_last_allowed_round[200-200]
+4 failed, 3 passed in 0.08s

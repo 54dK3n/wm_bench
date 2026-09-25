@@ -22,7 +22,7 @@ from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v10"
+RUNTIME_VERSION = "autonomous-brain-runtime/v9"
 
 
 def dump(path, value):
@@ -291,11 +291,11 @@ def main(argv=None):
             runtime.recent = runtime.recent[-5:]
             print(json.dumps({"round": number, "action": action["action"], "success": result["success"],
                               "reason": result["reason"], "simulation_seconds": runtime.bridge.seconds}), flush=True)
-            if action["action"] == "done" and result["success"]:
-                status, reason = "done", "observation_completion"
-                break
             if number >= config.get("max_rounds", 200):
                 reason = "round_limit"
+                break
+            if action["action"] == "done" and result["success"]:
+                status, reason = "done", "observation_completion"
                 break
         if args.replay:
             llm.assert_replay_consumed()
