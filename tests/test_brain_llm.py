@@ -46,11 +46,14 @@ def response(content, *, stream=True, **extra):
 
 def legacy_record(saved, version):
     saved["version"] = version
-    saved["request"].pop("stream", None)
+    if version != "autonomous-brain-llm/v6":
+        saved["request"].pop("stream", None)
     saved["request_sha256"] = hashlib.sha256(json.dumps(saved["request"],
         ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
-    if version != "autonomous-brain-llm/v5":
+    if version not in {"autonomous-brain-llm/v5", "autonomous-brain-llm/v6"}:
         saved.pop("transport_timeout_s", None)
+    for key in ("transport_retry_limit", "transport_retry_index", "transport_retry_delay_s"):
+        saved.pop(key, None)
     return saved
 
 
@@ -96,7 +99,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v6"
+            assert saved["version"] == "autonomous-brain-llm/v7"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
@@ -239,7 +242,8 @@ def test_explicit_nonstream_setting_is_restored_in_replay(tmp_path, state):
         k: v for k, v in saved.items() if k != "mode"}
 
 
-def test_old_v4_timeout_error_replays_without_new_timeout_metadata_or_retry(tmp_path, state):
+@pytest.mark.parametrize("version", ["autonomous-brain-llm/v4", "autonomous-brain-llm/v5", "autonomous-brain-llm/v6"])
+def test_old_timeout_error_replays_without_new_metadata_or_retry(tmp_path, state, version):
     path = tmp_path / "v4-timeout.jsonl"
     with patch("urllib.request.urlopen", side_effect=TimeoutError("never-record-this-key")) as send:
         with LLMClient(path, timeout_s=60, stream=False) as live:
@@ -248,11 +252,11 @@ def test_old_v4_timeout_error_replays_without_new_timeout_metadata_or_retry(tmp_
             assert send.call_count == live.call_count == 1
     saved = records(path)[0]
     assert saved["transport_timeout_s"] == 60
-    legacy_record(saved, "autonomous-brain-llm/v4")
+    legacy_record(saved, version)
     path.write_text(json.dumps(saved) + "\n")
     with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
             patch("urllib.request.urlopen", side_effect=AssertionError("network")):
-        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path, transport_retries=2) as replay:
             with pytest.raises(LLMRequestError) as replay_error:
                 replay.decide(state)
             assert str(replay_error.value) == str(original_error.value)
@@ -261,9 +265,185 @@ def test_old_v4_timeout_error_replays_without_new_timeout_metadata_or_retry(tmp_
             with pytest.raises(RuntimeError, match="stopped"):
                 replay.decide(state)
     replayed = records(tmp_path / "replay.jsonl")[0]
-    assert "transport_timeout_s" not in replayed
+    assert ("transport_timeout_s" in replayed) == (version != "autonomous-brain-llm/v4")
+    assert "transport_retry_limit" not in replayed
     assert {k: v for k, v in replayed.items() if k != "mode"} == {
         k: v for k, v in saved.items() if k != "mode"}
+
+
+def test_transient_retries_log_each_call_then_replay_without_network_environment_or_sleep(tmp_path, state):
+    path = tmp_path / "retry.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[
+            urllib.error.URLError("never-record-this-key"), http.client.RemoteDisconnected(),
+            response('{"action":"look_around","params":{}}')]) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(path, transport_retries=2) as live:
+            expected = live.decide(state)
+            assert live.call_count == send.call_count == 3
+            elapsed = live.total_elapsed_s
+    saved = records(path)
+    assert [call.args[0] for call in sleep.call_args_list] == [1, 2]
+    assert [row["call_index"] for row in saved] == [1, 2, 3]
+    assert [row["attempt"] for row in saved] == [1, 1, 1]
+    assert [row["transport_retry_index"] for row in saved] == [0, 1, 2]
+    assert [row["transport_retry_delay_s"] for row in saved] == [0, 1, 2]
+    assert all(row["transport_retry_limit"] == 2 for row in saved)
+    assert len({row["request_sha256"] for row in saved}) == 1
+    assert len({call.args[0].data for call in send.call_args_list}) == 1
+    assert elapsed == sum(row["elapsed_s"] for row in saved)
+    assert "never-record-this-key" not in path.read_text()
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("replay slept")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            assert replay.transport_retries == 2
+            assert replay.decide(state) == expected
+            assert replay.call_count == 3
+            assert replay.total_elapsed_s == elapsed
+            replay.assert_replay_consumed()
+    replayed = records(tmp_path / "replay.jsonl")
+    assert [{k: v for k, v in row.items() if k != "mode"} for row in replayed] == [
+        {k: v for k, v in row.items() if k != "mode"} for row in saved]
+
+
+@pytest.mark.parametrize("error", [TimeoutError(), type("timeout", (TimeoutError,), {})(),
+    urllib.error.URLError("offline"), http.client.RemoteDisconnected(),
+    http.client.IncompleteRead(b"", 1), ConnectionResetError()])
+def test_transport_retry_whitelist_stops_after_three_failures(tmp_path, state, error):
+    path = tmp_path / "failed-retries.jsonl"
+    with patch("urllib.request.urlopen", side_effect=error) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(path, transport_retries=2) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+            assert send.call_count == client.call_count == 3
+            assert [call.args[0] for call in sleep.call_args_list] == [1, 2]
+            with pytest.raises(RuntimeError, match="stopped"):
+                client.decide(state)
+    saved = records(path)
+    assert all(row["action"] is None for row in saved)
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("replay slept")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(LLMRequestError):
+                replay.decide(state)
+            assert replay.call_count == 3
+            replay.assert_replay_consumed()
+    assert [{k: v for k, v in row.items() if k != "mode"}
+            for row in records(tmp_path / "replay.jsonl")] == [
+        {k: v for k, v in row.items() if k != "mode"} for row in saved]
+
+
+@pytest.mark.parametrize("error", [OSError("not-whitelisted"), http.client.BadStatusLine("invalid")])
+def test_nontransient_transport_errors_do_not_retry(tmp_path, state, error):
+    with patch("urllib.request.urlopen", side_effect=error) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(tmp_path / "permanent-transport.jsonl", transport_retries=2) as client:
+            with pytest.raises(LLMRequestError):
+                client.decide(state)
+            assert send.call_count == client.call_count == 1
+    sleep.assert_not_called()
+
+
+def test_incomplete_stream_retry_discards_partial_content_before_success(tmp_path, state):
+    incomplete = sse_response([{"model": "served-model", "choices": [
+        {"index": 0, "delta": {"content": '{"action":"pick","params":'}}]}], done=False)
+    path = tmp_path / "partial-retry.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[incomplete,
+            response('{"action":"look_around","params":{}}')]) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(path, transport_retries=2) as client:
+            assert client.decide(state) == {"action": "look_around", "params": {}}
+            assert send.call_count == client.call_count == 2
+    first, second = records(path)
+    assert first["transport_error"] == {"type": "IncompleteStream"}
+    assert first["raw_output"] == '{"action":"pick","params":'
+    assert second["raw_output"] == '{"action":"look_around","params":{}}'
+    sleep.assert_called_once_with(1)
+
+
+@pytest.mark.parametrize("status", [408, 429, 500, 502, 503, 504])
+def test_retryable_http_status_then_success(tmp_path, state, status):
+    error = urllib.error.HTTPError("https://model.example", status, "temporary", {}, io.BytesIO(b'{}'))
+    with patch("urllib.request.urlopen", side_effect=[error,
+            response('{"action":"look_around","params":{}}')]) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(tmp_path / "http-retry.jsonl", transport_retries=2) as client:
+            assert client.decide(state)["action"] == "look_around"
+            assert send.call_count == client.call_count == 2
+    sleep.assert_called_once_with(1)
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404])
+def test_permanent_http_status_never_retries(tmp_path, state, status):
+    error = urllib.error.HTTPError("https://model.example", status, "permanent", {}, io.BytesIO(b'{}'))
+    with patch("urllib.request.urlopen", side_effect=error) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(tmp_path / "permanent.jsonl", transport_retries=2) as client:
+            with pytest.raises(LLMRequestError, match=f"HTTP {status}"):
+                client.decide(state)
+            assert send.call_count == client.call_count == 1
+    sleep.assert_not_called()
+
+
+def test_transport_retry_budget_resets_only_for_single_json_repair(tmp_path, state):
+    path = tmp_path / "repair-retry.jsonl"
+    responses = [TimeoutError(), response("invalid"),
+                 http.client.RemoteDisconnected(), response('{"action":"look_around","params":{}}')]
+    with patch("urllib.request.urlopen", side_effect=responses) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(path, transport_retries=2) as client:
+            assert client.decide(state)["action"] == "look_around"
+            assert send.call_count == client.call_count == 4
+    rows = records(path)
+    assert [row["attempt"] for row in rows] == [1, 1, 2, 2]
+    assert [row["transport_retry_index"] for row in rows] == [0, 1, 0, 1]
+    assert [call.args[0] for call in sleep.call_args_list] == [1, 1]
+    assert rows[0]["request"] == rows[1]["request"]
+    assert rows[2]["request"] == rows[3]["request"]
+    assert len(rows[2]["request"]["messages"]) == 4
+    assert rows[2]["request"]["messages"][2]["content"] == "invalid"
+
+
+def test_invalid_json_still_gets_only_one_repair_with_transport_retries_enabled(tmp_path, state):
+    path = tmp_path / "invalid.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[response("invalid"), response("invalid")]) as send, \
+            patch("autonomous_brain.llm.time.sleep") as sleep:
+        with LLMClient(path, transport_retries=2) as client:
+            with pytest.raises(LLMOutputError, match="one repair"):
+                client.decide(state)
+            assert send.call_count == client.call_count == 2
+    assert [row["transport_retry_index"] for row in records(path)] == [0, 0]
+    sleep.assert_not_called()
+
+
+@pytest.mark.parametrize("field,value", [("transport_retry_limit", 1),
+    ("transport_retry_index", 2), ("transport_retry_delay_s", 2),
+    ("transport_retry_limit", True), ("transport_retry_index", True),
+    ("transport_retry_delay_s", None)])
+def test_replay_rejects_inconsistent_transport_retry_metadata(tmp_path, state, field, value):
+    path = tmp_path / "retry.jsonl"
+    with patch("urllib.request.urlopen", side_effect=[TimeoutError(),
+            response('{"action":"look_around","params":{}}')]), patch("autonomous_brain.llm.time.sleep"):
+        with LLMClient(path, transport_retries=2) as client:
+            client.decide(state)
+    rows = records(path)
+    rows[1][field] = value
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")), \
+            patch("autonomous_brain.llm.time.sleep", side_effect=AssertionError("replay slept")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(ReplayError, match=f"input mismatch: {field}"):
+                replay.decide(state)
+            assert replay.call_count == 1
+
+
+@pytest.mark.parametrize("limit", [True, -1, 3, 1.0, "2", None])
+def test_transport_retry_limit_is_bounded_integer(tmp_path, limit):
+    with pytest.raises(ValueError, match="transport_retries"):
+        LLMClient(tmp_path / "invalid-limit.jsonl", transport_retries=limit)
 
 
 @pytest.mark.parametrize("temperature", ["0", "0.0", "0.7", "2"])
@@ -577,7 +757,7 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
 
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
                                      "autonomous-brain-llm/v3", "autonomous-brain-llm/v4",
-                                     "autonomous-brain-llm/v5"])
+                                     "autonomous-brain-llm/v5", "autonomous-brain-llm/v6"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"

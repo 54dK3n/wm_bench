@@ -124,7 +124,7 @@ def main(argv=None):
     rounds = JsonLog(out / "rounds.jsonl")
     status, reason, count = "failed", "not_started", 0
     try:
-        llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay)
+        llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay, transport_retries=2)
         runtime = Runtime(config, out)
         for number in range(1, config.get("max_rounds", 200) + 1):
             runtime.round = number

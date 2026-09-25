@@ -20,8 +20,11 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v6"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 7)}
+VERSION = "autonomous-brain-llm/v7"
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 8)}
+RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
+                              "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
+RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
 SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
@@ -166,7 +169,7 @@ class LLMClient:
     ``log_path`` is a new JSONL file, opened exclusively to prevent accidental
     mixing of runs. ``replay_path`` selects a recorded transcript and never
     reads API credentials or makes requests. Replay may use a live transcript
-    or another replay transcript. Compatible v1-v5 transcripts retain their
+    or another replay transcript. Compatible v1-v6 transcripts retain their
     recorded version when replayed; the code version is independently tracked
     by the run's source SHA256. Inputs and re-derived output validation must
     match exactly. Sampling settings are restored from the first request,
@@ -180,14 +183,15 @@ class LLMClient:
     Live requests use SSE streaming by default. Only a stream terminated by
     [DONE] can produce an action; raw SSE is retained for offline replay.
 
-    Only invalid model outputs get one repair request. Transport and HTTP
-    errors stop immediately (including unsupported JSON-mode errors); there
-    are no hidden retries or fallback model/temperature/format settings.
+    Invalid model outputs get one repair request. Transport errors stop by
+    default; an explicit transport_retries limit of 1 or 2 allows only the
+    listed transient failures to retry the same JSON request. Every attempt
+    and its delay are logged; no model/temperature/format fallback is used.
     """
 
     def __init__(self, log_path: str | Path, replay_path: str | Path | None = None,
                  timeout_s: float = 180, *, model: str | None = None,
-                 stream: bool = True) -> None:
+                 stream: bool = True, transport_retries: int = 0) -> None:
         if not _finite_number(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout_s must be positive and finite")
         self.timeout_s = timeout_s
@@ -219,6 +223,9 @@ class LLMClient:
             if not isinstance(self._replay[0].get("request"), dict):
                 raise ReplayError("Replay is missing its request object")
             first_request = self._replay[0]["request"]
+            self.transport_retries = self._replay[0].get("transport_retry_limit", 0)
+            if type(self.transport_retries) is not int or not 0 <= self.transport_retries <= 2:
+                raise ReplayError("Replay has invalid transport retry limit")
             self.model = model or first_request.get("model")
             self.stream = first_request.get("stream")
             if "stream" in first_request and not isinstance(self.stream, bool):
@@ -243,6 +250,9 @@ class LLMClient:
             if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
                 raise ReplayError("Replay has invalid temperature")
         else:
+            if type(transport_retries) is not int or not 0 <= transport_retries <= 2:
+                raise ValueError("transport_retries must be an integer from 0 through 2")
+            self.transport_retries = transport_retries
             if not isinstance(stream, bool):
                 raise ValueError("stream must be a boolean")
             self.stream = stream
@@ -344,8 +354,11 @@ class LLMClient:
         return "".join(pieces) if saw_content else None, model, done, error
 
     def _call(self, request: dict[str, Any], state: dict[str, Any],
-              attempt: int) -> dict[str, Any]:
+              attempt: int, transport_retry_index: int = 0) -> dict[str, Any]:
         replay_record = None
+        retry_metadata = {"transport_retry_limit": self.transport_retries,
+                          "transport_retry_index": transport_retry_index,
+                          "transport_retry_delay_s": 0 if transport_retry_index == 0 else 2 ** (transport_retry_index - 1)}
         request_hash = hashlib.sha256(_canonical(request).encode("utf-8")).hexdigest()
         record = {"version": VERSION, "call_index": self.call_count + 1,
                   "decision_index": self.decision_count, "attempt": attempt,
@@ -360,6 +373,13 @@ class LLMClient:
                 raise ReplayError("Replay exhausted before this decision")
             replay_record = self._replay[self._replay_cursor]
             record["version"] = replay_record["version"]
+            if replay_record["version"] == VERSION or any(key in replay_record for key in retry_metadata):
+                for key, expected in retry_metadata.items():
+                    if type(replay_record.get(key)) is not int or replay_record[key] != expected:
+                        raise ReplayError(f"Replay input mismatch: {key}")
+                record.update(retry_metadata)
+            elif self.transport_retries or transport_retry_index:
+                raise ReplayError("Replay is missing transport retry metadata")
             for field in ("call_index", "decision_index", "attempt", "request", "request_sha256"):
                 if replay_record.get(field) != record[field]:
                     raise ReplayError(f"Replay input mismatch: {field}")
@@ -373,12 +393,15 @@ class LLMClient:
                 record["transport_timeout_s"] = replay_record["transport_timeout_s"]
             self._replay_cursor += 1
         else:
+            record.update(retry_metadata)
             record["transport_timeout_s"] = self.timeout_s
             outbound = urllib.request.Request(
                 f"{self._base_url}/chat/completions",
                 data=_canonical(request).encode("utf-8"),
                 headers={"Content-Type": "application/json",
                          "Authorization": f"Bearer {self._api_key}"}, method="POST")
+            if retry_metadata["transport_retry_delay_s"]:
+                time.sleep(retry_metadata["transport_retry_delay_s"])
             start = time.perf_counter()
             received = bytearray()
             try:
@@ -451,6 +474,19 @@ class LLMClient:
             raise LLMRequestError(f"LLM request failed: {error['type']}{status}; see transcript")
         return record
 
+    def _call_with_retries(self, request: dict[str, Any], state: dict[str, Any],
+                           attempt: int) -> dict[str, Any]:
+        for retry_index in range(self.transport_retries + 1):
+            try:
+                return self._call(request, state, attempt, retry_index)
+            except LLMRequestError:
+                error = self.last_record["transport_error"]
+                retryable = (error["type"] in RETRYABLE_TRANSPORT_ERRORS
+                             or (error["type"] == "HTTPError" and error.get("status") in RETRYABLE_HTTP_STATUSES))
+                if not retryable or retry_index == self.transport_retries:
+                    raise
+        raise AssertionError("Transport retry loop exhausted unexpectedly")
+
     def decide(self, state: dict[str, Any]) -> dict[str, Any]:
         if self._closed:
             raise RuntimeError("LLM client is closed")
@@ -469,7 +505,7 @@ class LLMClient:
                     request["thinking"] = {"type": self.thinking}
                 if self.stream is not None:
                     request["stream"] = self.stream
-                result = self._call(request, prepared, attempt)
+                result = self._call_with_retries(request, prepared, attempt)
                 if result["validation_error"] is None:
                     return result["action"]
                 if attempt == 1:

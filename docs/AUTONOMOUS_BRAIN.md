@@ -20,13 +20,15 @@ node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
 
-输出目录必须不存在。driver 在平台外启动 `python3 -m autonomous_brain.run`，通过 stdin 仅传客户端能力、自然语言指令和运行上限。布局选择、真值捕获和成绩核验全在评测侧。大脑不接收地图名称或球的总数。
+输出目录必须不存在。driver 在平台外启动 `python3 -m autonomous_brain.run`，通过 stdin 仅传客户端能力、自然语言指令和运行上限。布局选择、真值捕获和成绩核验全在评测侧。决策状态不包含地图名称或球的总数。
 
 WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d1162dcadbc5ef`；默认使用仓库已保存的 `vendor/wm_kit_opt2`，也可设置 `WORLD_MODEL_ROOT` 指向同一版本。明确调用 `guangyang_static_world_model(max_range_m=0.9)`，不修改上游状态阈值。
 
 上限为 200 轮和仿真 1200 秒，到限失败。driver 同时给平台设置 1200 秒硬上限。`--max-rounds`、`--max-simulation-seconds` 只允许降低上限，供联调使用；联调结果不充当正式成功局。
 
-大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。任务要求仍以用户最新授权为准，模型不接受原参数时不能自动换温度。仅不合法输出重试一次，仍非法停止；网络或 HTTP 错误立即停止，不自动降级模型、温度或输出格式。日志记录实际请求参数，不记录 API 密钥或机器人凭证；回放从记录恢复采样参数。客户端 v5 将默认单次网络等待上限设为 180 秒，并在新调用日志的 `transport_timeout_s` 记录实际值；这不改变 1200 秒仿真上限，网络错误仍立即停止。旧版本记录回放不补写新字段。
+大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。用户已批准本机 Kimi K2.6 非思考模式、温度 0.6；程序不会按服务错误自动改模型或温度。完整但不合法的输出最多修复一次，仍非法就停止。
+
+客户端默认网络重试为 0；正式大脑自 v7 起显式设为 2，仅对列明的瞬态连接错误重发相同请求，最多初次加两次，等待 1 秒和 2 秒。每次失败和重试均记录，永久错误立即停止，耗尽后整局失败。默认单次网络等待为 180 秒，实际值记入 `transport_timeout_s`；调用耗时与重试等待分别保存。网络重试不增加 JSON 修复次数。旧记录回放恢复其原策略，缺失重试字段时按 0 处理，不补写字段、不联网或等待。细节与验证见[连接重试报告](../artifacts/autonomous-brain/llm-retry-fix-20260925/REPORT.md)。
 
 ## 大脑模块
 
@@ -65,7 +67,7 @@ python3 tools/evaluate_autonomous_brain.py \
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
 
-LLM v6 uses streaming transport and waits for `[DONE]` before validating a single action. Raw SSE and partial responses remain in `llm.jsonl`. No transport retry is added; legacy recordings retain their original non-streaming requests. See `artifacts/autonomous-brain/llm-streaming-fix-20260925/REPORT.md`.
+LLM 自 v6 起使用流式传输，收到 `[DONE]` 后才校验单个动作；原始 SSE 和中断时的部分响应保存在 `llm.jsonl`。旧记录仍保留原非流式请求。见[流式修复报告](../artifacts/autonomous-brain/llm-streaming-fix-20260925/REPORT.md)。
 
 模型回放调试（不访问模型 API，仍使用本地机器人桥）：
 

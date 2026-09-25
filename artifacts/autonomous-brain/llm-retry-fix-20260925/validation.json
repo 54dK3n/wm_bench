@@ -1,0 +1,31 @@
+{
+  "version": "autonomous-brain-llm/v7",
+  "source_sha256": {
+    "autonomous_brain/llm.py": "59e6f6f4420159b73bdba8aa315ae9628863ebbd346132d7f4589481835063dd",
+    "autonomous_brain/run.py": "40bf6b80212643cafed44eda5e590728bdcff439897528894c89d3ce4ee3b491",
+    "tests/test_brain_llm.py": "4594683f1dfbe0e5a1dc9312cf27c0d5db3add4ea9c67fa6b4cec6ed3034e67c"
+  },
+  "checks": [
+    {
+      "command": "python3 -m pytest tests/test_brain_llm.py -q",
+      "stdout_summary": "154 passed in 0.22s",
+      "exit_code": 0,
+      "provenance": "Executed by implementation subtask and returned to parent."
+    },
+    {
+      "command": "git diff --check -- autonomous_brain/llm.py autonomous_brain/run.py tests/test_brain_llm.py",
+      "exit_code": 0,
+      "stdout": ""
+    }
+  ],
+  "client_default_transport_retries": 0,
+  "brain_transport_retries": 2,
+  "live_backoff_s": [
+    1,
+    2
+  ],
+  "invalid_json_repairs": 1,
+  "model_parameters_unchanged": true,
+  "simulation_limits_unchanged": true,
+  "real_v6_replay": "artifacts/autonomous-brain/llm-retry-fix-20260925/v6-error-replay/replay-checks.json"
+}
