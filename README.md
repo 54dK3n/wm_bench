@@ -2,11 +2,13 @@
 
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
-最小双球 demo 已成功；旧 opt-2 三轮结束，最终双球送达 2/10，未达到 8/10。当前按新任务执行 demo 整理 → WorldModel 回流 → 行为不变重构 → opt-2b 优化；进度见下方执行状态。旧阶段 3–4 未执行，赛题 1 未运行，过滤测试集污染限制仍有效。本仓库不代表总验收通过。
+当前执行 **v4 自主观测闭环**：平台只提供传感器和执行器，大脑在平台外运行。旧五阶段、比赛计分和比赛专用规则已作废，旧程序与结果仅作历史参考。2026-09-25 复核发现阶段 1 的机器人桥过滤了仿真物体检测，当前阶段门禁为 **FAIL / STOP**；后续阶段未实施或验收，尚无 v4 map-05 成功局。
 
 ## 阅读入口
 
-- [当前 A–D 执行状态](docs/NEXT_WORK_STATE.md)
+- [当前 v4 执行状态](docs/NEXT_WORK_STATE.md)
+- [v4 平台实现与阶段门禁](docs/V4_AUTONOMOUS_LOOP.md)
+- [阶段 1 复核失败证据](artifacts/inloop/v4/stage-1/review-20260925/REPORT.md)
 - [WorldModel 回流结果及 PR](artifacts/worldmodel-return/SUMMARY.md)
 - [重构第 1 轮：未通过及视觉输入差异](artifacts/inloop/refactor/SUMMARY.md)
 - [v3 全阶段状态](artifacts/inloop/V3_FINAL_STATUS.md)
@@ -58,6 +60,8 @@ python -m pytest programs/tests/test_detection_filter.py -q
 当前构建和重构运行入口使用仓库相对路径；平台位置必须通过 `GUANGYANG_PLATFORM_ROOT` 提供。历史清单中的原始路径保持不动，由当前工具解析到本仓库；迁移到另一台机器前仍须恢复真实回放数据。本仓库尚不能宣称干净环境一条命令完成全部仿真复跑。根目录 `run.py`、`eval_inloop.py`、`mutate.py` 还依赖外部旧 wm_kit 中未随本仓库提供的 acceptance/planning/selection 模块，不作为默认安装检查。
 
 ## 重新构建与运行的入口
+
+下列为历史 Pyodide 程序的复现入口，不是 v4 大脑或当前执行计划；旧门限只解释历史结果。
 
 在仓库根目录执行；将平台环境变量设为本机独立平台目录。构建直接使用已锁定的 vendor 快照，不依赖嵌套 Git 或修改旧程序正文。
 

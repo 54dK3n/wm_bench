@@ -1,0 +1,43 @@
+{
+  "version": "wm-v4-stage1-review-20260925-r1",
+  "checks": [
+    {
+      "artifact": "artifacts/inloop/v4/stage-1/review-20260925/evidence-audit.json",
+      "sha256": "be7c78b92df466e735df17983dd411b3d2da687bb8554a62a61f053e57b4571c",
+      "independent_replay_sha256": "be7c78b92df466e735df17983dd411b3d2da687bb8554a62a61f053e57b4571c",
+      "byte_equal": true
+    },
+    {
+      "artifact": "artifacts/inloop/v4/stage-1/review-20260925/sensor-probe.json",
+      "sha256": "28f29cef9a509a5a7862dbc7aca5d7e1809628b7b1939b46dec594fb5417a131",
+      "independent_replay_sha256": "28f29cef9a509a5a7862dbc7aca5d7e1809628b7b1939b46dec594fb5417a131",
+      "byte_equal": true
+    },
+    {
+      "artifact": "artifacts/inloop/v4/stage-1/review-20260925/manifest.json",
+      "sha256": "3008d04a7747088a91ef98556ca4180f5a4d35f41f1bf3368c0a03ef051ef44a",
+      "independent_replay_sha256": "3008d04a7747088a91ef98556ca4180f5a4d35f41f1bf3368c0a03ef051ef44a",
+      "byte_equal": true
+    }
+  ],
+  "all_replays_byte_equal": true,
+  "workspaces": {
+    "guangyang-platform": {
+      "branch": "v4/robot-backend",
+      "commit": "3817902b39ba0322fdcee80afb1fa57087c6b5eb",
+      "working_tree_clean": true
+    },
+    "octos_robots": {
+      "branch": "codex/v4-autonomous-loop",
+      "commit": "dbc9fb2db36f8b459894951048598f8ae20598e8",
+      "working_tree_clean": true
+    },
+    "WorldModel": {
+      "branch": "codex/v4-perception-memory",
+      "commit": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
+      "working_tree_clean": true
+    }
+  },
+  "stage1": "FAIL",
+  "subsequent_stages": "STOP"
+}

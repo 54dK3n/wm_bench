@@ -1,0 +1,371 @@
+{
+  "schema": "wm-v4-stage1-sensor-probe/v1",
+  "allPass": false,
+  "detectorFixturesValid": true,
+  "passed": 1,
+  "failed": 3,
+  "stage1Decision": "blocked-do-not-enter-stage2",
+  "manifest": {
+    "version": "wm-v4-stage1-sensor-probe/v1",
+    "script": {
+      "file": "tools/v4_stage1_sensor_probe.js",
+      "sha256": "c6a73aed577cabc35da682870364586935977a2cfe573278d2f26e1f167e9fe3"
+    },
+    "platformRoot": "workspaces/guangyang-platform/projects/car-python",
+    "platformSourceSha256": {
+      "vision.js": "62274a407a689c8e48ab869eae43de5da0b4717a66e47b7bb7951ce20d654da2",
+      "vision-pixel-core.js": "7627c0429e338f481948bdcb6ab59af901ad6ed0cee8001ef38d51dfa063c614",
+      "robot-backend-runtime.js": "912306436ce285acc9195364f5250e1404d6edc6dc6c6b23a658b5bf2ecc6e16",
+      "robot-bridge-contract.js": "aa6e49f2c8f4c1e879a8ec7cc25b7558b52d40896fa222dea21fd04c218cdcca",
+      "storage-region-pixels.js": "e8707e81cac164f9db431d6ba185b69d558c5e89e0f82f4570a8ef7db5fe8b49",
+      "tests/vision-runtime.test.js": "da6eba89388fe14a9a6e57de2bfcbcb8015472e94fc962814f3e9a2cf1f50f1b"
+    },
+    "adapter": {
+      "function": "observe",
+      "sourceSha256": "529425f2334dd923bf07df466ec68079ffb21fe148a5c2641486d211620e4904",
+      "firstLine": 32
+    },
+    "limitations": [
+      "Offline synthetic RGBA fixtures, not a browser/WebGL simulation acceptance run.",
+      "Vision detector and observe adapter are unchanged platform source; only capture readiness and native evaluation logging are test doubles."
+    ]
+  },
+  "trials": [
+    {
+      "name": "red-ball",
+      "input": {
+        "width": 640,
+        "height": 480,
+        "backgroundRgba": [
+          18,
+          28,
+          42,
+          255
+        ],
+        "draw": {
+          "name": "red-ball",
+          "rawCategory": "target",
+          "shape": "circle",
+          "args": [
+            320,
+            260,
+            60,
+            [
+              235,
+              35,
+              30,
+              255
+            ]
+          ]
+        },
+        "rgbaSha256": "f5e78c7d68ab9fe76ff566d47d2a68716262baaebfd31c1ba1f5fab732f17e35",
+        "virtualOptions": {
+          "source": "virtual",
+          "fovDegrees": 60,
+          "cameraForwardOffset": 0.43,
+          "virtualPixelClasses": [
+            "red-ball",
+            "obstacle"
+          ]
+        },
+        "simulationContext": {
+          "tick": 0,
+          "stepMs": 20,
+          "stateRevision": 0,
+          "generation": 1
+        }
+      },
+      "detectorSawClass": true,
+      "pixelDetections": [
+        {
+          "label": "红球",
+          "category": "target",
+          "aliases": [
+            "球",
+            "包裹",
+            "目标物",
+            "sports ball"
+          ],
+          "source": "virtual-cv",
+          "detectorVersion": "chenlong.virtual-pixel/v2",
+          "confidence": 0.8928222222222222,
+          "distance": 1.954204710660612,
+          "distanceEstimated": true,
+          "clearance": 1.234204710660612,
+          "near": false,
+          "minimumApproachDistance": 0.725,
+          "stable": true,
+          "direction": "中间",
+          "bearingDeg": 0,
+          "box": {
+            "x": 260,
+            "y": 280,
+            "width": 120,
+            "height": 120
+          },
+          "frameId": 1,
+          "capturedAt": 0
+        }
+      ],
+      "params": {
+        "category": "red-ball",
+        "confidence": 0
+      },
+      "bridgeObservation": {
+        "frameId": 1,
+        "tick": 0,
+        "width": 640,
+        "height": 480,
+        "detections": []
+      },
+      "pass": false
+    },
+    {
+      "name": "blue-ball",
+      "input": {
+        "width": 640,
+        "height": 480,
+        "backgroundRgba": [
+          18,
+          28,
+          42,
+          255
+        ],
+        "draw": {
+          "name": "blue-ball",
+          "rawCategory": "distractor",
+          "shape": "circle",
+          "args": [
+            320,
+            260,
+            60,
+            [
+              59,
+              130,
+              246,
+              255
+            ]
+          ]
+        },
+        "rgbaSha256": "94b05c01fcf60eb5e95fc9c9b2377a24b24a498a1db2bc108014a10c1a392897",
+        "virtualOptions": {
+          "source": "virtual",
+          "fovDegrees": 60,
+          "cameraForwardOffset": 0.43,
+          "virtualPixelClasses": [
+            "red-ball",
+            "obstacle"
+          ]
+        },
+        "simulationContext": {
+          "tick": 0,
+          "stepMs": 20,
+          "stateRevision": 0,
+          "generation": 1
+        }
+      },
+      "detectorSawClass": true,
+      "pixelDetections": [
+        {
+          "label": "混淆物",
+          "category": "distractor",
+          "aliases": [
+            "干扰物",
+            "诱饵",
+            "distractor"
+          ],
+          "source": "virtual-cv",
+          "detectorVersion": "chenlong.virtual-pixel/v2",
+          "confidence": 0.8728222222222222,
+          "distance": 1.954204710660612,
+          "distanceEstimated": true,
+          "clearance": 1.234204710660612,
+          "near": false,
+          "minimumApproachDistance": 0.725,
+          "stable": true,
+          "direction": "中间",
+          "bearingDeg": 0,
+          "box": {
+            "x": 260,
+            "y": 280,
+            "width": 120,
+            "height": 120
+          },
+          "frameId": 1,
+          "capturedAt": 0
+        }
+      ],
+      "params": {
+        "category": "blue-ball",
+        "confidence": 0
+      },
+      "bridgeObservation": {
+        "frameId": 1,
+        "tick": 0,
+        "width": 640,
+        "height": 480,
+        "detections": []
+      },
+      "pass": false
+    },
+    {
+      "name": "obstacle",
+      "input": {
+        "width": 640,
+        "height": 480,
+        "backgroundRgba": [
+          18,
+          28,
+          42,
+          255
+        ],
+        "draw": {
+          "name": "obstacle",
+          "rawCategory": "obstacle",
+          "shape": "rectangle",
+          "args": [
+            250,
+            250,
+            140,
+            20,
+            [
+              235,
+              185,
+              25,
+              255
+            ]
+          ]
+        },
+        "rgbaSha256": "ebebe3fe3860d73d40ebc7c17007c0805284f7210511ece65e6f946a570aefc4",
+        "virtualOptions": {
+          "source": "virtual",
+          "fovDegrees": 60,
+          "cameraForwardOffset": 0.43,
+          "virtualPixelClasses": [
+            "red-ball",
+            "obstacle"
+          ]
+        },
+        "simulationContext": {
+          "tick": 0,
+          "stepMs": 20,
+          "stateRevision": 0,
+          "generation": 1
+        }
+      },
+      "detectorSawClass": true,
+      "pixelDetections": [
+        {
+          "label": "障碍物",
+          "category": "obstacle",
+          "aliases": [
+            "障碍",
+            "方块",
+            "墙"
+          ],
+          "source": "virtual-cv",
+          "detectorVersion": "chenlong.virtual-pixel/v2",
+          "confidence": 0.92,
+          "distance": 1.7958457796828862,
+          "distanceEstimated": true,
+          "clearance": 0.8358457796828862,
+          "near": false,
+          "stable": true,
+          "direction": "中间",
+          "bearingDeg": 0,
+          "box": {
+            "x": 219,
+            "y": 270,
+            "width": 202,
+            "height": 100
+          },
+          "frameId": 1,
+          "capturedAt": 0
+        }
+      ],
+      "params": {
+        "category": "obstacle",
+        "confidence": 0
+      },
+      "bridgeObservation": {
+        "frameId": 1,
+        "tick": 0,
+        "width": 640,
+        "height": 480,
+        "detections": []
+      },
+      "pass": false
+    },
+    {
+      "name": "storage-zone",
+      "input": {
+        "width": 640,
+        "height": 480,
+        "backgroundRgba": [
+          18,
+          28,
+          42,
+          255
+        ],
+        "draw": {
+          "name": "storage-zone",
+          "rawCategory": null,
+          "shape": "rectangle",
+          "args": [
+            200,
+            320,
+            240,
+            100,
+            [
+              0,
+              255,
+              0,
+              255
+            ]
+          ]
+        },
+        "rgbaSha256": "e28f88824dc0a87c4fc247494716b3333fe4ff2d88950632dd75431ce6ba2bde",
+        "virtualOptions": {
+          "source": "virtual",
+          "fovDegrees": 60,
+          "cameraForwardOffset": 0.43,
+          "virtualPixelClasses": [
+            "red-ball",
+            "obstacle"
+          ]
+        },
+        "simulationContext": {
+          "tick": 0,
+          "stepMs": 20,
+          "stateRevision": 0,
+          "generation": 1
+        }
+      },
+      "detectorSawClass": true,
+      "pixelDetections": [],
+      "params": {
+        "category": "storage-zone",
+        "confidence": 0
+      },
+      "bridgeObservation": {
+        "frameId": 1,
+        "tick": 0,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "storage-zone",
+            "confidence": 1,
+            "bbox": {
+              "x": 200,
+              "y": 320,
+              "w": 240,
+              "h": 100
+            }
+          }
+        ]
+      },
+      "pass": true
+    }
+  ]
+}
