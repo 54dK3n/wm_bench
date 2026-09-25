@@ -1,0 +1,3805 @@
+{
+  "schema": "completed-run-metrics/v1",
+  "source_commit": "1d9b0a79aed7a67a539a03a2c7d5b181bbcbec21",
+  "task_success": false,
+  "brain_status": "failed",
+  "brain_reason": "LLMRequestError: LLM request failed: HTTPError HTTP 429; see transcript",
+  "formal_limits": {
+    "max_rounds": 200,
+    "max_simulation_seconds": 1200
+  },
+  "metrics": {
+    "rounds": 181,
+    "llm_calls": 190,
+    "llm_total_elapsed_s": 2234.226738427001,
+    "simulation_seconds": 861.32,
+    "observations": 1104,
+    "failed_rounds": 27,
+    "failed_actions": 26,
+    "execution_failures": 1,
+    "external_stop_failures": 0,
+    "bridge_calls": 5160,
+    "nonwhitelist_brain_requests": 0
+  },
+  "recomputed": {
+    "rounds": 181,
+    "llm_calls": 190,
+    "observations": 1104,
+    "motions": 743,
+    "bridge_calls": 5160,
+    "llm_elapsed_s_fsum": 2234.2267384270012,
+    "retry_wait_s_fsum": 31.0,
+    "simulation_seconds": 861.32,
+    "final_tick": 43066
+  },
+  "driver_process": {
+    "code": 1,
+    "signal": null,
+    "spawnError": null,
+    "interrupted": null,
+    "wallSeconds": 2718.07,
+    "wallTimeoutSeconds": 0,
+    "invocation": {
+      "module": "autonomous_brain.run",
+      "output": "artifacts/autonomous-brain/map05-run-21/map-05-run-1/brain",
+      "replay": null
+    },
+    "capabilityPassed": {
+      "schema": "autonomous-brain-robot-config/v1",
+      "origin": "<local robot bridge>",
+      "bridge_id": "<limited robot capability>",
+      "client_token": "<not recorded>",
+      "task": "把地图上的红球都送到绿色存放区",
+      "simulation_step_ms": 20,
+      "max_rounds": 200,
+      "max_simulation_seconds": 1200
+    }
+  },
+  "brain_wall_elapsed_s": 2717.921814416,
+  "action_counts": {
+    "explore": 117,
+    "look_around": 40,
+    "go_to": 18,
+    "pick": 2,
+    "place": 3,
+    "null": 1
+  },
+  "motion_counts": {
+    "take_exit": 90,
+    "turn": 452,
+    "follow_road": 155,
+    "forward": 25,
+    "grab": 5,
+    "backward": 14,
+    "release": 2
+  },
+  "failed_rounds_by_reason": {
+    "road_blocked_returned_to_junction": [
+      9,
+      23,
+      56,
+      67,
+      74,
+      79,
+      91,
+      106,
+      128,
+      130,
+      143
+    ],
+    "visual_standoff_requires_road_reposition": [
+      13,
+      16,
+      18,
+      21,
+      94
+    ],
+    "known_route_exhausted_needs_exploration": [
+      26,
+      29,
+      31,
+      38
+    ],
+    "visual_standoff_range_not_supported": [
+      37
+    ],
+    "complete_storage_region_not_unique": [
+      45
+    ],
+    "visual_standoff_did_not_converge": [
+      46
+    ],
+    "visual_standoff_target_not_observed": [
+      48
+    ],
+    "road_blocked_at_junction": [
+      169,
+      170
+    ],
+    "LLM request failed: HTTPError HTTP 429; see transcript": [
+      181
+    ]
+  },
+  "failures": [
+    "brain_did_not_finish_with_observed_done",
+    "terminal_done_not_corroborated",
+    "execution_or_controller_error"
+  ],
+  "bridge_terminal_status_counts": {
+    "completed": 5160
+  },
+  "nonwhitelist_brain_requests": 0,
+  "transport_errors": [
+    {
+      "call_index": 185,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 15.568315874999826,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0
+    },
+    {
+      "call_index": 186,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 7.4388059999996585,
+      "transport_retry_index": 1,
+      "transport_retry_delay_s": 1
+    },
+    {
+      "call_index": 187,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 10.064711999999872,
+      "transport_retry_index": 2,
+      "transport_retry_delay_s": 2
+    },
+    {
+      "call_index": 188,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 10.544892875000187,
+      "transport_retry_index": 3,
+      "transport_retry_delay_s": 4
+    },
+    {
+      "call_index": 189,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 6.573334582999905,
+      "transport_retry_index": 4,
+      "transport_retry_delay_s": 8
+    },
+    {
+      "call_index": 190,
+      "decision_index": 181,
+      "transport_error": {
+        "status": 429,
+        "type": "HTTPError"
+      },
+      "elapsed_s": 6.168635874999836,
+      "transport_retry_index": 5,
+      "transport_retry_delay_s": 16
+    }
+  ],
+  "validation_errors": [
+    {
+      "call_index": 12,
+      "decision_index": 12,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_021\"}}"
+    },
+    {
+      "call_index": 114,
+      "decision_index": 113,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_140\"}}"
+    },
+    {
+      "call_index": 120,
+      "decision_index": 118,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_140\"}}"
+    },
+    {
+      "call_index": 122,
+      "decision_index": 119,
+      "validation_error": "go_to requires a CONFIRMED object",
+      "raw_output": "{\"action\":\"go_to\",\"params\":{\"object_id\":\"target_140\"}}"
+    }
+  ],
+  "public_timelines": [
+    {
+      "object_id": "target_021",
+      "category": "red-ball",
+      "first_seen_s": 22.14,
+      "first_seen_round": 7,
+      "first_seen_frame_id": "42",
+      "confirmed_s": 49.46,
+      "picked_s": 107.78,
+      "delivered_s": 284.42,
+      "confirmed_round": 12,
+      "original_position_m": {
+        "x": -1.5405242010433549,
+        "z": 1.057294147459922
+      },
+      "delivery_witness_id": null,
+      "delivered_position_m": {
+        "x": 1.0299915576715688,
+        "z": -0.06031325781114577
+      },
+      "accepted_hit_poses": [
+        {
+          "frame_id": "42",
+          "simulation_time_s": 22.14,
+          "x_m": -0.73,
+          "z_m": 0.27399999999999997,
+          "heading_deg": 45.0
+        },
+        {
+          "frame_id": "59",
+          "simulation_time_s": 39.22,
+          "x_m": -1.09,
+          "z_m": 0.121,
+          "heading_deg": 14.900000000000002
+        },
+        {
+          "frame_id": "72",
+          "simulation_time_s": 49.46,
+          "x_m": -1.4580000000000002,
+          "z_m": 0.552,
+          "heading_deg": 0.0
+        },
+        {
+          "frame_id": "89",
+          "simulation_time_s": 62.8,
+          "x_m": -1.895,
+          "z_m": 0.325,
+          "heading_deg": -21.8
+        },
+        {
+          "frame_id": "117",
+          "simulation_time_s": 85.06,
+          "x_m": -1.079,
+          "z_m": 0.7559999999999999,
+          "heading_deg": 57.699999999999996
+        },
+        {
+          "frame_id": "125",
+          "simulation_time_s": 92.06,
+          "x_m": -1.169,
+          "z_m": 1.077,
+          "heading_deg": 91.3
+        }
+      ]
+    },
+    {
+      "object_id": "target_112",
+      "category": "red-ball",
+      "first_seen_s": 421.74,
+      "first_seen_round": 82,
+      "first_seen_frame_id": "524",
+      "confirmed_s": 464.52,
+      "picked_s": 485.92,
+      "delivered_s": 520.02,
+      "confirmed_round": 93,
+      "original_position_m": {
+        "x": -0.30539259017665177,
+        "z": 1.4991445231402152
+      },
+      "delivery_witness_id": null,
+      "delivered_position_m": {
+        "x": 0.9645688275624887,
+        "z": -0.06684928606933815
+      },
+      "accepted_hit_poses": [
+        {
+          "frame_id": "524",
+          "simulation_time_s": 421.74,
+          "x_m": -0.003,
+          "z_m": 0.524,
+          "heading_deg": 0.8
+        },
+        {
+          "frame_id": "554",
+          "simulation_time_s": 435.48,
+          "x_m": -0.003,
+          "z_m": 1.115,
+          "heading_deg": 45.7
+        },
+        {
+          "frame_id": "596",
+          "simulation_time_s": 464.52,
+          "x_m": 0.307,
+          "z_m": 2.053,
+          "heading_deg": 126.1
+        },
+        {
+          "frame_id": "604",
+          "simulation_time_s": 470.54,
+          "x_m": 0.152,
+          "z_m": 1.9269999999999998,
+          "heading_deg": 139.5
+        }
+      ]
+    }
+  ],
+  "grab_attempts": {
+    "target_021": 2,
+    "target_112": 3
+  },
+  "delivery": {
+    "failures": [
+      "brain_did_not_finish_with_observed_done",
+      "terminal_done_not_corroborated",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "delivered_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 43066,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 0.38055189043545584,
+        "position_world": [
+          -10.698883,
+          -7.698235
+        ],
+        "events": [
+          {
+            "event_index": 2,
+            "seq": 1819,
+            "type": "package_grabbed",
+            "tick": 5215,
+            "simulation_seconds": 104.3,
+            "package_id": "guangyang-target-1"
+          },
+          {
+            "event_index": 6,
+            "seq": 4828,
+            "type": "package_delivered",
+            "tick": 14066,
+            "simulation_seconds": 281.32,
+            "package_id": "guangyang-target-1"
+          }
+        ]
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 43066,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 0.5382247025787638,
+        "position_world": [
+          -10.220325,
+          -8.239171
+        ],
+        "events": [
+          {
+            "event_index": 10,
+            "seq": 8386,
+            "type": "package_grabbed",
+            "tick": 24122,
+            "simulation_seconds": 482.44,
+            "package_id": "guangyang-target-2"
+          },
+          {
+            "event_index": 14,
+            "seq": 8945,
+            "type": "package_delivered",
+            "tick": 25846,
+            "simulation_seconds": 516.92,
+            "package_id": "guangyang-target-2"
+          }
+        ]
+      }
+    ],
+    "rounds": 181,
+    "round_records": 181,
+    "max_rounds": 200,
+    "simulation_seconds": 861.32,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "final_sample_tick": 43066,
+    "simulation_end_tick": 43066,
+    "terminal_done": {
+      "verified": false,
+      "round": 181,
+      "observation_index": null,
+      "observation_tick": null
+    },
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "physical_target_timelines": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_115"
+      ],
+      "first_raw_seen": {
+        "observation_index": 5,
+        "round": 2,
+        "frame_id": "5",
+        "tick": 138,
+        "simulation_seconds": 2.76,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 548,
+          "y": 188,
+          "w": 20,
+          "h": 12
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-1",
+            "projection": {
+              "u": 558.4765479149339,
+              "v": 194.26820679191553,
+              "depth_world": 12.074038911532847
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-1"
+      },
+      "first_confirmed": null,
+      "first_logged_wm_presence": {
+        "observation_index": 532,
+        "round": 83,
+        "frame_id": "532",
+        "tick": 21261,
+        "simulation_seconds": 425.22,
+        "track_id": "target_115",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": {
+        "event_index": 2,
+        "seq": 1819,
+        "type": "package_grabbed",
+        "tick": 5215,
+        "simulation_seconds": 104.3,
+        "package_id": "guangyang-target-1"
+      },
+      "first_delivered_truth_event": {
+        "event_index": 6,
+        "seq": 4828,
+        "type": "package_delivered",
+        "tick": 14066,
+        "simulation_seconds": 281.32,
+        "package_id": "guangyang-target-1"
+      },
+      "final_active_delivery_truth_event": {
+        "event_index": 6,
+        "seq": 4828,
+        "type": "package_delivered",
+        "tick": 14066,
+        "simulation_seconds": 281.32,
+        "package_id": "guangyang-target-1"
+      },
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_115",
+          "category": "red-ball",
+          "first_seen_s": 425.22,
+          "first_seen_round": 83,
+          "first_seen_frame_id": "532",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "532",
+              "simulation_time_s": 425.22,
+              "x_m": -0.003,
+              "z_m": 0.524,
+              "heading_deg": -89.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [
+        "target_058",
+        "target_112"
+      ],
+      "first_raw_seen": {
+        "observation_index": 128,
+        "round": 23,
+        "frame_id": "128",
+        "tick": 4860,
+        "simulation_seconds": 97.2,
+        "detection_index": 0,
+        "category": "red-ball",
+        "bbox": {
+          "x": 170,
+          "y": 190,
+          "w": 22,
+          "h": 18
+        },
+        "candidates": [
+          {
+            "truth_id": "guangyang-target-2",
+            "projection": {
+              "u": 184.0834424167682,
+              "v": 199.5916233459899,
+              "depth_world": 8.505844534777516
+            }
+          }
+        ],
+        "status": "unique",
+        "truth_id": "guangyang-target-2"
+      },
+      "first_confirmed": {
+        "observation_index": 596,
+        "round": 93,
+        "frame_id": "596",
+        "tick": 23226,
+        "simulation_seconds": 464.52,
+        "track_id": "target_112"
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 178,
+        "round": 28,
+        "frame_id": "178",
+        "tick": 8064,
+        "simulation_seconds": 161.28,
+        "track_id": "target_058",
+        "note": "first logged WM presence, not first raw sighting"
+      },
+      "first_grabbed_truth_event": {
+        "event_index": 10,
+        "seq": 8386,
+        "type": "package_grabbed",
+        "tick": 24122,
+        "simulation_seconds": 482.44,
+        "package_id": "guangyang-target-2"
+      },
+      "first_delivered_truth_event": {
+        "event_index": 14,
+        "seq": 8945,
+        "type": "package_delivered",
+        "tick": 25846,
+        "simulation_seconds": 516.92,
+        "package_id": "guangyang-target-2"
+      },
+      "final_active_delivery_truth_event": {
+        "event_index": 14,
+        "seq": 8945,
+        "type": "package_delivered",
+        "tick": 25846,
+        "simulation_seconds": 516.92,
+        "package_id": "guangyang-target-2"
+      },
+      "delivery_revocations": [],
+      "brain_memory_timeline": [
+        {
+          "object_id": "target_058",
+          "category": "red-ball",
+          "first_seen_s": 161.28,
+          "first_seen_round": 28,
+          "first_seen_frame_id": "178",
+          "confirmed_s": null,
+          "picked_s": null,
+          "delivered_s": null,
+          "accepted_hit_poses": [
+            {
+              "frame_id": "178",
+              "simulation_time_s": 161.28,
+              "x_m": -0.003,
+              "z_m": 0.524,
+              "heading_deg": 1.0
+            }
+          ]
+        },
+        {
+          "object_id": "target_112",
+          "category": "red-ball",
+          "first_seen_s": 421.74,
+          "first_seen_round": 82,
+          "first_seen_frame_id": "524",
+          "confirmed_s": 464.52,
+          "picked_s": 485.92,
+          "delivered_s": 520.02,
+          "confirmed_round": 93,
+          "original_position_m": {
+            "x": -0.30539259017665177,
+            "z": 1.4991445231402152
+          },
+          "delivery_witness_id": null,
+          "delivered_position_m": {
+            "x": 0.9645688275624887,
+            "z": -0.06684928606933815
+          },
+          "accepted_hit_poses": [
+            {
+              "frame_id": "524",
+              "simulation_time_s": 421.74,
+              "x_m": -0.003,
+              "z_m": 0.524,
+              "heading_deg": 0.8
+            },
+            {
+              "frame_id": "554",
+              "simulation_time_s": 435.48,
+              "x_m": -0.003,
+              "z_m": 1.115,
+              "heading_deg": 45.7
+            },
+            {
+              "frame_id": "596",
+              "simulation_time_s": 464.52,
+              "x_m": 0.307,
+              "z_m": 2.053,
+              "heading_deg": 126.1
+            },
+            {
+              "frame_id": "604",
+              "simulation_time_s": 470.54,
+              "x_m": 0.152,
+              "z_m": 1.9269999999999998,
+              "heading_deg": 139.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "wm_position_error": {
+    "count": 29,
+    "mean_cm": 7.388058989913361,
+    "rmse_cm": 7.407041118849331,
+    "max_cm": 8.246669237317937
+  },
+  "wm_unmatched_confirmed_count": 71,
+  "ambiguous_track_ids": {
+    "target_021": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "target_140": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ]
+  },
+  "judge_counts": {
+    "match": 2,
+    "false_positive": 0,
+    "false_negative": 0,
+    "unverifiable": 3,
+    "not_evaluated": 176,
+    "eligible_actions": 5
+  },
+  "done_action_count": 0,
+  "final_U": 32,
+  "final_node_count": 41,
+  "final_holding": {
+    "holding": false
+  },
+  "final_road": {
+    "onRoad": true,
+    "lateralOffsetCm": 0,
+    "headingErrorDeg": 0,
+    "leftClearanceCm": 8.6,
+    "rightClearanceCm": 8.6,
+    "frontClearanceCm": 34.5,
+    "atJunction": false,
+    "atNode": true,
+    "exits": [
+      {
+        "angleDeg": -180
+      }
+    ],
+    "tick": 43066
+  },
+  "exploration_decisions": [
+    {
+      "round": 1,
+      "U": 1,
+      "node_count": 1,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        0
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 2,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90,
+        0.8,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 3,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 4,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 5,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 6,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 7,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 8,
+      "U": 3,
+      "node_count": 2,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 9,
+      "U": 4,
+      "node_count": 3,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        87.7,
+        -75.1
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 10,
+      "U": 6,
+      "node_count": 4,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        31.6,
+        -73.3,
+        -165.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.6
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 11,
+      "U": 7,
+      "node_count": 5,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        59.5,
+        -41.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 59.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 12,
+      "U": 7,
+      "node_count": 5,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 13,
+      "U": 7,
+      "node_count": 5,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_requires_road_reposition"
+    },
+    {
+      "round": 14,
+      "U": 7,
+      "node_count": 5,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 15,
+      "U": 8,
+      "node_count": 6,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        70.5,
+        -78.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 70.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 16,
+      "U": 8,
+      "node_count": 6,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_requires_road_reposition"
+    },
+    {
+      "round": 17,
+      "U": 9,
+      "node_count": 7,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 18,
+      "U": 9,
+      "node_count": 7,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_requires_road_reposition"
+    },
+    {
+      "round": 19,
+      "U": 9,
+      "node_count": 7,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 20,
+      "U": 10,
+      "node_count": 8,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        77.6,
+        -60.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 77.6
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 21,
+      "U": 11,
+      "node_count": 9,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        35.5,
+        -63.4
+      ],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_requires_road_reposition"
+    },
+    {
+      "round": 22,
+      "U": 11,
+      "node_count": 9,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -48.8,
+        -147.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -48.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 23,
+      "U": 12,
+      "node_count": 10,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        52.1,
+        -23
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 52.1
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 24,
+      "U": 14,
+      "node_count": 11,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        178.8,
+        103.8,
+        -54.6
+      ],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 25,
+      "U": 14,
+      "node_count": 11,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        128,
+        1.4,
+        -73.6
+      ],
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_021"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "grasp_observed"
+    },
+    {
+      "round": 26,
+      "U": 14,
+      "node_count": 11,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -76.7
+      ],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_007"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "known_route_exhausted_needs_exploration"
+    },
+    {
+      "round": 27,
+      "U": 18,
+      "node_count": 15,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 28,
+      "U": 18,
+      "node_count": 15,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        0.8,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 29,
+      "U": 18,
+      "node_count": 15,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_019"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "known_route_exhausted_needs_exploration"
+    },
+    {
+      "round": 30,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 31,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "known_route_exhausted_needs_exploration"
+    },
+    {
+      "round": 32,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 33,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 34,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 35,
+      "U": 19,
+      "node_count": 16,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 36,
+      "U": 20,
+      "node_count": 17,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        56.6,
+        -102.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 56.6
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 37,
+      "U": 20,
+      "node_count": 17,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_range_not_supported"
+    },
+    {
+      "round": 38,
+      "U": 20,
+      "node_count": 17,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "known_route_exhausted_needs_exploration"
+    },
+    {
+      "round": 39,
+      "U": 20,
+      "node_count": 17,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 40,
+      "U": 20,
+      "node_count": 17,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 41,
+      "U": 21,
+      "node_count": 18,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        22.7,
+        -53.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -53.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 42,
+      "U": 20,
+      "node_count": 18,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -0.7,
+        -89.9
+      ],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 43,
+      "U": 20,
+      "node_count": 18,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -64.4
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -64.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 44,
+      "U": 20,
+      "node_count": 18,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 45,
+      "U": 21,
+      "node_count": 19,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "complete_storage_region_not_unique"
+    },
+    {
+      "round": 46,
+      "U": 21,
+      "node_count": 19,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_064"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_did_not_converge"
+    },
+    {
+      "round": 47,
+      "U": 21,
+      "node_count": 19,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 48,
+      "U": 21,
+      "node_count": 19,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_007"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_target_not_observed"
+    },
+    {
+      "round": 49,
+      "U": 21,
+      "node_count": 19,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        81.9,
+        -153.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 81.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 50,
+      "U": 23,
+      "node_count": 20,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        99.5,
+        9.5,
+        -80.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 99.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 51,
+      "U": 23,
+      "node_count": 20,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 52,
+      "U": 23,
+      "node_count": 20,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_064"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 53,
+      "U": 24,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -22.2
+      ],
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "ball_observed_in_storage"
+    },
+    {
+      "round": 54,
+      "U": 24,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 55,
+      "U": 24,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 56,
+      "U": 24,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        22.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 22.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 57,
+      "U": 23,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        68.2
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 68.2
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 58,
+      "U": 22,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -0.7,
+        -89.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -0.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 59,
+      "U": 22,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 60,
+      "U": 22,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 61,
+      "U": 21,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -75.1
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -75.1
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 62,
+      "U": 20,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -41.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -41.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 63,
+      "U": 19,
+      "node_count": 21,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -63.4
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -63.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 64,
+      "U": 19,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 65,
+      "U": 19,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 66,
+      "U": 19,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 67,
+      "U": 19,
+      "node_count": 21,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 68,
+      "U": 21,
+      "node_count": 22,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        79.2,
+        -81,
+        -180
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 79.2
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 69,
+      "U": 20,
+      "node_count": 22,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        75.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 75.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 70,
+      "U": 19,
+      "node_count": 22,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        65.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 65.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 71,
+      "U": 19,
+      "node_count": 22,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 72,
+      "U": 19,
+      "node_count": 22,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 73,
+      "U": 18,
+      "node_count": 22,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90.8,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 74,
+      "U": 20,
+      "node_count": 23,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90.7,
+        1.4,
+        -89.3
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 75,
+      "U": 23,
+      "node_count": 24,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90.7,
+        0,
+        -90.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 76,
+      "U": 23,
+      "node_count": 24,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 77,
+      "U": 22,
+      "node_count": 24,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90,
+        0
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 78,
+      "U": 22,
+      "node_count": 24,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 79,
+      "U": 22,
+      "node_count": 24,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 80,
+      "U": 25,
+      "node_count": 25,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90,
+        -12.5,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -12.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 81,
+      "U": 24,
+      "node_count": 25,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -53.9,
+        -53.9,
+        -53.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -53.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 82,
+      "U": 24,
+      "node_count": 25,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -89.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -89.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 83,
+      "U": 24,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 84,
+      "U": 24,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 85,
+      "U": 24,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 86,
+      "U": 23,
+      "node_count": 25,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        1.4,
+        -89.3
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 1.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 87,
+      "U": 23,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 88,
+      "U": 23,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 89,
+      "U": 23,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 90,
+      "U": 23,
+      "node_count": 25,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 91,
+      "U": 25,
+      "node_count": 26,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90.7,
+        -6.5,
+        -89.3
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 92,
+      "U": 28,
+      "node_count": 27,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        83.9,
+        1,
+        -89.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 83.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 93,
+      "U": 28,
+      "node_count": 27,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 94,
+      "U": 28,
+      "node_count": 27,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_112"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "visual_standoff_requires_road_reposition"
+    },
+    {
+      "round": 95,
+      "U": 28,
+      "node_count": 27,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 96,
+      "U": 28,
+      "node_count": 27,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "target_112"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 97,
+      "U": 31,
+      "node_count": 28,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        150.9,
+        60.3,
+        -29.1
+      ],
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_112"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "grasp_observed"
+    },
+    {
+      "round": 98,
+      "U": 31,
+      "node_count": 28,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "go_to",
+        "params": {
+          "object_id": "storage-zone_047"
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "target_seen_at_standoff"
+    },
+    {
+      "round": 99,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "ball_observed_in_storage"
+    },
+    {
+      "round": 100,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 101,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        55.5,
+        55.5,
+        55.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 55.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 102,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 103,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 104,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        9.5,
+        -80.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 9.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 105,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 106,
+      "U": 29,
+      "node_count": 29,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 107,
+      "U": 28,
+      "node_count": 29,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        90,
+        -90,
+        -180
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 108,
+      "U": 27,
+      "node_count": 30,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 109,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        77.5,
+        0,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 77.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 110,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 111,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 112,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 113,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 114,
+      "U": 30,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 115,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -53.9,
+        -53.9,
+        -53.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -53.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 116,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -89.9,
+        89.3,
+        -89.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 89.3
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 117,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -178.8,
+        -178.8,
+        -178.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -178.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 118,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        0.8,
+        -90,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 119,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -180,
+        -180,
+        -180
+      ],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 120,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -180,
+        -180,
+        -180
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 121,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        0.8,
+        -90,
+        -90
+      ],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 122,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        0.8,
+        -90,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 123,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 124,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 125,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 126,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 127,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 128,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -75.1,
+        -75.1,
+        -75.1
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 129,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        31.6,
+        -73.3,
+        31.6
+      ],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 130,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        31.6,
+        -73.3,
+        31.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -165.6
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 131,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        31.6,
+        -73.3,
+        31.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.6
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 132,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        59.5,
+        59.5,
+        59.5
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 133,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        65.8,
+        -26.5,
+        65.8
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 65.8
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 134,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 135,
+      "U": 29,
+      "node_count": 31,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -90
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 136,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -180,
+        -180,
+        -180
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 137,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        0.8,
+        -90,
+        -90
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 90
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 138,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 139,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 140,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 141,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -75.1,
+        -75.1,
+        -75.1
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 87.7
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 142,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 143,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "road_blocked_returned_to_junction"
+    },
+    {
+      "round": 144,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        31.6,
+        31.6,
+        -73.3
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.6
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 145,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        59.5,
+        59.5,
+        -180
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 59.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 146,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -78.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -78.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 147,
+      "U": 28,
+      "node_count": 31,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 148,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        31.7,
+        -97.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 31.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 149,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 150,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 151,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 152,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 153,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 154,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 155,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 156,
+      "U": 29,
+      "node_count": 32,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 157,
+      "U": 30,
+      "node_count": 33,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        78.4,
+        -103.2
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 78.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 158,
+      "U": 29,
+      "node_count": 34,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -180
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 159,
+      "U": 31,
+      "node_count": 35,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        12.3,
+        -64.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 12.3
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 160,
+      "U": 32,
+      "node_count": 36,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        25.4,
+        -72.1
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 25.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 161,
+      "U": 32,
+      "node_count": 36,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 162,
+      "U": 32,
+      "node_count": 36,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 163,
+      "U": 31,
+      "node_count": 36,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        0
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 164,
+      "U": 31,
+      "node_count": 36,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 165,
+      "U": 31,
+      "node_count": 36,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 166,
+      "U": 31,
+      "node_count": 36,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 167,
+      "U": 32,
+      "node_count": 37,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        94.5,
+        -63
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 94.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 168,
+      "U": 31,
+      "node_count": 38,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 179.9
+        }
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 169,
+      "U": 33,
+      "node_count": 39,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        21.4,
+        -95.6
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 21.4
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_at_junction"
+    },
+    {
+      "round": 170,
+      "U": 34,
+      "node_count": 40,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -16.7,
+        -133.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -16.7
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "road_blocked_at_junction"
+    },
+    {
+      "round": 171,
+      "U": 33,
+      "node_count": 40,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        -132.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": -132.9
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 172,
+      "U": 33,
+      "node_count": 40,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "full_circle_views_observed"
+    },
+    {
+      "round": 173,
+      "U": 33,
+      "node_count": 40,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 174,
+      "U": 33,
+      "node_count": 40,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 175,
+      "U": 35,
+      "node_count": 41,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        89.5,
+        0.2,
+        -96.9
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 89.5
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_observed"
+    },
+    {
+      "round": 176,
+      "U": 35,
+      "node_count": 41,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 177,
+      "U": 35,
+      "node_count": 41,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 178,
+      "U": 34,
+      "node_count": 41,
+      "hint_kinds": [
+        "current_fresh_unexplored",
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        89.3,
+        -90.7
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 89.3
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "new_objects_confirmed"
+    },
+    {
+      "round": 179,
+      "U": 34,
+      "node_count": 41,
+      "hint_kinds": [],
+      "hint_angles": [],
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "selected_suggested_angle": false,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 180,
+      "U": 33,
+      "node_count": 41,
+      "hint_kinds": [
+        "current_fresh_unexplored"
+      ],
+      "hint_angles": [
+        0
+      ],
+      "action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 0
+        }
+      },
+      "selected_suggested_angle": true,
+      "result": "next_junction_observed"
+    },
+    {
+      "round": 181,
+      "U": 32,
+      "node_count": 41,
+      "hint_kinds": [
+        "recorded_directed_route",
+        "recorded_directed_route",
+        "recorded_directed_route"
+      ],
+      "hint_angles": [
+        -180,
+        -180,
+        -180
+      ],
+      "action": {},
+      "selected_suggested_angle": false,
+      "result": "LLM request failed: HTTPError HTTP 429; see transcript"
+    }
+  ],
+  "replay": {
+    "allPass": true,
+    "replayed_rounds": 181,
+    "replayed_calls": 190,
+    "all_records_consumed": true,
+    "full_records_equal_except_mode": true,
+    "network_calls": 0,
+    "environment_access_attempts": 0
+  },
+  "inputs": {
+    "artifacts/autonomous-brain/map05-run-21/report/evaluation.json": {
+      "bytes": 194996,
+      "sha256": "ff6d4b967bfb14940470782922e4c488c9052ed3bbaea7b0a83037fc288a759a"
+    },
+    "artifacts/autonomous-brain/map05-run-21/llm-replay/replay-checks.json": {
+      "bytes": 213107,
+      "sha256": "750d1f28bc942f5d8adacb83b10d8e029eec7ae5f9957b5b207b2ea8cdaf793d"
+    },
+    "artifacts/autonomous-brain/run21-archive-tools-20260926/archive_completed.py": {
+      "bytes": 10414,
+      "sha256": "33a249c15680f3d7267e192aec2a8302a68b521d0aed16ddb838d5ebf162c788"
+    }
+  }
+}
