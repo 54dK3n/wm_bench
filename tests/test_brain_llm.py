@@ -66,6 +66,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             saved = records(path)[0]  # visible even before close
             request = send.call_args.args[0]
             body = json.loads(request.data)
+            assert send.call_args.kwargs["timeout"] == 180
             assert request.full_url == "https://model.example/v1/chat/completions"
             assert request.headers["Authorization"] == "Bearer never-record-this-key"
             assert body["model"] == "configured-model"
@@ -76,11 +77,58 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v4"
+            assert saved["version"] == "autonomous-brain-llm/v5"
+            assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
             assert saved["response_model"] == "served-model"
             assert "never-record-this-key" not in path.read_text()
+
+
+@pytest.mark.parametrize("timeout_s", [15, 0.25])
+def test_explicit_transport_timeout_is_sent_logged_and_preserved_in_replay(tmp_path, state, timeout_s):
+    path = tmp_path / "live.jsonl"
+    with patch("urllib.request.urlopen", return_value=response('{"action":"look_around","params":{}}')) as send:
+        with LLMClient(path, timeout_s=timeout_s) as live:
+            expected = live.decide(state)
+    assert send.call_args.kwargs["timeout"] == timeout_s
+    saved = records(path)[0]
+    assert saved["transport_timeout_s"] == timeout_s
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            assert replay.decide(state) == expected
+            replay.assert_replay_consumed()
+    replayed = records(tmp_path / "replay.jsonl")[0]
+    assert {k: v for k, v in replayed.items() if k != "mode"} == {
+        k: v for k, v in saved.items() if k != "mode"}
+
+
+def test_old_v4_timeout_error_replays_without_new_timeout_metadata_or_retry(tmp_path, state):
+    path = tmp_path / "v4-timeout.jsonl"
+    with patch("urllib.request.urlopen", side_effect=TimeoutError("never-record-this-key")) as send:
+        with LLMClient(path, timeout_s=60) as live:
+            with pytest.raises(LLMRequestError, match="TimeoutError") as original_error:
+                live.decide(state)
+            assert send.call_count == live.call_count == 1
+    saved = records(path)[0]
+    assert saved.pop("transport_timeout_s") == 60
+    saved["version"] = "autonomous-brain-llm/v4"
+    path.write_text(json.dumps(saved) + "\n")
+    with patch("autonomous_brain.llm.os.environ.get", side_effect=AssertionError("read environment")), \
+            patch("urllib.request.urlopen", side_effect=AssertionError("network")):
+        with LLMClient(tmp_path / "replay.jsonl", replay_path=path) as replay:
+            with pytest.raises(LLMRequestError) as replay_error:
+                replay.decide(state)
+            assert str(replay_error.value) == str(original_error.value)
+            assert replay.call_count == 1
+            replay.assert_replay_consumed()
+            with pytest.raises(RuntimeError, match="stopped"):
+                replay.decide(state)
+    replayed = records(tmp_path / "replay.jsonl")[0]
+    assert "transport_timeout_s" not in replayed
+    assert {k: v for k, v in replayed.items() if k != "mode"} == {
+        k: v for k, v in saved.items() if k != "mode"}
 
 
 @pytest.mark.parametrize("temperature", ["0", "0.0", "0.7", "2"])
@@ -392,7 +440,8 @@ def test_http_protocol_exception_without_partial_body_is_recorded(tmp_path, stat
     assert saved["transport_error"] == {"type": "BadStatusLine"}
 
 
-@pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2"])
+@pytest.mark.parametrize("version", ["autonomous-brain-llm/v1", "autonomous-brain-llm/v2",
+                                     "autonomous-brain-llm/v3", "autonomous-brain-llm/v4"])
 def test_old_transcripts_keep_version_and_integer_zero_without_environment(
         tmp_path, state, version):
     path = tmp_path / "legacy.jsonl"
@@ -401,6 +450,7 @@ def test_old_transcripts_keep_version_and_integer_zero_without_environment(
             client.decide(state)
     saved = records(path)[0]
     saved["version"] = version
+    saved.pop("transport_timeout_s")
     assert type(saved["request"]["temperature"]) is int
     assert "thinking" not in saved["request"]
     path.write_text(json.dumps(saved) + "\n")

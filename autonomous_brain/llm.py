@@ -20,8 +20,8 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v4"
-SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", "autonomous-brain-llm/v3", VERSION}
+VERSION = "autonomous-brain-llm/v5"
+SUPPORTED_TRANSCRIPT_VERSIONS = {"autonomous-brain-llm/v1", "autonomous-brain-llm/v2", "autonomous-brain-llm/v3", "autonomous-brain-llm/v4", VERSION}
 SYSTEM_PROMPT = """你在真实传感器约束下控制小车，每轮只决定一个动作。环境事实仅来自下面的状态 JSON；不能假定物体总数、布局或未观测信息。
 只输出一个 JSON 对象，严格格式：{"action":"动作名","params":{}}，不加说明、代码块或额外字段。
 动作：explore 的 params 为 {} 或 {"exit_angle":相对当前朝向的有限数字角度}；look_around、place、done 的 params 必须为 {}；go_to、pick 的 params 必须为 {"object_id":"物体表中的 id"}。
@@ -167,7 +167,7 @@ class LLMClient:
     """
 
     def __init__(self, log_path: str | Path, replay_path: str | Path | None = None,
-                 timeout_s: float = 60, *, model: str | None = None) -> None:
+                 timeout_s: float = 180, *, model: str | None = None) -> None:
         if not _finite_number(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout_s must be positive and finite")
         self.timeout_s = timeout_s
@@ -305,8 +305,11 @@ class LLMClient:
             record["elapsed_s"] = elapsed
             record["response_body"] = replay_record.get("response_body")
             record["transport_error"] = replay_record.get("transport_error")
+            if "transport_timeout_s" in replay_record:
+                record["transport_timeout_s"] = replay_record["transport_timeout_s"]
             self._replay_cursor += 1
         else:
+            record["transport_timeout_s"] = self.timeout_s
             outbound = urllib.request.Request(
                 f"{self._base_url}/chat/completions",
                 data=_canonical(request).encode("utf-8"),

@@ -26,7 +26,7 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 
 上限为 200 轮和仿真 1200 秒，到限失败。driver 同时给平台设置 1200 秒硬上限。`--max-rounds`、`--max-simulation-seconds` 只允许降低上限，供联调使用；联调结果不充当正式成功局。
 
-大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。任务要求仍以用户最新授权为准，模型不接受原参数时不能自动换温度。仅不合法输出重试一次，仍非法停止；网络或 HTTP 错误立即停止，不自动降级模型、温度或输出格式。日志记录实际请求参数，不记录 API 密钥或机器人凭证；回放从记录恢复采样参数。
+大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。任务要求仍以用户最新授权为准，模型不接受原参数时不能自动换温度。仅不合法输出重试一次，仍非法停止；网络或 HTTP 错误立即停止，不自动降级模型、温度或输出格式。日志记录实际请求参数，不记录 API 密钥或机器人凭证；回放从记录恢复采样参数。客户端 v5 将默认单次网络等待上限设为 180 秒，并在新调用日志的 `transport_timeout_s` 记录实际值；这不改变 1200 秒仿真上限，网络错误仍立即停止。旧版本记录回放不补写新字段。
 
 ## 大脑模块
 
