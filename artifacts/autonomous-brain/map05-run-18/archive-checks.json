@@ -1,0 +1,80 @@
+{
+  "schema": "autonomous-brain-archive-checks/v3",
+  "archive_status": "complete_archive_of_interrupted_run_with_missing_child_summary",
+  "task_verdict": "FAIL",
+  "independent_valid_deliveries": 2,
+  "expected_targets": 2,
+  "missing_original_files": [
+    "artifacts/autonomous-brain/map05-run-18/map-05-run-1/brain/summary.json"
+  ],
+  "missing_child_summary_fabricated": false,
+  "original_input_baseline": "artifacts/autonomous-brain/map05-run-18/original-input-hashes.json",
+  "original_file_count": 24,
+  "all_original_files_unchanged": true,
+  "changed_original_files": [],
+  "protected_prior_file_count": 74,
+  "all_protected_prior_files_unchanged": true,
+  "changed_protected_prior_files": [],
+  "source_proof": {
+    "path": "artifacts/autonomous-brain/map05-run-18/source-commit.json",
+    "eight_git_before_after_equal": true,
+    "before_after_manifest_equal": true,
+    "driver_sourcesUnchanged": true,
+    "missing_child_summary_limitation_preserved": true
+  },
+  "exports": {
+    "five_platform_datasets_complete": true,
+    "gzip_crc_and_hashes_match": true,
+    "envelope_matches": true
+  },
+  "record_chunks": {
+    "manifest": "artifacts/autonomous-brain/map05-run-18/record-chunks/manifest.json",
+    "restore_byte_for_byte_equal": true,
+    "restore_sha256_pass": true,
+    "original_ignored_by_git": true,
+    "exact_ignore_entry": "/artifacts/autonomous-brain/map05-run-18/map-05-run-1/record.json.gz",
+    "temporary_restored_duplicate_absent": true
+  },
+  "offline_llm_replay": {
+    "allPass": true,
+    "rounds": 167,
+    "calls": 200,
+    "all_records_consumed": true,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "unrecorded_round_168_not_recreated": true,
+    "llm_client_sha256_matches_frozen_manifest": true,
+    "llm_client_sha256": "cd4ac7b3f3534cb53c73388205c3a750b73bd175725ddc26411bc39b369defab"
+  },
+  "evaluation_failures_preserved": [
+    "missing_input:brain/summary.json",
+    "source_proof_brain_summary_hash_mismatch",
+    "brain_did_not_finish_with_observed_done",
+    "terminal_done_not_corroborated",
+    "execution_or_controller_error"
+  ],
+  "process_interruption": "driver_wall_timeout",
+  "terminal_signal": "SIGTERM",
+  "observed_done": false,
+  "no_execution_failure_round_fabricated": true,
+  "road_state_reconstruction": {
+    "scope": "offline reconstruction from frozen navigation source and public observations/motions; not a child summary or fabricated model request",
+    "observation_index": 1116,
+    "recorded_model_states_checked": 167,
+    "mismatched_rounds": [],
+    "observed_junction_count": 36,
+    "unexplored_exit_count": 25,
+    "saved_exit_count": 121
+  },
+  "publication_checks": "artifacts/autonomous-brain/map05-run-18/publication-checks.json",
+  "evidence_sha256": {
+    "artifacts/autonomous-brain/map05-run-18/source-commit.json": "ef7d5a6621e0d6a4d0bc4806b277cba549fbfe8c259d6d04aee63912aad4c868",
+    "artifacts/autonomous-brain/map05-run-18/archive-integrity.json": "e1438fef6cd79d3bb3125ab7413dfae8495c24ac61443187274053c975817eb4",
+    "artifacts/autonomous-brain/map05-run-18/run-metrics.json": "1c8375a5bad54ee63d1a7647e768f2b9295a87d41a79831de7013706548d8a50",
+    "artifacts/autonomous-brain/map05-run-18/FAILURE_ANALYSIS.md": "0e767f743825b32e0fbad2e1163d1828eb34bd83039864dcf0bd3f3178a71f81",
+    "artifacts/autonomous-brain/map05-run-18/llm-replay/replay-checks.json": "902112dd2eec0ec9b42d114694830ab881ccf1a510aaf34ea512dd44d549ac52",
+    "artifacts/autonomous-brain/map05-run-18/report/evaluation.json": "b2dfcb6b060c8f37c7b2a7ae94558e693306fb56fe0a0a17f51e58b0223c7e7a",
+    "artifacts/autonomous-brain/map05-run-18/record-chunks/manifest.json": "35c004bc7228e19945e80d116592e8ff5648fa2b2f2a8f20359f004a0c31ca0a",
+    "artifacts/autonomous-brain/map05-run-18/record-chunks/restore-checks.json": "4a2763879a24d0082ee5b6c603d57cf7664e5446b4ea3cce7a20f58d96921e3b"
+  }
+}

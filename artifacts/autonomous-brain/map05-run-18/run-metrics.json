@@ -1,0 +1,1105 @@
+{
+  "schema": "autonomous-brain-run-metrics/v3",
+  "scope": "Recomputed from preserved JSONL and end-of-run driver/evaluator evidence; no fabricated child summary.",
+  "source_commit": "258ebab8555344805eabd1c5b2fe4773d97d7df2",
+  "verdict": "FAIL",
+  "completed_rounds": 167,
+  "last_completed_round": 167,
+  "started_round": 168,
+  "observation_count": 1116,
+  "final_observation_index": 1116,
+  "final_simulation_seconds": 855.94,
+  "final_tick": 42797,
+  "saved_llm_calls": 200,
+  "last_saved_llm_decision_index": 167,
+  "saved_llm_elapsed_s_fsum": 6663.330369920001,
+  "saved_llm_retry_delay_s_fsum": 27.0,
+  "driver_wall_seconds": 7200.663,
+  "driver_interruption": "driver_wall_timeout",
+  "driver_signal": "SIGTERM",
+  "brain_summary_present": false,
+  "brain_summary_wall_elapsed_s": null,
+  "unrecorded_request_count": null,
+  "unrecorded_request_elapsed_s": null,
+  "unrecorded_request_outcome": null,
+  "action_counts": {
+    "explore": 102,
+    "look_around": 48,
+    "go_to": 12,
+    "pick": 3,
+    "place": 2
+  },
+  "action_success_count": 144,
+  "action_failure_count": 23,
+  "no_action_completed_round_count": 0,
+  "failed_action_rounds_by_reason": {
+    "road_blocked_returned_to_junction": [
+      8,
+      22,
+      62,
+      71,
+      94,
+      113,
+      122,
+      123,
+      127,
+      128,
+      130,
+      135,
+      142,
+      143,
+      166
+    ],
+    "visual_standoff_requires_road_reposition": [
+      21,
+      81,
+      83
+    ],
+    "known_route_exhausted_needs_exploration": [
+      25,
+      28,
+      31
+    ],
+    "three_grab_attempts_failed": [
+      87
+    ],
+    "route_no_progress": [
+      90
+    ]
+  },
+  "motion_count": 781,
+  "motion_counts": {
+    "take_exit": 83,
+    "turn": 500,
+    "follow_road": 151,
+    "forward": 24,
+    "grab": 8,
+    "backward": 13,
+    "release": 2
+  },
+  "bridge_call_count": 5246,
+  "bridge_terminal_counts": {
+    "completed": 5246
+  },
+  "transport_error_count": 20,
+  "transport_errors": [
+    {
+      "call_index": 20,
+      "decision_index": 19,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 32.567672125,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      }
+    },
+    {
+      "call_index": 40,
+      "decision_index": 38,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 89.7906224169999,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 42,
+      "decision_index": 39,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 77.82860920899998,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 54,
+      "decision_index": 47,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 64.07554866700002,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 55,
+      "decision_index": 47,
+      "attempt": 1,
+      "transport_retry_index": 1,
+      "transport_retry_delay_s": 1,
+      "elapsed_s": 63.61339966700007,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 62,
+      "decision_index": 53,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 65.35191962500016,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 64,
+      "decision_index": 54,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 123.61558824999997,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 65,
+      "decision_index": 54,
+      "attempt": 1,
+      "transport_retry_index": 1,
+      "transport_retry_delay_s": 1,
+      "elapsed_s": 34.01688549999972,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      }
+    },
+    {
+      "call_index": 66,
+      "decision_index": 54,
+      "attempt": 1,
+      "transport_retry_index": 2,
+      "transport_retry_delay_s": 2,
+      "elapsed_s": 79.36448354100003,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 80,
+      "decision_index": 67,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 83.65219995899997,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 81,
+      "decision_index": 67,
+      "attempt": 1,
+      "transport_retry_index": 1,
+      "transport_retry_delay_s": 1,
+      "elapsed_s": 49.47630404199981,
+      "transport_error": {
+        "type": "RemoteDisconnected"
+      }
+    },
+    {
+      "call_index": 84,
+      "decision_index": 69,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 86.67455066699995,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 87,
+      "decision_index": 71,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 72.83907816700003,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 106,
+      "decision_index": 86,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 70.3930006659998,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 111,
+      "decision_index": 90,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 78.33695575000002,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 113,
+      "decision_index": 91,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 69.16681941699972,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 122,
+      "decision_index": 98,
+      "attempt": 2,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 73.5221552920002,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 151,
+      "decision_index": 123,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 72.21348975000001,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 152,
+      "decision_index": 123,
+      "attempt": 1,
+      "transport_retry_index": 1,
+      "transport_retry_delay_s": 1,
+      "elapsed_s": 72.7659979580003,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    },
+    {
+      "call_index": 188,
+      "decision_index": 158,
+      "attempt": 1,
+      "transport_retry_index": 0,
+      "transport_retry_delay_s": 0,
+      "elapsed_s": 64.90224383300028,
+      "transport_error": {
+        "status": 502,
+        "type": "HTTPError"
+      }
+    }
+  ],
+  "validation_error_count": 13,
+  "validation_errors": [
+    {
+      "call_index": 10,
+      "decision_index": 10,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 43,
+      "decision_index": 39,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 45,
+      "decision_index": 40,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 52,
+      "decision_index": 46,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 88,
+      "decision_index": 71,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 92,
+      "decision_index": 74,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 96,
+      "decision_index": 77,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 121,
+      "decision_index": 98,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 125,
+      "decision_index": 100,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 128,
+      "decision_index": 102,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 147,
+      "decision_index": 120,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 190,
+      "decision_index": 159,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    },
+    {
+      "call_index": 192,
+      "decision_index": 160,
+      "attempt": 1,
+      "validation_error": "go_to requires a CONFIRMED object"
+    }
+  ],
+  "pick_place_timeline": [
+    {
+      "round": 24,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_032"
+        }
+      },
+      "success": true,
+      "reason": "grasp_observed",
+      "result_simulation_seconds": 109.06,
+      "result_after_observation": 157,
+      "final_observation": 158,
+      "holding": true,
+      "object_id": "target_032",
+      "candidate_witnesses": null,
+      "placement": null,
+      "release_observation": null,
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 157,
+        "after_observation": 157,
+        "motions": []
+      },
+      "attempts": [
+        {
+          "method": "grab",
+          "before_observation": 149,
+          "after_observation": 150,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 104.14,
+          "actuator_result": {
+            "completed": true
+          }
+        },
+        {
+          "method": "grab",
+          "before_observation": 151,
+          "after_observation": 152,
+          "before_holding": false,
+          "after_holding": true,
+          "after_simulation_seconds": 105.86,
+          "actuator_result": {
+            "completed": true
+          }
+        }
+      ],
+      "source_evidence_observations": {
+        "before_observation": 146,
+        "after_observation": 157,
+        "frame_id": 157,
+        "post_observation": 157,
+        "old_position_matches": 0
+      }
+    },
+    {
+      "round": 36,
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "success": true,
+      "reason": "ball_observed_in_storage",
+      "result_simulation_seconds": 223.2,
+      "result_after_observation": 260,
+      "final_observation": 261,
+      "holding": false,
+      "object_id": "target_032",
+      "candidate_witnesses": 1,
+      "placement": {
+        "ball_track_id": null,
+        "ball_category": "red-ball",
+        "ball_position_m": {
+          "x": 1.0305423846706816,
+          "z": -0.061244257995067386
+        },
+        "ball_bbox": {
+          "x": 282.0,
+          "y": 210.0,
+          "w": 72.0,
+          "h": 60.0
+        },
+        "storage_bbox": {
+          "x": 182.0,
+          "y": 239.0,
+          "w": 269.0,
+          "h": 49.0
+        },
+        "frame_id": 260
+      },
+      "release_observation": {
+        "frame_id": 259,
+        "simulation_time_s": 220.52,
+        "preexisting_ball_ids": [
+          "target_021",
+          "target_054"
+        ]
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 260,
+        "after_observation": 260,
+        "motions": []
+      },
+      "attempts": [
+        {
+          "method": "release",
+          "before_observation": 258,
+          "after_observation": 259,
+          "before_holding": true,
+          "after_holding": false,
+          "after_simulation_seconds": 220.52,
+          "actuator_result": {
+            "completed": true
+          }
+        }
+      ],
+      "source_evidence_observations": {
+        "before_observation": 254,
+        "after_observation": 260,
+        "frame_id": 260,
+        "post_observation": 260
+      }
+    },
+    {
+      "round": 87,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_114"
+        }
+      },
+      "success": false,
+      "reason": "three_grab_attempts_failed",
+      "result_simulation_seconds": 421.18,
+      "result_after_observation": 570,
+      "final_observation": 571,
+      "holding": false,
+      "object_id": "target_114",
+      "candidate_witnesses": null,
+      "placement": null,
+      "release_observation": null,
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 570,
+        "after_observation": 570,
+        "motions": []
+      },
+      "attempts": [
+        {
+          "method": "grab",
+          "before_observation": 565,
+          "after_observation": 566,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 417.46,
+          "actuator_result": {
+            "completed": true
+          }
+        },
+        {
+          "method": "grab",
+          "before_observation": 567,
+          "after_observation": 568,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 419.32,
+          "actuator_result": {
+            "completed": true
+          }
+        },
+        {
+          "method": "grab",
+          "before_observation": 569,
+          "after_observation": 570,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 421.18,
+          "actuator_result": {
+            "completed": true
+          }
+        }
+      ],
+      "source_evidence_observations": {
+        "before_observation": 563,
+        "after_observation": 570,
+        "frame_id": 570,
+        "post_observation": 570
+      }
+    },
+    {
+      "round": 89,
+      "action": {
+        "action": "pick",
+        "params": {
+          "object_id": "target_114"
+        }
+      },
+      "success": true,
+      "reason": "grasp_observed",
+      "result_simulation_seconds": 429.6,
+      "result_after_observation": 585,
+      "final_observation": 586,
+      "holding": true,
+      "object_id": "target_114",
+      "candidate_witnesses": null,
+      "placement": null,
+      "release_observation": null,
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 585,
+        "after_observation": 585,
+        "motions": []
+      },
+      "attempts": [
+        {
+          "method": "grab",
+          "before_observation": 575,
+          "after_observation": 576,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 422.82,
+          "actuator_result": {
+            "completed": true
+          }
+        },
+        {
+          "method": "grab",
+          "before_observation": 577,
+          "after_observation": 578,
+          "before_holding": false,
+          "after_holding": false,
+          "after_simulation_seconds": 424.68,
+          "actuator_result": {
+            "completed": true
+          }
+        },
+        {
+          "method": "grab",
+          "before_observation": 579,
+          "after_observation": 580,
+          "before_holding": false,
+          "after_holding": true,
+          "after_simulation_seconds": 426.4,
+          "actuator_result": {
+            "completed": true
+          }
+        }
+      ],
+      "source_evidence_observations": {
+        "before_observation": 575,
+        "after_observation": 585,
+        "frame_id": 585,
+        "post_observation": 585,
+        "old_position_matches": 0
+      }
+    },
+    {
+      "round": 92,
+      "action": {
+        "action": "place",
+        "params": {}
+      },
+      "success": true,
+      "reason": "ball_observed_in_storage",
+      "result_simulation_seconds": 473.98,
+      "result_after_observation": 624,
+      "final_observation": 625,
+      "holding": false,
+      "object_id": "target_114",
+      "candidate_witnesses": 1,
+      "placement": {
+        "ball_track_id": null,
+        "ball_category": "red-ball",
+        "ball_position_m": {
+          "x": 0.9645688275624887,
+          "z": -0.06684928606933815
+        },
+        "ball_bbox": {
+          "x": 276.0,
+          "y": 210.0,
+          "w": 88.0,
+          "h": 62.0
+        },
+        "storage_bbox": {
+          "x": 96.0,
+          "y": 248.0,
+          "w": 290.0,
+          "h": 48.0
+        },
+        "frame_id": 624
+      },
+      "release_observation": {
+        "frame_id": 623,
+        "simulation_time_s": 471.3,
+        "preexisting_ball_ids": [
+          "target_021",
+          "target_032",
+          "target_054",
+          "target_098",
+          "target_101"
+        ]
+      },
+      "road_return": {
+        "success": true,
+        "reason": "already_on_observed_road",
+        "on_road": true,
+        "anchor_observation": 624,
+        "after_observation": 624,
+        "motions": []
+      },
+      "attempts": [
+        {
+          "method": "release",
+          "before_observation": 622,
+          "after_observation": 623,
+          "before_holding": true,
+          "after_holding": false,
+          "after_simulation_seconds": 471.3,
+          "actuator_result": {
+            "completed": true
+          }
+        }
+      ],
+      "source_evidence_observations": {
+        "before_observation": 618,
+        "after_observation": 624,
+        "frame_id": 624,
+        "post_observation": 624
+      }
+    }
+  ],
+  "red_track_timeline": [
+    {
+      "object_id": "target_032",
+      "first_observed": {
+        "round": 13,
+        "observation_index": 75,
+        "simulation_seconds": 54.02
+      },
+      "first_confirmed": {
+        "round": 20,
+        "observation_index": 123,
+        "simulation_seconds": 81.98
+      },
+      "first_delivered": {
+        "round": 36,
+        "observation_index": 261,
+        "simulation_seconds": 223.2
+      }
+    },
+    {
+      "object_id": "target_114",
+      "first_observed": {
+        "round": 79,
+        "observation_index": 518,
+        "simulation_seconds": 393.74
+      },
+      "first_confirmed": {
+        "round": 80,
+        "observation_index": 527,
+        "simulation_seconds": 400.62
+      },
+      "first_delivered": {
+        "round": 92,
+        "observation_index": 625,
+        "simulation_seconds": 473.98
+      }
+    }
+  ],
+  "done_action_count": 0,
+  "last_completed_action": {
+    "action": "explore",
+    "params": {
+      "exit_angle": -81
+    }
+  },
+  "last_completed_result": {
+    "success": true,
+    "reason": "next_junction_observed",
+    "evidence": {
+      "after_observation": 1114,
+      "frame_id": 1114,
+      "tick": 42797,
+      "holding": false,
+      "before_observation": 1112,
+      "final_observation": 1115
+    }
+  },
+  "last_model_state_road_counts": {
+    "observed_junction_count": 36,
+    "unexplored_exit_count": 26
+  },
+  "final_red_lifecycle": [
+    {
+      "id": "target_021",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_032",
+      "state": "DELIVERED",
+      "completion_classification": "delivered"
+    },
+    {
+      "id": "target_054",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_098",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_101",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_114",
+      "state": "DELIVERED",
+      "completion_classification": "delivered"
+    },
+    {
+      "id": "target_128",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_133",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_136",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_145",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_147",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_149",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_150",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_151",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_152",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_155",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_159",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_165",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_166",
+      "state": "STALE",
+      "completion_classification": "pending"
+    },
+    {
+      "id": "target_181",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    },
+    {
+      "id": "target_182",
+      "state": "LOST",
+      "completion_classification": "retired_unconfirmed_hypothesis"
+    }
+  ],
+  "independent_evaluation_failures": [
+    "missing_input:brain/summary.json",
+    "source_proof_brain_summary_hash_mismatch",
+    "brain_did_not_finish_with_observed_done",
+    "terminal_done_not_corroborated",
+    "execution_or_controller_error"
+  ],
+  "delivery": {
+    "failures": [
+      "brain_did_not_finish_with_observed_done",
+      "terminal_done_not_corroborated",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "delivered_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 42797,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 0.36791785992256437,
+        "position_world": [
+          -10.696151,
+          -7.711193
+        ],
+        "events": [
+          {
+            "event_index": 2,
+            "seq": 1927,
+            "type": "package_grabbed",
+            "tick": 5279,
+            "simulation_seconds": 105.58,
+            "package_id": "guangyang-target-1"
+          },
+          {
+            "event_index": 5,
+            "seq": 3698,
+            "type": "package_delivered",
+            "tick": 11005,
+            "simulation_seconds": 220.1,
+            "package_id": "guangyang-target-1"
+          }
+        ]
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 42797,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 0.5382247025787638,
+        "position_world": [
+          -10.220325,
+          -8.239171
+        ],
+        "events": [
+          {
+            "event_index": 12,
+            "seq": 7605,
+            "type": "package_grabbed",
+            "tick": 21306,
+            "simulation_seconds": 426.12,
+            "package_id": "guangyang-target-2"
+          },
+          {
+            "event_index": 16,
+            "seq": 8317,
+            "type": "package_delivered",
+            "tick": 23544,
+            "simulation_seconds": 470.88,
+            "package_id": "guangyang-target-2"
+          }
+        ]
+      }
+    ],
+    "rounds": 167,
+    "round_records": 167,
+    "max_rounds": 200,
+    "simulation_seconds": 855.94,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "final_sample_tick": 42797,
+    "simulation_end_tick": 42797,
+    "terminal_done": {
+      "verified": false,
+      "round": 167,
+      "observation_index": 1115,
+      "observation_tick": 42797
+    },
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "judge_summary": {
+    "scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+    "report_only": true,
+    "counts": {
+      "match": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 5,
+      "not_evaluated": 162,
+      "eligible_actions": 5
+    }
+  },
+  "position_error": {
+    "count": 0,
+    "mean_cm": null,
+    "rmse_cm": null,
+    "max_cm": null
+  },
+  "unmatched_confirmed_count": 86,
+  "ambiguous_track_ids": {
+    "target_032": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "target_114": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ]
+  },
+  "evaluation_metrics": {
+    "rounds": 167,
+    "llm_calls": 200,
+    "llm_total_elapsed_s": 6663.330369920001,
+    "simulation_seconds": 855.94,
+    "observations": 1116,
+    "failed_rounds": 23,
+    "failed_actions": 23,
+    "execution_failures": 0,
+    "external_stop_failures": 0,
+    "bridge_calls": 5246,
+    "nonwhitelist_brain_requests": 0
+  },
+  "bridge_method_counts": {
+    "camera_parameters": 1,
+    "odometry": 1116,
+    "local_road": 1116,
+    "holding": 1116,
+    "observe": 1116,
+    "take_exit": 83,
+    "turn": 500,
+    "follow_road": 151,
+    "forward": 24,
+    "grab": 8,
+    "backward": 13,
+    "release": 2
+  },
+  "transport_error_types": {
+    "RemoteDisconnected": 3,
+    "HTTPError": 17
+  },
+  "validation_error_reasons": {
+    "go_to requires a CONFIRMED object": 13
+  },
+  "final_red_lifecycle_counts": {
+    "retired_unconfirmed_hypothesis": 18,
+    "delivered": 2,
+    "pending": 1
+  },
+  "derived_final_road_memory": {
+    "scope": "offline reconstruction from frozen navigation source and public observations/motions; not a child summary or fabricated model request",
+    "observation_index": 1116,
+    "recorded_model_states_checked": 167,
+    "mismatched_rounds": [],
+    "observed_junction_count": 36,
+    "unexplored_exit_count": 25,
+    "saved_exit_count": 121
+  },
+  "transport_retry_limit": 5,
+  "max_saved_transport_retry_index": 3,
+  "transport_timeout_s": 180
+}

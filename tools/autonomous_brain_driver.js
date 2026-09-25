@@ -13,7 +13,7 @@ const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v5";
+const VERSION = "wm-autonomous-brain-driver/v6";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -64,7 +64,7 @@ function loadLocalLLMConfig(file = path.join(ROOT, ".env.local"), env = process.
 function parseArgs(argv) {
   const options = {maps: ["map-05"], runs: 1,
     platformRoot: process.env.GUANGYANG_PLATFORM_ROOT || path.join(ROOT, "workspaces/guangyang-platform/projects/car-python"),
-    python: process.env.BRAIN_PYTHON || "python3", timeoutMs: 120000, wallTimeoutSeconds: 7200,
+    python: process.env.BRAIN_PYTHON || "python3", timeoutMs: 120000, wallTimeoutSeconds: 0,
     maxRounds: 200, maxSimulationSeconds: 1200, task: "把地图上的红球都送到绿色存放区"};
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i], value = argv[++i];
@@ -87,7 +87,8 @@ function parseArgs(argv) {
   assert.ok(options.maps.length && new Set(options.maps).size === options.maps.length
     && options.maps.every(id => /^map-(0[1-9]|10)$/.test(id)), "--maps accepts distinct map-01..map-10");
   assert.ok(Number.isSafeInteger(options.runs) && options.runs >= 1 && options.runs <= 10, "invalid --runs");
-  for (const key of ["timeoutMs", "wallTimeoutSeconds", "maxRounds", "maxSimulationSeconds"]) assert.ok(Number.isFinite(options[key]) && options[key] > 0, `invalid ${key}`);
+  for (const key of ["timeoutMs", "maxRounds", "maxSimulationSeconds"]) assert.ok(Number.isFinite(options[key]) && options[key] > 0, `invalid ${key}`);
+  assert.ok(Number.isFinite(options.wallTimeoutSeconds) && options.wallTimeoutSeconds >= 0, 'invalid wallTimeoutSeconds');
   assert.ok(Number.isInteger(options.maxRounds) && options.maxRounds <= 200, "round cap must be <= 200");
   assert.ok(options.maxSimulationSeconds <= 1200, "simulation cap must be <= 1200 seconds");
   assert.ok(options.task.length > 0 && options.task.length <= 10000, "invalid task");
@@ -497,7 +498,9 @@ async function runBrain(options, directory, capability, origin, evaluate) {
   while (!exited) {
     await Promise.race([completion, delay(1000)]);
     if (exited) break;
-    if (Date.now() - started >= options.wallTimeoutSeconds * 1000) interrupted = 'driver_wall_timeout';
+    // Model service latency does not consume the task's simulation budget.
+    // A wall-clock cutoff is an optional diagnostic control, disabled by default.
+    if (options.wallTimeoutSeconds > 0 && Date.now() - started >= options.wallTimeoutSeconds * 1000) interrupted = 'driver_wall_timeout';
     else {
       const clock = await evaluate('({tick:deterministicSimulator?.tick ?? 0, stepMs:20, status:competitionSession?.status})');
       if (clock.tick * clock.stepMs >= options.maxSimulationSeconds * 1000) interrupted = 'simulation_limit_reached';
@@ -522,6 +525,7 @@ async function runBrain(options, directory, capability, origin, evaluate) {
   const terminal = await completion;
   await Promise.all([new Promise(resolve => stdout.end(resolve)), new Promise(resolve => stderr.end(resolve))]);
   return {...terminal, spawnError, interrupted, wallSeconds: (Date.now() - started) / 1000,
+    wallTimeoutSeconds: options.wallTimeoutSeconds,
     invocation: {module: 'autonomous_brain.run', output: relative(brainDir), replay: options.replay ? relative(options.replay) : null},
     capabilityPassed: {...config, origin: '<local robot bridge>', bridge_id: '<limited robot capability>', client_token: '<not recorded>'}};
 }
@@ -543,6 +547,7 @@ async function main(argv = process.argv.slice(2)) {
   writeJson(path.join(options.out, 'manifest.json'), manifest);
   const summary = {schema: VERSION, status: 'running', maps: options.maps, runsPerMap: options.runs,
     maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds,
+    wallTimeoutSeconds: options.wallTimeoutSeconds,
     task: options.task, platformGatePass: true, trials: [], map05SuccessBeforeRun: map05Passed};
   const {createServer} = require(path.join(options.platformRoot, 'server.js'));
   const contract = require(path.join(options.platformRoot, 'robot-bridge-contract.js'));
@@ -602,7 +607,8 @@ async function main(argv = process.argv.slice(2)) {
       for (let run = 1; run <= options.runs; run++) {
         const directory = path.join(options.out, `${map}-run-${run}`); fs.mkdirSync(directory);
         const trial = {map, run, directory: path.basename(directory), success: false,
-          maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds};
+          maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds,
+          wallTimeoutSeconds: options.wallTimeoutSeconds};
         const errorCursor = cdp.pageErrors.length;
         let started = false, exported = null;
         try {

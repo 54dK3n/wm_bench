@@ -1,0 +1,126 @@
+{
+  "map": "map-05",
+  "run": 1,
+  "directory": "map-05-run-1",
+  "success": false,
+  "maxRounds": 200,
+  "maxSimulationSeconds": 1200,
+  "backendVersion": "robot-backend-v4-stage1-r2",
+  "process": {
+    "code": null,
+    "signal": "SIGTERM",
+    "spawnError": null,
+    "interrupted": "driver_wall_timeout",
+    "wallSeconds": 7200.663,
+    "invocation": {
+      "module": "autonomous_brain.run",
+      "output": "artifacts/autonomous-brain/map05-run-18/map-05-run-1/brain",
+      "replay": null
+    },
+    "capabilityPassed": {
+      "schema": "autonomous-brain-robot-config/v1",
+      "origin": "<local robot bridge>",
+      "bridge_id": "<limited robot capability>",
+      "client_token": "<not recorded>",
+      "task": "把地图上的红球都送到绿色存放区",
+      "simulation_step_ms": 20,
+      "max_rounds": 200,
+      "max_simulation_seconds": 1200
+    }
+  },
+  "evidenceExport": {
+    "complete": true,
+    "completedDatasets": [
+      "record",
+      "samples",
+      "sensorAudit",
+      "captures",
+      "envelope"
+    ],
+    "failures": [],
+    "partial": {}
+  },
+  "schema": "wm-autonomous-evaluation/v1",
+  "evaluationOnly": true,
+  "failures": [
+    "execution_or_controller_error",
+    "brain_summary_missing"
+  ],
+  "expectedTargetIds": [
+    "guangyang-target-1",
+    "guangyang-target-2"
+  ],
+  "deliveredTargetIds": [
+    "guangyang-target-1",
+    "guangyang-target-2"
+  ],
+  "deliveryEvents": [
+    {
+      "elapsedMs": 220100,
+      "packageId": "guangyang-target-1",
+      "deliveryId": "delivery-target-storage",
+      "objectRole": "target",
+      "destinationRole": "storage",
+      "tick": 11005,
+      "seq": 3698,
+      "t": 220100,
+      "type": "package_delivered"
+    },
+    {
+      "elapsedMs": 470880,
+      "packageId": "guangyang-target-2",
+      "deliveryId": "delivery-target-storage",
+      "objectRole": "target",
+      "destinationRole": "storage",
+      "tick": 23544,
+      "seq": 8317,
+      "t": 470880,
+      "type": "package_delivered"
+    }
+  ],
+  "finalPositions": [
+    {
+      "id": "guangyang-target-1",
+      "finalSampleTick": 42797,
+      "worldPosition": [
+        -10.696151,
+        -7.711193
+      ],
+      "destination": [
+        -10.7336,
+        -8.0772
+      ],
+      "distanceWorldUnits": 0.36791785992256437,
+      "radiusWorldUnits": 0.95,
+      "holding": false,
+      "finalInsideStorage": true,
+      "deliveredEventActive": true
+    },
+    {
+      "id": "guangyang-target-2",
+      "finalSampleTick": 42797,
+      "worldPosition": [
+        -10.220325,
+        -8.239171
+      ],
+      "destination": [
+        -10.7336,
+        -8.0772
+      ],
+      "distanceWorldUnits": 0.5382247025787638,
+      "radiusWorldUnits": 0.95,
+      "holding": false,
+      "finalInsideStorage": true,
+      "deliveredEventActive": true
+    }
+  ],
+  "simulationSeconds": 855.94,
+  "rejectedCalls": 0,
+  "nonwhitelistAcceptedCalls": 0,
+  "brainSummary": null,
+  "note": "Success independently requires final truth positions and non-revoked package_delivered record events. No competition score or old strict determinism gate.",
+  "recordFrameCount": 1116,
+  "captureCount": 1116,
+  "controllerErrors": [],
+  "pageErrors": []
+}

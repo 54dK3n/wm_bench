@@ -316,7 +316,7 @@ def test_source_proof_failures_cannot_pass_final_acceptance(tmp_path, fixture_da
     assert any(reason.startswith("source_proof_") for reason in result["failures"])
 
 
-@pytest.mark.parametrize("driver_version", [4, 5])
+@pytest.mark.parametrize("driver_version", [4, 5, 6])
 def test_known_source_proof_is_reported_without_reading_current_runtime(tmp_path, fixture_data, driver_version):
     version = f"wm-autonomous-brain-driver/v{driver_version}"
     fixture_data["source_manifest"]["version"] = version

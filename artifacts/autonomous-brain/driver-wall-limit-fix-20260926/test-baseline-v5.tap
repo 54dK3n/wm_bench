@@ -1,0 +1,61 @@
+✖ default wall time can cross 7200 seconds and the child still exits naturally (5.749458ms)
+✖ explicit zero wall timeout is legal and disables only the wall deadline (0.942584ms)
+✔ an explicit positive wall timeout still interrupts and cleans up the child (1.125459ms)
+✔ simulation monitoring continues below 1200 seconds and stops at 1200 (0.622708ms)
+✔ backend stop remains terminal when no wall deadline is enabled (0.591125ms)
+✔ monitor errors still terminate the child through the cleanup guard (0.591208ms)
+✔ simulation limit escalates cleanup to SIGKILL if SIGTERM is ignored (0.569958ms)
+✔ monitor error escalates cleanup to SIGKILL if SIGTERM is ignored (1.018333ms)
+✔ negative and nonfinite wall deadlines are rejected (0.727584ms)
+✔ round and simulation arguments cannot exceed 200 and 1200 (0.598583ms)
+✔ lower positive caps reach the child unchanged and constrain simulation monitoring (0.7305ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52.682208
+
+✖ failing tests:
+
+test at tools/tests/test_autonomous_brain_limits.js:96:1
+✖ default wall time can cross 7200 seconds and the child still exits naturally (5.749458ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'driver_wall_timeout'
+  - null
+  
+      at TestContext.<anonymous> (tools/tests/test_autonomous_brain_limits.js:100:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'driver_wall_timeout',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools/tests/test_autonomous_brain_limits.js:121:1
+✖ explicit zero wall timeout is legal and disables only the wall deadline (0.942584ms)
+  AssertionError [ERR_ASSERTION]: invalid wallTimeoutSeconds
+      at parseArgs (artifacts/autonomous-brain/driver-wall-limit-fix-20260926/test-baseline-v5-source.js:90:102)
+      at parse (tools/tests/test_autonomous_brain_limits.js:76:32)
+      at Object.run (tools/tests/test_autonomous_brain_limits.js:78:21)
+      at TestContext.<anonymous> (tools/tests/test_autonomous_brain_limits.js:123:26)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
