@@ -2,7 +2,7 @@
 
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
-当前执行 **WorldModel + 外部单动作大模型自主小车**：平台只提供传感器和执行器，大脑每轮观测、决策、行动、再观测。按最新范围，octos 编排、技能契约和逐条确定性门禁暂缓。平台的桥检测一致性与四类非空门禁已通过；外部大脑、M5 感知、模型记录回放和独立评测已实现，真实桥的假模型联调已通过。Kimi 本机配置与真实 JSON 输出已验证；用户已允许 K2.6 非思考模式、温度 0.6，[接入结果](artifacts/autonomous-brain/kimi-setup-20260925/REPORT.md)已存档。首局 40 轮未送达，已按 FAIL 保存[完整证据与原因](artifacts/autonomous-brain/map05-run-01/FAILURE_ANALYSIS.md)；导航恢复、路口记录与相对出口提示已修复，第二局第 8 轮因模型请求超时结束，见[第二局报告](artifacts/autonomous-brain/map05-run-02/FAILURE_ANALYSIS.md)；第三局 map05-run-03 已启动。**尚无本轮 map-05 成功局，十布局未运行**。
+当前执行 **WorldModel + 外部单动作大模型自主小车**：平台只提供传感器和执行器，大脑每轮观测、决策、行动、再观测。按最新范围，octos 编排、技能契约和逐条确定性门禁暂缓。平台的桥检测一致性与四类非空门禁已通过；外部大脑、M5 感知、模型记录回放和独立评测已实现，真实桥的假模型联调已通过。Kimi 本机配置与真实 JSON 输出已验证；用户已允许 K2.6 非思考模式、温度 0.6，[接入结果](artifacts/autonomous-brain/kimi-setup-20260925/REPORT.md)已存档。首局 40 轮未送达，已按 FAIL 保存[完整证据与原因](artifacts/autonomous-brain/map05-run-01/FAILURE_ANALYSIS.md)；导航恢复、路口记录与相对出口提示已修复，第二局第 8 轮因模型请求超时结束，见[第二局报告](artifacts/autonomous-brain/map05-run-02/FAILURE_ANALYSIS.md)；第三局第 2 轮连接提前关闭，见[第三局证据](artifacts/autonomous-brain/map05-run-03/FAILURE_ANALYSIS.md)。**尚无本轮 map-05 成功局，十布局未运行**。
 
 旧 v4 严格验收的 FAIL、空检测验收作废结论及全部历史证据保留原样；本轮新的够用门禁不改写旧结果。
 
