@@ -24,11 +24,48 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v12"
+RUNTIME_VERSION = "autonomous-brain-runtime/v14"
 
 
 def dump(path, value):
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+
+
+def compact_identity_ambiguity(value):
+    """Carry brain identity alternatives without exporting arbitrary payloads."""
+    if not isinstance(value, dict) or not value:
+        return None
+    result = {}
+    for key in ("frame_id", "reason"):
+        item = value.get(key)
+        if type(item) in (str, int):
+            result[key] = item[:256] if isinstance(item, str) else item
+    candidates = value.get("candidate_ids", [])
+    candidates = candidates if isinstance(candidates, list) else []
+    ids = sorted({item for item in candidates if isinstance(item, str)})
+    result["candidate_count"] = len(ids)
+    result["candidate_ids"] = [item[:256] for item in ids[:12]]
+    kinds = value.get("candidate_kinds", {})
+    allowed = {"active", "delivered", "released_unverified", "release_in_progress"}
+    result["candidate_kinds"] = {item[:256]: kinds[item] for item in ids[:12]
+        if isinstance(kinds, dict) and kinds.get(item) in allowed}
+    return result
+
+
+def compact_junction_history(rows):
+    """Keep all semantic nodes and obligations without repeating raw anchors."""
+    result = []
+    for row in rows:
+        node = {key: copy.deepcopy(row[key]) for key in ("id", "status", "position_m") if key in row}
+        node["exits"] = []
+        for raw in row.get("exits", []):
+            exit = {key: copy.deepcopy(raw[key]) for key in (
+                "id", "heading_deg", "state", "visits", "completed", "blocked", "last_failure") if key in raw}
+            exit["observation_count"] = len(raw.get("observation_refs", []))
+            exit["verified_traversal_count"] = len(raw.get("completion_traversal_ids", []))
+            node["exits"].append(exit)
+        result.append(node)
+    return result
 
 
 def compact_action_result(number, action, result, after_observation):
@@ -61,11 +98,22 @@ def compact_action_result(number, action, result, after_observation):
                             "distance_cm", "remembered_distance_cm", "bearing_deg",
                             "front_clearance_cm", "requested_cm", "method", "measured_cm",
                             "heading_change_deg", "motion_observation",
+                            "motion_verified", "frame_fresh", "holding_changed", "road_changed",
                             "candidate_witnesses", "recovery_steps", "unexplored_exits",
                             "previous_failure", "canonical_object_id", "ready_for_done",
                             "delivered_count", "required_count"))
     detection(raw, evidence)
-    for name in ("recovery_options", "unmet_conditions", "delivered_object_ids", "unresolved_identity_ids"):
+    if isinstance(raw.get("view_coverage"), dict):
+        coverage = raw["view_coverage"]
+        evidence["view_coverage"] = fields(coverage, (
+            "basis", "covered_degrees", "uncovered_degrees"))
+        if isinstance(coverage.get("views"), list):
+            evidence["view_coverage"]["valid_view_count"] = len(coverage["views"])
+    if isinstance(raw.get("reasons"), list):
+        evidence["motion_failure_reasons"] = [item[:256] for item in raw["reasons"][:8]
+                                               if isinstance(item, str)]
+    for name in ("recovery_options", "unmet_conditions", "delivered_object_ids", "unresolved_identity_ids",
+                 "unresolved_discovery_ids", "untracked_discovery_ids"):
         if isinstance(raw.get(name), list):
             evidence[name] = [value for value in raw[name] if isinstance(value, str)]
     if isinstance(raw.get("navigation_subgoal"), dict):
@@ -185,13 +233,15 @@ class Runtime:
         if odo["tick"] != observation["tick"] or road["tick"] != odo["tick"]:
             raise RuntimeError("sensor snapshots do not share a simulation tick")
         perception = self.perception.update(observation, odo,
-            simulation_time_s=self.bridge.seconds, round_index=self.round)
+            simulation_time_s=self.bridge.seconds, round_index=self.round,
+            observation_index=self.observation_count + 1)
         self.roads.update(odo, road, observation_index=self.observation_count + 1)
         self.observation_count += 1
         self.snapshot = {"observation_index": self.observation_count, "round": self.round,
                          "simulation_seconds": self.bridge.seconds, "odometry": odo,
                          "road": road, "holding": holding, "observation": observation,
-                         "perception": perception, "objects": self.perception.objects()}
+                         "perception": perception, "objects": self.perception.objects(),
+                         "discovery_evidence": self.perception.discovery_evidence()}
         finalized_motion = (dict(motion, after_observation=self.observation_count)
                             if motion is not None else None)
         traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
@@ -213,14 +263,23 @@ class Runtime:
             for key in ("completion_classification", "ever_confirmed"):
                 if key in row:
                     objects[-1][key] = row[key]
+            ambiguity = compact_identity_ambiguity(row.get("identity_ambiguity"))
+            if ambiguity is not None:
+                objects[-1]["identity_status"] = "ambiguous"
+                objects[-1]["identity_ambiguity"] = ambiguity
             if row["id"] in chains:
                 objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
         odo, road = self.snapshot["odometry"], self.snapshot["road"]
         task_spec = getattr(self, "task_spec", None) or parse_task(self.config["task"])
+        exploration = (self.roads.exploration_status()
+                       if hasattr(self.roads, "exploration_status") else None)
         completion = completion_progress(rows, self.perception.action_evidence(), task_spec,
             holding=self.snapshot["holding"]["holding"], held_object_id=self.held_object_id,
             pending_grasp=self.pending_grasp, nodes=len(self.roads.nodes),
-            unexplored=self.roads.unexplored())
+            unexplored=self.roads.unexplored(), exploration=exploration,
+            observed_detections=self.snapshot.get("perception", {}).get("detections"),
+            discovery_evidence=(self.perception.discovery_evidence()
+                                if hasattr(self.perception, "discovery_evidence") else None))
         return {"task": self.config["task"], "round": self.round,
                 "task_spec": copy.deepcopy(task_spec),
                 "simulation_seconds": self.bridge.seconds,
@@ -248,7 +307,8 @@ class Runtime:
                           "exit_angles": [e["angleDeg"] for e in road["exits"]],
                           "exits": self.roads.exits(odo, road),
                           "front_clearance_cm": road["frontClearanceCm"]},
-                "junction_history": self.roads.summary(),
+                "junction_history": compact_junction_history(self.roads.summary()),
+                "exploration": exploration,
                 "exploration_hints": [{key: value for key, value in hint.items() if key in {
                     "kind", "target_node_id", "target_exit_index", "target_heading_deg",
                     "next_exit_angle_deg", "recorded_travelled_cm", "cost_basis", "traversal_ids",
@@ -316,7 +376,8 @@ def main(argv=None):
                 count = number
                 rounds.write({"round": number, "state": state, "action": action,
                     "llm_output": llm.last_record,
-                    "result": {"success": False, "reason": str(exc), "error_type": type(exc).__name__},
+                    "result": {"success": False, "reason": str(exc), "error_type": type(exc).__name__,
+                               "evidence": copy.deepcopy(getattr(exc, "action_evidence", {}))},
                     "simulation_seconds": runtime.bridge.seconds,
                     "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
                 raise
@@ -355,7 +416,13 @@ def main(argv=None):
                    "pending_grasp": runtime.pending_grasp if runtime else None,
                    "grab_attempts": runtime.actions.grab_attempts if runtime else {},
                    "action_evidence": runtime.perception.action_evidence() if runtime else [],
+                   "discovery_evidence": (runtime.perception.discovery_evidence() if runtime
+                                          and hasattr(runtime.perception, "discovery_evidence") else None),
                    "junction_history": runtime.roads.summary() if runtime else [],
+                   "road_evidence": (runtime.roads.road_evidence() if runtime
+                                     and hasattr(runtime.roads, "road_evidence") else None),
+                   "exploration_state": (runtime.roads.exploration_status() if runtime
+                                         and hasattr(runtime.roads, "exploration_status") else None),
                    "limits": {"max_rounds": config.get("max_rounds", 200),
                               "max_simulation_seconds": config.get("max_simulation_seconds", 1200)},
                    "world_model": dependency,

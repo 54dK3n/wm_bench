@@ -57,7 +57,7 @@ class NavigationProgress:
         if not matches:
             self.records[canonical_id] = {"canonical_object_id": canonical_id,
                 "identity_ids": sorted(identities), "attempts": [], "last_result": None,
-                "subgoal": None, "tried_approach_positions": []}
+                "subgoal": None, "tried_approach_positions": [], "approach_attempts": []}
         else:
             # A verified reacquisition may change the current tracker ID. Its
             # prior failures and attempted viewpoints still belong to this goal.
@@ -66,6 +66,7 @@ class NavigationProgress:
                 old = self.records.pop(key)
                 row["attempts"].extend(old["attempts"])
                 row["tried_approach_positions"].extend(old["tried_approach_positions"])
+                row.setdefault("approach_attempts", []).extend(old.get("approach_attempts", []))
                 identities.update(old["identity_ids"])
             identities.update(row["identity_ids"])
             row.update(canonical_object_id=canonical_id, identity_ids=sorted(identities))
@@ -75,6 +76,40 @@ class NavigationProgress:
                 self.action_failures.setdefault((action, canonical_id), []).extend(
                     self.action_failures.pop((action, old_id)))
         return self.records[canonical_id]
+
+    def approach_blocked(self, row, candidate, context):
+        """The same failed route/conditions may not repeat; a place is not banned."""
+        return next((attempt for attempt in reversed(row.get("approach_attempts", []))
+            if attempt["candidate_position_m"] == candidate["position_m"]
+            and attempt["route_version"] == candidate["route_version"]
+            and (not changed(attempt["context"], context)
+                 or not changed(attempt.get("failure_context", attempt["context"]), context))), None)
+
+    def remember_approach(self, row, candidate, context, *, status, reason, reached,
+                          before_observation, after_observation, arrival_evidence=None,
+                          failure_context=None):
+        attempt = {"canonical_object_id": row["canonical_object_id"],
+            "candidate_position_m": copy.deepcopy(candidate["position_m"]),
+            "route_version": candidate["route_version"], "status": status, "reason": reason,
+            "candidate_reached": reached, "context": copy.deepcopy(context),
+            "route_path": copy.deepcopy(candidate["path"]),
+            "failure_context": copy.deepcopy(failure_context if failure_context is not None else context),
+            "before_observation": before_observation, "after_observation": after_observation,
+            "arrival_evidence": copy.deepcopy(arrival_evidence)}
+        attempts = row.setdefault("approach_attempts", [])
+        if (attempts and attempts[-1]["route_version"] == attempt["route_version"]
+                and attempts[-1]["before_observation"] == before_observation
+                and attempts[-1]["status"] == "candidate_reached_approach_not_verified"):
+            attempt["stages"] = attempts[-1].get("stages", []) + [{
+                "status": attempts[-1]["status"], "after_observation": attempts[-1]["after_observation"]}]
+            attempts[-1] = attempt
+        else:
+            attempts.append(attempt)
+        # Retain the old public field only as historical *arrivals*, never as a
+        # route exclusion. Unreached candidates cannot appear completed here.
+        if reached and candidate["position_m"] not in row["tried_approach_positions"]:
+            row["tried_approach_positions"].append(copy.deepcopy(candidate["position_m"]))
+        return copy.deepcopy(attempt)
 
     def blocked(self, row, context):
         # Check every failed endpoint, so turning away and back or completing a

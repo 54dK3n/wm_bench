@@ -13,7 +13,7 @@ const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v7";
+const VERSION = "wm-autonomous-brain-driver/v8";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -225,6 +225,16 @@ function gitRevision(directory) {
   return result.status === 0 ? result.stdout.trim() : null;
 }
 
+function evaluatorDependencies(root = ROOT) {
+  // These modules perform independent witness checking and raw model replay.
+  // Their bytes belong to the frozen evaluator, even though they are helpers.
+  return Object.fromEntries([
+    'tools/brain_evidence_audit.py',
+    'tools/replay_brain_llm.py',
+    'tools/brain_topology_audit.py',
+  ].map(file => [file, sha(fs.readFileSync(path.join(root, file)))]));
+}
+
 function sourceManifest(platformRoot, options = {}) {
   const preflight = readJson(path.join(ROOT, 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json'));
   const files = Object.keys(preflight.run.platform);
@@ -253,6 +263,7 @@ function sourceManifest(platformRoot, options = {}) {
     dependencyLock: {file: 'vendor/worldmodel.lock.json', sha256: sha(fs.readFileSync(path.join(ROOT, 'vendor/worldmodel.lock.json'))),
       scope: 'historical upstream base only; actual loaded files are recorded in worldModel'},
     evaluator: {file: 'tools/evaluate_autonomous_brain.py', sha256: sha(fs.readFileSync(path.join(ROOT, 'tools/evaluate_autonomous_brain.py')))},
+    evaluatorDependencies: evaluatorDependencies(),
     evaluatorCaptureSha256: sha(installEvaluationCapture.toString()),
     platformGate: 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json',
     platformGateReviewer: {file: 'tools/fresh_map05_platform_gate.js', sha256: sha(fs.readFileSync(path.join(__dirname, 'fresh_map05_platform_gate.js')))},
@@ -587,8 +598,8 @@ async function main(argv = process.argv.slice(2)) {
   assert.equal(gate.allPass, true, 'platform two-gate check failed; brain must not start');
   assert.ok(!fs.existsSync(options.out), 'refusing to reuse an output directory');
   assert.ok(fs.existsSync(path.join(ROOT, 'autonomous_brain/run.py')), 'brain module is not ready');
-  // This stage-1 entry point cannot attest the stage-2 topology requirements.
-  // Keep generalization closed until that independent gate is implemented.
+  // Stages one and two run individually on map-05. The independent Python
+  // evaluator checks stage-two topology; this driver does not unlock ten layouts.
   validateStageGate(options);
   let map05Passed = false;
   fs.mkdirSync(options.out, {recursive: true});
@@ -762,5 +773,5 @@ async function main(argv = process.argv.slice(2)) {
 }
 module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
-  evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
+  evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

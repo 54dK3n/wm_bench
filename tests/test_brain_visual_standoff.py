@@ -1,4 +1,5 @@
 """Visual standoff corrections from explicit, synthetic sensor feedback."""
+import math
 from types import SimpleNamespace
 
 import pytest
@@ -44,7 +45,9 @@ def visual_runtime(range_cm, bearing=0, *, blocked=False, lose_on_turn=False):
                 return {"stoppedBy": "front_clearance", "distanceCm": 0}
             signed = params["distanceCm"] * (1 if method == "forward" else -1)
             camera["distance_cm"] -= signed
-            snapshot["odometry"]["forwardCm"] += signed
+            theta = math.radians(snapshot["odometry"]["headingDeg"])
+            snapshot["odometry"]["rightCm"] -= math.sin(theta) * signed
+            snapshot["odometry"]["forwardCm"] += math.cos(theta) * signed
         else:
             raise AssertionError("Visual standoff must not select another road")
         return {"accepted": True, "completed": True}

@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v8"
+VERSION = "autonomous-brain-perception/v10"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -93,6 +93,10 @@ class Perception:
         self._delivered_positions: dict[str, dict[str, Any]] = {}
         self._delivery_aliases: dict[str, str] = {}
         self._unverified_releases: dict[str, dict[str, Any]] = {}
+        self._release_intents: dict[str, dict[str, Any]] = {}
+        self._identity_ambiguities: dict[str, dict[str, Any]] = {}
+        self._candidate_set_hypotheses: set[str] = set()
+        self._unresolved_discoveries: list[dict[str, Any]] = []
         self._reacquisitions: dict[str, dict[str, Any]] = {}
         self._observed_frames: dict[str, dict[str, Any]] = {}
         self._last_timestamp: float | None = None
@@ -190,8 +194,11 @@ class Perception:
         return det, evidence
 
     def update(self, observation: Mapping[str, Any], odometry: Mapping[str, Any], *,
-               simulation_time_s: float, round_index: int | None = None) -> dict[str, Any]:
+               simulation_time_s: float, round_index: int | None = None,
+               observation_index: int | None = None) -> dict[str, Any]:
         """Consume only a bridge observation and odometry at its same tick."""
+        if observation_index is not None and (type(observation_index) is not int or observation_index < 1):
+            raise ValueError("observation_index must be a positive integer when supplied")
         timestamp = _number(simulation_time_s, "simulation_time_s")
         if self._last_timestamp is not None and timestamp < self._last_timestamp:
             raise ValueError("simulation clock moved backwards")
@@ -206,28 +213,7 @@ class Perception:
         self.pose = odometry_to_pose(odometry)
         converted = [self._convert(item, frame_id, timestamp)
                      for item in observation["detections"]]
-        delivered_candidates = []
-        for detection_index, (det, item) in enumerate(converted):
-            if det is not None:
-                for oid, placed in self._delivered_positions.items():
-                    if placed["category"] == item["category"]:
-                        gap = math.hypot(det.x - placed["position_m"]["x"],
-                                         det.z - placed["position_m"]["z"])
-                        if gap <= 0.15:
-                            delivered_candidates.append((gap, detection_index, oid))
-        matched_detections, matched_deliveries = set(), set()
-        for gap, detection_index, delivered_id in sorted(delivered_candidates):
-            if detection_index in matched_detections or delivered_id in matched_deliveries:
-                continue
-            matched_detections.add(detection_index)
-            matched_deliveries.add(delivered_id)
-            # One detection per verified identity per frame. A nearby second
-            # object must remain available for normal perception and tracking.
-            # A storage rectangle alone never provides exclusion evidence.
-            converted[detection_index][1].update(
-                known_delivered_object_id=delivered_id, delivered_match_distance_m=gap,
-                fed_to_world_model=False, reason="matches_verified_placement",
-                track_id=delivered_id)
+        self._classify_delivered_candidates(converted, frame_id)
         detections = [det for det, item in converted if det is not None and item["fed_to_world_model"]]
         evidence_items = [item for det, item in converted if det is not None and item["fed_to_world_model"]]
         old_tracks = self.wm.get_scene()
@@ -311,6 +297,17 @@ class Perception:
                 times["confirmed_round"] = round_index
                 newly_confirmed.append(oid)
             self._history[oid] = self._row(track)
+        for _, item in converted:
+            oid = item.get("track_id")
+            if oid is not None and oid not in self._delivered_positions:
+                if item.get("identity_ambiguity"):
+                    self._identity_ambiguities[oid] = copy.deepcopy(item["identity_ambiguity"])
+                    if (self._times.get(oid, {}).get("first_seen_frame_id") == frame_id
+                            and len(item["identity_ambiguity"]["candidate_ids"]) > 1):
+                        self._candidate_set_hypotheses.add(oid)
+                else:
+                    self._identity_ambiguities.pop(oid, None)
+                    self._candidate_set_hypotheses.discard(oid)
         self._bind_reacquisitions(converted, frame_id, timestamp)
         self._last_timestamp, self._last_frame = timestamp, frame_id
         self._observed_frames[frame_id] = {"index": len(self._observed_frames),
@@ -325,7 +322,112 @@ class Perception:
             "detections": [item for _, item in converted],
             "newly_confirmed": newly_confirmed,
         }
+        for detection_index, (_, item) in enumerate(converted):
+            ambiguity = item.get("identity_ambiguity")
+            if (item.get("category") != "red-ball" or item.get("fed_to_world_model") is not False
+                    or not isinstance(ambiguity, dict) or not ambiguity):
+                continue
+            # An out-of-window observation cannot confirm a WM track, but it
+            # remains a discovered identity obligation. Keep each raw detection
+            # separately: two boxes competing for one already delivered ID are
+            # not resolved merely because all candidate IDs are delivered.
+            self._unresolved_discoveries.append({
+                "id": f"untracked-red-discovery-{len(self._unresolved_discoveries) + 1}",
+                "category": "red-ball", "frame_id": frame_id,
+                "observation_index": observation_index,
+                "perception_observation_index": len(self._observed_frames),
+                "tick": observation["tick"], "round": round_index,
+                "simulation_time_s": timestamp, "detection_index": detection_index,
+                "bbox": copy.deepcopy(observation["detections"][detection_index]["bbox"]),
+                "candidate_ids": copy.deepcopy(ambiguity["candidate_ids"]),
+                "identity_ambiguity": copy.deepcopy(ambiguity),
+                "reason": ambiguity["reason"], "admission_reason": item.get("reason")})
         return copy.deepcopy(self.last_evidence)
+
+    def discovery_evidence(self):
+        """Return persistent public discoveries, not an inferred physical count.
+
+        No general resolver is implemented. Empty views, elapsed time, new
+        frame numbers, or delivered candidate labels do not prove which
+        physical objects produced earlier competing out-of-window detections.
+        """
+        return {"schema": "brain-discovery-evidence/v1",
+                "unresolved": copy.deepcopy(self._unresolved_discoveries)}
+
+    def begin_release(self, object_id, aim_position):
+        """Register a brain-side competitor before the release's first frame."""
+        row = self.get_object(object_id)
+        if row is None or row["state"] != "HELD":
+            return False
+        self._release_intents[object_id] = {"category": row["category"],
+            "position_m": copy.deepcopy(aim_position), "source_frame_id": self._last_frame}
+        return True
+
+    def cancel_release_if_still_held(self, object_id, *, holding):
+        if holding is True:
+            self._release_intents.pop(object_id, None)
+
+    def _classify_delivered_candidates(self, converted, frame_id):
+        """Certify only isolated edges in the joint sensor identity graph.
+
+        A nearest or one-to-one assignment is not identity evidence when other
+        detections or active/released identities fit the same unchanged gates.
+        Ambiguous observations continue through normal tracking, with their
+        competing identities retained explicitly.
+        """
+        identities = {oid: {**placed, "kind": "delivered", "gate_m": .15}
+                      for oid, placed in self._delivered_positions.items()}
+        for track in self.wm.get_scene():
+            if track.obj_id in self._candidate_set_hypotheses:
+                # This track is an alternative observation of the existing
+                # multi-identity candidate set, not a separately established
+                # physical object. Existing active rivals and two detections
+                # competing for one delivered identity remain competitors.
+                continue
+            identities[track.obj_id] = {"category": WM_TO_PUBLIC.get(track.name, track.name),
+                "position_m": {"x": track.x, "z": track.z}, "kind": "active",
+                "gate_m": gate_for(track, self._last_timestamp, self.wm.assoc_cfg)}
+        for oid, released in self._unverified_releases.items():
+            row = self.get_object(oid)
+            identities[oid] = {"category": row["category"], "kind": "released_unverified",
+                "position_m": released.get("identity_anchor_m") or released.get("release_aim_position_m"),
+                "gate_m": .30}
+        for oid, intent in self._release_intents.items():
+            identities[oid] = {**intent, "kind": "release_in_progress", "gate_m": .30}
+        edges, reverse = {}, {}
+        for index, (det, item) in enumerate(converted):
+            if det is None:
+                continue
+            matches = {}
+            for oid, known in identities.items():
+                if known["category"] != item["category"]:
+                    continue
+                point = known.get("position_m")
+                gap = math.hypot(det.x - point["x"], det.z - point["z"]) if point else None
+                if gap is None or gap <= known["gate_m"]:
+                    matches[oid] = gap
+                    reverse.setdefault(oid, []).append(index)
+            edges[index] = matches
+        for index, matches in edges.items():
+            delivered = [oid for oid in matches if identities[oid]["kind"] == "delivered"]
+            if not delivered:
+                continue
+            item = converted[index][1]
+            if len(matches) == 1 and len(reverse[delivered[0]]) == 1:
+                oid = delivered[0]
+                item.update(known_delivered_object_id=oid,
+                    delivered_match_distance_m=matches[oid], fed_to_world_model=False,
+                    reason="matches_verified_placement", track_id=oid,
+                    delivered_identity_evidence={"frame_id": frame_id,
+                        "method": "joint_bidirectionally_unique_candidate", "candidate_ids": [oid],
+                        "candidate_detection_indices": [index]})
+            else:
+                item["identity_ambiguity"] = {"frame_id": frame_id,
+                    "reason": "delivered_identity_has_competing_observations_or_identities",
+                    "candidate_ids": sorted(matches),
+                    "candidate_kinds": {oid: identities[oid]["kind"] for oid in sorted(matches)},
+                    "candidate_distances_m": matches,
+                    "candidate_detection_indices": {oid: reverse[oid] for oid in sorted(matches)}}
 
     def _bind_reacquisitions(self, converted, frame_id: str, timestamp: float) -> None:
         """Link independent confirmations without reviving or merging WM tracks.
@@ -376,6 +478,7 @@ class Perception:
             gap = self.wm.assoc_cfg.min_hit_pose_gap_m
             if (neighbours[current_id] != [old_id]
                     or current_id in existing_successors or current_id not in seen
+                    or current_id in self._identity_ambiguities
                     or current_id in self._lifecycle
                     or current.state != ObjectState.CONFIRMED
                     or current_time.get("confirmed_s") is None
@@ -424,6 +527,8 @@ class Perception:
                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
         if track.obj_id in self._reacquisitions:
             row["reacquisition_binding"] = copy.deepcopy(self._reacquisitions[track.obj_id])
+        if track.obj_id in self._identity_ambiguities:
+            row["identity_ambiguity"] = copy.deepcopy(self._identity_ambiguities[track.obj_id])
         if row["category"] == "red-ball":
             times = self._times.get(track.obj_id, {})
             known_confirmation_history = "confirmed_s" in times
@@ -469,7 +574,7 @@ class Perception:
 
     def confirmed(self, object_id: str) -> dict[str, Any] | None:
         row = self.get_object(object_id)
-        return row if row is not None and row["state"] == "CONFIRMED" else None
+        return row if row is not None and row["state"] == "CONFIRMED" and not row.get("identity_ambiguity") else None
 
     def visible(self, object_id: str) -> dict[str, Any] | None:
         if self.last_evidence is None:
@@ -529,6 +634,8 @@ class Perception:
         if (evidence.get("holding") is not True or view != actual_view
                 or actual_view.get("valid") is not True or actual_view["matches"]
                 or simulation_time_s != self._last_timestamp):
+            return False
+        if row.get("identity_ambiguity"):
             return False
         if self._lifecycle.get(object_id) in ("HELD", "DELIVERED", "RELEASED_UNVERIFIED", "DELIVERY_ALIAS"):
             return False
@@ -605,6 +712,7 @@ class Perception:
                      if d.get("track_id") == witness_id and d.get("category") == category
                      and str(d.get("frame_id")) == frame_id
                      and not d.get("known_delivered_object_id")
+                     and not d.get("identity_ambiguity")
                      and placement.get("ball_position_m") == d.get("position_m")
                      and placement.get("ball_bbox") == d.get("bbox")]
         if len(witnesses) != 1 or placement.get("ball_category") != category:
@@ -621,6 +729,7 @@ class Perception:
                  if ball["category"] == category and "position_m" in ball
                  and zone["category"] == "storage-zone"
                  and not ball.get("known_delivered_object_id")
+                 and not ball.get("identity_ambiguity")
                  and ball.get("track_id") not in preexisting
                  and ball_inside_region(ball["bbox"], zone["bbox"])]
         if len(pairs) != 1 or pairs[0][0] != witnesses[0] or pairs[0][1] != zones[0]:
@@ -658,6 +767,7 @@ class Perception:
             "position_m": position, "frame_id": str(placement["frame_id"])}
         self._lifecycle[object_id] = "DELIVERED"
         self._unverified_releases.pop(object_id, None)
+        self._release_intents.pop(object_id, None)
         self._times[object_id]["delivered_s"] = timestamp
         self._times[object_id]["delivered_position_m"] = copy.deepcopy(position)
         self._action_evidence.append({"action": "place", "object_id": object_id,
@@ -675,15 +785,20 @@ class Perception:
         self.wm.mark_removed(object_id, now=timestamp)
         self._lifecycle[object_id] = "RELEASED_UNVERIFIED"
         self._unverified_releases[object_id] = copy.deepcopy(dict(evidence))
+        intent = self._release_intents.get(object_id)
+        if intent and "release_aim_position_m" not in evidence:
+            self._unverified_releases[object_id]["release_aim_position_m"] = copy.deepcopy(intent["position_m"])
         release = evidence.get("release_observation")
         if isinstance(release, Mapping) and self.last_evidence:
             candidates = [d for d in self.last_evidence["detections"]
                 if d["category"] == self.get_object(object_id)["category"]
                 and "position_m" in d and not d.get("known_delivered_object_id")
+                and not d.get("identity_ambiguity")
                 and d.get("track_id") not in release.get("preexisting_ball_ids", [])]
             anchor = (candidates[0]["position_m"] if len(candidates) == 1
-                      else evidence.get("release_aim_position_m"))
+                      else self._unverified_releases[object_id].get("release_aim_position_m"))
             self._unverified_releases[object_id]["identity_anchor_m"] = copy.deepcopy(anchor)
+        self._release_intents.pop(object_id, None)
         self._times[object_id]["released_unverified_s"] = timestamp
         self._action_evidence.append({"action": "release_unverified", "object_id": object_id,
             "simulation_time_s": timestamp, "holding": False,
@@ -723,6 +838,8 @@ class Perception:
         if len(candidates) != 1:
             return unresolved("release_identity_candidate_not_unique")
         candidate = candidates[0]
+        if candidate.get("identity_ambiguity"):
+            return unresolved("release_identity_candidate_ambiguous")
         anchor = saved.get("identity_anchor_m")
         if (not isinstance(anchor, Mapping)
                 or math.hypot(candidate["position_m"]["x"] - anchor["x"],

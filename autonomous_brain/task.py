@@ -30,7 +30,8 @@ def parse_task(instruction):
 
 
 def completion_progress(objects, action_evidence, task_spec, *, holding,
-                        held_object_id=None, pending_grasp=None, nodes=0, unexplored=0):
+                        held_object_id=None, pending_grasp=None, nodes=0, unexplored=0,
+                        exploration=None, observed_detections=None, discovery_evidence=None):
     """Count validated physical deliveries, not labels, events, or actuator replies.
 
     Perception owns the pixel/identity validation at transition time. This query
@@ -125,19 +126,56 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
     if ambiguous or invalid:
         unmet.append("delivery_identity_or_evidence_unresolved")
     required = task_spec["required_count"]
+    discovery_unresolved, visible_ambiguities, untracked_ids = [], [], []
     if task_spec["quantity_mode"] == "known":
         if len(delivered) < required:
             unmet.append("required_delivery_count_not_met")
     else:
+        if (not isinstance(discovery_evidence, dict)
+                or discovery_evidence.get("schema") != "brain-discovery-evidence/v1"
+                or not isinstance(discovery_evidence.get("unresolved"), list)):
+            unmet.append("untracked_discovery_evidence_missing")
+        elif discovery_evidence["unresolved"]:
+            untracked_ids = [item.get("id") if isinstance(item, dict) else None
+                             for item in discovery_evidence["unresolved"]]
+            unmet.append("untracked_target_discoveries_unresolved")
         if result["pending_objects"]:
             unmet.append("observed_targets_pending")
-        if not nodes or unexplored:
+        discovery_unresolved = sorted({item["object_id"] for item in
+            result["retired_unconfirmed_hypotheses"] if root(item["object_id"]) not in delivered})
+        if discovery_unresolved:
+            unmet.append("unconfirmed_discoveries_unresolved")
+        if not isinstance(observed_detections, list) or any(
+                not isinstance(item, dict) for item in observed_detections):
+            unmet.append("current_target_observation_missing")
+        else:
+            visible_ambiguities = [{"frame_id": item.get("frame_id"),
+                "track_id": item.get("track_id"),
+                "candidate_ids": copy.deepcopy(item["identity_ambiguity"].get("candidate_ids", []))}
+                for item in observed_detections if item.get("category") == task_spec["target_category"]
+                and isinstance(item.get("identity_ambiguity"), dict) and item["identity_ambiguity"]]
+            if visible_ambiguities:
+                unmet.append("current_target_identity_ambiguity")
+        states = (exploration or {}).get("state_counts") if isinstance(exploration, dict) else None
+        count_keys = ("pending_exit_count", "unresolved_node_count", "unresolved_connection_count")
+        valid_exploration = (isinstance(exploration, dict)
+            and exploration.get("schema") == "brain-road-exploration/v1"
+            and exploration.get("complete") is True and isinstance(states, dict)
+            and set(states) == {"unexplored", "exploring", "verified", "blocked", "unresolved"}
+            and all(type(value) is int and value >= 0 for value in states.values())
+            and all(type(exploration.get(key)) is int and exploration[key] == 0 for key in count_keys)
+            and sum(value for key, value in states.items() if key != "verified") == 0)
+        if not nodes or unexplored or not valid_exploration:
             unmet.append("road_exploration_incomplete")
     result.update(task_spec=copy.deepcopy(task_spec), required_count=required,
                   delivered_count=len(delivered),
                   delivered_object_ids=sorted(d["object_id"] for d in delivered.values()),
                   delivery_evidence=list(delivered.values()),
                   unresolved_identity_ids=sorted(ambiguous | invalid),
+                  unresolved_discovery_ids=discovery_unresolved,
+                  untracked_discovery_ids=untracked_ids,
+                  current_target_ambiguities=visible_ambiguities,
+                  exploration=copy.deepcopy(exploration),
                   ready_for_done=not unmet, unmet_conditions=unmet,
                   unexplored_exits=unexplored)
     return result

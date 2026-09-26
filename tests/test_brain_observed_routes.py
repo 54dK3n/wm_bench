@@ -51,7 +51,8 @@ def runtime(monkeypatch, tmp_path, movements, *, exits=(0,)):
     bridge = PublicBridge(frame(0, 0, 0, exits=exits), movements)
     monkeypatch.setattr(run, "RobotBridge", lambda *args: bridge)
     monkeypatch.setattr(run, "Perception", lambda *args: SimpleNamespace(
-        update=lambda *args, **kwargs: {"detections": []}, objects=lambda: [], action_evidence=lambda: []))
+        update=lambda *args, **kwargs: {"detections": []}, objects=lambda: [], action_evidence=lambda: [],
+        discovery_evidence=lambda: {"schema": "brain-discovery-evidence/v1", "unresolved": []}))
     result = run.Runtime({"task": "把两个红球送到绿色存放区"}, tmp_path)
     result.round = 1
     result.observe()
@@ -66,7 +67,8 @@ def test_actual_motion_outcome_rejects_collision_before_arrival_acceptance(monke
     r = runtime(monkeypatch, tmp_path, [("take_exit", frame(25, 25, 10, exits=(180, 90)),
         {"accepted": True, "stoppedBy": "collision"})])
     r.actions.take_observed_exit(0)
-    assert r.roads.nodes[0]["exits"][0]["completed"] is True  # Legacy bookkeeping unchanged.
+    assert r.roads.nodes[0]["exits"][0]["completed"] is False
+    assert r.roads.nodes[0]["exits"][0]["state"] != "verified"
     assert r.roads.traversal_records() == []
     event = r.snapshot["road_traversal_events"][-1]
     assert event["reason"] == "motion_not_observed_accepted"
@@ -101,23 +103,26 @@ def test_complete_window_survives_round_boundaries_stationary_frames_and_turns(m
     assert r.snapshot["road_traversal_events"][-1]["recorded"] is True
 
 
-def test_short_exit_still_at_origin_is_not_discarded(monkeypatch, tmp_path):
+def test_short_same_structure_exit_without_identity_evidence_remains_unresolved(monkeypatch, tmp_path):
     r = runtime(monkeypatch, tmp_path, [
         ("take_exit", frame(5, 5, 5, exits=(0,)), {"accepted": True}),
         ("follow_road", frame(25, 25, 15, exits=(180, 90)), {"accepted": True})])
     r.actions.take_observed_exit(0)
     assert r.roads.traversal_records() == []
+    assert r.roads.exploration_status()["unresolved_node_count"] > 0
     r.observe()
     r.actions.move("follow_road", {"distanceCm": 20})
-    assert len(r.roads.traversal_records()) == 1
-    assert r.roads.traversal_records()[0]["travelled_cm"] == 25
+    # Neither the short command nor a later arrival may silently delete this
+    # potentially distinct intermediate junction from the traversal window.
+    assert r.roads.traversal_records() == []
+    assert not r.roads.exploration_status()["complete"]
 
 
 @pytest.mark.parametrize("method", ["forward", "backward"])
 def test_primitive_completed_field_can_finish_a_valid_window(monkeypatch, tmp_path, method):
     r = runtime(monkeypatch, tmp_path, [
         ("take_exit", frame(20, 20, 10), {"accepted": True}),
-        (method, frame(25, 25, 15, exits=(180, 90)), {"completed": True})])
+        (method, frame(25 if method == "forward" else 15, 25, 15, exits=(180, 90)), {"completed": True})])
     r.actions.take_observed_exit(0)
     r.actions.move(method, {"distanceCm": 5})
     assert len(r.roads.traversal_records()) == 1
@@ -164,5 +169,6 @@ def test_legacy_completed_flags_without_motion_windows_cannot_make_routes():
     memory.update(a["odometry"], a["road"], observation_index=1)
     memory.chosen(a["odometry"], 0, observation_index=1)
     memory.update(b["odometry"], b["road"], observation_index=2)
-    assert memory.nodes[0]["exits"][0]["completed"] is True
+    assert memory.nodes[0]["exits"][0]["completed"] is False
+    assert memory.exploration_status()["complete"] is False
     assert memory.traversal_records() == []

@@ -21,10 +21,12 @@ import sys
 from typing import Any
 
 
-VERSION = "autonomous-brain-offline-evaluation/v5"
+VERSION = "autonomous-brain-offline-evaluation/v7"
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from autonomous_brain.task import parse_task, completion_progress
+from tools.brain_evidence_audit import audit_observed_ledger, audit_done_bytes, strict_transcript_replay, audit_unknown_discoveries
+from tools.brain_topology_audit import audit_topology
 METHODS = {"observe", "camera_parameters", "odometry", "local_road", "holding",
            "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"}
 
@@ -491,7 +493,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
 
     def valid(value):
         if not isinstance(value, dict) or value.get("version") not in {
-                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 8)}:
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 9)}:
             return False
         driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
         base_valid = (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
@@ -502,7 +504,14 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
                 and len({Path(key).name for key in brain}) == len(brain)
                 and isinstance(platform, dict) and bool(platform) and all(sha(value) for value in platform.values())
                 and sha(value.get("evaluatorCaptureSha256")))
-        return base_valid and (value["version"] != "wm-autonomous-brain-driver/v7" or valid_v7(value))
+        modern = value["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8"}
+        dependencies = value.get("evaluatorDependencies")
+        dependency_valid = (isinstance(dependencies, dict)
+            and set(dependencies) == {"tools/brain_evidence_audit.py", "tools/replay_brain_llm.py", "tools/brain_topology_audit.py"}
+            and all(sha(digest) for digest in dependencies.values())
+            and isinstance(brain, dict) and sha(brain.get("autonomous_brain/road_evidence.py")))
+        return base_valid and (not modern or valid_v7(value)) and (
+            value["version"] != "wm-autonomous-brain-driver/v8" or dependency_valid)
 
     if (not isinstance(manifest, dict) or not isinstance(driver_summary, dict)
             or not isinstance(brain_summary, dict)):
@@ -517,7 +526,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     result["recorded_before_after_equal"] = manifest == after
     expected = {Path(path).name: value for path, value in manifest["brain"].items()}
     result["brain_summary_hashes_match"] = brain_summary.get("source_sha256") == expected
-    if manifest["version"] == "wm-autonomous-brain-driver/v7":
+    if manifest["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8"}:
         expected_wm = dict(manifest["worldModel"])
         expected_wm.pop("selection")
         result["actual_world_model_matches"] = expected_wm == brain_summary.get("world_model")
@@ -547,7 +556,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     return result
 
 
-def evaluate_task_scope(summary, observations, rounds, calls):
+def evaluate_task_scope(summary, observations, rounds, calls, bridge=None, motions=None, *, native_record=None, captures=None):
     """New task-aware runs require both a legal ledger and an explicit LLM done."""
     spec = summary.get("task_spec")
     if spec is None:
@@ -563,14 +572,29 @@ def evaluate_task_scope(summary, observations, rounds, calls):
     if stage == "stage-1" and (parsed["required_count"] != 2
             or summary["task"] != "把两个红球送到绿色存放区"):
         failures.append("stage1_requires_exact_two_ball_instruction")
+    if stage == "stage-2" and summary["task"] != "把地图上的红球都送到绿色存放区":
+        failures.append("stage2_requires_exact_unknown_count_instruction")
+    topology=None
+    if stage == "stage-2":
+        topology=audit_topology(summary,observations,motions or [],native_record or {},bridge or [],captures)
+        failures.extend(topology["failures"])
+        if topology.get("complete") is not True:
+            failures.append("stage2_independent_topology_incomplete")
     final = observations[-1] if observations else {}
+    exploration = (topology or {}).get("exploration") if stage == "stage-2" else None
+    discovery = audit_unknown_discoveries(summary,observations) if stage == "stage-2" else None
+    if discovery:
+        failures.extend(discovery["failures"])
     progress = completion_progress(summary.get("final_objects", []),
         summary.get("action_evidence", []), parsed,
         holding=final.get("holding", {}).get("holding"),
         held_object_id=summary.get("held_object_id"), pending_grasp=summary.get("pending_grasp"),
-        nodes=len(summary.get("junction_history", [])),
-        unexplored=sum(1 for node in summary.get("junction_history", [])
-                       for exit in node.get("exits", []) if not exit.get("completed")))
+        nodes=(topology or {}).get("brain_node_count", 0) if stage == "stage-2" else len(summary.get("junction_history", [])),
+        unexplored=((exploration or {}).get("state_counts", {}).get("unexplored", 0) if stage == "stage-2"
+            else sum(1 for node in summary.get("junction_history", []) for exit in node.get("exits", []) if not exit.get("completed"))),
+        exploration=exploration,
+        discovery_evidence=discovery["evidence"] if discovery else None,
+        observed_detections=final.get("perception", {}).get("detections"))
     if not progress["ready_for_done"]:
         failures.extend("task_completion:" + reason for reason in progress["unmet_conditions"])
     if summary.get("final_objects") != final.get("objects"):
@@ -588,26 +612,14 @@ def evaluate_task_scope(summary, observations, rounds, calls):
                 or request.get("temperature") != 0 or request.get("thinking") != {"type": "disabled"}):
             failures.append("formal_model_configuration_mismatch")
             break
-    # Check successful transition evidence against this run's raw observations.
-    by_index = {row.get("observation_index"): row for row in observations}
-    by_frame = {str(row.get("observation", {}).get("frameId")): row for row in observations}
-    for event in summary.get("action_evidence", []):
-        basis = event.get("evidence") or {}
-        if event.get("action") == "pick":
-            observed = by_index.get(basis.get("post_observation", basis.get("after_observation")), {})
-            if observed.get("holding", {}).get("holding") is not True:
-                failures.append("pick_ledger_missing_holding_observation")
-        elif event.get("action") == "place":
-            placement = basis.get("placement") or {}
-            observed = by_frame.get(str(placement.get("frame_id")), {})
-            detections = observed.get("perception", {}).get("detections", [])
-            if (observed.get("holding", {}).get("holding") is not False
-                    or not any(d.get("category") == "red-ball" and d.get("bbox") == placement.get("ball_bbox") for d in detections)
-                    or not any(d.get("category") == "storage-zone" and d.get("bbox") == placement.get("storage_bbox") for d in detections)):
-                failures.append("delivery_ledger_missing_same_frame_observation")
-    if stage == "stage-2":
-        failures.append("stage2_topology_acceptance_not_implemented")
+    observed_evidence = audit_observed_ledger(summary, observations, rounds, bridge, motions)
+    failures.extend(observed_evidence["failures"])
+    done_evidence = audit_done_bytes(last, calls, progress, observations)
+    failures.extend(done_evidence["failures"])
     return {"stage": stage, "task_spec": parsed, "completion": progress,
+            "topology": topology,
+            "discovery_audit": discovery,
+            "observed_evidence": observed_evidence, "done_evidence": done_evidence,
             "failures": list(dict.fromkeys(failures))}
 
 
@@ -775,6 +787,83 @@ def evaluate_judge(record: dict, rounds: list, observations: list, motions: list
             "report_only": True, "counts": counts, "rows": audited}
 
 
+def evaluate_action_identity_audits(record, captures, summary, observations, rounds, motions, task_scope):
+    """Keep all-action temporal Judge separate from global consistency.
+
+    A report-only historical unverifiable is not itself a new failure. Only an
+    unverified identity actually used by this run's completion ledger blocks it.
+    """
+    expected = sorted({identity for definition in record.get("native", {}).get("taskDefinition", {}).get("deliveries", [])
+        if definition.get("objectRole") == "target" and definition.get("destinationRole") == "storage"
+        for identity in definition.get("requiredPackageIds", [])})
+    audits, bound_by_round = [], {}
+    for row in rounds:
+        if (row.get("action") or {}).get("action") not in {"pick", "place"}:
+            continue
+        before = row.get("result", {}).get("evidence", {}).get("before_observation")
+        prefix = [o for o in observations if type(before) is int and type(o.get("observation_index")) is int
+                  and o["observation_index"] <= before]
+        bound = evaluate_perception(prefix, captures, record, summary, expected)
+        judged = evaluate_judge(record, [row], observations, motions, bound["track_truth_bindings"])["rows"][0]
+        bound_by_round[row.get("round")] = bound["track_truth_bindings"]
+        audits.append({"round": row.get("round"), "prefix_rule": "all observations 1..before_observation inclusive",
+            "prefix_final_observation": before, "prefix_observation_count": len(prefix), "judge": judged,
+            "ambiguous_track_ids": bound["ambiguous_track_ids"]})
+    counts = Counter(row["judge"]["status"] for row in audits)
+    grouped_observations, grouped_captures = defaultdict(list), defaultdict(list)
+    for row in observations:
+        grouped_observations[str(row.get("observation", {}).get("frameId"))].append(row)
+    for capture in captures:
+        grouped_captures[str(capture.get("frameId"))].append(capture)
+    failures, witnesses, identities = [], [], {}
+    completed_ids = set(task_scope.get("completion", {}).get("delivered_object_ids", []))
+    for audit in audits:
+        judgment = audit["judge"]
+        if judgment.get("object_id") in completed_ids and judgment.get("status") == "false_positive":
+            failures.append("completion_action_contradicted_by_native_window")
+    for entry in task_scope.get("observed_evidence", {}).get("deliveries", []):
+        frame_id, oid = str(entry["frame_id"]), entry["object_id"]
+        os, cs = grouped_observations[frame_id], grouped_captures[frame_id]
+        row = {"object_id": oid, "frame_id": frame_id, "truth_id": None, "verified": False, "failures": []}
+        if len(os) != 1 or len(cs) != 1 or os[0]["observation"].get("tick") != cs[0].get("tick"):
+            row["failures"].append("completion_witness_exact_capture_missing_or_ambiguous")
+        else:
+            observation, capture = os[0], cs[0]
+            event = summary["action_evidence"][entry["event_index"]]
+            bbox = event["evidence"]["placement"]["ball_bbox"]
+            matched = match_pixels(observation["observation"].get("detections", []), capture)
+            raw = observation["observation"].get("detections", [])
+            selected = [m for m in matched if raw[m["detection_index"]].get("bbox") == bbox
+                        and category(raw[m["detection_index"]].get("category")) == "red-ball"]
+            if len(selected) != 1 or selected[0].get("status") != "unique":
+                row["failures"].append("completion_witness_physical_identity_unverified")
+            else:
+                identity = row["truth_id"] = selected[0]["truth_id"]
+                release_index = entry.get("release_observation_index")
+                release_commands = [m for m in motions if m.get("method") == "release" and m.get("after_observation") == release_index]
+                binding = bound_by_round.get(release_commands[0].get("round"), {}) if len(release_commands) == 1 else {}
+                if binding.get(oid) != identity:
+                    row["failures"].append("completion_witness_disagrees_with_pre_action_identity")
+                if identity in identities.values():
+                    row["failures"].append("completion_reuses_physical_object")
+                for det in observation.get("perception", {}).get("detections", []):
+                    old_id = det.get("known_delivered_object_id")
+                    if old_id not in identities:
+                        continue
+                    old = [m for m in matched if raw[m["detection_index"]].get("bbox") == det.get("bbox")]
+                    if len(old) != 1 or old[0].get("status") != "unique" or old[0].get("truth_id") != identities[old_id]:
+                        row["failures"].append("completion_old_object_exclusion_identity_conflict")
+                identities[oid] = identity
+        row["verified"] = not row["failures"]
+        failures.extend(row["failures"])
+        witnesses.append(row)
+    return {"scope": "all_pick_place_prefix_judge_and_completion_witness_identity",
+            "prefix_judge": {"eligible_actions": len(audits), "counts": dict(counts), "rows": audits},
+            "completion_witnesses": witnesses, "global_judge_replaced": False,
+            "unverifiable_policy": "report each historical gap; gate only completion evidence affected by the gap",
+            "failures": list(dict.fromkeys(failures))}
+
+
 def evaluate_run(directory: Path) -> dict:
     directory = Path(directory).resolve()
     inputs = {}
@@ -814,9 +903,9 @@ def evaluate_run(directory: Path) -> dict:
     manifest = load("../manifest.json", {})
     driver_summary = load("../summary.json", {})
     lifecycle = load("brain/llm.lifecycle.jsonl", [],
-        required=manifest.get("version") == "wm-autonomous-brain-driver/v7", lines=True)
+        required=manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8"}, lines=True)
     lifecycle_audit = (evaluate_call_lifecycle(calls, lifecycle)
-        if lifecycle or manifest.get("version") == "wm-autonomous-brain-driver/v7" else None)
+        if lifecycle or manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8"} else None)
     if lifecycle_audit:
         failures.extend(lifecycle_audit["failures"])
     stop = load("../evaluator-stop.json", {}, required=False)
@@ -836,9 +925,10 @@ def evaluate_run(directory: Path) -> dict:
                 failures.append("evidence_sha_mismatch:" + key)
     delivery = evaluate_delivery(record, rounds, summary, metadata, observations)
     failures.extend(delivery["failures"])
-    task_scope = evaluate_task_scope(summary, observations, rounds, calls)
+    task_scope = evaluate_task_scope(summary, observations, rounds, calls, bridge, motions,native_record=record,captures=captures)
+    topology=task_scope.get("topology")
     failures.extend(task_scope["failures"])
-    if manifest.get("version") == "wm-autonomous-brain-driver/v7" and task_scope["stage"] == "legacy-unscoped":
+    if manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8"} and task_scope["stage"] == "legacy-unscoped":
         failures.append("new_run_missing_instruction_task_spec")
     if not rounds:
         failures.append("no_completed_round_logs")
@@ -859,6 +949,12 @@ def evaluate_run(directory: Path) -> dict:
         failures.append("nonwhitelist_brain_requests")
     perception = evaluate_perception(observations, captures, record, summary, delivery["expected_target_ids"])
     judge = evaluate_judge(record, rounds, observations, motions, perception["track_truth_bindings"])
+    identity_audit = transcript_audit = None
+    if task_scope["stage"] != "legacy-unscoped":
+        identity_audit = evaluate_action_identity_audits(record, captures, summary, observations, rounds, motions, task_scope)
+        transcript_audit = strict_transcript_replay(directory)
+        failures.extend(identity_audit["failures"])
+        failures.extend(transcript_audit["failures"])
     failures_by_action = [{"round": row.get("round"), "action": row.get("action"),
                            "simulation_seconds": row.get("simulation_seconds"), "result": row.get("result"),
                            "failure_kind": stop_failure_kind(row, rounds[-1].get("round"), stop, delivery["step_ms"])}
@@ -879,9 +975,13 @@ def evaluate_run(directory: Path) -> dict:
             "brain_status": summary.get("status"), "brain_reason": summary.get("reason"),
             "failed_actions": failures_by_action, "perception": perception,
             "source_proof": source_proof, "judge": judge,
+            "action_identity_audit": identity_audit, "strict_transcript_replay": transcript_audit,
+            "topology_audit": topology,
             "external_stop": {"recorded": bool(stop), "version": stop.get("version"),
                               "reason": stop.get("reason"), "classified_failures": failure_counts["external_stop"]},
             "inputs": inputs, "evaluator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "evaluator_dependencies": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+                for name in ("tools/brain_evidence_audit.py", "tools/replay_brain_llm.py", "tools/brain_topology_audit.py")},
             "rules": {"truth_only_in_evaluator": True,
                 "success_recomputed_from_record": True, "determinism_is_not_a_gate": True,
                 "position_error_is_report_only": True,
@@ -920,6 +1020,20 @@ def report_text(result: dict) -> str:
     lines.extend(["", "## 最终真值核对", "", "| 红球 ID | 交付事件仍有效 | 最终在存放区 | 仍被夹持 |", "|---|---|---|---|"])
     for row in result["delivery"]["final_positions"]:
         lines.append(f"| {row['truth_id']} | {row['active_delivery_event']} | {row['inside_storage']} | {row['held']} |")
+    topology=result.get("topology_audit")
+    if topology is not None:
+        lines.extend(["", "## 阶段 2 独立全图探索复核", "",
+            "分母取原 record 全图道路首尾端点按冻结 JS 六位小数合并的全部节点，含 1 / 2 / 3+ 度和无合法出边的终点；不含曲路内部采样点，不裁成可达子图。分子取全部语义节点身份，只有经原观测与实际运动核验的 alias 才排除。", "",
+            "| 指标 | 独立结果 |", "|---|---:|",
+            f"| 自建节点 / 全图真实节点 | {fmt(topology.get('brain_node_count'))} / {fmt(topology.get('true_node_count'))} |",
+            f"| 节点比例（上限 1.2） | {fmt(topology.get('node_ratio'))} |",
+            f"| 缺失真实节点数 | {len(topology.get('missing_nodes', []))} |",
+            f"| 有重复脑身份的真实节点数 | {len(topology.get('duplicate_nodes', {}))} |",
+            f"| 错误合并的脑身份数 | {len(topology.get('false_merges', {}))} |",
+            f"| 未完成合法有向出口数 | {len(topology.get('missing_directed_exits', []))} |",
+            f"| 实际完整行程数 | {fmt(topology.get('verified_traversal_count'))} |",
+            f"| 独立探索完成 | {topology.get('complete') is True} |", "",
+            "比例达标不替代缺失节点、错误合并、未解决身份/连接及每条合法有向出口的完整行程门禁；反向出口仅可尝试不能算已完成。逐项锚点绑定、失败原因与来源见 evaluation.json 的 topology_audit。"])
     counts = result["judge"]["counts"]
     lines.extend(["", "## 独立 Judge 对照", "",
         "仅对有唯一真值身份绑定、动作内grab/release记录、前后观测及同tick真值样本的pick/place作独立对照。缺失或歧义记为无法核验，不猜测；explore、look_around、go_to、done不套用抓放真值判据。对照统计本身不增加任务通过门槛。", "",

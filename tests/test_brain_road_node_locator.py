@@ -1,18 +1,20 @@
-"""Consistent nearest-within-15-cm node lookup from sensor-only fixtures.
+"""Historical proximity cases require explicit anchor/continuity evidence.
 
-Querying current exits and choosing one must use the same node as observation
-updates. The tests retain strict distance boundaries, insertion-order ties,
-and the existing direct-node-to-node traversal completion semantics.
+The original coordinates, 15 cm boundaries and equal-distance permutations
+remain counterexamples. Neither nearest position nor insertion order assigns a
+semantic junction; positive controls supply complete public sensor/motion data.
 """
 import copy
 
 import pytest
 
 from autonomous_brain.navigation import RoadMemory, distance, position, wrap
+from test_brain_stage2_adversarial import SensorTrace, canonical
 
 
 def odometry(right_cm=0, forward_cm=0, heading_deg=0):
-    return {"rightCm": right_cm, "forwardCm": forward_cm, "headingDeg": heading_deg}
+    return {"rightCm": right_cm, "forwardCm": forward_cm, "headingDeg": heading_deg,
+            "distanceCm": 0, "tick": 0}
 
 
 def road(*angles, error=0):
@@ -20,142 +22,166 @@ def road(*angles, error=0):
             "headingErrorDeg": error, "exits": [{"angleDeg": angle} for angle in angles]}
 
 
-def overlapping_run14_anchors():
-    # Run14 observations133/145 created junction9/10 respectively. This
-    # isolated two-node fixture intentionally renumbers those same anchors.
-    memory = RoadMemory()
-    original = odometry(-209.3, 116.8, -96.9)
-    memory.update(original, road(157.4, 28.1, -52.2, error=-32.9))
-    earlier = memory.nodes[0]
-    # The r27 input reports the earlier -68.8deg exit as visited+blocked.
-    # Establish that state via the normal navigation API, not truth metadata.
-    memory.chosen(original, 28.1, blocked=True)
-    memory.mark_blocked()
-    memory.update(odometry(-187.7, 109.3, 98.5), road(112.4, -38, -167.3))
-    nearer = memory.nodes[1]
-    current = odometry(-200.1, 107.7, -84.3)  # observations161–163
-    observed = road(144.8, 15.5, -64.8, error=15.5)
-    memory.update(current, observed)
-    assert len(memory.nodes) == 2
-    assert distance(position(current), earlier["position"]) * 100 == pytest.approx(12.9402472939)
-    assert distance(position(current), nearer["position"]) * 100 == pytest.approx(12.5027996865)
-    return memory, earlier, nearer, current, observed
+def node(memory, ident):
+    return next(n for n in memory.nodes if n['id']==ident)
 
 
 def exit_at(node, heading):
-    matches = [e for e in node["exits"] if abs(wrap(e["heading_deg"] - heading)) < 1e-6]
-    assert len(matches) == 1
+    matches = [e for e in node['exits'] if abs(wrap(e['heading_deg']-heading))<1e-6]
+    assert len(matches)==1
     return matches[0]
 
 
-def test_current_node_uses_the_nearer_run14_anchor_despite_insertion_order():
-    memory, earlier, nearer, current, observed = overlapping_run14_anchors()
-    # A synthetic extra sensor exit makes update's destination observable;
-    # the original three angles and geometric/angle thresholds are unchanged.
-    observed = copy.deepcopy(observed)
-    observed["exits"].append({"angleDeg": 84.3})  # absolute0deg
-    memory.update(current, observed)
-    assert exit_at(nearer, 0)["visits"] == 0
-    assert not any(abs(e["heading_deg"]) < 1e-6 for e in earlier["exits"])
-    assert memory.current_node(current) is nearer
+def overlapping_run14_anchors():
+    # Original observations133/145/161 coordinates and local angles. There is
+    # no original motion window here, so the nearby identities stay unresolved.
+    trace = SensorTrace()
+    trace.publish(-209.3,116.8,heading=-96.9,absolute_exits=(60.5,-68.8,-149.1),
+                  heading_error=-32.9)
+    earlier_id = trace.roads.current_node(trace.current['odometry'])['id']
+    params = trace.select(-68.8)
+    trace.publish(-209.3,116.8,heading=-96.9,absolute_exits=(60.5,-68.8,-149.1),
+                  heading_error=-32.9,method='take_exit',params=params,
+                  result={'accepted':True,'stoppedBy':'front_clearance','distanceCm':0})
+    trace.roads.mark_blocked()
+    trace.publish(-187.7,109.3,heading=98.5,travelled=25,
+                  absolute_exits=(-149.1,60.5,-68.8),tick=30)
+    nearer_id = trace.roads.current_node(trace.current['odometry'])['id']
+    trace.publish(-200.1,107.7,heading=-84.3,travelled=40,
+                  absolute_exits=(60.5,-68.8,-149.1),heading_error=15.5,tick=40)
+    current, observed = trace.current['odometry'], trace.current['road']
+    memory = trace.roads
+    assert len(memory.nodes)==3
+    assert distance(position(current),node(memory,earlier_id)['position'])*100==pytest.approx(12.9402472939)
+    assert distance(position(current),node(memory,nearer_id)['position'])*100==pytest.approx(12.5027996865)
+    return trace,earlier_id,nearer_id,current,observed
 
 
-def test_current_exit_state_comes_from_the_node_receiving_current_observations():
-    memory, earlier, nearer, current, observed = overlapping_run14_anchors()
-    assert exit_at(earlier, -68.8)["blocked"] is True
-    assert exit_at(nearer, -68.8)["blocked"] is False
-    seen = next(e for e in memory.exits(current, observed) if e["angle_deg"] == 15.5)
-    assert seen["visits"] == 0
-    assert seen["blocked"] is False
-    assert seen["completed"] is False
+def test_current_node_does_not_choose_nearer_run14_anchor_by_proximity():
+    trace,earlier,nearer,_,_ = overlapping_run14_anchors()
+    memory = trace.roads
+    before = {i:copy.deepcopy(node(memory,i)) for i in (earlier,nearer)}
+    # The extra public exit changes the current profile, never either nearby
+    # historical node. A hypothesis may remain unresolved until actual revisit.
+    trace.publish(-200.1,107.7,heading=-84.3,travelled=40,
+                  absolute_exits=(60.5,-68.8,-149.1,0),heading_error=15.5)
+    current = memory.current_node(trace.current['odometry'])
+    assert current['id'] not in {earlier,nearer}
+    assert exit_at(current,0)['visits']==0
+    assert all(node(memory,i)==before[i] for i in before)
+    assert not memory.exploration_status()['complete']
 
 
-def test_chosen_after_run14_stationary_alignment_updates_the_same_nearest_node():
-    memory, earlier, nearer, _, _ = overlapping_run14_anchors()
-    aligned = odometry(-200.1, 107.7, -68.8)  # observation164
-    memory.update(aligned, road(129.3, 0, -80.3))
-    before_earlier = copy.deepcopy(earlier)
-    memory.chosen(aligned, 0)
-    assert memory.active_exit["node"] is nearer
-    assert exit_at(nearer, -68.8)["visits"] == 1
-    assert earlier == before_earlier
-    assert exit_at(nearer, -68.8)["completed"] is False
+def test_current_exit_state_does_not_inherit_nearby_historical_block():
+    trace,earlier,nearer,current,observed = overlapping_run14_anchors()
+    memory = trace.roads
+    assert exit_at(node(memory,earlier),-68.8)['blocked'] is True
+    assert exit_at(node(memory,nearer),-68.8)['blocked'] is False
+    fresh = memory.current_node(current)
+    assert fresh['id'] not in {earlier,nearer}
+    seen = next(e for e in memory.exits(current,observed) if abs(e['angle_deg']-15.5)<1e-6)
+    assert seen['visits']==0 and seen['blocked'] is False and seen['completed'] is False
 
 
-@pytest.mark.parametrize("reverse_insertion", [False, True])
-def test_equal_distance_tie_remains_stable_for_update_lookup_and_selection(reverse_insertion):
-    memory = RoadMemory()
-    anchors = [odometry(0), odometry(20)]
+def test_chosen_after_run14_observed_alignment_uses_current_anchor_identity():
+    trace,earlier,nearer,_,_ = overlapping_run14_anchors()
+    memory = trace.roads
+    current_id = memory.current_node(trace.current['odometry'])['id']
+    before = {i:copy.deepcopy(node(memory,i)) for i in (earlier,nearer)}
+    trace.publish(-200.1,107.7,heading=-68.8,travelled=40,
+                  absolute_exits=(60.5,-68.8,-149.1),method='turn',params={'angleDeg':15.5})
+    assert memory.current_node(trace.current['odometry'])['id']==current_id
+    trace.select(-68.8)
+    assert exit_at(node(memory,current_id),-68.8)['visits']==1
+    assert exit_at(node(memory,current_id),-68.8)['completed'] is False
+    assert all(node(memory,i)==before[i] for i in before)
+
+
+@pytest.mark.parametrize('reverse_insertion',[False,True])
+def test_equal_distance_tie_cannot_assign_identity_by_insertion_order(reverse_insertion):
+    trace = SensorTrace()
+    points = [0,20]
     if reverse_insertion:
-        anchors.reverse()
-    for anchor in anchors:
-        memory.update(anchor, road(0))
-    first, second = memory.nodes
-    midpoint = odometry(10)
-    memory.update(midpoint, road(0, 90))
-    assert memory.current_node(midpoint) is first
-    assert exit_at(first, 90)["visits"] == 0
-    assert len(second["exits"]) == 1
-    memory.chosen(midpoint, 90)
-    assert memory.active_exit["node"] is first
-    assert exit_at(first, 90)["visits"] == 1
-    assert len(memory.nodes) == 2
-    assert memory.unexplored() == 3
+        points.reverse()
+    trace.publish(points[0],0,absolute_exits=(0,))
+    trace.publish(points[1],0,travelled=20,absolute_exits=(0,),tick=20)
+    earlier = {n['id']:copy.deepcopy(n) for n in trace.roads.nodes}
+    trace.publish(10,0,travelled=30,absolute_exits=(0,90),tick=30)
+    current = trace.roads.current_node(trace.current['odometry'])
+    assert current['id'] not in earlier and len(trace.roads.nodes)==3
+    trace.select(90)
+    current = trace.roads.current_node(trace.current['odometry'])
+    assert exit_at(current,90)['visits']==1
+    assert all(node(trace.roads,i)==saved for i,saved in earlier.items())
+    assert trace.evidence()['traversals']==[]
+    assert not trace.roads.exploration_status()['complete']
 
 
-@pytest.mark.parametrize("right_cm", [15, 15.0001])
+@pytest.mark.parametrize('right_cm',[15,15.0001])
 def test_original_fifteen_centimetre_boundary_does_not_merge_nodes(right_cm):
-    memory = RoadMemory()
-    memory.update(odometry(), road(0))
-    earlier = memory.nodes[0]
-    before = copy.deepcopy(earlier)
+    trace = SensorTrace()
+    trace.publish(0,0,absolute_exits=(0,))
+    earlier = copy.deepcopy(trace.roads.nodes[0])
     current = odometry(right_cm)
-    assert memory.current_node(current) is None
-    memory.update(current, road(90))
-    assert len(memory.nodes) == 2
-    assert memory.current_node(current) is memory.nodes[1]
-    assert earlier == before
-    assert memory.unexplored() == 2
+    assert trace.roads.current_node(current) is None
+    trace.publish(right_cm,0,travelled=right_cm,absolute_exits=(90,),tick=20)
+    assert len(trace.roads.nodes)==2
+    assert trace.roads.current_node(trace.current['odometry'])['id']!=earlier['id']
+    assert node(trace.roads,earlier['id'])==earlier
+    assert trace.evidence()['traversals']==[]
 
 
-def test_position_just_inside_original_boundary_reuses_existing_node():
-    memory = RoadMemory()
-    memory.update(odometry(), road(0))
-    earlier = memory.nodes[0]
-    current = odometry(14.9999)
-    memory.update(current, road(90))
-    assert memory.current_node(current) is earlier
-    assert len(memory.nodes) == 1
-    assert len(earlier["exits"]) == 2
+def test_position_just_inside_original_boundary_does_not_establish_identity():
+    trace = SensorTrace()
+    trace.publish(0,0,absolute_exits=(0,))
+    earlier = copy.deepcopy(trace.roads.nodes[0])
+    trace.publish(14.9999,0,travelled=14.9999,absolute_exits=(90,),tick=20)
+    assert trace.roads.current_node(trace.current['odometry'])['id']!=earlier['id']
+    assert len(trace.roads.nodes)==2
+    assert node(trace.roads,earlier['id'])==earlier
+    assert trace.evidence()['traversals']==[]
 
 
-@pytest.mark.parametrize("has_distant_node", [False, True])
+@pytest.mark.parametrize('has_distant_node',[False,True])
 def test_no_near_node_returns_none_and_cannot_mutate_another_node(has_distant_node):
-    memory = RoadMemory()
+    trace = SensorTrace()
+    memory = trace.roads
     if has_distant_node:
-        memory.update(odometry(), road(0))
+        trace.publish(0,0,absolute_exits=(0,))
     before = copy.deepcopy(memory.nodes)
-    elsewhere = odometry(100, 100)
+    elsewhere = odometry(100,100)
     assert memory.current_node(elsewhere) is None
-    memory.chosen(elsewhere, 0)
-    assert memory.active_exit is None
-    assert memory.nodes == before
-    assert memory.exits(elsewhere, road(0)) == [{"angle_deg": 0, "heading_deg": 0,
-        "visits": 0, "completed": False, "blocked": False}]
+    memory.chosen(elsewhere,0)
+    assert memory.active_exit is None and memory.nodes==before
+    observed = memory.exits(elsewhere,road(0))
+    assert len(observed)==1
+    assert observed[0]['angle_deg']==0 and observed[0]['heading_deg']==0
+    assert observed[0]['id'] is None and observed[0]['state']=='unresolved'
+    assert not observed[0]['completed'] and not observed[0]['blocked']
 
 
-def test_direct_node_to_node_observation_still_completes_only_traversed_exits():
+def test_direct_node_updates_without_motion_do_not_complete_either_direction():
     memory = RoadMemory()
     start = odometry()
-    memory.update(start, road(0))
-    memory.chosen(start, 0)
-    # Consecutive atNode=True samples may span a whole segment. A locator fix
-    # must not collapse these nodes merely because no False frame was sampled.
+    memory.update(start,road(0))
+    memory.chosen(start,0)
     arrival = odometry(forward_cm=25)
-    memory.update(arrival, road(180, 90))
-    assert len(memory.nodes) == 2
-    assert memory.current_node(arrival) is memory.nodes[1]
-    assert memory.nodes[0]["exits"][0]["completed"] is True
-    assert [e["completed"] for e in memory.exits(arrival, road(180, 90))] == [True, False]
-    assert memory.unexplored() == 1
-    assert memory.active_exit is None
+    memory.update(arrival,road(180,90))
+    assert len(memory.nodes)==2
+    assert memory.current_node(arrival)['id']==memory.nodes[1]['id']
+    assert [e['completed'] for e in memory.exits(arrival,road(180,90))]==[False,False]
+    assert memory.traversal_records()==[] and not memory.exploration_status()['complete']
+
+
+def test_complete_public_direct_trip_binds_current_selection_to_arrival_anchor():
+    trace = SensorTrace()
+    trace.publish(0,0,absolute_exits=(0,))
+    params = trace.select(0)
+    trace.publish(0,25,travelled=25,absolute_exits=(180,90),method='take_exit',params=params)
+    current = trace.roads.current_node(trace.current['odometry'])
+    assert current['id']==canonical(trace.evidence(),2)
+    assert len(trace.evidence()['traversals'])==1
+    trace.select(90)
+    current = trace.roads.current_node(trace.current['odometry'])
+    assert exit_at(current,90)['state']=='exploring'
+    assert exit_at(current,180)['state']!='verified'

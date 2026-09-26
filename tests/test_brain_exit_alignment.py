@@ -14,7 +14,7 @@ from autonomous_brain.navigation import position, wrap
 
 
 def exit_runtime(*, start_pose=(93.6, .4, -145.2), selected_angle=-147.2,
-                 turn_residual=2, fresh_exit_mode="same", fresh_on_road=True,
+                 turn_residual=.1, fresh_exit_mode="same", fresh_on_road=True,
                  fresh_at_node=True, blocked_result=None, initial_at_node=True):
     x, z, heading = start_pose
     absolute_exit = wrap(heading + selected_angle)
@@ -127,7 +127,7 @@ def test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit(call
     assert calls[0]["params"]["angleDeg"] == pytest.approx(-147.2)
     assert events == ["turn", "observe", "take_exit", "observe"]
     assert calls[1]["observation_index"] > calls[0]["observation_index"]
-    assert calls[1]["params"]["angleDeg"] == pytest.approx(2)
+    assert calls[1]["params"]["angleDeg"] == pytest.approx(.1)
     assert wrap(calls[1]["heading_deg"] + calls[1]["params"]["angleDeg"]) == pytest.approx(67.6)
     assert calls[1]["road"]["frontClearanceCm"] == 100
     assert len(logs) == 2

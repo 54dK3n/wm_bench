@@ -194,8 +194,8 @@ def test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_f
     assert_unobserved_failure(f, result)
 
 
-@pytest.mark.parametrize("fraction", [1, .5])
-def test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked(fraction):
+def test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_blocked():
+    fraction = 1
     f = junction_runtime([response("follow_road")] + [response("forward", fraction=fraction) for _ in range(5)],
                          road={"headingErrorDeg": 0, "leftClearanceCm": 9})
     result = f.actions.explore()
@@ -206,6 +206,20 @@ def test_five_probes_without_a_node_exhaust_the_request_budget_without_marking_b
     assert sum(row["params"]["distanceCm"] for row in probes) == 20
     assert f.runtime.snapshot["odometry"]["forwardCm"] == pytest.approx(20 * fraction)
     assert result["evidence"]["junction_recovery"]["requested_budget_cm"] == 20
+    assert result["evidence"]["junction_recovery"]["requested_total_cm"] == 20
+
+
+def test_partial_probe_stops_without_spending_remaining_request_budget():
+    f = junction_runtime([response("follow_road"), response("forward", fraction=.5)],
+                         road={"headingErrorDeg": 0, "leftClearanceCm": 9})
+    result = f.actions.explore()
+    assert_unobserved_failure(f, result)
+    probes = [row for row in f.calls if row["method"] == "forward"]
+    assert len(probes) == 1
+    assert sum(row["params"]["distanceCm"] for row in probes) == 4
+    assert result["evidence"]["junction_recovery"]["requested_budget_cm"] == 20
+    assert result["evidence"]["junction_recovery"]["requested_total_cm"] == 4
+    assert f.runtime.snapshot["odometry"]["forwardCm"] == pytest.approx(2)
 
 
 @pytest.mark.parametrize("stopped_by", ["junction", "max_distance"])

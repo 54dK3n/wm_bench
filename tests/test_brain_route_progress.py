@@ -136,7 +136,7 @@ def test_near_angled_junction_reacquires_then_stops_after_one_no_motion_step():
                                                  "stoppedBy": "junction"})
     result = Actions(runtime).go_to("zone-1")
     assert result["success"] is False
-    assert result["reason"] == "route_no_progress"
+    assert result["reason"] == "basic_motion_not_verified"
     assert [method for method, _ in runtime.motions] == ["turn", "forward"]
 
 

@@ -253,7 +253,8 @@ class PerceptionTests(unittest.TestCase):
         self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
             simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))
         # Both detections lie within 15 cm of the known delivered ball. The
-        # closer one is second in input order; matching must use distance.
+        # closer one is second in input order, but proximity cannot resolve
+        # which physical ball produced either observation.
         evidence = observe(self.perception, 5, time=3,
                            items=[ball(60, bearing=5), ball(60)])
         unplaced, delivered = evidence["detections"]
@@ -261,9 +262,11 @@ class PerceptionTests(unittest.TestCase):
         self.assertTrue(unplaced["fed_to_world_model"])
         self.assertIsNotNone(unplaced["track_id"])
         self.assertNotEqual(unplaced["track_id"], oid)
-        self.assertEqual(delivered["known_delivered_object_id"], oid)
-        self.assertFalse(delivered["fed_to_world_model"])
-        self.assertEqual(len([row for row in self.perception.objects() if row["category"] == "red-ball"]), 2)
+        self.assertNotIn("known_delivered_object_id", delivered)
+        self.assertTrue(delivered["fed_to_world_model"])
+        self.assertTrue(all(oid in d["identity_ambiguity"]["candidate_ids"]
+                            for d in (unplaced, delivered)))
+        self.assertEqual(len([row for row in self.perception.objects() if row["category"] == "red-ball"]), 3)
 
     def test_near_visibility_preserves_existing_confirmation_without_new_hits_or_geometry(self):
         oid = self.confirm_red()

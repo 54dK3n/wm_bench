@@ -87,7 +87,8 @@ def test_far_fresh_view_does_not_ignore_a_blocked_road_or_claim_success():
     result = Actions(runtime).go_to("red")
 
     assert result["success"] is False
-    assert result["reason"] == "route_blocked"
+    assert result["reason"] == "basic_motion_not_verified"
+    assert result["evidence"]["actuator_result"]["stoppedBy"] == "front_clearance"
     assert len(moves) == 1 and len(routes) == 1
     assert detection["distance_cm"] > 65
     assert runtime.snapshot["odometry"]["forwardCm"] == 0
@@ -98,7 +99,7 @@ def test_far_fresh_view_stops_after_one_road_command_with_no_pose_progress():
     result = Actions(runtime).go_to("red")
 
     assert result["success"] is False
-    assert result["reason"] == "route_no_progress"
+    assert result["reason"] == "basic_motion_not_verified"
     assert len(moves) == 1 and len(routes) == 1
     assert detection["distance_cm"] > 65
 

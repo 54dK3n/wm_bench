@@ -30,6 +30,18 @@ class CompactActionResultTests(unittest.TestCase):
         return run.compact_action_result(3, action or {"action": "go_to", "params": {"object_id": "red-1"}},
                                          result, 8)
 
+    def test_failed_scan_reports_actual_coverage_and_motion_failure_to_next_decision(self):
+        source = {"success": False, "reason": "basic_motion_not_verified", "evidence": {
+            "motion_verified": False, "frame_fresh": True, "holding_changed": False,
+            "reasons": ["rotation_not_verified"],
+            "view_coverage": {"basis": "observed_views", "covered_degrees": 60.,
+                              "uncovered_degrees": 300., "views": [{"private": "large"}]}}}
+        evidence = self.compact(source, {"action": "look_around", "params": {}})["evidence"]
+        self.assertFalse(evidence["motion_verified"])
+        self.assertEqual(evidence["motion_failure_reasons"], ["rotation_not_verified"])
+        self.assertEqual(evidence["view_coverage"], {"basis": "observed_views",
+            "covered_degrees": 60., "uncovered_degrees": 300., "valid_view_count": 1})
+
     def test_pick_motion_failure_keeps_sensor_basis_separate_from_return(self):
         source = {"success": False, "reason": "pick_motion_not_verified", "evidence": {
             "method": "forward", "front_clearance_cm": 23.9, "requested_cm": 2.5784,
@@ -183,7 +195,7 @@ class CompactActionResultTests(unittest.TestCase):
 
 
 class NextModelStateTests(unittest.TestCase):
-    def run_offline(self, max_rounds):
+    def run_offline(self, max_rounds, abort=None):
         states, runtimes, results = [], [], []
         row = {"id": "red-1", "category": "red-ball", "position_m": {"x": 0.0, "z": .32},
                "confidence": .9, "state": "CONFIRMED", "distance_cm": 32.0,
@@ -215,6 +227,8 @@ class NextModelStateTests(unittest.TestCase):
             def execute(self, action):
                 before = self.observation_count
                 self.observe()
+                if abort is not None:
+                    raise abort
                 result = failed_go_to()
                 result["evidence"].update(before_observation=before, after_observation=self.observation_count,
                                             final_observation=self.observation_count)
@@ -248,6 +262,20 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(row, original_row)
         return states, runtimes[0], results, summary, logged_rounds
 
+    def test_exception_keeps_observed_action_evidence_and_closes_logs(self):
+        abort = RuntimeError("synthetic sensor disconnect after motion")
+        abort.action_evidence = {"before_observation": 1, "after_observation": 2,
+                                 "holding": False, "release_unverified": True,
+                                 "place_trajectory": [{"method": "forward", "measured_cm": 4}]}
+        _, runtime, _, summary, rounds = self.run_offline(2, abort=abort)
+        self.assertEqual(len(rounds), 1)
+        self.assertEqual(rounds[0]["result"]["error_type"], "RuntimeError")
+        self.assertEqual(rounds[0]["result"]["evidence"], abort.action_evidence)
+        self.assertEqual(summary["status"], "failed")
+        self.assertEqual(summary["observations"], 2)
+        runtime.bridge.log.close.assert_called_once()
+        self.assertEqual(runtime.observation_log.close.call_count, 2)
+
     def test_next_model_receives_failed_observed_basis_without_rewriting_wm_geometry(self):
         states, runtime, results, summary, logged_rounds = self.run_offline(2)
         recent = states[1]["recent_actions"][-1]
@@ -261,7 +289,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v12")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v14")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

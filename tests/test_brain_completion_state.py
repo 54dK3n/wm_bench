@@ -38,7 +38,9 @@ def test_retirement_basis_reaches_done_evidence_and_next_state_without_rewriting
     runtime = runtime_with_retired_history()
     original = copy.deepcopy(runtime.perception.timeline())
     outcome = Actions(runtime).done()
-    assert outcome["success"] is True
+    # Retiring an unconfirmed object does not retire the blocked road exit.
+    assert outcome["success"] is False
+    assert outcome["evidence"]["unexplored_exits"] > 0
     completion = runtime.state()["completion"]
     assert completion["pending_objects"] == []
     retired = completion["retired_unconfirmed_hypotheses"]

@@ -1,0 +1,74 @@
+{
+  "classification": "completed_final_offline_prerequisite_gate",
+  "status": "FAIL",
+  "decision": "STOP_NO_FORMAL_RUNS",
+  "reason": "Malformed model endpoint can be echoed into round and summary error logs; independent synthetic boundary counterexample reproduced. No real secret leakage established. No runtime repair after stop.",
+  "python": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2 python3 -m pytest -q tests/test_brain_*.py",
+    "tests": 1193,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "node": {
+    "command": "node --test tools/tests/test_autonomous_brain_*.js",
+    "tests": 28,
+    "passed": 28,
+    "failed": 0
+  },
+  "curved_reposition": {
+    "command": "python3 tools/diagnose_road_reposition.py --output <new-file.json>",
+    "classification": "synthetic_fixed_public_sensor_test_not_formal_simulator_run",
+    "passed": true,
+    "metrics": {
+      "candidate_attempt_count": 1,
+      "candidate_reached_count": 1,
+      "complete_reposition_success_count": 1,
+      "road_translation_steps": 3,
+      "odometer_travel_cm": 42.2,
+      "sum_step_endpoint_displacements_cm": 40.70228118503398,
+      "net_reposition_displacement_cm": 36.05551275463989,
+      "candidate_arrival_error_cm": 0.0,
+      "visual_distance_cm": 30.0
+    }
+  },
+  "integrity": {
+    "original": {
+      "entries": 79,
+      "mismatches": []
+    },
+    "isolated_restore": {
+      "entries": 79,
+      "mismatches": []
+    },
+    "platform": {
+      "entries": 58,
+      "mismatches": [],
+      "revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+      "expected_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0"
+    },
+    "pass": true
+  },
+  "source_files_unchanged_during_gate": 79,
+  "boundary_counterexample": {
+    "reproduced": true,
+    "network_calls": 0,
+    "real_configuration_read": false,
+    "marker_in_round_result_reason": true,
+    "marker_in_summary_reason": true,
+    "same_source_as_test_gate": true
+  },
+  "formal_runs_started": 0,
+  "simulation_runs_started": 0,
+  "model_calls": 0,
+  "historical_results_rewritten": false,
+  "evidence_sha256": {
+    "raw/final-offline-gate/python.xml": "5558b93acbf5f5d696e0fd52a0760b7da4cce9cefafe46b872d6cb9b6bc4104b",
+    "raw/final-offline-gate/curved-reposition.json": "dd5fe19e863accec3c56b03cb5202641dd80dc7f01025b1d2a33059fa6f05f54",
+    "raw/final-offline-gate/integrity-before.json": "677e9760d119fab1bb296a9897614cffab5b169e6207d5ce99bbd21e0c35f4f0",
+    "raw/final-offline-gate/integrity-after.json": "677e9760d119fab1bb296a9897614cffab5b169e6207d5ce99bbd21e0c35f4f0",
+    "raw/final-offline-gate/python.txt": "736ae2a471865f062b89593cdff684f88b7b030919625f549db9da67c1ac5946",
+    "raw/final-offline-gate/node.txt": "09b59edf73aedf4e211276b79d132c2eae82c0cc5290aa08f28e4bb65157fc3b",
+    "raw/boundary-review/invalid-endpoint-result.json": "c311a265b80e7cb3a1f7f584ec4a205045a9a22aefc6ea1dbd48a3e46b866edf"
+  }
+}

@@ -87,10 +87,18 @@ def test_quantized_short_visual_step_keeps_its_actual_connection():
 
 def reposition_runtime(*, route=True, no_motion=False):
     roads = RoadMemory()
-    prior = [sensor(1, (.3, .3)), sensor(2, (0, .3), travelled=30),
-             sensor(3, (0, 0), heading=-90, travelled=60)]
+    prior = [sensor(1, (.3, .3), heading=90), sensor(2, (0, .3), heading=90, travelled=30),
+             sensor(3, (0, 0), heading=-180, travelled=60),
+             sensor(4, (0, 0), heading=-90, travelled=60)]
+    # Public anchor headings describe the actual west-then-south traversal.
+    # The final stationary look east is not part of its arrival direction.
+    prior[0]["road"].update(atNode=True, exits=[{"angleDeg": 0}])
+    prior[1]["road"].update(atNode=True, headingErrorDeg=90,
+                          exits=[{"angleDeg": -180}, {"angleDeg": 90}])
+    prior[2]["road"].update(atNode=True, exits=[{"angleDeg": -180}])
+    prior[3]["road"].update(atNode=True, headingErrorDeg=90, exits=[{"angleDeg": 90}])
     for i, row in enumerate(prior):
-        register(roads, row, prior[i - 1] if route and i else None)
+        register(roads, row, prior[i - 1] if route and 0 < i < 3 else None)
     current = prior[-1]
     target = {"id": "red", "category": "red-ball", "state": "CONFIRMED",
               "position_m": {"x": .5, "z": 0}}
@@ -154,6 +162,10 @@ def test_blocked_direct_approach_repositions_on_recorded_road_then_observes_succ
     assert "forward" not in [m for m, _ in moves]
     evidence = outcome["evidence"]["road_reposition"]
     assert evidence["status"] == "reposition_and_visual_standoff_verified"
+    assert all(step["direction"] == "reverse_attempt"
+               and step["reverse_execution"] == "endpoint_and_heading_observed"
+               and step["historical_arc_retraced"]
+               for step in evidence["attempts"][0]["steps"])
     assert evidence["attempts"][0]["approach_observation"] > evidence["attempts"][0]["steps"][-1]["after_observation"]
     assert outcome["evidence"]["navigation_subgoal"]["operation_ready"]
     assert runtime.perception.get_object("red")["position_m"] == {"x": .5, "z": 0}
@@ -184,7 +196,7 @@ def test_repeated_failure_is_rejected_across_rounds_and_new_frame_ids():
         runtime.observe()
         outcome = Actions(runtime).execute({"action": "go_to", "params": {"object_id": "zone"}})
         assert outcome["reason"] == "navigation_repeat_without_new_evidence"
-        assert outcome["evidence"]["previous_failure"] == "visual_standoff_blocked"
+        assert outcome["evidence"]["previous_failure"] == "basic_motion_not_verified"
     assert len(moves) == 1
     assert Actions(runtime).navigation_state()[0]["repeat_blocked"]
 
@@ -192,10 +204,11 @@ def test_repeated_failure_is_rejected_across_rounds_and_new_frame_ids():
 def test_new_material_road_evidence_permits_retry_but_frame_churn_does_not():
     runtime, moves, _ = visual_runtime(45, blocked=True)
     actions = Actions(runtime)
-    actions.go_to("zone")
+    action = {"action": "go_to", "params": {"object_id": "zone"}}
+    actions.execute(action)
     runtime.snapshot["road"]["frontClearanceCm"] += 5
-    outcome = actions.go_to("zone")
-    assert outcome["reason"] == "visual_standoff_blocked"
+    outcome = actions.execute(action)
+    assert outcome["reason"] == "basic_motion_not_verified"
     assert len(moves) == 2
 
 

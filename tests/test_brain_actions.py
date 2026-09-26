@@ -116,7 +116,7 @@ class ActionEvidenceTests(unittest.TestCase):
 class ScriptedActionCase(unittest.TestCase):
     def scripted_runtime(self, steps, *, on_road=True, pose=None, task="", objects=None,
                          detections=None, holding=False, road=None):
-        snapshot = {"observation_index": 1, "observation": {"frameId": 1},
+        snapshot = {"observation_index": 1, "observation": {"frameId": 1, "detections": []},
                     "odometry": {"tick": 0, "rightCm": 0, "forwardCm": 0, "headingDeg": 0,
                                  **(pose or {})},
                     "holding": {"holding": holding},
@@ -130,7 +130,8 @@ class ScriptedActionCase(unittest.TestCase):
         roads = RoadMemory()
         roads.update(snapshot["odometry"], snapshot["road"])
         runtime = SimpleNamespace(snapshot=snapshot, round=1, roads=roads, config={"task": task},
-            perception=SimpleNamespace(objects=lambda: snapshot["objects"]),
+            perception=SimpleNamespace(objects=lambda: snapshot["objects"],
+                camera={"width": 640, "height": 480, "fx": 415.69219381653056}),
             bridge=SimpleNamespace(seconds=0, max_seconds=1200),
             motion_log=SimpleNamespace(write=lambda row: None))
 
@@ -409,7 +410,8 @@ class RoadMemoryTests(unittest.TestCase):
         self.assertEqual(roads.unexplored(), 1)
         roads.update(dict(odo, forwardCm=40), {"onRoad": True, "atNode": True,
                                              "headingErrorDeg": 0, "exits": [{"angleDeg": 180}]})
-        self.assertEqual(roads.unexplored(), 0)
+        self.assertEqual(roads.unexplored(), 2)
+        self.assertFalse(roads.exploration_status()["complete"])
 
     def test_direction_and_paths_are_odometry_based(self):
         self.assertEqual(heading_to((0, 0), (1, 0)), -90)
@@ -419,7 +421,8 @@ class RoadMemoryTests(unittest.TestCase):
             roads.update({"rightCm": 0, "forwardCm": forward, "headingDeg": 0},
                          {"onRoad": True, "atNode": False, "exits": []})
         path = roads.route_to({"rightCm": 0, "forwardCm": 40}, (0, 0))
-        self.assertEqual(path, [(0, .4), (0, .2), (0, 0)])
+        # Coordinates alone do not establish an actually traversed road edge.
+        self.assertEqual(path, [])
 
 
 if __name__ == "__main__":

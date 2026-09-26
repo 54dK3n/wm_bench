@@ -20,15 +20,15 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v15"
+VERSION = "autonomous-brain-llm/v16"
 FORMAL_MODEL = "deepseek-flash"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 16)}
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 17)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14", "autonomous-brain-llm/v15"}
-RETRY_METADATA_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14", "autonomous-brain-llm/v15"}
-DIAGNOSTICS_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14", "autonomous-brain-llm/v15"}
-NORMAL_FINISH_REQUIRED_VERSIONS = {"autonomous-brain-llm/v14", "autonomous-brain-llm/v15"}
+EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 17)}
+RETRY_METADATA_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
+DIAGNOSTICS_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
+NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 17)}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -42,6 +42,8 @@ exploration_hints 至多给出三个观测支持的探索建议：current_fresh_
 按任务选择物体。未持物且已有 CONFIRMED 的任务目标时，优先搬运该目标，不必等探索完所有路段；先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标。目标在身后也可交给 go_to 沿已记录道路导航。只有当前没有可处理的已确认任务目标，或其最近导航失败尚需寻找可达路线时，才继续探索和换位确认；不为与任务无关的球或障碍延迟已有目标的搬运。有持物时，依据当前 objects 中自己的 distance_cm，优先选择最近的 CONFIRMED 存放区，并结合 recent_actions 中对应物体的导航失败及观测证据判断是否可处理；先 go_to 再 place，不要只因另一个存放区先被确认就反复选择更远的区域。若某物体最近 go_to 返回 known_route_exhausted_needs_exploration，而此后没有换位或新增道路/视觉证据，不要机械重复同一已耗尽路线；可先 look_around 重获近处区域的观测、选择另一个已确认存放区，或根据现有出口探索可达路线。具体选择仍由你依据本轮状态决定。task_spec.quantity_mode 明确区分任务：known 时只按指令给出的 required_count 搬运，无需探索完整地图；unknown 时继续探索未知路口和出口，必须没有未探索路段、所有发现目标均已交付且没有待确认目标，不能因为暂时没看见目标就 done。completion.delivered_count 只统计已证明不同身份的有效交付，不能自行把别名或重复观测计为新球。检查 completion.ready_for_done 和 unmet_conditions；只有 ready_for_done 为 true 才主动选择 done，由执行层用新观测再校验。已知数量任务已满足时，不为无关历史假设继续探索；交付身份、数量或夹爪状态仍有歧义时不能结束。检查最近动作的结果；失败时利用观测改变动作，不要机械重复同一失败动作。未持物不能 place，持物不能 pick。
 completion 中的 retired_unconfirmed_hypotheses 保留已归档且从未确认的 LOST 红球假设及依据，objects 的 retired_unconfirmed_hypothesis 分类只表示该历史假设不再阻止完成，不代表已送达，也不代表物体不存在；这些假设是否阻止完成由任务数量模式和 completion 决定；HELD、RELEASED_UNVERIFIED 和未解决交付身份不得忽略，后续新检测仍须正常确认。
 objects 中的 reacquired_as 仅表示 WorldModel 已依据原关联门控、双向唯一竞争检查和新轨迹自身的三个位点确认，记录了历史 LOST 身份到当前身份的重获绑定；历史对象和轨迹仍保留，不能自行猜测或合并物理身份。go_to/pick 只操作当前状态为 CONFIRMED 的身份，不操作历史 LOST ID。重获本身不等于送达；只有经过完整绑定链校验，且链终端真实状态已为 DELIVERED，completion.resolved_reacquired_identities 才会给出旧义务解除的 delivered_object_id 和 binding_chain 依据。终端未送达、证据不完整或有歧义时仍在 pending_objects；判断是否完成要检查 completion 的实际结果，不能因出现 reacquired_as 就 done。
+exploration 和 junction_history 中的出口 state 区分 unexplored（未探索）、exploring（正在探索）、verified（实际完整走过）、blocked（暂时受阻）和 unresolved（身份或连接待解决）。blocked 和 unresolved 都仍是待处理义务；命令 accepted、路点经过、反向可尝试或没有探索建议都不能替代 verified。未解决路口或连接也会阻止未知数量任务完成；按当前新鲜出口和实质新证据恢复探索，不能把任务改成只探索可达区域。节点身份来自结构与实际运动证据；candidate_ids 表示尚未确认的身份假设，不能自行合并。
+completion.unresolved_discovery_ids 是未知数量任务中从未确认且仍未解释的历史红球发现；归档或暂时看不见不证明它不存在或已交付。completion.untracked_discovery_ids 保留尚未进入物体表的歧义红球发现，空视野不能消除这些义务。当前红球 identity_ambiguity 也必须解决；歧义对象不能作为可抓取或交付见证。已知数量任务仍只按经过验证的不同对象数量完成，不需全图探索。
 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
 
 

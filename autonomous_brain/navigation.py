@@ -2,10 +2,19 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import heapq
+import json
 import math
 
-VERSION = "autonomous-brain-navigation/v6"
+from .road_evidence import RoadEvidence
+
+VERSION = "autonomous-brain-navigation/v8"
+
+
+def evidence_version(value):
+    """Version semantic route facts, excluding frame counters and timestamps."""
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def wrap(angle):
@@ -23,160 +32,6 @@ def distance(a, b):
 def heading_to(a, b):
     # Public odometry/turn: positive left; x right, z forward.
     return -math.degrees(math.atan2(b[0] - a[0], b[1] - a[1]))
-
-
-class _BreadcrumbMemory:
-    def __init__(self):
-        self.nodes = []
-        self.vertices = []
-        self.edges = {}
-        self.last_vertex = None
-        self.last_position = None
-        self.blocked = []
-        self.active_exit = None
-
-    def update(self, odo, road):
-        p = position(odo)
-        if self.active_exit:
-            previous = self.active_exit["last_position"]
-            if distance(p, previous) > 1e-6:
-                # The chord of a curved motion is not its arrival tangent.
-                # Public headingErrorDeg is road heading minus robot heading.
-                # Use the local tangent only when the measured displacement
-                # establishes which direction was travelled along that road.
-                reverse = heading_to(p, previous)
-                error = road.get("headingErrorDeg")
-                self.active_exit["reverse_heading"] = None
-                if (road["onRoad"] and isinstance(error, (int, float))
-                        and not isinstance(error, bool) and math.isfinite(error)):
-                    tangent = wrap(odo["headingDeg"] + error)
-                    aligned = [angle for angle in (tangent, wrap(tangent + 180))
-                               if abs(wrap(angle - reverse)) < 45]
-                    if len(aligned) == 1:
-                        self.active_exit["reverse_heading"] = aligned[0]
-                # Stationary turns/repeated frames retain this arrival evidence.
-                self.active_exit["last_position"] = p
-        if road["onRoad"]:
-            choices = [(distance(p, vertex), i) for i, vertex in enumerate(self.vertices)]
-            closest = min(choices, default=(math.inf, None))
-            if closest[0] < 0.08:
-                current = closest[1]
-            else:
-                current = len(self.vertices)
-                self.vertices.append(p)
-                self.edges[current] = {}
-            if self.last_vertex is not None and current != self.last_vertex:
-                gap = distance(self.vertices[current], self.vertices[self.last_vertex])
-                # Edges encode only an actually traversed consecutive segment.
-                if self.last_position is not None and distance(p, self.last_position) <= 0.60:
-                    self.edges[current][self.last_vertex] = gap
-                    self.edges[self.last_vertex][current] = gap
-            self.last_vertex = current
-        else:
-            self.last_vertex = None
-        self.last_position = p
-        if road.get("atNode") and road["exits"]:
-            node = self.current_node(odo)
-            if node is None:
-                node = {"id": f"junction-{len(self.nodes)+1}", "position": p, "exits": []}
-                self.nodes.append(node)
-            for raw in road["exits"]:
-                heading = wrap(odo["headingDeg"] + raw["angleDeg"])
-                if not any(abs(wrap(e["heading_deg"] - heading)) < 15 for e in node["exits"]):
-                    node["exits"].append({"heading_deg": heading, "visits": 0, "completed": False, "blocked": False})
-            if self.active_exit:
-                origin = self.active_exit["node"]
-                # A sensor step can cross the whole segment without observing
-                # atNode=False. Distinct odometry positions establish arrival.
-                if distance(node["position"], origin["position"]) >= 0.15:
-                    self.active_exit["exit"]["completed"] = True
-                    # Mark only a uniquely observed current reverse exit. Old
-                    # bearings retained at a merged node are not fresh evidence.
-                    reverse = self.active_exit["reverse_heading"]
-                    if reverse is not None and road["onRoad"]:
-                        current = [wrap(odo["headingDeg"] + raw["angleDeg"])
-                                   for raw in road["exits"]
-                                   if abs(wrap(odo["headingDeg"] + raw["angleDeg"] - reverse)) < 45]
-                        if len(current) == 1:
-                            saved = [e for e in node["exits"]
-                                     if abs(wrap(e["heading_deg"] - current[0])) < 15]
-                            if len(saved) == 1:
-                                saved[0]["completed"] = True
-                    self.active_exit = None
-                elif self.active_exit["departed"]:
-                    self.active_exit = None
-        elif self.active_exit:
-            self.active_exit["departed"] = True
-
-    def current_node(self, odo):
-        p = position(odo)
-        # min keeps the first inserted node when distances are exactly tied.
-        node = min(self.nodes, key=lambda n: distance(p, n["position"]), default=None)
-        return node if node is not None and distance(p, node["position"]) < 0.15 else None
-
-    def exits(self, odo, road):
-        node = self.current_node(odo)
-        result = []
-        for raw in road.get("exits", []):
-            heading = wrap(odo["headingDeg"] + raw["angleDeg"])
-            saved = next((e for e in (node or {}).get("exits", [])
-                          if abs(wrap(e["heading_deg"] - heading)) < 15), None)
-            result.append({"angle_deg": raw["angleDeg"], "heading_deg": heading,
-                           "visits": saved["visits"] if saved else 0,
-                           "completed": saved["completed"] if saved else False,
-                           "blocked": saved["blocked"] if saved else False})
-        return result
-
-    def chosen(self, odo, angle, blocked=False):
-        node = self.current_node(odo)
-        if not node:
-            return
-        heading = wrap(odo["headingDeg"] + angle)
-        for exit in node["exits"]:
-            if abs(wrap(exit["heading_deg"] - heading)) < 15:
-                exit["visits"] += 1
-                exit["blocked"] |= blocked
-                self.active_exit = {"node": node, "exit": exit, "departed": False,
-                                    "last_position": position(odo), "reverse_heading": None}
-
-    def mark_blocked(self):
-        if self.active_exit:
-            self.active_exit["exit"]["blocked"] = True
-            self.active_exit = None
-
-    def route_to(self, odo, target):
-        """Shortest recorded path to the visited road point nearest target."""
-        if not self.vertices:
-            return []
-        start = min(range(len(self.vertices)), key=lambda i: distance(position(odo), self.vertices[i]))
-        if distance(position(odo), self.vertices[start]) >= .08:
-            return []
-        goal = min(range(len(self.vertices)), key=lambda i: distance(target, self.vertices[i]))
-        costs, previous, queue = {start: 0}, {}, [(0, start)]
-        while queue:
-            cost, node = heapq.heappop(queue)
-            if cost != costs[node]:
-                continue
-            if node == goal:
-                path = [node]
-                while node != start:
-                    node = previous[node]
-                    path.append(node)
-                return [self.vertices[i] for i in reversed(path)]
-            for other, length in self.edges[node].items():
-                if cost + length < costs.get(other, math.inf):
-                    costs[other] = cost + length
-                    previous[other] = node
-                    heapq.heappush(queue, (cost + length, other))
-        return []
-
-    def summary(self):
-        return [{"id": n["id"], "position_m": {"x": round(n["position"][0], 3), "z": round(n["position"][1], 3)},
-                 "exits": [dict(e, heading_deg=round(e["heading_deg"], 1)) for e in n["exits"]]}
-                for n in self.nodes]
-
-    def unexplored(self):
-        return sum(not e["completed"] and not e["blocked"] for n in self.nodes for e in n["exits"])
 
 
 def number(value):
@@ -209,9 +64,11 @@ def same_context(a, b, *, exact_position=True):
             and all(sum(abs(wrap(x - y)) <= 5 for x in left) == 1 for y in right))
 
 
-class RoadMemory(_BreadcrumbMemory):
+class RoadMemory:
     def __init__(self):
-        super().__init__()
+        self.nodes = []
+        self.blocked = []
+        self.active_exit = None
         self._frames = {}
         self._frame_anchors = {}
         self._invalid_indices = set()
@@ -225,6 +82,99 @@ class RoadMemory(_BreadcrumbMemory):
         self._approach_previous = None
         self._approach_points = {}
         self._approach_edges = {}
+        self._road_segments = {}
+        self._semantic = RoadEvidence()
+        self._unindexed_sequence = 0
+
+    def _sync_semantic(self):
+        self.nodes = self._semantic.node_views()
+        for i, raw in self._semantic.anchors.items():
+            self._frame_anchors[i] = copy.deepcopy(raw)
+        self._exit_anchors = {}
+        for anchor in self._frame_anchors.values():
+            if anchor is None:
+                continue
+            node = next((n for n in self.nodes if n["id"] == anchor["node_id"]), None)
+            if node is None:
+                continue
+            for binding in anchor.get("exit_bindings", []):
+                matched = [i for i, e in enumerate(node["exits"]) if e["id"] == binding["exit_id"]]
+                if len(matched) == 1:
+                    self._exit_anchors.setdefault((node["id"], matched[0]), []).append(copy.deepcopy(anchor))
+
+    def current_node(self, odo):
+        anchor = self._frame_anchors.get(self._latest_index)
+        if anchor is None or anchor.get("position_m") != list(position(odo)):
+            return None
+        return next((n for n in self.nodes if n["id"] == anchor["node_id"]), None)
+
+    def exits(self, odo, road):
+        node, result = self.current_node(odo), []
+        for raw in road.get("exits", []):
+            heading = wrap(odo["headingDeg"] + raw["angleDeg"])
+            matches = [e for e in (node or {}).get("exits", []) if abs(wrap(e["heading_deg"] - heading)) <= 5]
+            saved = matches[0] if len(matches) == 1 else {}
+            state = saved.get("state", "unresolved")
+            result.append({"angle_deg": raw["angleDeg"], "heading_deg": heading,
+                "id": saved.get("id"), "state": state, "visits": saved.get("visits", 0),
+                "completed": state == "verified", "blocked": state == "blocked"})
+        return result
+
+    def road_evidence(self):
+        return self._semantic.evidence()
+
+    def exploration_status(self):
+        return self._semantic.status()
+
+    def unexplored(self):
+        return self.exploration_status()["pending_exit_count"]
+
+    def summary(self):
+        return [{"id": n["id"], "status": n["status"],
+            "position_m": {"x": n["position"][0], "z": n["position"][1]},
+            "exits": copy.deepcopy(n["exits"])} for n in self.nodes]
+
+    def route_to(self, odo, target):
+        """Use only actual registered motion endpoints, never proximity edges."""
+        start = position(odo)
+        if start not in self._approach_edges:
+            return []
+        queue, seen = [(0, start, [start])], set()
+        best = None
+        while queue:
+            cost, p, path = heapq.heappop(queue)
+            if p in seen:
+                continue
+            seen.add(p)
+            key = (distance(p, target), cost)
+            if best is None or key < best[0]:
+                best = (key, path)
+            for q, edge in self._approach_edges[p].items():
+                if not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices):
+                    heapq.heappush(queue, (cost + edge["travelled_cm"], q, path + [q]))
+        return best[1] if best else []
+
+    def _segment_anchor(self, frame, travel_heading):
+        odo, road = frame["odometry"], frame["road"]
+        exits = sorted(wrap(odo["headingDeg"] + item["angleDeg"])
+                       for item in road.get("exits", []) if number(item.get("angleDeg")))
+        matches = [heading for heading in exits if abs(wrap(heading - travel_heading)) <= 5]
+        return {"observation_index": frame["observation_index"], "position_m": list(position(odo)),
+                "heading_deg": odo["headingDeg"], "travel_heading_deg": travel_heading,
+                "at_node": road.get("atNode") is True, "fresh_exit_headings_deg": exits,
+                "exit_heading_deg": matches[0] if len(matches) == 1 else None,
+                "exit_correspondence": "unique_observed_exit" if len(matches) == 1
+                    else "not_at_observed_node" if not road.get("atNode") else "unresolved",
+                "registered_junction_anchor": self.observation_anchor(frame["observation_index"])}
+
+    def road_segment_records(self):
+        """Shared evidence API for routes and future junction/exploration logic.
+
+        These are accepted sensor/motion windows, not inferred topological
+        connections or complete exploration obligations. Reverse candidates
+        remain distinct from motions actually observed in that direction.
+        """
+        return copy.deepcopy(list(self._road_segments.values()))
 
     def _record_approach_segment(self, observation, motion):
         """Keep exact measured endpoints; never connect nearby road branches.
@@ -235,6 +185,9 @@ class RoadMemory(_BreadcrumbMemory):
         previous = self._approach_previous
         current = copy.deepcopy(observation)
         self._approach_previous = current
+        if (current["observation_index"] in self._invalid_indices or previous is not None
+                and previous["observation_index"] in self._invalid_indices):
+            return
         odo, road = current["odometry"], current["road"]
         if (road.get("onRoad") is not True
                 or not all(number(odo.get(k)) for k in (
@@ -286,41 +239,113 @@ class RoadMemory(_BreadcrumbMemory):
                 return
         if str(previous["observation"]["frameId"]) == str(current["observation"]["frameId"]):
             return
+        if method == "take_exit":
+            angle = motion.get("params", {}).get("angleDeg")
+            if not number(angle):
+                return
+            departure_heading = wrap(old["headingDeg"] + angle)
+        elif method == "follow_road":
+            error = previous["road"].get("headingErrorDeg")
+            if not number(error):
+                return
+            departure_heading = wrap(old["headingDeg"] + error)
+        else:
+            departure_heading = wrap(old["headingDeg"] + (180 if method == "backward" else 0))
+        arrival_heading = wrap(odo["headingDeg"] + (180 if method == "backward" else 0))
+        departure = self._segment_anchor(previous, departure_heading)
+        arrival = self._segment_anchor(current, arrival_heading)
+        if method == "take_exit" and departure["exit_correspondence"] != "unique_observed_exit":
+            return
         edge = {"before_observation": previous["observation_index"],
             "after_observation": current["observation_index"], "method": method,
-            "travelled_cm": travelled, "measured_cm": measured}
-        self._approach_edges[a][p] = edge
-        self._approach_edges[p][a] = edge
+            "travelled_cm": travelled, "measured_cm": measured,
+            "segment_id": f"road-segment-{previous['observation_index']}-{current['observation_index']}",
+            "departure": departure, "arrival": arrival,
+            "motion": copy.deepcopy(motion), "direction": "forward", "direction_status": "observed_forward"}
+        semantic = {"from": list(a), "to": list(p), "method": method,
+            "departure_heading": departure_heading, "arrival_heading": arrival_heading,
+            "departure_exits": departure["fresh_exit_headings_deg"],
+            "arrival_exits": arrival["fresh_exit_headings_deg"],
+            "departure_at_node": departure["at_node"], "arrival_at_node": arrival["at_node"]}
+        edge["segment_version"] = evidence_version(semantic)
+        self._road_segments[edge["segment_id"]] = copy.deepcopy(edge)
+        self._approach_edges[a][p] = copy.deepcopy(edge)
+        reverse = copy.deepcopy(edge)
+        reverse.update(direction="reverse_attempt", direction_status="reverse_not_yet_observed",
+            departure=self._segment_anchor(current, wrap(arrival_heading + 180)),
+            arrival=self._segment_anchor(previous, wrap(departure_heading + 180)))
+        # A newly observed direction supersedes a merely proposed reverse edge.
+        existing = self._approach_edges[p].get(a)
+        if existing is None or existing.get("direction_status") != "observed_forward":
+            self._approach_edges[p][a] = reverse
 
-    def approach_candidates(self, odo, target, excluded=(), limit=3):
-        """Reachable observed viewpoints in the unchanged visual-range window."""
+    def approach_candidates(self, odo, target, excluded=(), limit=3, alternative_routes=()):
+        """Reachable viewpoints with directional, executable segment evidence.
+
+        Legacy excluded positions are intentionally no longer exclusions: a
+        location is not a failed route. Actions applies versioned failure records.
+        """
         start = position(odo)
-        if start not in self._approach_edges:
+        if start not in self._approach_edges or self._latest_index in self._invalid_indices:
             return []
+        def available(edge):
+            return not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
         costs, previous, queue = {start: 0}, {}, [(0, start)]
         while queue:
             cost, point = heapq.heappop(queue)
             if costs[point] != cost:
                 continue
             for other, edge in self._approach_edges[point].items():
+                if not available(edge):
+                    continue
                 updated = cost + edge["travelled_cm"]
                 if updated < costs.get(other, math.inf):
                     costs[other], previous[other] = updated, point
                     heapq.heappush(queue, (updated, other))
         candidates = []
+        def candidate(path, cost):
+            point = path[-1]
+            segments = [copy.deepcopy(self._approach_edges[a][b]) for a, b in zip(path, path[1:])]
+            return {"position_m": list(point), "path": [list(p) for p in path], "segments": segments,
+                "route_version": evidence_version([[s["segment_version"], s["direction"]] for s in segments]),
+                "source": "observed_on_road_motion_endpoints", "travelled_cm": cost,
+                "observation_index": self._approach_points[point]["observation_index"]}
         for point, cost in costs.items():
-            if (distance(start, point) < .15 or not .25 <= distance(point, target) <= .65
-                    or any(distance(point, tuple(old)) < .15 for old in excluded)):
+            if distance(start, point) < .15 or not .25 <= distance(point, target) <= .65:
                 continue
             path, endpoint = [point], point
             while endpoint != start:
                 endpoint = previous[endpoint]
                 path.append(endpoint)
             path.reverse()
-            candidates.append({"position_m": list(point), "path": [list(p) for p in path],
-                "segments": [copy.deepcopy(self._approach_edges[a][b]) for a, b in zip(path, path[1:])],
-                "source": "observed_on_road_motion_endpoints", "travelled_cm": cost,
-                "observation_index": self._approach_points[point]["observation_index"]})
+            candidates.append(candidate(path, cost))
+        # A failed shortest route must not conceal a newly observed, longer
+        # alternative to the same candidate. Search finite detours by excluding
+        # one of that route's directed edges; no point/area is blacklisted.
+        wanted = {tuple(row["position_m"]) for row in candidates}
+        versions = {row["route_version"] for row in candidates}
+        for failed in list(alternative_routes)[-3:]:
+            endpoint = tuple(failed.get("candidate_position_m", ()))
+            old_path = [tuple(p) for p in failed.get("route_path", [])]
+            if endpoint not in wanted:
+                continue
+            for blocked_edge in zip(old_path, old_path[1:]):
+                queue, seen = [(0., start, [start])], {}
+                while queue:
+                    cost, point, path = heapq.heappop(queue)
+                    if cost >= seen.get(point, math.inf):
+                        continue
+                    seen[point] = cost
+                    if point == endpoint:
+                        row = candidate(path, cost)
+                        if row["route_version"] not in versions:
+                            candidates.append(row)
+                            versions.add(row["route_version"])
+                        break
+                    for other, edge in self._approach_edges[point].items():
+                        if (point, other) == blocked_edge or not available(edge) or other in path:
+                            continue
+                        heapq.heappush(queue, (cost + edge["travelled_cm"], other, path + [other]))
         return sorted(candidates, key=lambda row: (
             abs(distance(tuple(row["position_m"]), target) - .32), row["travelled_cm"],
             row["position_m"]))[:max(0, min(limit, 3))]
@@ -328,7 +353,6 @@ class RoadMemory(_BreadcrumbMemory):
     def _anchor(self, frame):
         road, odo = frame["road"], frame["odometry"]
         if (road.get("onRoad") is not True or road.get("atNode") is not True
-                or not road.get("exits")
                 or not all(number(odo.get(k)) for k in ("rightCm", "forwardCm", "headingDeg", "distanceCm", "tick"))
                 or not all(number(e.get("angleDeg")) for e in road["exits"])):
             return None
@@ -342,38 +366,35 @@ class RoadMemory(_BreadcrumbMemory):
                 "fresh_headings_deg": [wrap(odo["headingDeg"] + e["angleDeg"]) for e in road["exits"]]}
 
     def update(self, odo, road, observation_index=None):
-        result = super().update(odo, road)
-        self._latest_index = observation_index if index(observation_index) else None
+        # Unindexed legacy observations remain unresolved hypotheses. They can
+        # never manufacture a completed exit or a road connection.
         if not index(observation_index):
-            return result
+            self._unindexed_sequence -= 1
+            observation_index = self._unindexed_sequence
+        self._latest_index = observation_index
         frame = snapshot({"observation_index": observation_index, "odometry": odo, "road": road})
         if observation_index in self._frames and self._frames[observation_index] != frame:
             self._invalid_indices.add(observation_index)
-            return result
+            self._semantic.problem("connection", "conflicting_observation_index", [observation_index])
+            return
         if observation_index in self._frames:
-            return result
+            return
         self._frames[observation_index] = frame
-        anchor = self._anchor(frame)
-        self._frame_anchors[observation_index] = copy.deepcopy(anchor)
-        if anchor is not None:
-            node = self.current_node(odo)
-            for heading in anchor["fresh_headings_deg"]:
-                matched = [i for i, e in enumerate(node["exits"]) if abs(wrap(e["heading_deg"] - heading)) < 15]
-                if len(matched) == 1:
-                    self._exit_anchors.setdefault((node["id"], matched[0]), []).append(
-                        {**copy.deepcopy(anchor), "observed_exit_heading_deg": heading})
-        return result
+        self._semantic.register(frame)
+        self._frame_anchors[observation_index] = None
+        self._sync_semantic()
 
     def chosen(self, odo, angle, blocked=False, observation_index=None):
         self._cancel_traversal("new_departure")
-        result = super().chosen(odo, angle, blocked)
+        self._semantic.choose(observation_index, angle, blocked)
+        self._sync_semantic()
         frame = self._frames.get(observation_index)
         if (blocked or not index(observation_index) or observation_index in self._invalid_indices
                 or self._latest_index != observation_index or frame is None or frame["odometry"] != odo):
-            return result
+            return
         anchor = self._frame_anchors.get(observation_index)
         if anchor is None or not number(angle):
-            return result
+            return
         fresh = [a for a in anchor["fresh_relative_exits_deg"] if abs(wrap(a - angle)) <= 5]
         node = self.current_node(odo)
         matched = [i for i, e in enumerate(node["exits"])
@@ -386,10 +407,11 @@ class RoadMemory(_BreadcrumbMemory):
             if current is not None and current["observation_index"] == observation_index:
                 self._pending_traversal = {"observations": [copy.deepcopy(current)],
                                            "motions": [], "left_origin": False}
-        return result
 
     def _cancel_traversal(self, reason):
         if self._pending_traversal is not None:
+            self._semantic.cancel(reason, blocked=reason == "exit_marked_blocked")
+            self._sync_semantic()
             observations = self._pending_traversal["observations"]
             self._traversal_events.append({"recorded": False, "status": "rejected", "reason": reason,
                 "before_observation": observations[0]["observation_index"],
@@ -397,7 +419,8 @@ class RoadMemory(_BreadcrumbMemory):
             self._pending_traversal = None
 
     def mark_blocked(self):
-        super().mark_blocked()
+        self._semantic.cancel("exit_marked_blocked", blocked=True)
+        self._sync_semantic()
         self._cancel_traversal("exit_marked_blocked")
 
     def observe_traversal(self, observation, motion=None):
@@ -407,11 +430,16 @@ class RoadMemory(_BreadcrumbMemory):
         round boundaries), and supplies a finalized motion only for an actuator
         call. Legacy completion flags are never used as traversal evidence.
         """
-        self._record_approach_segment(observation, motion)
         current = snapshot(observation)
         sensor = observation.get("observation")
         if isinstance(sensor, dict):
             current["observation"] = {k: sensor[k] for k in ("frameId", "tick") if k in sensor}
+        old_public = self._semantic.frames.get(current["observation_index"])
+        if old_public is not None and old_public != current:
+            self._invalid_indices.add(current["observation_index"])
+        self._semantic.observe(current, motion)
+        self._sync_semantic()
+        self._record_approach_segment(observation, motion)
         self._latest_public_observation = copy.deepcopy(current)
         window = self._pending_traversal
         if window is not None:
@@ -454,6 +482,9 @@ class RoadMemory(_BreadcrumbMemory):
                     self._traversal_events.append(dict(recorded,
                         before_observation=window["observations"][0]["observation_index"],
                         after_observation=current["observation_index"]))
+                    if not recorded["recorded"]:
+                        self._semantic.cancel(recorded["reason"])
+                        self._sync_semantic()
                     self._pending_traversal = None
                 # A short exit step may still be at the origin. Keep its whole
                 # window until a distinct node, return, or explicit failure.
@@ -497,11 +528,10 @@ class RoadMemory(_BreadcrumbMemory):
                     > b["odometry"]["distanceCm"] - a["odometry"]["distanceCm"] + .2):
                 return reject("pose_displacement_exceeds_public_odometer")
         sensor_frames = [o.get("observation") for o in observations]
-        if any(s is not None for s in sensor_frames):
-            if (not all(isinstance(s, dict) and "frameId" in s and s.get("tick") == f["odometry"]["tick"]
+        if (not all(isinstance(s, dict) and "frameId" in s and s.get("tick") == f["odometry"]["tick"]
                         for s, f in zip(sensor_frames, frames))
-                    or len({str(s["frameId"]) for s in sensor_frames}) != len(sensor_frames)):
-                return reject("sensor_frames_not_fresh_or_bound")
+                or len({str(s["frameId"]) for s in sensor_frames}) != len(sensor_frames)):
+            return reject("sensor_frames_not_fresh_or_bound")
         if not motions or motions[0].get("method") != "take_exit" or motions[0].get("before_observation") != indices[0]:
             return reject("missing_departure_motion")
         selection = self._selections.get(indices[0])
@@ -529,6 +559,9 @@ class RoadMemory(_BreadcrumbMemory):
             if key not in pairs and any(a["odometry"][k] != b["odometry"][k]
                                       for k in ("rightCm", "forwardCm", "headingDeg", "distanceCm", "tick")):
                 return reject("unaccounted_motion_between_observations")
+        for a, b in zip(observations, observations[1:]):
+            if not RoadEvidence.step_valid(a, b, pairs.get((a["observation_index"], b["observation_index"]))):
+                return reject("public_motion_window_not_verified")
         start = selection["anchor"]
         left_origin = False
         for f in frames[1:-1]:
@@ -540,10 +573,23 @@ class RoadMemory(_BreadcrumbMemory):
         end = self._frame_anchors.get(indices[-1])
         if end is None:
             return reject("arrival_node_not_observed", "pending")
-        if end["node_id"] == start["node_id"]:
+        if self._semantic.nodes[end["node_id"]]["status"] == "unresolved" and end.get("candidate_ids"):
+            return reject("arrival_node_identity_unresolved")
+        if end["node_id"] == start["node_id"] and not left_origin:
             return reject("no_distinct_node_arrival")
+        if end["node_id"] == start["node_id"]:
+            # Driving out and reversing along the same unfinished branch is
+            # not a complete self-loop. A loop arrives through another unique
+            # sensed exit, with a recorded translation direction.
+            arrival_direction = frames[-1]["odometry"]["headingDeg"]
+            if motions[-1]["method"] == "backward":
+                arrival_direction = wrap(arrival_direction + 180)
+            incoming = [h for h in end["fresh_headings_deg"]
+                        if abs(wrap(h - arrival_direction - 180)) <= 5]
+            if len(incoming) != 1 or abs(wrap(incoming[0] - selection["departure_heading_deg"])) <= 5:
+                return reject("self_loop_arrival_exit_not_distinct")
         travelled = end["odometer_cm"] - start["odometer_cm"]
-        if travelled < .2 or math.dist(start["position_m"], end["position_m"]) * 100 < .2:
+        if travelled < .2 or (not left_origin and math.dist(start["position_m"], end["position_m"]) * 100 < .2):
             return reject("no_observed_translation")
         identity = (indices[0], indices[-1])
         if any((t["departure"]["observation_index"], t["arrival"]["observation_index"]) == identity for t in self._trips):
@@ -557,7 +603,10 @@ class RoadMemory(_BreadcrumbMemory):
                     "tick": f["odometry"]["tick"], "position_m": list(position(f["odometry"])),
                     "odometer_cm": f["odometry"]["distanceCm"]} for f in frames],
                 "motions": copy.deepcopy(motions)}
+        if not self._semantic.complete(trip):
+            return reject("semantic_departure_binding_unresolved")
         self._trips.append(trip)
+        self._sync_semantic()
         return {"recorded": True, "status": "completed", "trip": copy.deepcopy(trip)}
 
     def traversal_records(self):

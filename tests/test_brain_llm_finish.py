@@ -94,7 +94,7 @@ def test_abnormal_finish_rejects_complete_json_and_replays_exactly(tmp_path, sta
                 client.decide(state)
     sleep.assert_not_called()
     rows = read_rows(source)
-    assert all(row["version"] == "autonomous-brain-llm/v15" for row in rows)
+    assert all(row["version"] == "autonomous-brain-llm/v16" for row in rows)
     assert all(row["response_body"] == body and row["raw_output"] == RAW for row in rows)
     assert all(row["action"] is None and row["validation_error"] and row["transport_error"] is None
                for row in rows)
@@ -233,8 +233,9 @@ def test_literal_v6_to_v13_stream_replay_keeps_original_end_semantics(tmp_path, 
 
 
 @pytest.mark.parametrize("body", LEGACY_STREAMS)
-def test_v14_replay_rejects_a_forged_success_using_legacy_end_semantics(tmp_path, state, body):
-    row = literal_row(state, 14, body, stream=True)
+@pytest.mark.parametrize("number", [14, 15, 16])
+def test_modern_replay_rejects_a_forged_success_using_legacy_end_semantics(tmp_path, state, body, number):
+    row = literal_row(state, number, body, stream=True)
     source = tmp_path / "forged-success.jsonl"
     original = canonical(row) + "\n"
     source.write_text(original)

@@ -41,10 +41,11 @@ def test_pending_grasp_drop_during_retreat_never_writes_held():
     assert not result["success"] and result["reason"] == "place_holding_changed_during_motion"
     assert motions == [("backward", {"distanceCm": 16, "speed": 30})]
     assert marks == [] and objects["held"]["state"] == "CONFIRMED"
-    assert runtime.held_object_id is None and runtime.pending_grasp is None
+    assert runtime.held_object_id is None
+    assert runtime.pending_grasp["status"] == "holding_lost_unverified"
 
 
-def test_pick_drop_during_retreat_clears_pending_identity():
+def test_pick_drop_during_retreat_keeps_unverified_identity_obligation():
     runtime, calls, _, marks, _, target = pick_runtime()
     original_call = runtime.bridge.call
     def dropping(method, params):
@@ -56,7 +57,9 @@ def test_pick_drop_during_retreat_clears_pending_identity():
     result = Actions(runtime).pick(target["id"])
     assert not result["success"] and result["reason"] == "pick_holding_changed_during_motion"
     assert marks == [] and target["state"] == "CONFIRMED"
-    assert runtime.pending_grasp is None and runtime.held_object_id is None
+    assert runtime.held_object_id is None
+    assert runtime.pending_grasp["status"] == "holding_lost_unverified"
+    assert runtime.pending_grasp["object_id"] == target["id"]
     assert len([row for row in calls if row["method"] == "grab"]) == 1
 
 
