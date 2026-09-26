@@ -122,6 +122,10 @@ def pick_runtime(*, grab_results=(True,), old_position_present=False,
     runtime.perception = SimpleNamespace(
         confirmed=lambda oid: target if target["state"] == "CONFIRMED" else None,
         get_object=lambda oid: target, objects=lambda: [target], mark_picked=mark_picked,
+        original_position_evidence=lambda original, category: {
+            "valid": True, "matches": copy.deepcopy(snapshot["perception"]["detections"])
+                if old_position_present else [],
+            "frame_id": str(snapshot["observation"]["frameId"])},
         visible=lambda oid: next((d for d in snapshot["perception"]["detections"]
                                   if d.get("track_id") == oid), None))
     return runtime, calls, motion_log, pick_evidence, controls, target

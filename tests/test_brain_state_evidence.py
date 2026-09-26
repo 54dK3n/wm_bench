@@ -222,6 +222,9 @@ class NextModelStateTests(unittest.TestCase):
                 return result
 
         class FakeClient:
+            def validate_formal_configuration(self):
+                return {"mode": "offline_fixture"}
+
             def __init__(self, **kwargs):
                 assert kwargs["transport_retries"] == 5
                 self.call_count, self.total_elapsed_s, self.last_record = 0, 0, {}
@@ -235,7 +238,7 @@ class NextModelStateTests(unittest.TestCase):
                 pass
 
         with tempfile.TemporaryDirectory() as temporary, \
-                mock.patch.object(run, "read_config", return_value={"task": "Move observed red balls", "max_rounds": max_rounds}), \
+                mock.patch.object(run, "read_config", return_value={"task": "把地图上的红球都送到绿色存放区", "max_rounds": max_rounds}), \
                 mock.patch.object(run, "Runtime", FakeRuntime), mock.patch.object(run, "LLMClient", FakeClient), \
                 mock.patch("urllib.request.urlopen", side_effect=AssertionError("offline fixture must not network")), \
                 mock.patch("sys.stdout", new_callable=io.StringIO):
@@ -258,7 +261,7 @@ class NextModelStateTests(unittest.TestCase):
         self.assertEqual(recent["after_observation"], 2)
         self.assertEqual(recent["evidence"]["final_observation"], 2)
         self.assertEqual(logged_rounds[0]["result"], results[0])
-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v11")
+        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v12")
 
     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
         states, runtime, _, _, _ = self.run_offline(8)

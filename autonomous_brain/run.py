@@ -21,8 +21,10 @@ from .bridge import JsonLog, RobotBridge, SimulationLimit
 from .llm import LLMClient
 from .navigation import RoadMemory
 from .perception import Perception
+from .task import parse_task, completion_progress
+from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v11"
+RUNTIME_VERSION = "autonomous-brain-runtime/v12"
 
 
 def dump(path, value):
@@ -59,8 +61,21 @@ def compact_action_result(number, action, result, after_observation):
                             "distance_cm", "remembered_distance_cm", "bearing_deg",
                             "front_clearance_cm", "requested_cm", "method", "measured_cm",
                             "heading_change_deg", "motion_observation",
-                            "candidate_witnesses", "recovery_steps", "unexplored_exits"))
+                            "candidate_witnesses", "recovery_steps", "unexplored_exits",
+                            "previous_failure", "canonical_object_id", "ready_for_done",
+                            "delivered_count", "required_count"))
     detection(raw, evidence)
+    for name in ("recovery_options", "unmet_conditions", "delivered_object_ids", "unresolved_identity_ids"):
+        if isinstance(raw.get(name), list):
+            evidence[name] = [value for value in raw[name] if isinstance(value, str)]
+    if isinstance(raw.get("navigation_subgoal"), dict):
+        subgoal = raw["navigation_subgoal"]
+        evidence["navigation_subgoal"] = fields(subgoal, (
+            "object_id", "standoff_ready", "operation", "operation_ready", "visual_fresh",
+            "operation_readiness_scope", "memory_source", "after_observation"))
+        if isinstance(subgoal.get("current_visual"), dict):
+            evidence["navigation_subgoal"]["current_visual"] = fields(
+                subgoal["current_visual"], ("distance_cm", "bearing_deg", "frame_id"))
     if isinstance(raw.get("pending_objects"), list):
         evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
     if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):
@@ -148,6 +163,7 @@ def compact_action_result(number, action, result, after_observation):
 class Runtime:
     def __init__(self, config, out):
         self.config, self.out = config, Path(out)
+        self.task_spec = parse_task(config["task"])
         self.round = 0
         self.observation_count = 0
         self.bridge = RobotBridge(config, self.out / "bridge-calls.jsonl")
@@ -200,7 +216,13 @@ class Runtime:
             if row["id"] in chains:
                 objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
         odo, road = self.snapshot["odometry"], self.snapshot["road"]
+        task_spec = getattr(self, "task_spec", None) or parse_task(self.config["task"])
+        completion = completion_progress(rows, self.perception.action_evidence(), task_spec,
+            holding=self.snapshot["holding"]["holding"], held_object_id=self.held_object_id,
+            pending_grasp=self.pending_grasp, nodes=len(self.roads.nodes),
+            unexplored=self.roads.unexplored())
         return {"task": self.config["task"], "round": self.round,
+                "task_spec": copy.deepcopy(task_spec),
                 "simulation_seconds": self.bridge.seconds,
                 "coordinate_convention": {
                     "position_frame": "initial_odometry",
@@ -213,7 +235,9 @@ class Runtime:
                                        "negative": "right", "zero": "forward"},
                     "object_bearing_to_relative_turn": "negate"},
                 "objects": objects,
-                "completion": completion_evidence(rows),
+                "completion": completion,
+                "navigation": (self.actions.navigation_state() if hasattr(self, "actions")
+                               and hasattr(self.actions, "navigation_state") else {}),
                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
                                     "heading_deg": odo["headingDeg"]},
                           "holding": self.snapshot["holding"]["holding"],
@@ -269,10 +293,14 @@ def main(argv=None):
     wall_start = time.monotonic()
     runtime = None
     llm = None
+    dependency = None
+    formal_configuration = None
     rounds = JsonLog(out / "rounds.jsonl")
     status, reason, count = "failed", "not_started", 0
     try:
         llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay, transport_retries=5)
+        formal_configuration = llm.validate_formal_configuration()
+        dependency = capture_world_model_provenance(WM_ROOT)
         runtime = Runtime(config, out)
         for number in range(1, config.get("max_rounds", 200) + 1):
             runtime.round = number
@@ -315,6 +343,7 @@ def main(argv=None):
     finally:
         summary = {"version": VERSION, "runtime_version": RUNTIME_VERSION, "status": status, "reason": reason,
                    "task": config["task"], "rounds": count,
+                   "task_spec": getattr(runtime, "task_spec", None),
                    "llm_calls": llm.call_count if llm else 0,
                    "llm_total_elapsed_s": llm.total_elapsed_s if llm else 0,
                    "wall_elapsed_s": time.monotonic() - wall_start,
@@ -329,8 +358,8 @@ def main(argv=None):
                    "junction_history": runtime.roads.summary() if runtime else [],
                    "limits": {"max_rounds": config.get("max_rounds", 200),
                               "max_simulation_seconds": config.get("max_simulation_seconds", 1200)},
-                   "world_model": {"upstream_main": "fef0ba9b754ce9652836fdb720d1162dcadbc5ef",
-                                   "profile": "guangyang_static_world_model", "max_range_m": 0.9},
+                   "world_model": dependency,
+                   "formal_configuration": formal_configuration,
                    "source_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                      for p in sorted(Path(__file__).parent.glob("*.py"))}}
         dump(out / "summary.json", summary)

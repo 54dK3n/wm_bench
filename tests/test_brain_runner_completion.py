@@ -52,6 +52,9 @@ def run_fixture(tmp_path, max_rounds, done_round, *, unexplored=0, holding=False
             return self.real_actions.result(True, "nonterminal_fixture")
 
     class RecordedClient:
+        def validate_formal_configuration(self):
+            return {"mode": "offline_fixture"}
+
         def __init__(self, **kwargs):
             self.call_count = self.total_elapsed_s = 0
             self.last_record = {}

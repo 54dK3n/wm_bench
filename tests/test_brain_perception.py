@@ -55,6 +55,19 @@ def placement_evidence(perception, object_id):
                           "storage_bbox": copy.deepcopy(storage["bbox"])}}
 
 
+def grasp_evidence(perception, object_id, *, time=None):
+    """Build the old-position absence witness from an actual empty sensor frame."""
+    if time is not None:
+        odo = perception.last_evidence["odometry"]
+        observe(perception, "pick-proof-" + str(perception.last_evidence["frame_id"]),
+                odo["forwardCm"], right=odo["rightCm"], heading=odo["headingDeg"],
+                time=time, items=[])
+    row = perception.get_object(object_id)
+    original = (row["position_m"]["x"], row["position_m"]["z"])
+    return {"holding": True, "frame_id": perception.last_evidence["frame_id"],
+            "original_position_observation": perception.original_position_evidence(original, row["category"])}
+
+
 class PerceptionTests(unittest.TestCase):
     def setUp(self):
         self.perception = Perception(CAMERA)
@@ -172,7 +185,8 @@ class PerceptionTests(unittest.TestCase):
         self.assertFalse(self.perception.mark_picked(oid, holding=True,
             original_position_absent=True, simulation_time_s=1, evidence={}))
         self.assertTrue(self.perception.mark_picked(oid, holding=True,
-            original_position_absent=True, simulation_time_s=1, evidence={"frame_id": "post"}))
+            original_position_absent=True, simulation_time_s=1,
+            evidence=grasp_evidence(self.perception, oid, time=1)))
         self.assertEqual(self.perception.get_object(oid)["state"], "HELD")
         self.assertIsNone(self.perception.confirmed(oid))
         for holding, inside in ((True, True), (False, False)):
@@ -189,7 +203,7 @@ class PerceptionTests(unittest.TestCase):
         oid = self.confirm_red()
         original = self.perception.get_object(oid)["position_m"]
         self.perception.mark_picked(oid, holding=True, original_position_absent=True,
-                                   simulation_time_s=1, evidence={"frame_id": "grabbed"})
+                                   simulation_time_s=1, evidence=grasp_evidence(self.perception, oid, time=1))
         placed = {"x": 0.0, "z": calibrate_reading(60, 0)[0] / 100}
         self.assertFalse(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
             simulation_time_s=2, evidence={"holding": False, "placement": {"frame_id": "incomplete"}}))
@@ -217,7 +231,7 @@ class PerceptionTests(unittest.TestCase):
     def test_unverified_release_never_claims_delivery_or_suppresses_reobservation(self):
         oid = self.confirm_red()
         self.perception.mark_picked(oid, holding=True, original_position_absent=True,
-                                   simulation_time_s=1, evidence={"frame_id": "grabbed"})
+                                   simulation_time_s=1, evidence=grasp_evidence(self.perception, oid, time=1))
         for evidence in ({}, {"holding": True}, {"holding": 0}):
             self.assertFalse(self.perception.mark_release_unverified(
                 oid, simulation_time_s=2, evidence=evidence))
@@ -234,7 +248,7 @@ class PerceptionTests(unittest.TestCase):
     def test_one_delivery_cannot_suppress_two_nearby_balls_in_one_frame(self):
         oid = self.confirm_red()
         self.perception.mark_picked(oid, holding=True, original_position_absent=True,
-                                   simulation_time_s=1, evidence={"frame_id": "grabbed"})
+                                   simulation_time_s=1, evidence=grasp_evidence(self.perception, oid, time=1))
         placed = {"x": 0.0, "z": calibrate_reading(60, 0)[0] / 100}
         self.assertTrue(self.perception.mark_delivered(oid, holding=False, ball_in_storage=True,
             simulation_time_s=2, evidence=placement_evidence(self.perception, oid)))

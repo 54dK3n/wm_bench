@@ -8,21 +8,22 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const crypto = require("node:crypto");
-const {createGzip, gunzipSync} = require("node:zlib");
+const {createGzip} = require("node:zlib");
 const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v6";
+const VERSION = "wm-autonomous-brain-driver/v7";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
 const TASK = "R2-GYI-MVP-02";
+const FORMAL_MODEL = "deepseek-flash";
 const PUBLIC_METHODS = ["observe", "camera_parameters", "odometry", "local_road", "holding", "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"];
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 const relative = file => path.relative(ROOT, file);
-const json = value => JSON.stringify(value, null, 2).split(ROOT + path.sep).join("") + "\n";
+const json = value => JSON.stringify(value, null, 2) + "\n";
 const writeJson = (file, value) => fs.writeFileSync(file, json(value));
 const readJson = file => JSON.parse(fs.readFileSync(file, "utf8"));
 
@@ -65,7 +66,7 @@ function parseArgs(argv) {
   const options = {maps: ["map-05"], runs: 1,
     platformRoot: process.env.GUANGYANG_PLATFORM_ROOT || path.join(ROOT, "workspaces/guangyang-platform/projects/car-python"),
     python: process.env.BRAIN_PYTHON || "python3", timeoutMs: 120000, wallTimeoutSeconds: 0,
-    maxRounds: 200, maxSimulationSeconds: 1200, task: "把地图上的红球都送到绿色存放区"};
+    maxRounds: 200, maxSimulationSeconds: 1200, task: "把两个红球送到绿色存放区"};
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i], value = argv[++i];
     assert.ok(value !== undefined, `${key} requires a value`);
@@ -76,7 +77,7 @@ function parseArgs(argv) {
     else if (key === "--python") options.python = value;
     else if (key === "--task") options.task = value;
     else if (key === "--replay") options.replay = path.resolve(value);
-    else if (key === "--map05-success") options.map05Success = path.resolve(value);
+    else if (key === "--map05-success" || key === "--stage2-success") options.stage2Success = path.resolve(value);
     else if (key === "--timeout-ms") options.timeoutMs = Number(value);
     else if (key === "--wall-timeout-seconds") options.wallTimeoutSeconds = Number(value);
     else if (key === "--max-rounds") options.maxRounds = Number(value);
@@ -184,7 +185,47 @@ async function waitFor(check, label, timeoutMs = 180000) {
   throw new Error(`timeout waiting for ${label}; last=${JSON.stringify(last)}`);
 }
 
-function sourceManifest(platformRoot) {
+function validateFormalLLMConfig(env = process.env) {
+  for (const name of LLM_REQUIRED_KEYS) assert.ok(env[name], `${name} must be configured before a formal run`);
+  let temperature;
+  try { temperature = JSON.parse(env.LLM_TEMPERATURE ?? '0'); }
+  catch { throw new Error('Formal run requires temperature=0'); }
+  assert.equal(env.LLM_MODEL, FORMAL_MODEL, 'Formal run requires deepseek-flash');
+  assert.equal(temperature, 0, 'Formal run requires temperature=0');
+  assert.equal(env.LLM_THINKING, 'disabled', 'Formal run requires thinking=disabled');
+  return {model: env.LLM_MODEL, temperature, thinking: env.LLM_THINKING,
+    response_format: {type: 'json_object'}, stream: true, formal_run: true};
+}
+
+function sourceTree(directory, extensions) {
+  const files = [];
+  const excluded = new Set(['.git', '__pycache__', 'node_modules', 'data', 'reports', 'artifacts', 'tests', 'logs']);
+  function visit(current) {
+    for (const entry of fs.readdirSync(current, {withFileTypes: true})) {
+      if (excluded.has(entry.name) || entry.name.startsWith('.')) continue;
+      const file = path.join(current, entry.name);
+      if (entry.isDirectory()) visit(file);
+      else if (entry.isFile() && extensions.has(path.extname(file))) files.push(file);
+    }
+  }
+  visit(directory);
+  return Object.fromEntries(files.sort().map(file => [path.relative(directory, file), sha(fs.readFileSync(file))]));
+}
+
+function worldModelProvenance(python = 'python3', env = process.env) {
+  const root = path.resolve(env.WORLD_MODEL_ROOT || path.join(ROOT, 'vendor/wm_kit_opt2'));
+  const checked = spawnSync(python, ['-m', 'autonomous_brain.provenance', '--root', root],
+    {cwd: ROOT, env, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024});
+  assert.equal(checked.status, 0, 'Cannot attest the actual WorldModel dependency');
+  return {...JSON.parse(checked.stdout), selection: env.WORLD_MODEL_ROOT ? 'WORLD_MODEL_ROOT' : 'vendored_default'};
+}
+
+function gitRevision(directory) {
+  const result = spawnSync('git', ['-C', directory, 'rev-parse', 'HEAD'], {encoding: 'utf8'});
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+function sourceManifest(platformRoot, options = {}) {
   const preflight = readJson(path.join(ROOT, 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json'));
   const files = Object.keys(preflight.run.platform);
   const brainFiles = [];
@@ -200,6 +241,18 @@ function sourceManifest(platformRoot) {
   return {version: VERSION, driver: {file: relative(__filename), sha256: sha(fs.readFileSync(__filename))},
     platform: Object.fromEntries(files.map(file => [file, sha(fs.readFileSync(path.join(platformRoot, file)))])),
     brain: Object.fromEntries(brainFiles.sort().map(file => [relative(file), sha(fs.readFileSync(file))])),
+    brainRevision: gitRevision(ROOT), platformRevision: gitRevision(platformRoot),
+    runtime: {node: process.version, nodeExecutable: process.execPath},
+    platformRoot: fs.realpathSync(platformRoot),
+    platformRuntimeSources: sourceTree(platformRoot, new Set(['.js', '.mjs', '.html', '.json', '.wasm', '.css', '.onnx'])),
+    worldModel: worldModelProvenance(options.python, process.env),
+    modelConfiguration: options.replay ? {mode: 'replay', source: options.replay,
+      sha256: sha(fs.readFileSync(options.replay)), formal_run: false} : validateFormalLLMConfig(),
+    runConfiguration: {task: options.task ?? null, maxRounds: options.maxRounds ?? null,
+      maxSimulationSeconds: options.maxSimulationSeconds ?? null, wallTimeoutSeconds: options.wallTimeoutSeconds ?? null},
+    dependencyLock: {file: 'vendor/worldmodel.lock.json', sha256: sha(fs.readFileSync(path.join(ROOT, 'vendor/worldmodel.lock.json'))),
+      scope: 'historical upstream base only; actual loaded files are recorded in worldModel'},
+    evaluator: {file: 'tools/evaluate_autonomous_brain.py', sha256: sha(fs.readFileSync(path.join(ROOT, 'tools/evaluate_autonomous_brain.py')))},
     evaluatorCaptureSha256: sha(installEvaluationCapture.toString()),
     platformGate: 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json',
     platformGateReviewer: {file: 'tools/fresh_map05_platform_gate.js', sha256: sha(fs.readFileSync(path.join(__dirname, 'fresh_map05_platform_gate.js')))},
@@ -460,18 +513,15 @@ function evaluateTruth(record, brainSummary = {}, capSeconds = 1200) {
 }
 
 function previousMap05Success(file) {
+  // Historical truth-only map-05 results never constitute stage-2 acceptance.
   const previous = readJson(file);
-  assert.equal(previous.map, 'map-05', 'success proof is not map-05');
-  assert.equal(previous.success, true, 'map-05 proof did not pass');
-  const dir = path.dirname(file);
-  const evidence = readJson(path.join(dir, 'evidence.json'));
-  const packed = fs.readFileSync(path.join(dir, evidence.record.file));
-  assert.equal(sha(packed), evidence.record.sha256, 'map-05 proof record SHA mismatch');
-  const unpacked = gunzipSync(packed);
-  assert.equal(sha(unpacked), evidence.record.expandedSha256, 'expanded map-05 record SHA mismatch');
-  assert.equal(evaluateTruth(JSON.parse(unpacked), {}, previous.maxSimulationSeconds || 1200).success, true,
-    'map-05 record failed independently recomputed truth check');
-  return true;
+  assert.equal(previous.stage, 'stage-2', 'stage-1 success cannot satisfy the stage-2 gate');
+  throw new Error('Stage-2 proof validation is not implemented; ten-layout gate remains closed');
+}
+
+function validateStageGate(options) {
+  assert.ok(!options.stage2Success, 'Stage-2 proof validation is not implemented; stage-1 success cannot unlock ten layouts');
+  assert.ok(options.maps.every(map => map === 'map-05'), 'Stage-2 formal acceptance is required before other layouts');
 }
 
 async function runBrain(options, directory, capability, origin, evaluate) {
@@ -532,16 +582,17 @@ async function runBrain(options, directory, capability, origin, evaluate) {
 
 async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
-  if (!options.replay) loadLocalLLMConfig();
+  if (!options.replay) {loadLocalLLMConfig(); validateFormalLLMConfig();}
   const gate = verifyPreflightGate({platformRoot: options.platformRoot});
   assert.equal(gate.allPass, true, 'platform two-gate check failed; brain must not start');
   assert.ok(!fs.existsSync(options.out), 'refusing to reuse an output directory');
-  if (!options.replay) for (const name of LLM_REQUIRED_KEYS) assert.ok(process.env[name], `${name} must be configured in .env.local or the process environment before running`);
   assert.ok(fs.existsSync(path.join(ROOT, 'autonomous_brain/run.py')), 'brain module is not ready');
-  let map05Passed = options.map05Success ? previousMap05Success(options.map05Success) : false;
-  assert.ok(map05Passed || options.maps[0] === 'map-05', 'map-05 must succeed before other layouts');
+  // This stage-1 entry point cannot attest the stage-2 topology requirements.
+  // Keep generalization closed until that independent gate is implemented.
+  validateStageGate(options);
+  let map05Passed = false;
   fs.mkdirSync(options.out, {recursive: true});
-  const manifest = sourceManifest(options.platformRoot);
+  const manifest = sourceManifest(options.platformRoot, options);
   const frozenPlatform = gate.run.platform;
   assert.deepEqual(manifest.platform, frozenPlatform, 'selected platform source differs from the rechecked gate evidence');
   writeJson(path.join(options.out, 'manifest.json'), manifest);
@@ -681,8 +732,17 @@ async function main(argv = process.argv.slice(2)) {
   } catch (error) {summary.status = 'failed'; summary.error = String(error.stack || error);}
   finally {
     summary.map05Passed = map05Passed;
-    summary.sourceManifestAfterRun = sourceManifest(options.platformRoot);
-    summary.sourcesUnchanged = json(manifest) === json(summary.sourceManifestAfterRun);
+    try {
+      summary.sourceManifestAfterRun = sourceManifest(options.platformRoot, options);
+      summary.sourcesUnchanged = json(manifest) === json(summary.sourceManifestAfterRun);
+    } catch (error) {
+      // Dependency disappearance/import failure must preserve the failed run
+      // and still release the browser/server in this finally block.
+      summary.status = 'failed';
+      summary.sourceManifestAfterRun = null;
+      summary.sourcesUnchanged = false;
+      summary.sourceVerificationError = String(error.stack || error);
+    }
     summary.success = summary.status === 'complete' && summary.sourcesUnchanged
       && summary.trials.length === options.maps.length * options.runs && summary.trials.every(trial => trial.success);
     if (preserveTemp) summary.preservedTempDirectory = relative(temp);
@@ -700,7 +760,7 @@ async function main(argv = process.argv.slice(2)) {
   process.exitCode = summary.success ? 0 : 1;
   return summary;
 }
-module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, parseArgs, installEvaluationCapture,
+module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
   evaluateTruth, previousMap05Success, sourceManifest, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

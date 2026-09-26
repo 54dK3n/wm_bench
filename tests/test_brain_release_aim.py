@@ -256,7 +256,7 @@ def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
 
 
 @pytest.mark.parametrize("with_old", [False, True])
-def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release(with_old):
+def test_fixed_aim_approach_stops_at_first_unverified_translation(with_old):
     f = aimed_place_runtime(projection=(.04, .60), with_old=with_old)
     original_call = f.runtime.bridge.call
 
@@ -277,7 +277,9 @@ def test_fixed_aim_that_cannot_be_reached_in_eight_steps_does_not_release(with_o
     assert result["success"] is False
     assert f.before_release == []
     forwards = [params for method, params in f.motions if method == "forward"]
-    assert len(forwards) == 8
+    assert len(forwards) == 1
+    assert result["reason"] == "place_motion_not_verified"
+    assert "insufficient_displacement" in result["evidence"]["reasons"]
     assert all(0 < params["distanceCm"] <= 7 for params in forwards)
     assert sum(params["distanceCm"] for params in forwards) <= 56
     assert f.runtime.snapshot["holding"]["holding"] is True

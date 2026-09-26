@@ -17,11 +17,14 @@ import math
 import os
 from pathlib import Path
 import re
+import sys
 from typing import Any
 
 
-VERSION = "autonomous-brain-offline-evaluation/v4"
+VERSION = "autonomous-brain-offline-evaluation/v5"
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from autonomous_brain.task import parse_task, completion_progress
 METHODS = {"observe", "camera_parameters", "odometry", "local_road", "holding",
            "grab", "release", "forward", "backward", "turn", "follow_road", "take_exit"}
 
@@ -190,6 +193,8 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
     samples = native.get("samples", [])
     last_sample = samples[-1] if samples else {}
     end_tick = native.get("simulationEndTick")
+    if "holding" not in last_sample or last_sample["holding"] is not None:
+        failures.append("final_truth_gripper_not_empty_or_unknown")
     if (not finite(last_sample.get("tick")) or not finite(end_tick)
             or last_sample.get("tick") != end_tick):
         failures.append("final_sample_tick_mismatch")
@@ -226,7 +231,7 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
     count = max(round_numbers) if round_numbers and all(isinstance(n, int) for n in round_numbers) else len(rounds)
     if round_numbers != list(range(1, len(rounds) + 1)):
         failures.append("round_log_sequence_incomplete")
-    if count >= cap_rounds:
+    if count > cap_rounds or (count == cap_rounds and not terminal_done(rounds, observations or [], end_tick)["verified"]):
         failures.append("round_limit_reached")
     if simulation_seconds is not None and simulation_seconds >= cap_seconds:
         failures.append("simulation_limit_reached")
@@ -405,12 +410,91 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     def sha(value):
         return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
+    def relative_file(value):
+        return (isinstance(value, str) and bool(value) and not Path(value).is_absolute()
+                and ".." not in Path(value).parts)
+
+    def hashed_files(value):
+        return (isinstance(value, dict) and bool(value)
+                and all(relative_file(key) and sha(digest) for key, digest in value.items()))
+
+    def absolute(value):
+        return isinstance(value, str) and Path(value).is_absolute() and ".." not in Path(value).parts
+
+    def valid_v7(value):
+        required_brain = {"autonomous_brain/" + name + ".py" for name in (
+            "__init__", "run", "actions", "bridge", "llm", "navigation",
+            "navigation_progress", "perception", "task", "provenance")}
+        if not required_brain.issubset(value["brain"]) or not hashed_files(value["platform"]):
+            return False
+        wm = value.get("worldModel")
+        platform = value.get("platformRuntimeSources")
+        model = value.get("modelConfiguration")
+        config = value.get("runConfiguration")
+        if not all(isinstance(item, dict) for item in (wm, model, config)):
+            return False
+        if (wm.get("schema") != "autonomous-brain-world-model-provenance/v1"
+                or wm.get("version_basis") != "actual_source_tree_sha256"
+                or "declared_version" not in wm
+                or (wm["declared_version"] is not None and not isinstance(wm["declared_version"], str))
+                or wm.get("selection") not in {"WORLD_MODEL_ROOT", "vendored_default"}
+                or not absolute(wm.get("configured_root")) or not absolute(wm.get("loaded_package"))
+                or Path(wm["loaded_package"]) != Path(wm["configured_root"]) / "world_model"
+                or not hashed_files(wm.get("files"))
+                or not all(key.startswith("world_model/") for key in wm["files"])):
+            return False
+        canonical = json.dumps(wm["files"], sort_keys=True, separators=(",", ":")).encode()
+        if wm.get("source_tree_sha256") != hashlib.sha256(canonical).hexdigest():
+            return False
+        modules, python = wm.get("loaded_modules"), wm.get("python")
+        if (not isinstance(modules, dict) or "world_model" not in modules
+                or not isinstance(python, dict) or not absolute(python.get("executable"))
+                or not isinstance(python.get("version"), str) or not python["version"]):
+            return False
+        for name, module in modules.items():
+            if (not isinstance(name, str) or not (name == "world_model" or name.startswith("world_model."))
+                    or not isinstance(module, dict) or not absolute(module.get("path"))):
+                return False
+            try:
+                file = Path(module["path"]).relative_to(wm["configured_root"]).as_posix()
+            except ValueError:
+                return False
+            if file not in wm["files"] or not sha(module.get("sha256")) or wm["files"][file] != module["sha256"]:
+                return False
+        critical_platform = {"server.js", "index.html", "app.js", "robot-bridge-contract.js",
+                             "robot-backend-runtime.js", "robot-camera-detector.js",
+                             "backend/robot-bridge.js", "vision-pixel-core.js", "vendor/three/three.min.js"}
+        if (not hashed_files(platform) or not critical_platform.issubset(platform)
+                or not absolute(value.get("platformRoot"))
+                or any((key in platform and platform[key] != digest)
+                       or (not key.startswith("tests/") and key not in platform)
+                       for key, digest in value["platform"].items())):
+            return False
+        runtime = value.get("runtime")
+        if (not isinstance(runtime, dict) or not isinstance(runtime.get("node"), str)
+                or not absolute(runtime.get("nodeExecutable"))):
+            return False
+        for key, filename in (("dependencyLock", "vendor/worldmodel.lock.json"),
+                              ("evaluator", "tools/evaluate_autonomous_brain.py")):
+            row = value.get(key)
+            if not isinstance(row, dict) or row.get("file") != filename or not sha(row.get("sha256")):
+                return False
+        if (model.get("model") != "deepseek-flash" or not finite(model.get("temperature"))
+                or model["temperature"] != 0 or model.get("thinking") != "disabled"
+                or model.get("stream") is not True or model.get("formal_run") is not True
+                or model.get("response_format") != {"type": "json_object"}):
+            return False
+        return (isinstance(config.get("task"), str) and bool(config["task"].strip())
+                and type(config.get("maxRounds")) is int and 1 <= config["maxRounds"] <= 200
+                and finite(config.get("maxSimulationSeconds")) and 0 < config["maxSimulationSeconds"] <= 1200
+                and finite(config.get("wallTimeoutSeconds")) and config["wallTimeoutSeconds"] >= 0)
+
     def valid(value):
         if not isinstance(value, dict) or value.get("version") not in {
-                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 7)}:
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 8)}:
             return False
         driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
-        return (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
+        base_valid = (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
                 and sha(driver.get("sha256")) and isinstance(brain, dict) and bool(brain)
                 and all(isinstance(key, str) and key.startswith("autonomous_brain/")
                         and key.endswith(".py") and ".." not in key.split("/") and sha(digest)
@@ -418,8 +502,10 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
                 and len({Path(key).name for key in brain}) == len(brain)
                 and isinstance(platform, dict) and bool(platform) and all(sha(value) for value in platform.values())
                 and sha(value.get("evaluatorCaptureSha256")))
+        return base_valid and (value["version"] != "wm-autonomous-brain-driver/v7" or valid_v7(value))
 
-    if not isinstance(manifest, dict) or not isinstance(driver_summary, dict):
+    if (not isinstance(manifest, dict) or not isinstance(driver_summary, dict)
+            or not isinstance(brain_summary, dict)):
         result.update(status="invalid")
         result["failures"].append("source_proof_unsupported_or_invalid_manifest")
         return result
@@ -431,6 +517,25 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     result["recorded_before_after_equal"] = manifest == after
     expected = {Path(path).name: value for path, value in manifest["brain"].items()}
     result["brain_summary_hashes_match"] = brain_summary.get("source_sha256") == expected
+    if manifest["version"] == "wm-autonomous-brain-driver/v7":
+        expected_wm = dict(manifest["worldModel"])
+        expected_wm.pop("selection")
+        result["actual_world_model_matches"] = expected_wm == brain_summary.get("world_model")
+        if not result["actual_world_model_matches"]:
+            result["failures"].append("source_proof_actual_world_model_mismatch")
+        formal = brain_summary.get("formal_configuration")
+        result["formal_configuration_matches"] = (isinstance(formal, dict) and formal.get("mode") == "live"
+            and {key: val for key, val in formal.items() if key != "mode"} == manifest["modelConfiguration"])
+        if not result["formal_configuration_matches"]:
+            result["failures"].append("source_proof_formal_configuration_mismatch")
+        config = manifest["runConfiguration"]
+        result["run_configuration_matches"] = (
+            all(driver_summary.get(key) == val for key, val in config.items())
+            and brain_summary.get("task") == config["task"]
+            and brain_summary.get("limits") == {"max_rounds": config["maxRounds"],
+                                               "max_simulation_seconds": config["maxSimulationSeconds"]})
+        if not result["run_configuration_matches"]:
+            result["failures"].append("source_proof_task_or_limits_mismatch")
     result["recorded_brain_and_driver_files"] = len(expected) + 1
     for passed, failure in ((result["recorded_before_after_equal"], "source_proof_before_after_mismatch"),
                             (driver_summary.get("sourcesUnchanged") is True, "source_proof_driver_flag_not_true"),
@@ -440,6 +545,86 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
             result["failures"].append(failure)
     result["status"] = "verified" if not result["failures"] else "mismatch"
     return result
+
+
+def evaluate_task_scope(summary, observations, rounds, calls):
+    """New task-aware runs require both a legal ledger and an explicit LLM done."""
+    spec = summary.get("task_spec")
+    if spec is None:
+        return {"stage": "legacy-unscoped", "task_spec": None, "failures": []}
+    failures = []
+    try:
+        parsed = parse_task(summary.get("task"))
+    except ValueError:
+        return {"stage": "invalid", "task_spec": spec, "failures": ["invalid_task_instruction"]}
+    if spec != parsed:
+        failures.append("instruction_task_spec_mismatch")
+    stage = "stage-1" if parsed["quantity_mode"] == "known" else "stage-2"
+    if stage == "stage-1" and (parsed["required_count"] != 2
+            or summary["task"] != "把两个红球送到绿色存放区"):
+        failures.append("stage1_requires_exact_two_ball_instruction")
+    final = observations[-1] if observations else {}
+    progress = completion_progress(summary.get("final_objects", []),
+        summary.get("action_evidence", []), parsed,
+        holding=final.get("holding", {}).get("holding"),
+        held_object_id=summary.get("held_object_id"), pending_grasp=summary.get("pending_grasp"),
+        nodes=len(summary.get("junction_history", [])),
+        unexplored=sum(1 for node in summary.get("junction_history", [])
+                       for exit in node.get("exits", []) if not exit.get("completed")))
+    if not progress["ready_for_done"]:
+        failures.extend("task_completion:" + reason for reason in progress["unmet_conditions"])
+    if summary.get("final_objects") != final.get("objects"):
+        failures.append("final_object_ledger_not_corroborated")
+    last = rounds[-1] if rounds else {}
+    record = last.get("llm_output") or {}
+    if ((last.get("action") or {}).get("action") != "done"
+            or record.get("action") != last.get("action")
+            or not any(call == record for call in calls)):
+        failures.append("done_not_selected_in_recorded_llm_call")
+    for call in calls:
+        request = call.get("request") or {}
+        if (call.get("mode") != "live" or request.get("model") != "deepseek-flash"
+                or type(request.get("temperature")) not in (int, float)
+                or request.get("temperature") != 0 or request.get("thinking") != {"type": "disabled"}):
+            failures.append("formal_model_configuration_mismatch")
+            break
+    # Check successful transition evidence against this run's raw observations.
+    by_index = {row.get("observation_index"): row for row in observations}
+    by_frame = {str(row.get("observation", {}).get("frameId")): row for row in observations}
+    for event in summary.get("action_evidence", []):
+        basis = event.get("evidence") or {}
+        if event.get("action") == "pick":
+            observed = by_index.get(basis.get("post_observation", basis.get("after_observation")), {})
+            if observed.get("holding", {}).get("holding") is not True:
+                failures.append("pick_ledger_missing_holding_observation")
+        elif event.get("action") == "place":
+            placement = basis.get("placement") or {}
+            observed = by_frame.get(str(placement.get("frame_id")), {})
+            detections = observed.get("perception", {}).get("detections", [])
+            if (observed.get("holding", {}).get("holding") is not False
+                    or not any(d.get("category") == "red-ball" and d.get("bbox") == placement.get("ball_bbox") for d in detections)
+                    or not any(d.get("category") == "storage-zone" and d.get("bbox") == placement.get("storage_bbox") for d in detections)):
+                failures.append("delivery_ledger_missing_same_frame_observation")
+    if stage == "stage-2":
+        failures.append("stage2_topology_acceptance_not_implemented")
+    return {"stage": stage, "task_spec": parsed, "completion": progress,
+            "failures": list(dict.fromkeys(failures))}
+
+
+def evaluate_call_lifecycle(calls, lifecycle):
+    started = [row for row in lifecycle if row.get("event") == "started"]
+    finished = [row for row in lifecycle if row.get("event") == "finished"]
+    failures = []
+    expected = list(range(1, len(calls) + 1))
+    if ([row.get("call_index") for row in started] != expected
+            or [row.get("call_index") for row in finished] != expected):
+        failures.append("llm_lifecycle_unfinished_or_missing_call")
+    for start, finish, call in zip(started, finished, calls):
+        if (start.get("request") != call.get("request")
+                or start.get("request_sha256") != call.get("request_sha256")
+                or any(finish.get(key) != value for key, value in call.items())):
+            failures.append("llm_lifecycle_transcript_mismatch")
+    return {"started": len(started), "finished": len(finished), "failures": failures}
 
 
 def stop_failure_kind(row: dict, final_round: Any, stop: dict, step_ms: float) -> str:
@@ -628,6 +813,12 @@ def evaluate_run(directory: Path) -> dict:
     evidence = load("evidence.json", {})
     manifest = load("../manifest.json", {})
     driver_summary = load("../summary.json", {})
+    lifecycle = load("brain/llm.lifecycle.jsonl", [],
+        required=manifest.get("version") == "wm-autonomous-brain-driver/v7", lines=True)
+    lifecycle_audit = (evaluate_call_lifecycle(calls, lifecycle)
+        if lifecycle or manifest.get("version") == "wm-autonomous-brain-driver/v7" else None)
+    if lifecycle_audit:
+        failures.extend(lifecycle_audit["failures"])
     stop = load("../evaluator-stop.json", {}, required=False)
     source_proof = evaluate_source_proof(manifest, driver_summary, summary)
     failures.extend(source_proof["failures"])
@@ -645,6 +836,10 @@ def evaluate_run(directory: Path) -> dict:
                 failures.append("evidence_sha_mismatch:" + key)
     delivery = evaluate_delivery(record, rounds, summary, metadata, observations)
     failures.extend(delivery["failures"])
+    task_scope = evaluate_task_scope(summary, observations, rounds, calls)
+    failures.extend(task_scope["failures"])
+    if manifest.get("version") == "wm-autonomous-brain-driver/v7" and task_scope["stage"] == "legacy-unscoped":
+        failures.append("new_run_missing_instruction_task_spec")
     if not rounds:
         failures.append("no_completed_round_logs")
     if not observations:
@@ -670,6 +865,8 @@ def evaluate_run(directory: Path) -> dict:
                           for row in rounds if row.get("result", {}).get("success") is False]
     failure_counts = Counter(row["failure_kind"] for row in failures_by_action)
     return {"version": VERSION, "evaluation_only": True, "run_directory": relative(directory),
+            "stage": task_scope["stage"], "task_spec": task_scope["task_spec"], "task_scope": task_scope,
+            "llm_lifecycle": lifecycle_audit,
             "map": metadata.get("map", directory.name.split("-run-")[0]),
             "success": not failures, "failures": list(dict.fromkeys(failures)),
             "delivery": delivery, "metrics": {"rounds": delivery["rounds"],
@@ -689,7 +886,7 @@ def evaluate_run(directory: Path) -> dict:
                 "success_recomputed_from_record": True, "determinism_is_not_a_gate": True,
                 "position_error_is_report_only": True,
                 "judge_disagreements_are_report_only": True,
-                "limits": "reaching configured round/time cap fails; caps never exceed 200 rounds or 1200 seconds"}}
+                "limits": "successful observed done may use the final allowed round; otherwise caps stop at 200 rounds or 1200 seconds"}}
 
 
 def report_text(result: dict) -> str:

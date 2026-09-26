@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from test_brain_perception import CAMERA, ball, observe
+from test_brain_perception import CAMERA, ball, observe, grasp_evidence
 from autonomous_brain import actions as action_module
 from autonomous_brain.actions import Actions
 from autonomous_brain.perception import Perception
@@ -144,7 +144,7 @@ def test_manipulated_but_not_delivered_identity_stays_pending(unverified_release
     perception, object_id = confirmed_red()
     observe(perception, 4, items=[], time=.4)
     assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
-        simulation_time_s=.4, evidence={"holding": True, "post_observation": 4})
+        simulation_time_s=.4, evidence=grasp_evidence(perception, object_id))
     if unverified_release:
         observe(perception, 5, items=[], time=.5)
         assert perception.mark_release_unverified(object_id, simulation_time_s=.5,
@@ -195,7 +195,7 @@ def test_sensor_verified_delivery_allows_done_with_only_archived_unconfirmed_hyp
     assert object_id != retired_id and perception.confirmed(object_id) is not None
     observe(perception, 6, 32, right=200, time=20.4, items=[])
     assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
-        simulation_time_s=20.4, evidence={"holding": True, "post_observation": 6})
+        simulation_time_s=20.4, evidence=grasp_evidence(perception, object_id))
     preexisting = [row["id"] for row in perception.objects()
                    if row["category"] == "red-ball" and row["id"] != object_id]
     zone = {"category": "storage-zone", "source": "storage-ground-pixels", "confidence": 1,

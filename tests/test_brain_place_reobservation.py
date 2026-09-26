@@ -174,6 +174,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
         assert evidence["placement"]["frame_id"] == snapshot["observation"]["frameId"]
         assert evidence["post_observation"] == snapshot["observation_index"]
         objects[oid]["state"] = "DELIVERED"
+        unresolved.clear()
         return True
 
     def mark_unverified(oid, *, evidence, **kwargs):

@@ -158,6 +158,7 @@ def test_v13_prompt_transmits_hints_without_overriding_the_model_or_completion(t
     prompt = request["messages"][0]["content"]
     for phrase in ("current_fresh_unexplored", "recorded_directed_route", "原样属于本轮 robot.exit_angles",
                    "每轮重新检查", "空 exploration_hints 不代表探索完成", "不证明物理路口身份相同",
-                   "没有未探索路段", "没有待确认目标", "go_to 和 pick 只能选择当前状态为 CONFIRMED"):
+                   "task_spec.quantity_mode", "known 时只按指令给出的 required_count", "无需探索完整地图",
+                   "completion.ready_for_done", "unknown 时继续探索", "go_to 和 pick 只能选择当前状态为 CONFIRMED"):
         assert phrase in prompt
-    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v14"
+    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v15"

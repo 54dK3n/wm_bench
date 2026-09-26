@@ -108,50 +108,41 @@ def place_runtime(views, *, road=lambda odo: True, block_return=False, actual_fi
     return runtime, motions, logs, objects, delivery_evidence
 
 
-def test_observed_alignment_turns_do_not_spend_the_translation_budget():
-    # Real partial turns and translations require more than eight primitives,
-    # while every alignment still refers to the same initial ground point.
+def test_completed_acknowledgement_cannot_hide_partial_turn():
     runtime, motions, _, objects, evidence = place_runtime(
         [(30, 30)], approach_step_cm=1.5, turn_fraction=.7)
     result = Actions(runtime).place()
+    assert result["success"] is False
+    assert result["reason"] == "place_motion_not_verified"
+    assert result["evidence"]["reasons"] == ["rotation_not_verified"]
+    assert [method for method, _ in motions] == ["turn"]
+    assert objects["held"]["state"] == "HELD" and evidence == []
+
+
+def test_partial_translation_is_rejected_before_another_approach_command():
+    runtime, motions, _, objects, _ = place_runtime([(30, 0)], approach_step_cm=1.5)
+    result = Actions(runtime).place()
+    assert result["success"] is False and result["reason"] == "place_motion_not_verified"
+    assert [method for method, _ in motions] == ["forward"]
+    assert result["evidence"]["measured_cm"] == pytest.approx(1.5)
+    assert "insufficient_displacement" in result["evidence"]["reasons"]
+    assert objects["held"]["state"] == "HELD"
+
+
+def test_full_verified_translation_budget_stays_at_eight():
+    runtime, motions, _, objects, _ = place_runtime([(65, 0)])
+    result = Actions(runtime).place()
     assert result["success"] is True
-    before_release = motions[:next(i for i, row in enumerate(motions) if row[0] == "release")]
-    assert sum(method == "forward" for method, _ in before_release) == 8
-    assert sum(method == "turn" for method, _ in before_release) >= 3
-    assert all(params["distanceCm"] <= 7 for method, params in before_release if method == "forward")
+    assert sum(method == "forward" for method, _ in motions) <= 8
     assert objects["held"]["state"] == "DELIVERED"
-    assert evidence[0]["placement"]["ball_track_id"] == "fresh-release"
-    assert "release_observation" in evidence[0]
 
 
-def test_eighth_translation_gets_a_fresh_gate_check_before_failing():
-    runtime, motions, _, _, _ = place_runtime([(30, 0)], approach_step_cm=1.5)
-    result = Actions(runtime).place()
-    assert result["success"] is True
-    assert sum(method == "forward" for method, _ in motions) == 8
-    assert result["evidence"]["release_aim"]["last_alignment"]["frame_id"] == 9
-    assert result["evidence"]["release_aim"]["last_alignment"]["distance_cm"] == pytest.approx(18)
-
-
-def test_translation_budget_stays_at_eight_when_fresh_range_does_not_converge():
-    runtime, motions, _, objects, _ = place_runtime([(30, 0)], approach_step_cm=1)
-    result = Actions(runtime).place()
-    assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
-    assert [method for method, _ in motions] == ["forward"] * 8
-    assert result["evidence"]["detection"]["distance_cm"] == pytest.approx(22)
-    assert result["evidence"]["detection"]["bearing_deg"] == 0
-    assert str(result["evidence"]["detection"]["frame_id"]) == str(runtime.snapshot["observation"]["frameId"])
-    assert runtime.snapshot["odometry"]["forwardCm"] == 8
-    assert runtime.snapshot["holding"]["holding"] is True and objects["held"]["state"] == "HELD"
-
-
-def test_alignment_stops_after_three_observed_turns_without_translation():
+def test_alignment_stops_at_first_insufficient_turn():
     runtime, motions, _, _, _ = place_runtime([(30, 10)], turn_fraction=.1)
     result = Actions(runtime).place()
-    assert result["success"] is False and result["reason"] == "storage_alignment_did_not_converge"
-    assert [method for method, _ in motions] == ["turn"] * 3
-    assert runtime.snapshot["odometry"]["headingDeg"] == pytest.approx(-2.71)
-    assert result["evidence"]["release_aim"]["last_alignment"]["bearing_deg"] == pytest.approx(7.29)
+    assert result["success"] is False and result["reason"] == "place_motion_not_verified"
+    assert [method for method, _ in motions] == ["turn"]
+    assert runtime.snapshot["odometry"]["headingDeg"] == pytest.approx(-1)
     assert runtime.snapshot["holding"]["holding"] is True
 
 
@@ -185,7 +176,7 @@ def test_failed_approach_stops_at_first_blocked_return_command():
     runtime, motions, _, _, _ = place_runtime([(30, 0), None], road=near_origin, block_return=True)
     result = Actions(runtime).place()
     assert result["success"] is False
-    assert result["evidence"]["road_return"]["reason"] == "recorded_return_blocked"
+    assert result["evidence"]["road_return"]["reason"] == "return_motion_not_verified"
     assert [method for method, _ in motions] == ["forward", "backward"]
     assert runtime.snapshot["holding"]["holding"] is True
 
@@ -202,7 +193,7 @@ def test_verified_delivery_is_separate_from_small_step_road_return(block_return)
     assert result["evidence"]["road_return"]["success"] is not block_return
     if block_return:
         assert [method for method, _ in motions] == ["release", "backward", "forward"]
-        assert result["evidence"]["road_return"]["reason"] == "recorded_return_blocked"
+        assert result["evidence"]["road_return"]["reason"] == "return_motion_not_verified"
     else:
         assert [method for method, _ in motions] == ["release", "backward", "forward", "forward"]
         assert runtime.snapshot["odometry"]["forwardCm"] == pytest.approx(-11)
@@ -222,11 +213,11 @@ def test_failed_gate_keeps_its_detection_frame_separate_from_return_observations
                                             approach_step_cm=1)
     result = Actions(runtime).place()
     assert result["success"] is False
-    assert result["evidence"]["detection"]["frame_id"] == "9"
-    assert result["evidence"]["detection"]["distance_cm"] == pytest.approx(22)
-    assert result["evidence"]["frame_id"] > 9
+    assert result["evidence"]["detection"]["frame_id"] == "2"
+    assert result["evidence"]["detection"]["distance_cm"] == pytest.approx(29)
+    assert result["evidence"]["frame_id"] > 2
     assert result["evidence"]["road_return"]["success"] is True
-    assert len(motions) == 16
+    assert len(motions) == 2
 
 
 def test_recorded_run08_rounded_trajectory_can_be_reversed_without_guessing_geometry():
@@ -291,7 +282,7 @@ def test_return_stops_when_inverse_actuator_reports_complete_without_motion():
     runtime.bridge.call = no_progress
     result = Actions(runtime).place()
     assert result["success"] is False
-    assert result["evidence"]["road_return"]["reason"] == "recorded_return_no_verified_progress"
+    assert result["evidence"]["road_return"]["reason"] == "return_motion_not_verified"
     assert [method for method, _ in motions] == ["forward", "backward"]
 
 

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from test_brain_perception import CAMERA, ball, observe
+from test_brain_perception import CAMERA, ball, observe, grasp_evidence
 from autonomous_brain.actions import Actions
 from autonomous_brain.perception import Perception
 
@@ -30,7 +30,8 @@ class DeliveryRuntime:
         self.original_id = self.perception.objects()[0]["id"]
         assert self.perception.confirmed(self.original_id) is not None
         assert self.perception.mark_picked(self.original_id, holding=True,
-            original_position_absent=True, simulation_time_s=.35, evidence={"frame_id": "grasped"})
+            original_position_absent=True, simulation_time_s=.35,
+            evidence=grasp_evidence(self.perception, self.original_id, time=.35))
         self.frame, self.nearby_reds = 3, nearby_reds
         self.preexisting_ids = set()
         if nearby_reds:

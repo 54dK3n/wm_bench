@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from test_brain_perception import CAMERA, ball, observe
+from test_brain_perception import CAMERA, ball, observe, grasp_evidence
 from autonomous_brain.actions import completion_evidence
 from autonomous_brain.perception import Perception
 
@@ -73,8 +73,7 @@ def sensor_pick(perception, object_id, *, frame, timestamp):
     observed = observe(perception, frame, 32, time=timestamp, items=[])
     assert perception.mark_picked(object_id, holding=True, original_position_absent=True,
         simulation_time_s=timestamp,
-        evidence={"holding": True, "original_position_absent": True,
-                  "post_observation": frame, "frame_id": observed["frame_id"]})
+        evidence=grasp_evidence(perception, object_id))
     assert perception.get_object(object_id)["state"] == "HELD"
 
 
@@ -214,7 +213,7 @@ def test_action_removed_identity_cannot_become_historical_reacquisition(unverifi
     observe(perception, 4, 32, time=.4, items=[])
     assert perception.mark_picked(old, holding=True, original_position_absent=True,
                                   simulation_time_s=.4,
-                                  evidence={"holding": True, "post_observation": 4})
+                                  evidence=grasp_evidence(perception, old))
     if unverified_release:
         assert perception.mark_release_unverified(old, simulation_time_s=.4,
                    evidence={"holding": False, "post_observation": 4})

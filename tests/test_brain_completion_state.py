@@ -73,7 +73,7 @@ def test_live_prompt_carries_explicit_retirement_semantics_and_unchanged_sensor_
     prompt = request["messages"][0]["content"]
     assert "retired_unconfirmed_hypothesis" in prompt
     assert "不代表已送达" in prompt and "不代表物体不存在" in prompt
-    assert "曾确认的 LOST" in prompt
+    assert "completion.ready_for_done" in prompt
 
 
 def test_v9_repair_replay_keeps_its_old_prompt_and_state_exact_without_network_env_or_sleep(tmp_path):

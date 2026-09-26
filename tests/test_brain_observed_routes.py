@@ -51,8 +51,8 @@ def runtime(monkeypatch, tmp_path, movements, *, exits=(0,)):
     bridge = PublicBridge(frame(0, 0, 0, exits=exits), movements)
     monkeypatch.setattr(run, "RobotBridge", lambda *args: bridge)
     monkeypatch.setattr(run, "Perception", lambda *args: SimpleNamespace(
-        update=lambda *args, **kwargs: {"detections": []}, objects=lambda: []))
-    result = run.Runtime({"task": "explore from public observations"}, tmp_path)
+        update=lambda *args, **kwargs: {"detections": []}, objects=lambda: [], action_evidence=lambda: []))
+    result = run.Runtime({"task": "把两个红球送到绿色存放区"}, tmp_path)
     result.round = 1
     result.observe()
     return result
@@ -93,7 +93,10 @@ def test_complete_window_survives_round_boundaries_stationary_frames_and_turns(m
     trip = trips[0]
     assert [p["observation_index"] for p in trip["observed_path"]] == list(range(1, 8))
     assert trip["travelled_cm"] == 65
-    assert trip["motions"] == records(tmp_path / "motions.jsonl")
+    logged = records(tmp_path / "motions.jsonl")
+    assert trip["motions"] == [{key: value for key, value in row.items()
+                                if key != "motion_verification"} for row in logged]
+    assert all("motion_verification" in row for row in logged)
     assert [m["method"] for m in trip["motions"]] == ["take_exit", "turn", "follow_road"]
     assert r.snapshot["road_traversal_events"][-1]["recorded"] is True
 

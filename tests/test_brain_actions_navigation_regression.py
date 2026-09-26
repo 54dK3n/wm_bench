@@ -31,7 +31,7 @@ class FakePerception:
         return None
 
     def mark_delivered(self, object_id, *, holding, ball_in_storage, **kwargs):
-        if holding or not ball_in_storage or self.rows[object_id]["state"] != "HELD":
+        if holding or not ball_in_storage or self.rows[object_id]["state"] not in {"HELD", "RELEASED_UNVERIFIED"}:
             return False
         self.rows[object_id]["state"] = "DELIVERED"
         self.delivered.append(object_id)
@@ -135,6 +135,8 @@ def test_place_cannot_use_another_preexisting_ball_as_its_delivery_witness(witne
             runtime.snapshot["holding"]["holding"] = False
             runtime.snapshot["perception"]["detections"] = [zone, witness]
             runtime.perception.rows[other["id"]] = copy.deepcopy(other)
+        else:
+            runtime.snapshot["odometry"]["forwardCm"] -= params["distanceCm"]
         return {"accepted": True, "completed": True}
 
     # Keep the already-known other ball clear of the initial aiming pixel;

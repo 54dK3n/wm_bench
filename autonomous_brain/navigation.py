@@ -5,7 +5,7 @@ import copy
 import heapq
 import math
 
-VERSION = "autonomous-brain-navigation/v5"
+VERSION = "autonomous-brain-navigation/v6"
 
 
 def wrap(angle):
@@ -149,6 +149,8 @@ class _BreadcrumbMemory:
         if not self.vertices:
             return []
         start = min(range(len(self.vertices)), key=lambda i: distance(position(odo), self.vertices[i]))
+        if distance(position(odo), self.vertices[start]) >= .08:
+            return []
         goal = min(range(len(self.vertices)), key=lambda i: distance(target, self.vertices[i]))
         costs, previous, queue = {start: 0}, {}, [(0, start)]
         while queue:
@@ -220,6 +222,108 @@ class RoadMemory(_BreadcrumbMemory):
         self._latest_public_observation = None
         self._pending_traversal = None
         self._traversal_events = []
+        self._approach_previous = None
+        self._approach_points = {}
+        self._approach_edges = {}
+
+    def _record_approach_segment(self, observation, motion):
+        """Keep exact measured endpoints; never connect nearby road branches.
+
+        This small path memory is separate from junction identity/frontier
+        bookkeeping. Repositioning follows the local road afresh at every step.
+        """
+        previous = self._approach_previous
+        current = copy.deepcopy(observation)
+        self._approach_previous = current
+        odo, road = current["odometry"], current["road"]
+        if (road.get("onRoad") is not True
+                or not all(number(odo.get(k)) for k in (
+                    "rightCm", "forwardCm", "headingDeg", "distanceCm", "tick"))):
+            return
+        p = position(odo)
+        self._approach_points[p] = {"position_m": list(p),
+            "observation_index": current["observation_index"],
+            "heading_deg": odo["headingDeg"], "road": copy.deepcopy(road)}
+        self._approach_edges.setdefault(p, {})
+        if previous is None or motion is None:
+            return
+        old = previous["odometry"]
+        result, method = motion.get("actuator_result", {}), motion.get("method")
+        if (previous["road"].get("onRoad") is not True
+                or not all(number(old.get(k)) for k in (
+                    "rightCm", "forwardCm", "headingDeg", "distanceCm", "tick"))
+                or current["observation_index"] != previous["observation_index"] + 1
+                or motion.get("before_observation") != previous["observation_index"]
+                or motion.get("after_observation") != current["observation_index"]
+                or method not in {"take_exit", "follow_road", "forward", "backward"}
+                or not isinstance(result, dict) or result.get("error")
+                or result.get("accepted") is False
+                or result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}
+                or (result.get("completed") is not True if method in {"forward", "backward"}
+                    else result.get("accepted") is not True)):
+            return
+        a = position(old)
+        measured, travelled = distance(a, p) * 100, odo["distanceCm"] - old["distanceCm"]
+        if (a not in self._approach_edges or not .1 <= measured <= 60
+                or travelled < .1 or measured > travelled + .2 or odo["tick"] <= old["tick"]):
+            return
+        if method in {"forward", "backward"}:
+            requested = motion.get("params", {}).get("distanceCm")
+            theta = math.radians(old["headingDeg"])
+            dx, dz = odo["rightCm"] - old["rightCm"], odo["forwardCm"] - old["forwardCm"]
+            along = (-math.sin(theta) * dx + math.cos(theta) * dz) * (1 if method == "forward" else -1)
+            across = math.cos(theta) * dx + math.sin(theta) * dz
+            # Public odometry is rounded to 0.1 cm. A heading computed from a
+            # tiny displacement has arbitrarily large angular error; retain the
+            # existing 0.2 cm axis tolerances used for basic-motion verification.
+            if (not number(requested) or abs(measured - requested) > .2
+                    or abs(wrap(odo["headingDeg"] - old["headingDeg"])) > .2
+                    or along <= 0 or abs(along - requested) > .2 or abs(across) > .2):
+                return
+        for frame in (previous, current):
+            sensor = frame.get("observation", {})
+            if sensor.get("tick") != frame["odometry"]["tick"] or "frameId" not in sensor:
+                return
+        if str(previous["observation"]["frameId"]) == str(current["observation"]["frameId"]):
+            return
+        edge = {"before_observation": previous["observation_index"],
+            "after_observation": current["observation_index"], "method": method,
+            "travelled_cm": travelled, "measured_cm": measured}
+        self._approach_edges[a][p] = edge
+        self._approach_edges[p][a] = edge
+
+    def approach_candidates(self, odo, target, excluded=(), limit=3):
+        """Reachable observed viewpoints in the unchanged visual-range window."""
+        start = position(odo)
+        if start not in self._approach_edges:
+            return []
+        costs, previous, queue = {start: 0}, {}, [(0, start)]
+        while queue:
+            cost, point = heapq.heappop(queue)
+            if costs[point] != cost:
+                continue
+            for other, edge in self._approach_edges[point].items():
+                updated = cost + edge["travelled_cm"]
+                if updated < costs.get(other, math.inf):
+                    costs[other], previous[other] = updated, point
+                    heapq.heappush(queue, (updated, other))
+        candidates = []
+        for point, cost in costs.items():
+            if (distance(start, point) < .15 or not .25 <= distance(point, target) <= .65
+                    or any(distance(point, tuple(old)) < .15 for old in excluded)):
+                continue
+            path, endpoint = [point], point
+            while endpoint != start:
+                endpoint = previous[endpoint]
+                path.append(endpoint)
+            path.reverse()
+            candidates.append({"position_m": list(point), "path": [list(p) for p in path],
+                "segments": [copy.deepcopy(self._approach_edges[a][b]) for a, b in zip(path, path[1:])],
+                "source": "observed_on_road_motion_endpoints", "travelled_cm": cost,
+                "observation_index": self._approach_points[point]["observation_index"]})
+        return sorted(candidates, key=lambda row: (
+            abs(distance(tuple(row["position_m"]), target) - .32), row["travelled_cm"],
+            row["position_m"]))[:max(0, min(limit, 3))]
 
     def _anchor(self, frame):
         road, odo = frame["road"], frame["odometry"]
@@ -303,6 +407,7 @@ class RoadMemory(_BreadcrumbMemory):
         round boundaries), and supplies a finalized motion only for an actuator
         call. Legacy completion flags are never used as traversal evidence.
         """
+        self._record_approach_segment(observation, motion)
         current = snapshot(observation)
         sensor = observation.get("observation")
         if isinstance(sensor, dict):

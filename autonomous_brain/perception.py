@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v7"
+VERSION = "autonomous-brain-perception/v8"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -92,6 +92,7 @@ class Perception:
         self._action_evidence: list[dict[str, Any]] = []
         self._delivered_positions: dict[str, dict[str, Any]] = {}
         self._delivery_aliases: dict[str, str] = {}
+        self._unverified_releases: dict[str, dict[str, Any]] = {}
         self._reacquisitions: dict[str, dict[str, Any]] = {}
         self._observed_frames: dict[str, dict[str, Any]] = {}
         self._last_timestamp: float | None = None
@@ -169,6 +170,13 @@ class Perception:
             {"category": PUBLIC_TO_WM[category], "confidence": confidence,
              "distanceCm": distance_cm, "bearingDeg": bearing_deg, "frameId": frame_id},
             self.pose, timestamp=timestamp, source=source)
+        # The frozen upstream provider's registry is in scene-unit widths
+        # labelled metres. Correct only this adapter's physical size contract;
+        # do not mutate its association profile or the upstream source.
+        det.radius_cm = DETECTOR_WIDTH_CM[category] / 2
+        evidence["physical_size"] = {"diameter_cm": DETECTOR_WIDTH_CM[category],
+                                     "radius_cm": det.radius_cm,
+                                     "source": "virtual-cv-scene-unit-adapter/v1"}
         det.bbox = (x, y, x + w, y + h)
         # Profile confirmation uses the demo's raw 40–90 cm memory window.
         # Near observations remain usable by the action's visual servo, but
@@ -411,6 +419,7 @@ class Perception:
                 "distance_cm": math.hypot(local_x, local_z) * 100.0,
                 "bearing_deg": _wrap_deg(math.degrees(math.atan2(local_x, local_z))),
                 "hit_count": track.hit_count, "source": track.source,
+                "radius_cm": track.radius_cm,
                 "last_seen_s": track.last_seen,
                 "hit_poses": copy.deepcopy(self._accepted_poses.get(track.obj_id, []))}
         if track.obj_id in self._reacquisitions:
@@ -468,12 +477,58 @@ class Perception:
         return next((copy.deepcopy(item) for item in self.last_evidence["detections"]
                      if item["track_id"] == object_id), None)
 
+    def original_position_evidence(self, original, category):
+        """Absence needs a fresh, in-frame, unobstructed old-position view."""
+        result = {"valid": False, "frame_id": self._last_frame, "matches": [],
+                  "original_position_m": {"x": original[0], "z": original[1]},
+                  "category": category}
+        if self.last_evidence is None or category not in DETECTOR_WIDTH_CM:
+            return dict(result, reason="original_position_observation_unavailable")
+        x, z = self.pose.to_local(*original)
+        if not .15 <= math.hypot(x, z) <= .9 or z <= 0:
+            return dict(result, reason="original_position_outside_valid_range")
+        try:
+            u, v = self.ground_camera.ground_point_to_pixel(x, z)
+        except (ValueError, ZeroDivisionError, OverflowError):
+            return dict(result, reason="original_position_projection_invalid")
+        diameter_px = DETECTOR_WIDTH_CM[category] / 100 * self.camera["fy"] / z
+        box = {"x": u - diameter_px / 2, "y": v - diameter_px,
+               "w": diameter_px, "h": diameter_px}
+        result["projected_bbox"] = box
+        if (box["x"] <= 0 or box["y"] <= 0 or box["x"] + box["w"] >= self.camera["width"]
+                or box["y"] + box["h"] >= self.camera["height"]):
+            return dict(result, reason="original_position_not_fully_visible")
+        detections = self.last_evidence["detections"]
+        result["matches"] = [copy.deepcopy(d) for d in detections if d["category"] == category
+            and "position_m" in d and math.hypot(original[0] - d["position_m"]["x"],
+                original[1] - d["position_m"]["z"]) < .15]
+        occluders = []
+        for d in detections:
+            if d["category"] == "storage-zone":
+                continue
+            b = d["bbox"]
+            if (b["x"] < box["x"] + box["w"] and b["x"] + b["w"] > box["x"]
+                    and b["y"] < box["y"] + box["h"] and b["y"] + b["h"] > box["y"]):
+                occluders.append(copy.deepcopy(d))
+        result["occluders"] = occluders
+        return dict(result, valid=not occluders,
+                    reason="original_position_obstructed" if occluders else "original_position_visible")
+
     def mark_picked(self, object_id: str, *, holding: bool, original_position_absent: bool,
                     simulation_time_s: float, evidence: Mapping[str, Any]) -> bool:
-        if not holding or not original_position_absent or not evidence:
+        if holding is not True or not original_position_absent or not evidence:
             return False
         row = self.get_object(object_id)
         if row is None or self._times[object_id]["confirmed_s"] is None:
+            return False
+        view = evidence.get("original_position_observation")
+        if not isinstance(view, Mapping) or view.get("frame_id") != self._last_frame:
+            return False
+        original = (row["position_m"]["x"], row["position_m"]["z"])
+        actual_view = self.original_position_evidence(original, row["category"])
+        if (evidence.get("holding") is not True or view != actual_view
+                or actual_view.get("valid") is not True or actual_view["matches"]
+                or simulation_time_s != self._last_timestamp):
             return False
         if self._lifecycle.get(object_id) in ("HELD", "DELIVERED", "RELEASED_UNVERIFIED", "DELIVERY_ALIAS"):
             return False
@@ -492,10 +547,14 @@ class Perception:
                        simulation_time_s: float, evidence: Mapping[str, Any]) -> bool:
         if holding or not ball_in_storage or not evidence:
             return False
-        if self._lifecycle.get(object_id) != "HELD":
+        if self._lifecycle.get(object_id) not in {"HELD", "RELEASED_UNVERIFIED"}:
             return False
         placement = evidence.get("placement")
         release = evidence.get("release_observation")
+        saved = self._unverified_releases.get(object_id)
+        if (self._lifecycle.get(object_id) == "RELEASED_UNVERIFIED"
+                and (not saved or release != saved.get("release_observation"))):
+            return False
         if (not isinstance(placement, Mapping) or not isinstance(release, Mapping)
                 or evidence.get("holding") is not False
                 or type(evidence.get("candidate_witnesses")) is not int or evidence["candidate_witnesses"] != 1
@@ -527,6 +586,21 @@ class Perception:
                 return False
         original = self.get_object(object_id)
         category = original["category"]
+        if saved is not None:
+            # A direct mark cannot bypass the same identity obligations that
+            # later look/place recovery enforces. This also covers same-action
+            # post-release retreat, whose initial sensor boundary is saved.
+            seen_delivered = {d["known_delivered_object_id"] for d in self.last_evidence["detections"]
+                              if d.get("known_delivered_object_id")}
+            candidates = [d for d in self.last_evidence["detections"]
+                if d["category"] == category and "position_m" in d
+                and not d.get("known_delivered_object_id") and d.get("track_id") not in preexisting]
+            anchor = saved.get("identity_anchor_m")
+            if (not set(saved.get("required_delivered_ids", [])) <= seen_delivered
+                    or len(candidates) != 1 or not isinstance(anchor, Mapping)
+                    or math.hypot(candidates[0]["position_m"]["x"] - anchor["x"],
+                                  candidates[0]["position_m"]["z"] - anchor["z"]) > .30):
+                return False
         witnesses = [d for d in self.last_evidence["detections"]
                      if d.get("track_id") == witness_id and d.get("category") == category
                      and str(d.get("frame_id")) == frame_id
@@ -583,6 +657,7 @@ class Perception:
             "category": WM_TO_PUBLIC.get(track.name, track.name),
             "position_m": position, "frame_id": str(placement["frame_id"])}
         self._lifecycle[object_id] = "DELIVERED"
+        self._unverified_releases.pop(object_id, None)
         self._times[object_id]["delivered_s"] = timestamp
         self._times[object_id]["delivered_position_m"] = copy.deepcopy(position)
         self._action_evidence.append({"action": "place", "object_id": object_id,
@@ -599,11 +674,95 @@ class Perception:
         timestamp = _number(simulation_time_s, "simulation_time_s")
         self.wm.mark_removed(object_id, now=timestamp)
         self._lifecycle[object_id] = "RELEASED_UNVERIFIED"
+        self._unverified_releases[object_id] = copy.deepcopy(dict(evidence))
+        release = evidence.get("release_observation")
+        if isinstance(release, Mapping) and self.last_evidence:
+            candidates = [d for d in self.last_evidence["detections"]
+                if d["category"] == self.get_object(object_id)["category"]
+                and "position_m" in d and not d.get("known_delivered_object_id")
+                and d.get("track_id") not in release.get("preexisting_ball_ids", [])]
+            anchor = (candidates[0]["position_m"] if len(candidates) == 1
+                      else evidence.get("release_aim_position_m"))
+            self._unverified_releases[object_id]["identity_anchor_m"] = copy.deepcopy(anchor)
         self._times[object_id]["released_unverified_s"] = timestamp
         self._action_evidence.append({"action": "release_unverified", "object_id": object_id,
             "simulation_time_s": timestamp, "holding": False,
             "evidence": copy.deepcopy(dict(evidence))})
         return True
+
+    def unverified_releases(self):
+        return [{"object_id": oid, "category": self.get_object(oid)["category"],
+                 **copy.deepcopy(evidence)} for oid, evidence in self._unverified_releases.items()]
+
+    def recover_release(self, object_id, *, holding, simulation_time_s, evidence):
+        """Resolve a saved release only from a unique current sensor witness."""
+        def unresolved(reason):
+            return {"resolved": False, "reason": reason}
+
+        saved = self._unverified_releases.get(object_id)
+        if holding is not False or not saved or not self.last_evidence:
+            return unresolved("release_recovery_state_unavailable")
+        category = self.get_object(object_id)["category"]
+        if sum(self.get_object(oid)["category"] == category for oid in self._unverified_releases) != 1:
+            return unresolved("multiple_unverified_release_identities")
+        release = saved.get("release_observation")
+        boundary = self._observed_frames.get(str((release or {}).get("frame_id")))
+        if (not boundary or evidence.get("release_observation") != release
+                or release.get("simulation_time_s") != boundary["simulation_time_s"]
+                or simulation_time_s != self._last_timestamp
+                or self._observed_frames[self._last_frame]["index"] <= boundary["index"]):
+            return unresolved("release_recovery_requires_fresh_boundary")
+        observed = {d["known_delivered_object_id"] for d in self.last_evidence["detections"]
+                    if d.get("known_delivered_object_id")}
+        if not set(saved.get("required_delivered_ids", [])) <= observed:
+            return unresolved("previously_delivered_objects_not_reobserved")
+        preexisting = release["preexisting_ball_ids"]
+        candidates = [d for d in self.last_evidence["detections"] if d["category"] == category
+            and "position_m" in d and not d.get("known_delivered_object_id")
+            and d.get("track_id") not in preexisting]
+        if len(candidates) != 1:
+            return unresolved("release_identity_candidate_not_unique")
+        candidate = candidates[0]
+        anchor = saved.get("identity_anchor_m")
+        if (not isinstance(anchor, Mapping)
+                or math.hypot(candidate["position_m"]["x"] - anchor["x"],
+                              candidate["position_m"]["z"] - anchor["z"]) > .30):
+            return unresolved("release_identity_continuity_unverified")
+        if self.mark_delivered(object_id, holding=False, ball_in_storage=evidence.get("placement") is not None,
+                               simulation_time_s=simulation_time_s, evidence=evidence):
+            return {"resolved": True, "reason": "delayed_delivery_observed", "state": "DELIVERED"}
+        # A rejected containment witness is not proof that the object is out.
+        # Require one complete region and a ball box wholly outside its box.
+        zones = [d for d in self.last_evidence["detections"] if d["category"] == "storage-zone"]
+        witness_id = candidate.get("track_id")
+        track = self.confirmed(witness_id) if witness_id is not None else None
+        birth = self._times.get(witness_id, {})
+        first = self._observed_frames.get(birth.get("first_seen_frame_id"))
+        if (len(zones) != 1 or track is None or first is None
+                or first["index"] < boundary["index"]
+                or witness_id in self._delivery_aliases or witness_id == object_id):
+            return unresolved("released_object_location_or_identity_unresolved")
+        b, z = candidate["bbox"], zones[0]["bbox"]
+        complete = (z["x"] > 0 and z["y"] > 0 and z["x"] + z["w"] < self.camera["width"]
+                    and z["y"] + z["h"] < self.camera["height"] and z["w"] >= 3 and z["h"] >= 3)
+        outside = (b["x"] + b["w"] < z["x"] or b["x"] > z["x"] + z["w"]
+                   or b["y"] + b["h"] < z["y"] or b["y"] > z["y"] + z["h"])
+        if not complete or not outside:
+            return unresolved("released_object_location_or_identity_unresolved")
+        # The observed confirmed successor remains a normal pickable track;
+        # preserve the archived grasp identity and its explicit alias witness.
+        self._delivery_aliases[object_id] = witness_id
+        self._lifecycle[object_id] = "RECOVERED_ALIAS"
+        self._times[object_id].update(recovered_object_id=witness_id,
+                                      recovery_frame_id=self._last_frame)
+        self._unverified_releases.pop(object_id)
+        self._action_evidence.append({"action": "release_recovery", "object_id": object_id,
+            "recovered_object_id": witness_id, "simulation_time_s": simulation_time_s,
+            "holding": False, "outside_storage": True,
+            "evidence": {**copy.deepcopy(dict(evidence)), "release_identity_anchor_m": copy.deepcopy(anchor),
+                         "candidate": copy.deepcopy(candidate), "storage": copy.deepcopy(zones[0])}})
+        return {"resolved": True, "reason": "released_object_recovered_outside_storage",
+                "state": "CONFIRMED", "recovered_object_id": witness_id}
 
     def timeline(self) -> list[dict[str, Any]]:
         return [dict(copy.deepcopy(value),
