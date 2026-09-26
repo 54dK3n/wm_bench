@@ -1,0 +1,89 @@
+{
+  "frozen_commit": "d1538f7570a42b760ad518f133eaefd7bcac83a8",
+  "tests": [
+    {
+      "name": "directed",
+      "command": "PYTHONPATH=vendor/wm_kit_opt2 python3 -m pytest -q tests/test_brain_task_scope.py tests/test_brain_stage1_evaluation.py tests/test_brain_stage1_source_proof.py tests/test_brain_navigation_reposition.py tests/test_brain_manipulation_closure.py tests/test_brain_provenance.py tests/test_brain_formal_startup.py",
+      "passed": 94,
+      "failed": 0,
+      "log": "artifacts/autonomous-brain/stage1-review-20260926/raw/final-directed-tests.txt",
+      "sha256": "01c6d885dc0e99cf97bf9755ef9434c06f1b52544454082ad0eb55c52fa1e252"
+    },
+    {
+      "name": "full_regression",
+      "command": "GUANGYANG_PLATFORM_ROOT=\"$PWD/workspaces/guangyang-platform/projects/car-python\" PYTHONPATH=vendor/wm_kit_opt2 python3 -m pytest -q tests tools/tests vendor/wm_kit_opt2/tests",
+      "passed": 1326,
+      "failed": 0,
+      "log": "artifacts/autonomous-brain/stage1-review-20260926/raw/final-regression.txt",
+      "sha256": "ebebaf1ac0ead3b09e5767b95a3f9c405f41ff95196fbd4abdfda58262471369"
+    },
+    {
+      "name": "node_regression",
+      "command": "node --test tools/tests/test_autonomous_brain_config.js tools/tests/test_autonomous_brain_limits.js tools/tests/test_autonomous_brain_export.js",
+      "passed": 27,
+      "failed": 0,
+      "log": "artifacts/autonomous-brain/stage1-review-20260926/raw/node-regression.txt",
+      "sha256": "c455f395a6dbe60c99ba3737d635384756af521f3975fa623c3b58b31101c38c"
+    }
+  ],
+  "legacy_replays": [
+    {
+      "run": 21,
+      "rounds": 181,
+      "calls": 190,
+      "all_pass": true,
+      "network_calls": 0
+    },
+    {
+      "run": 22,
+      "rounds": 200,
+      "calls": 206,
+      "all_pass": true,
+      "network_calls": 0
+    }
+  ],
+  "vendor_lock": {
+    "verified_files": 50,
+    "changed": 0
+  },
+  "prior_failures": {
+    "integration_in_progress": {
+      "passed": 871,
+      "failed": 25,
+      "resolution": "implementation/test fixture integration fixes; three localhost socket permission failures"
+    },
+    "integration_02": {
+      "passed": 947,
+      "failed": 3,
+      "resolution": "localhost socket sandbox restriction, rerun with permission"
+    },
+    "full_regression_missing_platform_env": {
+      "passed": 1315,
+      "failed": 6,
+      "errors": 2,
+      "resolution": "configure existing GUANGYANG_PLATFORM_ROOT; no source changes for this failure"
+    },
+    "platform_configured_before_final_navigation_fix": {
+      "passed": 1324,
+      "failed": 0
+    }
+  },
+  "formal_task_acceptance": {
+    "result": "PASS",
+    "run": "raw/formal-map05/map-05-run-1",
+    "evaluation": "raw/formal-evaluation/evaluation.json",
+    "evaluation_sha256": "c8e8fad2a65e995b7c34d85ca88fef27a803ab2c5bc77b73c545ffdab35c5898",
+    "rounds": 111,
+    "llm_calls": 115,
+    "observations": 594,
+    "simulation_seconds": 577.8,
+    "brain_delivered_count": 2,
+    "native_delivery_count": 2,
+    "model_selected_done_round": 111,
+    "external_stop_failures": 0,
+    "nonwhitelist_brain_requests": 0,
+    "original_global_judge_unverifiable": 2,
+    "supplementary_prefix_matches": 4,
+    "supplementary_audit": "ACTION_PREFIX_AUDIT.json"
+  }
+}

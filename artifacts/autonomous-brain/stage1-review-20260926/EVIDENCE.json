@@ -1,0 +1,31 @@
+{
+  "schema": "autonomous-brain-stage1-evidence/v1",
+  "formal_run_directory": "raw/formal-map05/map-05-run-1",
+  "formal_evaluation": "raw/formal-evaluation/evaluation.json",
+  "formal_driver_logs": [
+    "raw/formal-driver.stdout.log",
+    "raw/formal-driver.stderr.log"
+  ],
+  "model_replay": "raw/formal-llm-replay/replay-checks.json",
+  "source_provenance": "SOURCE_PROVENANCE.json",
+  "review_matrix": "REVIEW.md",
+  "metrics": "METRICS.json",
+  "export_integrity": "EXPORT_INTEGRITY.json",
+  "action_prefix_summary": "ACTION_PREFIX_AUDIT.json",
+  "navigation_audit": "raw/formal-navigation-audit.json",
+  "manipulation_audit": "raw/formal-manipulation-audit.json",
+  "sha256_manifest": "SHA256SUMS",
+  "raw_storage": {
+    "location": "local workspace under raw/",
+    "external_archive_status": "not_completed",
+    "raw_files_tracked_by_git": false,
+    "note": "No external upload destination or credential was available. Do not infer publication from local presence."
+  },
+  "recovery": {
+    "source_commit": "d1538f7570a42b760ad518f133eaefd7bcac83a8",
+    "platform_commit": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+    "runtime_archive": "raw/frozen-runtime-source.tar.gz",
+    "runtime_archive_scope": "autonomous_brain/, tools/autonomous_brain_driver.js, tools/evaluate_autonomous_brain.py, vendor/wm_kit_opt2/",
+    "hash_check": "shasum -a 256 -c artifacts/autonomous-brain/stage1-review-20260926/SHA256SUMS"
+  }
+}

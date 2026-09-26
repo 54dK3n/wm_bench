@@ -1,0 +1,250 @@
+{
+  "schema": "post-run-action-prefix-audit-summary/v1",
+  "evaluation_only": true,
+  "supplementary_diagnostic_not_replacement_of_formal_evaluation": true,
+  "script_sha256": "326a45bdb37ac23cbd426478e8ab6c2c0f05c406a8b16f4a59e996a15b02e0fe",
+  "evaluator_sha256": "71c0b7410e29cd4859e2c0fdea4b6b8897d5f4ff96a3fb9aafb4013ca822b6be",
+  "formal_evaluation_sha256": "c8e8fad2a65e995b7c34d85ca88fef27a803ab2c5bc77b73c545ffdab35c5898",
+  "source_files": {
+    "record.json": {
+      "file": "record.json.gz",
+      "sha256": "9719232ef9cebbaed6b82392324a34c4851b373221f47cee438c1d5feb9e2e17",
+      "bytes": 138638316
+    },
+    "captures.json": {
+      "file": "captures.json.gz",
+      "sha256": "8e55b2662d9a96d5245c7ee8e10c0521d6862a67772088032b06f325edf020ef",
+      "bytes": 47140
+    },
+    "brain/summary.json": {
+      "file": "brain/summary.json",
+      "sha256": "6a0a7aa30f0923d470c646749f7bc6ceda2e39c9123d6bd7a601aa4f1a989405",
+      "bytes": 269497
+    },
+    "brain/rounds.jsonl": {
+      "file": "brain/rounds.jsonl",
+      "sha256": "c141353be2b18440ca5f595f968a13022875d69a2da8ddb28f52dc18fd794519",
+      "bytes": 9250290
+    },
+    "brain/observations.jsonl": {
+      "file": "brain/observations.jsonl",
+      "sha256": "6a5440d941225b5c5cc58db9a76cfebefa06c2b8f1beda33056ccc4cce60c26a",
+      "bytes": 28929979
+    },
+    "brain/motions.jsonl": {
+      "file": "brain/motions.jsonl",
+      "sha256": "8111d686fbea7c302542897820d3f3d3b9c9ace2ef052aed3ba9249ba6ce81b3",
+      "bytes": 183473
+    }
+  },
+  "formal_success_unchanged": true,
+  "global_judge_reproduced_exactly": true,
+  "original_global_judge_counts": {
+    "match": 2,
+    "false_positive": 0,
+    "false_negative": 0,
+    "unverifiable": 2,
+    "not_evaluated": 107,
+    "eligible_actions": 4
+  },
+  "prefix_binding_judge_counts": {
+    "match": 4
+  },
+  "every_pick_place_action_included": true,
+  "all_action_prefix_judgments_match": true,
+  "all_same_frame_place_witnesses_verified": true,
+  "selected_delivery_witnesses_are_distinct_truth_objects": true,
+  "frozen_action_source_sha256": "21f481edf87e5ad1b72003bfcf687356daf9133f874beaff017e435c05747f30",
+  "frozen_manifest_sha256": "e6922cd2a1e0de5b3525732bb68a7ddcaa8eda202e7ae9c9ad671b8caa4f8442",
+  "limitations": [
+    "The original global binding remains ambiguous; its counts are not overwritten.",
+    "Temporal binding tests historical action identity using all evidence available before that action.",
+    "Geometric pixel matching retains the original evaluator occlusion limitation.",
+    "Later transient delivered-object labeling errors are diagnosed, not repaired or omitted from raw evidence."
+  ],
+  "detailed_audit": {
+    "path": "artifacts/autonomous-brain/stage1-review-20260926/raw/action-prefix-audit.json",
+    "sha256": "9015df7dbc754177234d320528b570ce304ad158b292ae9c6f39d625936a2b7b",
+    "bytes": 40464
+  },
+  "actions": [
+    {
+      "round": 21,
+      "action": "pick",
+      "object_id": "target_017",
+      "prefix_observation_count": 93,
+      "binding_status": "unique",
+      "binding_evidence_count": 19,
+      "prefix_judge": {
+        "round": 21,
+        "action": "pick",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_017",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 93,
+        "final_observation": 107,
+        "before_tick": 3953,
+        "final_tick": 4385
+      }
+    },
+    {
+      "round": 45,
+      "action": "place",
+      "object_id": "target_017",
+      "prefix_observation_count": 243,
+      "binding_status": "unique",
+      "binding_evidence_count": 26,
+      "prefix_judge": {
+        "round": 45,
+        "action": "place",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_017",
+        "truth_id": "guangyang-target-1",
+        "before_observation": 243,
+        "final_observation": 250,
+        "before_tick": 11583,
+        "final_tick": 11840
+      }
+    },
+    {
+      "round": 107,
+      "action": "pick",
+      "object_id": "target_122",
+      "prefix_observation_count": 540,
+      "binding_status": "unique",
+      "binding_evidence_count": 27,
+      "prefix_judge": {
+        "round": 107,
+        "action": "pick",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_122",
+        "truth_id": "guangyang-target-2",
+        "before_observation": 540,
+        "final_observation": 550,
+        "before_tick": 26017,
+        "final_tick": 26314
+      }
+    },
+    {
+      "round": 110,
+      "action": "place",
+      "object_id": "target_122",
+      "prefix_observation_count": 585,
+      "binding_status": "unique",
+      "binding_evidence_count": 30,
+      "prefix_judge": {
+        "round": 110,
+        "action": "place",
+        "claimed_success": true,
+        "independent_success": true,
+        "status": "match",
+        "reason": "exact_tick_truth_and_action_window",
+        "object_id": "target_122",
+        "truth_id": "guangyang-target-2",
+        "before_observation": 585,
+        "final_observation": 592,
+        "before_tick": 28605,
+        "final_tick": 28890
+      }
+    }
+  ],
+  "place_witness_checks": [
+    {
+      "round": 45,
+      "frame_id": "249",
+      "holding": false,
+      "release_frame_id": "248",
+      "original_candidate_count": 1,
+      "recomputed_candidate_count": 1,
+      "recomputed_placement_exactly_matches_original": true,
+      "selected_witness_truth_matches_pre_action_identity": true,
+      "known_delivered_labels_match_pre_action_bindings": true,
+      "distinct_same_frame_red_truth_ids_inside_frozen_gate": [
+        "guangyang-target-1"
+      ],
+      "verified": true
+    },
+    {
+      "round": 110,
+      "frame_id": "591",
+      "holding": false,
+      "release_frame_id": "590",
+      "original_candidate_count": 1,
+      "recomputed_candidate_count": 1,
+      "recomputed_placement_exactly_matches_original": true,
+      "selected_witness_truth_matches_pre_action_identity": true,
+      "known_delivered_labels_match_pre_action_bindings": true,
+      "distinct_same_frame_red_truth_ids_inside_frozen_gate": [
+        "guangyang-target-1",
+        "guangyang-target-2"
+      ],
+      "verified": true
+    }
+  ],
+  "ambiguity_summary": [
+    {
+      "track_id": "target_017",
+      "global_identities": [
+        "guangyang-target-1",
+        "guangyang-target-2"
+      ],
+      "identity_support": [
+        {
+          "truth_id": "guangyang-target-1",
+          "count": 48,
+          "first": {
+            "observation_index": 31,
+            "round": 8,
+            "frame_id": "31",
+            "tick": 1265,
+            "simulation_seconds": 25.3
+          },
+          "last": {
+            "observation_index": 594,
+            "round": 111,
+            "frame_id": "594",
+            "tick": 28890,
+            "simulation_seconds": 577.8
+          }
+        },
+        {
+          "truth_id": "guangyang-target-2",
+          "count": 1,
+          "first": {
+            "observation_index": 590,
+            "round": 110,
+            "frame_id": "590",
+            "tick": 28756,
+            "simulation_seconds": 575.12
+          },
+          "last": {
+            "observation_index": 590,
+            "round": 110,
+            "frame_id": "590",
+            "tick": 28756,
+            "simulation_seconds": 575.12
+          }
+        }
+      ],
+      "first_observed_binding_conflicts": [
+        {
+          "observation_index": 590,
+          "round": 110,
+          "frame_id": "590",
+          "tick": 28756,
+          "simulation_seconds": 575.12,
+          "truth_id": "guangyang-target-2"
+        }
+      ]
+    }
+  ]
+}

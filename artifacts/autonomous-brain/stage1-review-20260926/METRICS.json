@@ -1,0 +1,127 @@
+{
+  "schema": "autonomous-brain-stage1-metrics/v1",
+  "result": "PASS",
+  "task": {
+    "stage": "stage-1",
+    "map": "map-05",
+    "instruction": "把两个红球送到绿色存放区",
+    "quantity_mode": "known",
+    "required_count": 2
+  },
+  "version": {
+    "branch": "codex/autonomous-brain",
+    "brain_commit": "d1538f7570a42b760ad518f133eaefd7bcac83a8",
+    "platform_commit": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+    "world_model_root": "vendor/wm_kit_opt2",
+    "world_model_source_tree_sha256": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+    "runtime_source_archive": "raw/frozen-runtime-source.tar.gz"
+  },
+  "formal_run": {
+    "status": "done",
+    "reason": "observation_completion",
+    "rounds": 111,
+    "llm_calls": 115,
+    "llm_total_elapsed_s": 147.27677004399987,
+    "simulation_seconds": 577.8,
+    "observations": 594,
+    "max_rounds": 200,
+    "max_simulation_seconds": 1200,
+    "failed_actions": 21,
+    "execution_failures": 0,
+    "external_stop_failures": 0,
+    "nonwhitelist_brain_requests": 0,
+    "model": "deepseek-flash",
+    "temperature": 0,
+    "thinking": "disabled",
+    "model_lifecycle": {
+      "started": 115,
+      "finished": 115,
+      "failures": 0
+    },
+    "action_counts": {
+      "explore": 90,
+      "go_to": 14,
+      "look_around": 2,
+      "pick": 2,
+      "place": 2,
+      "done": 1
+    }
+  },
+  "task_completion": {
+    "brain_delivered_count": 2,
+    "brain_required_count": 2,
+    "brain_unresolved_identity_count": 0,
+    "final_holding": false,
+    "final_pending_grasp": null,
+    "model_selected_done_round": 111,
+    "done_observation": 594,
+    "done_reason": "instruction_delivery_completed",
+    "native_delivery_count": 2,
+    "native_final_balls_inside_storage": 2,
+    "native_final_held": 0
+  },
+  "formal_evaluation": {
+    "success": true,
+    "failures": [],
+    "source_proof_status": "verified",
+    "global_judge": {
+      "match": 2,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 2,
+      "not_evaluated": 107,
+      "eligible_actions": 4
+    },
+    "evaluation_file": "raw/formal-evaluation/evaluation.json",
+    "evaluation_sha256": "c8e8fad2a65e995b7c34d85ca88fef27a803ab2c5bc77b73c545ffdab35c5898"
+  },
+  "supplementary_action_prefix_audit": {
+    "evaluation_only": true,
+    "reproduced_original_global_judge": true,
+    "prefix_matches": 4,
+    "all_four_pick_place_actions_included": true,
+    "same_frame_place_witnesses_verified": true,
+    "selected_witnesses_are_distinct": true,
+    "retained_original_unverifiable_count": 2,
+    "summary_file": "ACTION_PREFIX_AUDIT.json",
+    "summary_sha256": "2e5801f2db914d17625d36746eb583d2a4ad16da939362481c9ce987eb4aa785",
+    "detail_file": "raw/action-prefix-audit.json"
+  },
+  "navigation_audit": {
+    "reposition_actions": 2,
+    "candidate_attempts": 1,
+    "complete_candidate_repositions": 0,
+    "reposition_translation_steps": 10,
+    "reposition_primitive_commands": 14,
+    "reposition_odometer_travel_cm": 190.40000000000055,
+    "repeat_failure_rejections": 3,
+    "repeat_rejections_with_fresh_observation": 3,
+    "audit_file": "raw/formal-navigation-audit.json"
+  },
+  "manipulation_audit": {
+    "sensor_manipulation_audit_pass": true,
+    "actuator_commands": 372,
+    "basic_motions_independently_recomputed": 162,
+    "unknown_execution_outcomes": 0,
+    "unverified_basic_motions": 0,
+    "canonical_deliveries": 2,
+    "audit_file": "raw/formal-manipulation-audit.json"
+  },
+  "tests": {
+    "directed_passed": 94,
+    "full_regression_passed": 1326,
+    "node_regression_passed": 27,
+    "vendor_lock_verified_files": 50,
+    "legacy_replays": [
+      {"run": 21, "rounds": 181, "calls": 190, "all_pass": true, "network_calls": 0},
+      {"run": 22, "rounds": 200, "calls": 206, "all_pass": true, "network_calls": 0}
+    ],
+    "validation_file": "VALIDATION.json"
+  },
+  "archive": {
+    "raw_evidence_location": "raw/",
+    "external_archive": "not_completed",
+    "reason": "No external upload destination or credential was available; local originals and hashes are retained.",
+    "sha256_manifest": "SHA256SUMS"
+  }
+}
