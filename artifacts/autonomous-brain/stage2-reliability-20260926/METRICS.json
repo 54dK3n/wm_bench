@@ -1,0 +1,77 @@
+{
+  "schema": "wm-brain-offline-stop-metrics/v1",
+  "source_commit": "ba9edd36a773b896f9fe6e9eb37ed0f75e8e8a7c",
+  "overall": "FAIL_STOP",
+  "reliability_gate": {
+    "python_passed": 1045,
+    "node_passed": 28
+  },
+  "final_test_subchecks": {
+    "python": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2 python3 -m pytest -q tests/test_brain_*.py",
+      "tests": 1193,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "node": {
+      "command": "node --test tools/tests/test_autonomous_brain_*.js",
+      "tests": 28,
+      "passed": 28,
+      "failed": 0
+    },
+    "source_files_stable": 79
+  },
+  "independent_boundary_counterexample": {
+    "reproduced": true,
+    "network_calls": 0,
+    "real_configuration_read": false,
+    "marker_in_round_result_reason": true,
+    "marker_in_summary_reason": true,
+    "same_source_as_test_gate": true
+  },
+  "formal": {
+    "runs_started": 0,
+    "authorized_maximum": 2,
+    "stage1_regression": "NOT_RUN",
+    "stage2_acceptance": "NOT_RUN_NOT_ACCEPTED",
+    "stage3": "NOT_STARTED",
+    "stage4": "NOT_STARTED",
+    "online_model_calls": 0,
+    "simulation_runs": 0
+  },
+  "synthetic_reposition": {
+    "command": "python3 tools/diagnose_road_reposition.py --output <new-file.json>",
+    "classification": "synthetic_fixed_public_sensor_test_not_formal_simulator_run",
+    "passed": true,
+    "metrics": {
+      "candidate_attempt_count": 1,
+      "candidate_reached_count": 1,
+      "complete_reposition_success_count": 1,
+      "road_translation_steps": 3,
+      "odometer_travel_cm": 42.2,
+      "sum_step_endpoint_displacements_cm": 40.70228118503398,
+      "net_reposition_displacement_cm": 36.05551275463989,
+      "candidate_arrival_error_cm": 0.0,
+      "visual_distance_cm": 30.0
+    }
+  },
+  "historical_immutable": {
+    "source_commit": "d1538f7570a42b760ad518f133eaefd7bcac83a8",
+    "report_commit": "4a48664eecd3f46984f9ca48674aefe53fd9518d",
+    "task_status": "PASS",
+    "rounds": 111,
+    "model_calls": 115,
+    "observations": 594,
+    "global_judge": {
+      "match": 2,
+      "unverifiable": 2
+    },
+    "prefix_judge": {
+      "match": 4
+    },
+    "r102_complete_reposition_successes": 0,
+    "original_files_verified": 79
+  },
+  "stop_reason": "Invalid model endpoint exception can echo original endpoint in saved errors; synthetic/no real configuration/no network. No runtime fix after stop."
+}
