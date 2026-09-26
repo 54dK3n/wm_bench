@@ -162,4 +162,4 @@ def test_v13_prompt_transmits_hints_without_overriding_the_model_or_completion(t
                    "task_spec.quantity_mode", "known 时只按指令给出的 required_count", "无需探索完整地图",
                    "completion.ready_for_done", "unknown 时继续探索", "go_to 和 pick 只能选择当前状态为 CONFIRMED"):
         assert phrase in prompt
-    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v17"
+    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v18"

@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v11"
+VERSION = "autonomous-brain-perception/v12"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -374,6 +374,228 @@ class Perception:
             "unresolved": [r for r in self._discovery_records
                 if self._discovery_pending(r) and r["id"] not in self._discovery_resolutions]})
 
+    def _discovery_sampling_identities(self, records, ledger):
+        proofs = {p["discovery_id"]: p["canonical_object_id"] for p in ledger.get("resolutions", [])}
+        ids = set()
+        for record in records:
+            oid = proofs.get(record["id"])
+            if oid is None and not record.get("identity_ambiguity"):
+                oid = record.get("initial_object_id") or record.get("observed_track_id")
+            if oid is not None:
+                ids.add(self._discovery_canonical(oid))
+        return ids
+
+    def _discovery_sampling_groups(self, ledger):
+        """Fold guidance by explicit active identity, never merge source obligations."""
+        hypotheses = {}
+        for record in ledger.get("records", []):
+            hypotheses.setdefault(record["hypothesis_id"], []).append(record)
+        groups = {}
+        for hypothesis, records in hypotheses.items():
+            ids = self._discovery_sampling_identities(records, ledger)
+            oid = next(iter(ids)) if len(ids) == 1 else None
+            obj = self.get_object(oid) if oid is not None else None
+            key = ("object", oid) if obj is not None and obj["state"] != "LOST" else ("hypothesis", hypothesis)
+            groups.setdefault(key, []).extend(records)
+        return [sorted(records, key=lambda r: (r["perception_observation_index"], r["detection_index"]))
+                for records in groups.values()]
+
+    def _discovery_sampling_target(self, records, ledger):
+        source, latest = records[0], records[-1]
+        frame = self.last_evidence or {}
+        current_records = [r for r in records if r["frame_id"] == frame.get("frame_id")]
+        current_record = current_records[0] if len(current_records) == 1 else None
+        current_items = [d for d in frame.get("detections", []) if d["category"] == "red-ball"]
+        current = next((d for d in current_items if current_record is not None
+                        and d.get("discovery_id") == current_record["id"]), None)
+        ids = self._discovery_sampling_identities(records, ledger)
+        oid = next(iter(ids)) if len(ids) == 1 else None
+        obj = self.get_object(oid) if oid is not None else None
+        poses = copy.deepcopy(obj.get("hit_poses", [])) if obj is not None else []
+        required, gap = self.wm.decay_cfg.confirm_hits, self.wm.assoc_cfg.min_hit_pose_gap_m
+        pending_ids = {r["id"] for r in ledger["unresolved"]}
+        source_peers = [r for r in ledger["records"] if r["frame_id"] == source["frame_id"]]
+
+        def compatible(a, item):
+            # The exact current source is a public detection reference. Clipped
+            # range is not a metric position proof for a different observation.
+            if a["frame_id"] == frame.get("frame_id") and a["bbox"] == item["bbox"]:
+                return True
+            candidate_record = next((r for r in ledger["records"]
+                                     if r["id"] == item.get("discovery_id")), None)
+            return (candidate_record is not None
+                    and discovery_pixel_match(self.camera, a, item["position_m"])
+                    and discovery_pixel_match(self.camera, candidate_record, a["position_m"]))
+
+        matrix = {r["id"]: [d.get("discovery_id") for d in current_items if compatible(r, d)]
+                  for r in source_peers}
+        now = {"observation_index": getattr(self, "_discovery_observation_index", None),
+               "perception_observation_index": len(self._observed_frames),
+               "simulation_time_s": frame.get("simulation_time_s", source["simulation_time_s"])}
+        boundaries = self._discovery_motion_boundaries(source, now)
+        missing = max(0, required - len(poses))
+        reason = "needs_fresh_observation"
+        allowed = False
+        if obj is not None and obj["state"] == "DELIVERED":
+            reason = "already_delivered"
+        elif obj is not None and obj["state"] in {"HELD", "RELEASED_UNVERIFIED"}:
+            reason = "manipulation_obligation_pending"
+        elif boundaries:
+            reason = "manipulation_boundary_unresolved"
+        elif len(ids) > 1 or (obj or {}).get("identity_ambiguity"):
+            reason = "associated_identity_not_unique"
+        elif current is not None and current.get("identity_ambiguity"):
+            reason = "current_identity_ambiguous"
+        elif obj is not None and obj["state"] == "CONFIRMED":
+            reason = "target_confirmed"
+        elif current is not None:
+            matches = matrix.get(source["id"], [])
+            if len(matches) != 1 or sum(current["discovery_id"] in row for row in matrix.values()) != 1:
+                reason = "current_detection_not_unique" if len(matches) > 1 else "source_pixels_not_compatible"
+            elif matches[0] != current["discovery_id"]:
+                reason = "source_pixels_not_compatible"
+            else:
+                allowed = True
+                reason = ("needs_bearing_adjustment" if abs(current["raw_bearing_deg"]) > 35 else
+                          "needs_range_adjustment" if not 40 <= current["raw_distance_cm"] < 90 else
+                          "ready_for_sampling")
+        elif len(current_records) > 1:
+            reason = "current_detection_not_unique"
+
+        # Historical CONFIRMED state is not a fresh confirmation witness. A
+        # clipped original may use its already validated resolver proof rather
+        # than treating the clipped point as an invertible metric observation.
+        original_proof = next((p for p in ledger.get("resolutions", [])
+                               if p["discovery_id"] == source["id"]
+                               and self._discovery_canonical(p["canonical_object_id"]) == oid), None)
+        source_matches = matrix.get(source["id"], [])
+        source_supported = (current is not None and len(source_matches) == 1
+                            and source_matches[0] == current.get("discovery_id")
+                            and sum(current.get("discovery_id") in values for values in matrix.values()) == 1)
+        current_frame_records = [r for r in ledger["records"] if r["frame_id"] == frame.get("frame_id")]
+        current_matrix = {r["id"]: [d.get("discovery_id") for d in current_items if compatible(r, d)]
+                          for r in current_frame_records}
+        current_unique = (current is not None and current_record is not None
+            and current_matrix.get(current_record["id"]) == [current.get("discovery_id")]
+            and sum(current.get("discovery_id") in values for values in current_matrix.values()) == 1)
+        corroborated = bool(obj is not None and obj["state"] == "CONFIRMED"
+            and len(ids) == 1 and not obj.get("identity_ambiguity") and not boundaries
+            and current_unique and not current.get("identity_ambiguity")
+            and self._discovery_canonical(current.get("track_id")) == oid
+            and current.get("fed_to_world_model")
+            and 40 <= current["raw_distance_cm"] < 90 and abs(current["raw_bearing_deg"]) <= 35
+            and (source_supported or original_proof is not None))
+
+        # Progress uses separated translations and actual accepted WM hits. A
+        # repeated frame/tick or an in-place turn contributes no new hit/pose.
+        views = []
+        for record in records:
+            if self._discovery_motion_boundaries(source, record):
+                continue
+            odo = record["odometry"]
+            if all(math.hypot(odo["rightCm"] - old["odometry"]["rightCm"],
+                              odo["forwardCm"] - old["odometry"]["forwardCm"]) / 100 >= gap
+                   for old in views):
+                views.append(record)
+
+        def original_view(record):
+            # Ranking may recognize an identical public view even when range
+            # clipping prevented a ledger association. This never merges IDs.
+            return next((old for old in ledger["records"]
+                         if old["perception_observation_index"] <= record["perception_observation_index"]
+                         and old["bbox"] == record["bbox"]
+                         and all(old["odometry"][key] == record["odometry"][key]
+                                 for key in ("rightCm", "forwardCm", "headingDeg"))), record)
+
+        view_progress = [original_view(r) for r in views]
+        hit_frames = {p["frame_id"] for p in poses}
+        hit_records = [r for r in records if r["frame_id"] in hit_frames]
+        progress = max(view_progress + hit_records, key=lambda r: r["perception_observation_index"], default=source)
+        new_evidence = progress["frame_id"] == frame.get("frame_id")
+        result = {"schema": "brain-discovery-target/v1", "id": source["hypothesis_id"],
+            "hypothesis_id": source["hypothesis_id"], "source_discovery_id": source["id"],
+            "latest_discovery_id": latest["id"], "source": source, "latest_evidence": latest,
+            "hypothesis_ids": list(dict.fromkeys(r["hypothesis_id"] for r in records)),
+            "record_ids": [r["id"] for r in records],
+            "current_record": current_record, "current_detection": current,
+            "source_frame_records": source_peers, "candidate_matrix": matrix,
+            "associated_object": obj, "associated_object_ids": sorted(ids),
+            "sampling_allowed": allowed, "reason": reason,
+            "current_confirmation_corroborated": corroborated,
+            "current_confirmation_evidence": {"frame_id": frame.get("frame_id"),
+                "observation_index": now["observation_index"], "unique_current_pixels": current_unique,
+                "source_pixels_supported": source_supported,
+                "source_resolution_ref": original_proof["discovery_id"] if original_proof is not None else None,
+                "current_candidate_matrix": current_matrix},
+            "has_pending_discovery": any(r["id"] in pending_ids for r in records),
+            "confirmation": {"required_hit_count": required, "min_hit_pose_gap_m": gap,
+                "accepted_hit_count": len(poses), "missing_hit_count": missing,
+                "accepted_hit_poses": poses},
+            "progress": {"independent_view_count": len(views),
+                "last_progress_discovery_id": progress["id"],
+                "last_progress_observation_index": progress["observation_index"],
+                "last_progress_perception_index": progress["perception_observation_index"],
+                "last_accepted_hit_observation_index": hit_records[-1]["observation_index"] if hit_records else None,
+                "new_independent_evidence": new_evidence},
+            "motion_boundaries": boundaries}
+        return copy.deepcopy(result)
+
+    def discovery_target(self, discovery_id):
+        """Return public sampling evidence, never an authorization to go_to/pick."""
+        if not isinstance(discovery_id, str):
+            return None
+        ledger = self.discovery_evidence()
+        for records in self._discovery_sampling_groups(ledger):
+            if any(discovery_id in {r["id"], r["hypothesis_id"]} for r in records):
+                return self._discovery_sampling_target(records, ledger)
+        return None
+
+    def discovery_summary(self, limit=6, current_discovery_id=None):
+        """Rank bounded observation guidance explicitly; retain the full ledger."""
+        if type(limit) is not int or not 0 <= limit <= 6:
+            raise ValueError("discovery summary limit must be an integer from 0 to 6")
+        ledger = self.discovery_evidence()
+        candidates = []
+        for records in self._discovery_sampling_groups(ledger):
+            target = self._discovery_sampling_target(records, ledger)
+            obj = target["associated_object"] or {}
+            if not target["has_pending_discovery"] and obj.get("state") not in {"TENTATIVE", "STALE"}:
+                continue
+            selected = (current_discovery_id in target["record_ids"] + target["hypothesis_ids"]
+                        and target["progress"]["new_independent_evidence"] and target["sampling_allowed"])
+            current = target["current_detection"]
+            eligible = bool(current is not None and 40 <= current["raw_distance_cm"] < 90
+                            and abs(current["raw_bearing_deg"]) <= 35 and target["sampling_allowed"])
+            priority = {"selected_with_new_evidence": selected, "visible_now": current is not None,
+                "confirmation_window_now": eligible, "sampling_allowed": target["sampling_allowed"],
+                "last_effective_observation_index": target["progress"]["last_progress_observation_index"],
+                "missing_hit_count": target["confirmation"]["missing_hit_count"]}
+            # Current evidence and feasible confirmation outrank archival view
+            # age. Ties use independent progress, missing hits, then stable ID.
+            rank = (selected, target["sampling_allowed"], current is not None, eligible,
+                    target["progress"]["last_progress_perception_index"],
+                    -target["confirmation"]["missing_hit_count"])
+            latest = target["latest_evidence"]
+            row = {key: copy.deepcopy(latest[key]) for key in ("frame_id", "observation_index", "bbox",
+                "odometry", "position_m", "position_is_range_clipped", "raw_distance_cm", "raw_bearing_deg")}
+            row.update({key: target[key] for key in ("id", "hypothesis_id", "source_discovery_id",
+                "latest_discovery_id", "sampling_allowed", "reason", "progress")})
+            row.update(associated_object_id=obj.get("id"), associated_object_state=obj.get("state"),
+                candidate_ids=sorted(set(target["associated_object_ids"] + latest.get("candidate_ids", [])))[:12],
+                hit_count=target["confirmation"]["accepted_hit_count"],
+                missing_hit_count=target["confirmation"]["missing_hit_count"],
+                required_hit_count=target["confirmation"]["required_hit_count"],
+                min_hit_pose_gap_m=target["confirmation"]["min_hit_pose_gap_m"],
+                accepted_hit_poses=target["confirmation"]["accepted_hit_poses"][-3:], priority=priority)
+            candidates.append((rank, row))
+        candidates.sort(key=lambda pair: pair[1]["hypothesis_id"])
+        candidates.sort(key=lambda pair: pair[0], reverse=True)
+        return copy.deepcopy({"schema": ledger["schema"], "selection_rule": "current_independent_confirmation_evidence/v1",
+            "pending_count": len({r["hypothesis_id"] for r in ledger["unresolved"]}),
+            "pending_record_count": len(ledger["unresolved"]), "candidate_count": len(candidates),
+            "pending": [row for _, row in candidates[:limit]],
+            "required_evidence": "fresh_separated_views_with_unique_pixel_and_identity_support"})
+
     def _discovery_canonical(self, oid):
         seen = set()
         while oid not in seen:
@@ -401,6 +623,7 @@ class Perception:
         return (row is None or (row["state"] == "LOST" and row.get("ever_confirmed") is False))
 
     def _record_discoveries(self, observation_index):
+        self._discovery_observation_index = observation_index
         frame = self.last_evidence
         previous = {}
         for row in self._discovery_records:

@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v23"
+VERSION = "autonomous-brain-actions/v24"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -704,15 +704,98 @@ class Actions:
         self.r.roads.chosen(odo, fresh_angle, observation_index=self.s["observation_index"])
         return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
 
-    def explore(self, exit_angle=None):
+    def _semantic_explore_result(self, outcome, start, prior_traversals, before_ids, before_confirmed):
+        """Describe observed progress without turning a node flag into a trip."""
+        getter = getattr(self.r.roads, "road_evidence", None)
+        ledger = getter() if callable(getter) else {}
+        nodes = {n["id"]: n for n in ledger.get("nodes", [])}
+        anchors = {a["observation_index"]: a for a in ledger.get("anchors", [])}
+        first, last = start["observation_index"], self.s["observation_index"]
+        origin, current = anchors.get(first), anchors.get(last)
+        def identity(anchor):
+            return nodes.get((anchor or {}).get("node_id"), {}).get("canonical_id")
+        start_id, end_id = identity(origin), identity(current)
+        end_confirmed = (current is not None and current.get("valid") is True
+                         and nodes.get(end_id, {}).get("status") == "confirmed")
+        exits = {e["id"]: e for e in ledger.get("exits", [])}
+        new_trips = [t for t in ledger.get("traversals", []) if t["id"] not in prior_traversals
+                     and first < t["last_observation"] <= last]
+        arrivals = [t for t in new_trips if end_confirmed
+            and t["arrival"]["node_id"] == end_id
+            and nodes.get(t["departure"]["node_id"], {}).get("status") == "confirmed"
+            and t["id"] in exits.get(t["departure"]["exit_id"], {}).get("completion_traversal_ids", [])
+            and exits.get(t["departure"]["exit_id"], {}).get("state") == "verified"]
+        different = any(t["departure"]["node_id"] != end_id for t in arrivals)
+        road = self.s["road"]
+        net = distance(position(start["odometry"]), position(self.s["odometry"])) * 100
+        a, b = start["odometry"].get("distanceCm"), self.s["odometry"].get("distanceCm")
+        travel = b-a if all(type(v) in (int, float) and math.isfinite(v) for v in (a,b)) else None
+        segments_getter = getattr(self.r.roads, "road_segment_records", None)
+        segments = segments_getter() if callable(segments_getter) else []
+        entered = any(s.get("method") == "take_exit" and first <= s["before_observation"]
+                      < s["after_observation"] <= last for s in segments)
+        if road.get("onRoad") is not True:
+            status = "not_on_road"
+        elif road.get("atNode"):
+            status = ("next_junction_verified" if different else "junction_identity_unresolved" if not end_confirmed
+                else "same_junction_progress" if start_id == end_id and (net >= .2 or arrivals)
+                else "same_junction_reobserved" if start_id == end_id
+                else "road_node_connection_unverified")
+        else:
+            status = ("exit_entered" if entered else "road_segment_progress"
+                      if travel is not None and travel >= .2 else "no_verified_progress")
+        progress = {"schema": "brain-explore-road-progress/v1", "status": status,
+            "before_observation": first, "after_observation": last,
+            "start_node_id": start_id, "end_node_id": end_id,
+            "start_anchor_observation": (origin or {}).get("observation_index"),
+            "end_anchor_observation": (current or {}).get("observation_index"),
+            "new_traversal_ids": [t["id"] for t in new_trips],
+            "arrival_traversal_ids": [t["id"] for t in arrivals],
+            "different_node_verified": different, "on_road": road.get("onRoad"), "at_node": road.get("atNode"),
+            "net_displacement_cm": net, "odometer_travel_cm": travel}
+        objects = self.r.perception.objects()
+        category = (getattr(self.r, "task_spec", None) or {}).get("target_category")
+        new = [o for o in objects if o["id"] not in before_ids]
+        confirmed = [o for o in objects if o.get("state") == "CONFIRMED" and o["id"] not in before_confirmed]
+        target = {"schema": "brain-explore-target-progress/v1", "target_category": category,
+            "new_target_object_ids": [o["id"] for o in new if category is not None and o.get("category") == category],
+            "newly_confirmed_target_ids": [o["id"] for o in confirmed if category is not None and o.get("category") == category],
+            "new_other_object_ids": [o["id"] for o in new if category is not None and o.get("category") != category],
+            "newly_confirmed_other_object_ids": [o["id"] for o in confirmed if category is not None and o.get("category") != category]}
+        outcome["evidence"].update(road_progress=progress, target_progress=target)
+        if outcome["reason"] == "next_junction_observed":
+            outcome["success"] = different or status == "same_junction_progress"
+            outcome["reason"] = {"next_junction_verified": "next_junction_observed",
+                "same_junction_progress": "same_junction_progress_observed",
+                "same_junction_reobserved": "same_junction_reobserved",
+                "road_node_connection_unverified": "road_node_observed_without_completed_traversal"}.get(status, "junction_identity_unresolved")
+        elif outcome["reason"] == "road_blocked_returned_to_junction":
+            outcome["reason"] = "road_blocked_returned_to_observed_node"
+        elif category is not None and outcome["reason"] in {"new_objects_observed", "new_objects_confirmed"}:
+            is_confirmation = outcome["reason"] == "new_objects_confirmed"
+            ids = target["newly_confirmed_target_ids" if is_confirmation else "new_target_object_ids"]
+            outcome["reason"] = ("target" if ids else "other") + "_objects_" + ("confirmed" if is_confirmation else "observed")
+        return outcome
+
+    def explore(self, exit_angle=None, discovery_id=None):
+        if discovery_id is not None:
+            if exit_angle is not None:
+                return self.result(False, "explore_intents_are_mutually_exclusive")
+            from .confirmation_sampling import sample_discovery
+            return sample_discovery(self, discovery_id)
         before_ids = {o["id"] for o in self.r.perception.objects()}
         before_confirmed = {o["id"] for o in self.r.perception.objects() if o["state"] == "CONFIRMED"}
+        start_snapshot = copy.deepcopy(self.s)
+        getter = getattr(self.r.roads, "road_evidence", None)
+        prior_traversals = {t["id"] for t in (getter() if callable(getter) else {}).get("traversals", [])}
+        def finish(outcome):
+            return self._semantic_explore_result(outcome, start_snapshot, prior_traversals, before_ids, before_confirmed)
         start = position(self.s["odometry"])
         road, odo = self.s["road"], self.s["odometry"]
         if not road["onRoad"]:
-            return self.result(False, "not_on_observed_road")
+            return finish(self.result(False, "not_on_observed_road"))
         if exit_angle is not None and not road.get("atNode"):
-            return self.result(False, "exit_angle_requires_a_current_junction")
+            return finish(self.result(False, "exit_angle_requires_a_current_junction"))
         if road.get("atNode") and road["exits"]:
             exits = self.r.roads.exits(odo, road)
             if exit_angle is None:
@@ -720,49 +803,50 @@ class Actions:
             else:
                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
-                    return self.result(False, "requested_exit_not_observed", available_exits=exits)
+                    return finish(self.result(False, "requested_exit_not_observed", available_exits=exits))
             result = self.take_observed_exit(chosen["angle_deg"])
             if result.get("selection_error"):
-                return self.result(False, result["selection_error"], exit_selection=result)
+                return finish(self.result(False, result["selection_error"], exit_selection=result))
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
-                return self.return_from_blocked_road(result)
+                return finish(self.return_from_blocked_road(result))
             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
-                return self.return_from_blocked_road(result)
+                return finish(self.return_from_blocked_road(result))
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
-                return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+                return finish(self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed))
             moved = distance(start, position(self.s["odometry"])) * 100
             if self.observed_road_node() and moved >= .2:
-                return self.result(True, "next_junction_observed")
+                return finish(self.result(True, "next_junction_observed"))
             if result.get("stoppedBy") == "junction":
                 if self.observed_road_node():
-                    return self.result(False, "selected_exit_no_observed_progress", actuator_result=result)
-                return self.recover_unobserved_junction(result)
+                    return finish(self.result(False, "selected_exit_no_observed_progress", actuator_result=result))
+                return finish(self.recover_unobserved_junction(result))
             if result.get("distanceCm", 0) < 0.2:
                 self.r.roads.mark_blocked()
-                return self.result(False, "selected_exit_blocked", actuator_result=result)
+                return finish(self.result(False, "selected_exit_blocked", actuator_result=result))
         for step in range(12):
             new = [o["id"] for o in self.r.perception.objects() if o["id"] not in before_ids]
             if new:
-                return self.result(True, "new_objects_observed", new_object_ids=new)
+                return finish(self.result(True, "new_objects_observed", new_object_ids=new))
             before = position(self.s["odometry"])
             step_cm = 16 if self.fresh_tentative_views() else 20
             result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
-                return self.return_from_blocked_road(result)
+                return finish(self.return_from_blocked_road(result))
             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
-                return self.return_from_blocked_road(result)
+                return finish(self.return_from_blocked_road(result))
             confirmed = self.newly_confirmed(before_confirmed)
             if confirmed:
-                return self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed)
+                return finish(self.result(True, "new_objects_confirmed", newly_confirmed_object_ids=confirmed))
             if self.observed_road_node():
-                return self.result(True, "next_junction_observed")
+                return finish(self.result(True, "next_junction_observed"))
             if result.get("stoppedBy") == "junction":
-                return self.recover_unobserved_junction(result)
+                return finish(self.recover_unobserved_junction(result))
             moved = distance(before, position(self.s["odometry"])) * 100
             if moved < 0.2:
-                return self.return_from_blocked_road(result)
-        return self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100)
+                return finish(self.return_from_blocked_road(result))
+        return finish(self.result(True, "bounded_road_segment_observed", distance_cm=distance(start, position(self.s["odometry"])) * 100))
+
 
     def visual_standoff(self, object_id, navigation_budget=None):
         """Close the existing standoff gate using fresh, identified camera views.
@@ -1081,6 +1165,7 @@ class Actions:
                 # commands. Crossing an internal sample neither consumes that
                 # sample nor discards the remainder of the aggregate arc.
                 execution_end = cursor
+                remaining = available
                 if available >= 10:
                     command = {"distanceCm": min(20, available), "speed": 50}
                     plan = {"method": "follow_road", "params": command,
@@ -1173,18 +1258,36 @@ class Actions:
                 else "reposition_motion_budget_exhausted", steps)
 
     def _road_reposition(self, object_id, initial_failure, budget):
+        from inspect import Parameter, signature
+
         target = self.r.perception.get_object(object_id)
         get_candidates = getattr(self.r.roads, "approach_candidates", None)
+        try:
+            parameters = signature(get_candidates).parameters.values()
+            supports_filter = any(p.kind == Parameter.VAR_KEYWORD
+                or p.name == "candidate_filter" and p.kind != Parameter.POSITIONAL_ONLY for p in parameters)
+        except (TypeError, ValueError):
+            supports_filter = False
         record = self._navigation_record(object_id)
         goal = (target["position_m"]["x"], target["position_m"]["z"])
         evidence = {"initial_failure": initial_failure["reason"], "attempts": [],
                     "candidate_limit": 3, "source": "observed_on_road_motion_endpoints"}
         for _ in range(3):
-            candidates = (get_candidates(self.s["odometry"], goal,
-                alternative_routes=record.get("approach_attempts", [])) if callable(get_candidates) else [])
             context = self._navigation_context(object_id)
-            blocked = [c for c in candidates if self.r.navigation_progress.approach_blocked(record, c, context)]
-            candidates = [c for c in candidates if c not in blocked]
+            blocked = []
+            def eligible(candidate):
+                if self.r.navigation_progress.approach_blocked(record, candidate, context):
+                    blocked.append(candidate)
+                    return False
+                return True
+            options = {"alternative_routes": record.get("approach_attempts", [])}
+            if supports_filter:
+                options["candidate_filter"] = eligible
+            candidates = (get_candidates(self.s["odometry"], goal, **options)
+                if callable(get_candidates) else [])
+            # Simple legacy providers may ignore the optional filter. Preserve
+            # their old repeat guard; RoadMemory applies it before its cap.
+            candidates = [c for c in candidates if eligible(c)]
             if not candidates:
                 evidence["status"] = ("same_route_without_relevant_new_evidence" if blocked
                                       else "no_verified_route_needs_exploration")
@@ -2288,6 +2391,9 @@ class Actions:
                 "holding": (self.s.get("holding") or {}).get("holding"),
                 "outcome_unknown": True}
             raise
+        if action["action"] == "explore" and action["params"].get("discovery_id") is not None:
+            from .confirmation_sampling import corroborate_final
+            outcome = corroborate_final(self, outcome)
         if action["action"] == "go_to" and outcome["success"]:
             detected = self.visible(action["params"]["object_id"])
             prior_evidence = outcome["evidence"]

@@ -24,7 +24,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v15"
+RUNTIME_VERSION = "autonomous-brain-runtime/v16"
 
 
 def dump(path, value):
@@ -103,6 +103,27 @@ def compact_action_result(number, action, result, after_observation):
                             "previous_failure", "canonical_object_id", "ready_for_done",
                             "delivered_count", "required_count"))
     detection(raw, evidence)
+    if isinstance(raw.get("confirmation_sampling"), dict):
+        evidence["confirmation_sampling"] = fields(raw["confirmation_sampling"], (
+            "schema", "discovery_id", "initial_object_id", "confirmed_object_id",
+            "initial_hit_count", "final_hit_count", "reason", "travelled_cm",
+            "independent_hits_added", "max_steps"))
+        if isinstance(raw["confirmation_sampling"].get("viewpoint_constraints"), list):
+            evidence["confirmation_sampling"]["viewpoint_constraints"] = [
+                value[:128] for value in raw["confirmation_sampling"]["viewpoint_constraints"][:6]
+                if isinstance(value, str)]
+    for name, scalar_fields, id_lists in (
+            ("road_progress", ("schema", "status", "before_observation", "after_observation",
+                "start_node_id", "end_node_id", "start_anchor_observation", "end_anchor_observation",
+                "different_node_verified", "on_road", "at_node", "net_displacement_cm", "odometer_travel_cm"),
+                ("new_traversal_ids", "arrival_traversal_ids")),
+            ("target_progress", ("schema", "target_category"),
+                ("new_target_object_ids", "newly_confirmed_target_ids", "new_other_object_ids", "newly_confirmed_other_object_ids"))):
+        if isinstance(raw.get(name), dict):
+            evidence[name] = fields(raw[name], scalar_fields)
+            for key in id_lists:
+                if isinstance(raw[name].get(key), list):
+                    evidence[name][key] = [value[:128] for value in raw[name][key][:12] if isinstance(value, str)]
     if isinstance(raw.get("view_coverage"), dict):
         coverage = raw["view_coverage"]
         evidence["view_coverage"] = fields(coverage, (
@@ -201,7 +222,7 @@ def compact_action_result(number, action, result, after_observation):
                 placement[name] = fields(raw["placement"][name], ("x", "y", "w", "h"))
         evidence["placement"] = placement
     compact_action = fields(action, ("action",))
-    compact_action["params"] = fields(action.get("params"), ("object_id", "exit_angle"))
+    compact_action["params"] = fields(action.get("params"), ("object_id", "exit_angle", "discovery_id"))
     summary = fields({"round": number, "success": result["success"], "reason": result["reason"],
                       "after_observation": after_observation},
                      ("round", "success", "reason", "after_observation"))
@@ -278,17 +299,11 @@ class Runtime:
                        if hasattr(self.roads, "exploration_status") else None)
         discoveries = (self.perception.discovery_evidence()
                        if hasattr(self.perception, "discovery_evidence") else None)
-        pending_discoveries = (discoveries or {}).get("unresolved", [])
-        pending_hypotheses = {}
-        for item in pending_discoveries:
-            pending_hypotheses[item.get("hypothesis_id", item["id"])] = item
-        discovery_state = {"schema": (discoveries or {}).get("schema"),
-            "pending_count": len(pending_hypotheses), "pending_record_count": len(pending_discoveries),
-            "pending": [{key: copy.deepcopy(item[key]) for key in (
-                "id", "hypothesis_id", "frame_id", "observation_index", "position_m",
-                "position_is_range_clipped", "raw_bearing_deg", "candidate_ids", "reason") if key in item}
-                for item in list(pending_hypotheses.values())[-6:]],
-            "required_evidence": "fresh_separated_views_with_unique_pixel_and_identity_support"}
+        discovery_state = (self.perception.discovery_summary(
+            current_discovery_id=getattr(self, "active_discovery_id", None))
+            if hasattr(self.perception, "discovery_summary") else
+            {"schema": (discoveries or {}).get("schema"), "pending_count": 0,
+             "pending_record_count": len((discoveries or {}).get("unresolved", [])), "pending": []})
         for item in discovery_state["pending"]:
             item["candidate_ids"] = [value[:128] for value in item.get("candidate_ids", [])[:12]
                                      if isinstance(value, str)]

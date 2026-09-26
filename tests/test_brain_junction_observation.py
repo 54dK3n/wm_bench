@@ -117,7 +117,10 @@ def test_run19_turns_minus_47_6_then_uses_new_front_clearance(old_front):
         response("forward", road=NODE),
     ], road={"frontClearanceCm": old_front})
     result = f.actions.explore()
-    assert result["success"] is True and result["reason"] == "next_junction_observed"
+    # Boundary recovery proves the physical node flag; these sensor-only
+    # recovery fixtures do not supply a complete semantic road traversal.
+    assert result["success"] is False and result["reason"] == "junction_identity_unresolved"
+    assert result["evidence"]["road_progress"]["arrival_traversal_ids"] == []
     assert [row["method"] for row in f.calls] == ["follow_road", "turn", "forward"]
     assert f.calls[0]["params"]["distanceCm"] == 20
     assert f.calls[1]["params"]["angleDeg"] == pytest.approx(-47.6)
@@ -223,11 +226,14 @@ def test_partial_probe_stops_without_spending_remaining_request_budget():
 
 
 @pytest.mark.parametrize("stopped_by", ["junction", "max_distance"])
-def test_a_fresh_real_node_remains_success_without_a_recovery_probe(stopped_by):
+def test_a_fresh_node_stops_without_a_recovery_probe_but_needs_semantic_proof(stopped_by):
     f = junction_runtime([response("follow_road", actual_cm=6.4, road=NODE,
         result={"accepted": True, "stoppedBy": stopped_by, "distanceCm": 6.4})])
     result = f.actions.explore()
-    assert result["success"] is True and result["reason"] == "next_junction_observed"
+    # Boundary recovery proves the physical node flag; these sensor-only
+    # recovery fixtures do not supply a complete semantic road traversal.
+    assert result["success"] is False and result["reason"] == "junction_identity_unresolved"
+    assert result["evidence"]["road_progress"]["arrival_traversal_ids"] == []
     assert [row["method"] for row in f.calls] == ["follow_road"]
     assert "junction_recovery" not in result["evidence"]
     assert f.marked == [] and f.remaining == []
@@ -248,7 +254,10 @@ def test_take_exit_unobserved_junction_uses_the_same_sensor_recovery():
                           response("forward", road=NODE)],
                          road={**NODE, "headingErrorDeg": 0, "leftClearanceCm": 9})
     result = f.actions.explore(0)
-    assert result["success"] is True and result["reason"] == "next_junction_observed"
+    # Boundary recovery proves the physical node flag; these sensor-only
+    # recovery fixtures do not supply a complete semantic road traversal.
+    assert result["success"] is False and result["reason"] == "junction_identity_unresolved"
+    assert result["evidence"]["road_progress"]["arrival_traversal_ids"] == []
     assert [row["method"] for row in f.calls] == ["take_exit", "forward"]
     assert "junction_recovery" in result["evidence"]
     assert f.marked == [] and f.remaining == []

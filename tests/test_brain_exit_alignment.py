@@ -122,7 +122,11 @@ def test_run10_blocked_old_heading_turns_observes_then_uses_fresh_same_exit(call
     runtime, calls, events, logs = exit_runtime()
     result = run_action(runtime, caller)
 
-    assert result["success"] is True
+    # go_to retains its object-arrival contract. explore needs a semantic
+    # traversal, absent in this exit-alignment-only fixture.
+    assert result["success"] is (caller == "go_to")
+    if caller == "explore":
+        assert result["reason"] == "junction_identity_unresolved"
     assert [row["method"] for row in calls] == ["turn", "take_exit"]
     assert calls[0]["params"]["angleDeg"] == pytest.approx(-147.2)
     assert events == ["turn", "observe", "take_exit", "observe"]
@@ -191,11 +195,12 @@ def test_blocked_follow_road_with_fresh_node_still_reports_blockage():
     assert [row["method"] for row in calls] == ["follow_road"]
 
 
-def test_short_genuine_junction_remains_a_success():
+def test_short_observed_junction_stops_but_needs_semantic_trip():
     runtime, calls, _, _ = exit_runtime(initial_at_node=False,
         blocked_result={"accepted": True, "stoppedBy": "junction",
                         "distanceCm": 6.4, "elapsedTicks": 21})
     result = Actions(runtime).explore()
 
-    assert result["success"] is True and result["reason"] == "next_junction_observed"
+    assert result["success"] is False and result["reason"] == "junction_identity_unresolved"
+    assert result["evidence"]["road_progress"]["arrival_traversal_ids"] == []
     assert [row["method"] for row in calls] == ["follow_road"]

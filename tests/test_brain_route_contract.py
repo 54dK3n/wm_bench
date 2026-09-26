@@ -76,7 +76,7 @@ def test_thirty_then_six_does_not_consume_first_leg_at_twenty_or_send_illegal_fo
     assert runtime.snapshot['odometry']['distanceCm']==pytest.approx(36)
 
 
-@pytest.mark.parametrize('lengths',[[6],[3,3,6],[20,20],[30,6],[6,20],[3,3,30],[6,500]])
+@pytest.mark.parametrize('lengths',[[6],[4,4],[6,3],[2,2,2],[6,6],[3,3,6],[20,20],[30,6],[6,20],[3,3,30],[6,500]])
 def test_complete_reposition_uses_legal_commands_and_fresh_original_visual_gate(lengths):
     runtime,_,calls,_=straight_runtime(lengths)
     actions=Actions(runtime)
@@ -86,6 +86,38 @@ def test_complete_reposition_uses_legal_commands_and_fresh_original_visual_gate(
     assert attempt['reached'] and attempt['approach_observation']>attempt['steps'][-1]['after_observation']
     assert 25<=outcome['evidence']['detection']['distance_cm']<=40
     assert sum(p['distanceCm'] for method,p in calls if method!='turn')==pytest.approx(sum(lengths))
+
+
+@pytest.mark.parametrize('lengths',[[4,4],[6,3],[2,2,2]])
+def test_subten_aggregate_has_one_matching_endpoint_budget_and_command(lengths):
+    runtime,candidate,calls,_=straight_runtime(lengths)
+    budget=[1]
+    reached,reason,steps=Actions(runtime)._follow_approach_path(candidate,budget)
+    assert reached,reason
+    assert budget==[0]
+    assert calls==[('forward',{'distanceCm':sum(lengths),'speed':30})]
+    assert steps[0]['execution_plan']['remaining_arc_cm']==sum(lengths)
+    assert steps[0]['completed_segment_ids']==[str(i) for i in range(len(lengths))]
+
+
+@pytest.mark.parametrize('lengths',[[4,4],[6,3],[2,2,2]])
+def test_subten_aggregate_cannot_bypass_fresh_clearance_or_zero_budget(lengths):
+    runtime,candidate,calls,_=straight_runtime(lengths,blocked=True)
+    reached,reason,steps=Actions(runtime)._follow_approach_path(candidate,[1])
+    assert not reached and reason=='reposition_short_segment_no_safe_legal_motion'
+    assert calls==[] and steps==[]
+    runtime,candidate,calls,_=straight_runtime(lengths)
+    reached,reason,steps=Actions(runtime)._follow_approach_path(candidate,[0])
+    assert not reached and reason=='reposition_motion_budget_exhausted'
+    assert calls==[] and steps==[]
+
+
+def test_subten_aggregate_stops_at_internal_junction_without_silent_consumption():
+    runtime,candidate,calls,_=straight_runtime([4,4],junction_after=0)
+    reached,reason,steps=Actions(runtime)._follow_approach_path(candidate,[2])
+    assert not reached and reason=='reposition_exit_correspondence_unavailable'
+    assert calls==[('forward',{'distanceCm':4,'speed':30})]
+    assert steps[0]['completed_segment_ids']==['0']
 
 
 def test_short_leg_ending_at_node_is_not_combined_across_unhandled_exit():

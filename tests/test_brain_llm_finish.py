@@ -94,7 +94,7 @@ def test_abnormal_finish_rejects_complete_json_and_replays_exactly(tmp_path, sta
                 client.decide(state)
     sleep.assert_not_called()
     rows = read_rows(source)
-    assert all(row["version"] == "autonomous-brain-llm/v17" for row in rows)
+    assert all(row["version"] == "autonomous-brain-llm/v18" for row in rows)
     assert all(row["response_body"] == body and row["raw_output"] == RAW for row in rows)
     assert all(row["action"] is None and row["validation_error"] and row["transport_error"] is None
                for row in rows)

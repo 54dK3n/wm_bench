@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v9"
+VERSION = "autonomous-brain-navigation/v10"
 
 
 def evidence_version(value):
@@ -308,11 +308,13 @@ class RoadMemory:
         if existing is None or existing.get("direction_status") != "observed_forward":
             self._approach_edges[p][a] = reverse
 
-    def approach_candidates(self, odo, target, excluded=(), limit=3, alternative_routes=()):
+    def approach_candidates(self, odo, target, excluded=(), limit=3, alternative_routes=(), candidate_filter=None):
         """Reachable viewpoints with directional, executable segment evidence.
 
         Legacy excluded positions are intentionally no longer exclusions: a
         location is not a failed route. Actions applies versioned failure records.
+        A caller may filter those records before the three-candidate cap; the
+        optional predicate leaves all historical positional arguments valid.
         """
         start = position(odo)
         if start not in self._approach_edges or self._latest_index in self._invalid_indices:
@@ -375,7 +377,8 @@ class RoadMemory:
                         if (point, other) == blocked_edge or not available(edge) or other in path:
                             continue
                         heapq.heappush(queue, (cost + edge["travelled_cm"], other, path + [other]))
-        return sorted(candidates, key=lambda row: (
+        eligible = [row for row in candidates if candidate_filter is None or candidate_filter(row)]
+        return sorted(eligible, key=lambda row: (
             abs(distance(tuple(row["position_m"]), target) - .32), row["travelled_cm"],
             row["position_m"]))[:max(0, min(limit, 3))]
 

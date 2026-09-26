@@ -174,8 +174,10 @@ class ExploreRecoveryTests(ScriptedActionCase):
                     "road": {"atNode": True, "exits": [{"angleDeg": 180}, {"angleDeg": 90}]},
                 }])
                 result = Actions(runtime).explore()
-                self.assertTrue(result["success"])
-                self.assertEqual(result["reason"], "next_junction_observed")
+                # A physical node flag ends this bounded probe, but this legacy
+                # fixture supplies no indexed semantic anchor / complete trip.
+                self.assertFalse(result["success"])
+                self.assertEqual(result["reason"], "junction_identity_unresolved")
                 self.assertEqual(len(moves), 1)
                 self.assertEqual(remaining, [])
                 self.assertEqual(runtime.roads.blocked, [])
@@ -189,9 +191,9 @@ class ExploreRecoveryTests(ScriptedActionCase):
                     "road": {"atNode": at_node},
                 }])
                 result = Actions(runtime).explore()
-                self.assertEqual(result["success"], at_node)
+                self.assertFalse(result["success"])
                 if at_node:
-                    self.assertEqual(result["reason"], "next_junction_observed")
+                    self.assertEqual(result["reason"], "junction_identity_unresolved")
                 else:
                     # No fresh node and no side-clearance evidence authorizing
                     # boundary recovery: neither arrival nor an obstacle.
@@ -216,7 +218,7 @@ class ExploreRecoveryTests(ScriptedActionCase):
         ], pose={"rightCm": -156.8, "forwardCm": -22.4, "headingDeg": -90})
         result = Actions(runtime).explore()
         self.assertFalse(result["success"])
-        self.assertEqual(result["reason"], "road_blocked_returned_to_junction")
+        self.assertEqual(result["reason"], "road_blocked_returned_to_observed_node")
         self.assertEqual(result["evidence"]["actuator_result"]["stoppedBy"], "front_clearance")
         self.assertEqual(result["evidence"]["recovery_steps"], 2)
         self.assertEqual([method for method, _ in moves], ["follow_road", "turn", "follow_road", "follow_road"])
@@ -393,7 +395,8 @@ class CandidateReobservationTests(ScriptedActionCase):
                     "odometry": {"forwardCm": 20}, "road": {"atNode": True},
                 }], objects=[target], detections=[detection])
                 result = Actions(runtime).explore()
-                self.assertEqual(result["reason"], "next_junction_observed")
+                self.assertFalse(result["success"])
+                self.assertEqual(result["reason"], "junction_identity_unresolved")
                 self.assertEqual(len(moves), 1)
 
 
