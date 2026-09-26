@@ -12,7 +12,7 @@ node --test workspaces/guangyang-platform/projects/car-python/tests/robot-bridge
 
 本次原输出 `raw/gate/python-full.{txt,xml}` 为 **1448 passed / 0 failed / 0 skipped**，61 个测试文件；`node-full.txt` 为 **29 passed**，`platform-boundary.txt` 为 **15 passed**。后两集合亦无失败或跳过。测试中的回环 HTTP 服务需要本机监听；没有模型请求或整车仿真。`GATE.json` 保存执行时 brain 字节哈希及日志哈希；`TESTS.json` 从同一 JUnit 按文件计数。
 
-新文件子集：发现摘要 18、感知动作联动 19、探索语义 15、模型参数/回放/有限结果摘要 57、候选过滤 5，共 114 项，包含在 1448 中。短段正反例迁入既有 `test_brain_route_contract.py`。所有测试运动由实际平台 `normalizeCommand` 校验。旧探索测试只升级其虚假“下一路口”结果断言，保留命令、运动预算、转角和恢复边界断言。
+新文件子集：发现摘要 18、感知动作联动 19、探索语义 15、模型参数/回放/有限结果摘要 57、候选过滤 5，共 114 项，包含在 1448 中。短段正反例迁入既有 `test_brain_route_contract.py`。本轮短段、候选路线、探索语义和确认采样夹具中的运动使用实际平台 `normalizeCommand` 校验；不把这句话外推到全部历史测试桩。旧探索测试只升级其虚假“下一路口”结果断言，保留命令、运动预算、转角和恢复边界断言。
 
 ## 先红后绿
 
@@ -22,7 +22,7 @@ node --test workspaces/guangyang-platform/projects/car-python/tests/robot-bridge
 | 探索新语义 | `raw/navigation/explore-first-red.txt`：7 fail | 实际 RoadMemory + normalize 新15项；旧语义11项红例升级断言后98相关pass |
 | 主动感知采样 | `raw/sampling/first-red.txt`：10 fail / 1 pass | 最终19项全部通过，真实 Perception / WorldModel / Runtime / Actions |
 | 后置遮挡/竞争 | `raw/sampling/extended-counterexamples.txt`：2 fail / 14 pass | 需要当前唯一可见证据，不能仅用历史CONFIRMED |
-| 回退路径/未知运动 | `raw/sampling/reverse-and-exception-red.txt`：3 fail / 15 pass | 精确横向距离及连续行驶证据，未知回执只记录、不重发 |
+| 回退路径/未知运动 | `raw/sampling/reverse-and-exception-red.txt`：1 fail / 17 pass（失败项是未知回执未保存采样trace） | 精确横向距离及连续行驶证据，未知回执只记录、不重发 |
 | 采样实际里程上限 | `raw/sampling/budget-red.txt`：1 fail / 18 pass | 实际里程超120cm即拒绝成功，不靠请求长度推定 |
 | 新参数/旧记录语义 | `raw/contract/llm-discovery-red.txt`：20 fail / 34 pass | 当前v18，新意图；旧v1–v17原契约和修复文字保留 |
 
