@@ -20,13 +20,14 @@ import urllib.error
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v13"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 14)}
+VERSION = "autonomous-brain-llm/v14"
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 15)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13"}
-RETRY_METADATA_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13"}
-DIAGNOSTICS_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13"}
+EXTENDED_RETRY_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14"}
+RETRY_METADATA_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14"}
+DIAGNOSTICS_REQUIRED_VERSIONS = {"autonomous-brain-llm/v12", "autonomous-brain-llm/v13", "autonomous-brain-llm/v14"}
+NORMAL_FINISH_REQUIRED_VERSIONS = {"autonomous-brain-llm/v14"}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -133,17 +134,22 @@ def _record_transport_reason(diagnostics: dict[str, Any], exc: BaseException,
 
 
 def _sse_events(body: str):
+    # EOF is not an SSE event delimiter. Keep partial events for diagnostics,
+    # while allowing modern callers to distinguish a complete [DONE] frame.
     data = []
-    for line in body.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+    lines = body.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    for line in lines:
         if not line:
             if data:
-                yield "\n".join(data)
+                yield "\n".join(data), True
                 data = []
         elif line.startswith("data:"):
             value = line[5:]
             data.append(value[1:] if value.startswith(" ") else value)
     if data:
-        yield "\n".join(data)
+        yield "\n".join(data), False
 
 
 def validate_action(action: Any, state: dict[str, Any]) -> dict[str, Any]:
@@ -212,7 +218,7 @@ class LLMClient:
     ``log_path`` is a new JSONL file, opened exclusively to prevent accidental
     mixing of runs. ``replay_path`` selects a recorded transcript and never
     reads API credentials or makes requests. Replay may use a live transcript
-    or another replay transcript. Compatible v1-v12 transcripts retain their
+    or another replay transcript. Compatible v1-v13 transcripts retain their
     recorded version when replayed; the code version is independently tracked
     by the run's source SHA256. Inputs and re-derived output validation must
     match exactly. Sampling settings are restored from the first request,
@@ -223,8 +229,10 @@ class LLMClient:
     a finite JSON number from 0 through 2. LLM_THINKING may be enabled or
     disabled; when unset, the request omits thinking entirely.
 
-    Live requests use SSE streaming by default. Only a stream terminated by
-    [DONE] can produce an action; raw SSE is retained for offline replay.
+    Live requests use SSE streaming by default. Only one finish_reason=stop,
+    followed by a complete [DONE] event, can produce an action. Non-streaming
+    responses also require finish_reason=stop. Raw responses are retained for
+    offline replay; v1-v13 keep their original completion-validation semantics.
 
     Invalid model outputs get one repair request. Transport errors stop by
     default; an explicit transport_retries limit from 1 through 5 allows only the
@@ -343,7 +351,7 @@ class LLMClient:
         self.total_elapsed_s += record["elapsed_s"]
 
     @staticmethod
-    def _decode_response(body: str) -> tuple[str, str | None]:
+    def _decode_response(body: str, *, require_stop: bool = True) -> tuple[str, str | None, str | None]:
         try:
             payload = _strict_loads(body)
             choices = payload["choices"]
@@ -355,17 +363,25 @@ class LLMClient:
             raw = message["content"]
             if not isinstance(raw, str):
                 raise ValueError("Completion content must be text")
-            return raw, payload.get("model")
+            error = ("Completion must end with finish_reason=stop"
+                     if require_stop and choices[0].get("finish_reason") != "stop" else None)
+            return raw, payload.get("model"), error
         except (ValueError, KeyError, TypeError, IndexError, AttributeError) as exc:
             raise ActionValidationError("Response must contain one textual JSON completion") from exc
 
     @staticmethod
-    def _decode_stream(body: str) -> tuple[str | None, str | None, bool, str | None]:
+    def _decode_stream(body: str, *, require_stop: bool = True) -> tuple[str | None, str | None, bool, str | None]:
         pieces, model, done, error, saw_content = [], None, False, None, False
-        for event in _sse_events(body):
+        finish_reason = None
+        for event, complete in _sse_events(body):
+            if require_stop and done:
+                error = "Stream contains data after [DONE]"
+                continue
             if event == "[DONE]":
-                done = True
-                break
+                done = complete or not require_stop
+                if not require_stop:
+                    break
+                continue
             try:
                 chunk = _strict_loads(event)
                 if not isinstance(chunk, dict) or "error" in chunk:
@@ -382,6 +398,12 @@ class LLMClient:
                 choice = choices[0]
                 if type(choice.get("index")) is not int or choice["index"] != 0:
                     raise ValueError("Expected choice index zero")
+                if require_stop and finish_reason is not None:
+                    error = "Stream contains a choice after its terminal finish_reason"
+                if require_stop and choice.get("finish_reason") is not None:
+                    finish_reason = choice["finish_reason"]
+                    if finish_reason != "stop":
+                        error = "Completion must end with finish_reason=stop"
                 delta = choice["delta"]
                 if not isinstance(delta, dict) or delta.get("tool_calls") or delta.get("function_call"):
                     raise ValueError("Tool calls are not permitted")
@@ -395,6 +417,8 @@ class LLMClient:
                 error = "Response must contain one textual JSON completion"
         if not saw_content:
             error = "Response must contain one textual JSON completion"
+        if require_stop and finish_reason is None:
+            error = error or "Stream is missing terminal finish_reason=stop"
         return "".join(pieces) if saw_content else None, model, done, error
 
     def _call(self, request: dict[str, Any], state: dict[str, Any],
@@ -509,8 +533,10 @@ class LLMClient:
             finally:
                 record["elapsed_s"] = time.perf_counter() - start
 
+        require_stop = record["version"] in NORMAL_FINISH_REQUIRED_VERSIONS
         if request.get("stream") and isinstance(record["response_body"], str):
-            raw, response_model, done, error = self._decode_stream(record["response_body"])
+            raw, response_model, done, error = self._decode_stream(
+                record["response_body"], require_stop=require_stop)
             record["raw_output"], record["response_model"] = raw, response_model
             if record["transport_error"] is None:
                 if not done:
@@ -520,9 +546,12 @@ class LLMClient:
         if record["transport_error"] is None and record["validation_error"] is None:
             try:
                 if not request.get("stream"):
-                    raw, response_model = self._decode_response(record["response_body"])
+                    raw, response_model, error = self._decode_response(
+                        record["response_body"], require_stop=require_stop)
                     record["raw_output"] = raw
                     record["response_model"] = response_model
+                    if error is not None:
+                        raise ActionValidationError(error)
                 raw = record["raw_output"]
                 try:
                     parsed = _strict_loads(raw)

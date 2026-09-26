@@ -102,7 +102,8 @@ def test_literal_v12_extended_retry_replay_is_exact(tmp_path, state, limit, reco
                for row in read_rows(output))
 
 
-@pytest.mark.parametrize("version", ["autonomous-brain-llm/v12", "autonomous-brain-llm/v13"])
+@pytest.mark.parametrize("version", ["autonomous-brain-llm/v12", "autonomous-brain-llm/v13",
+                                     "autonomous-brain-llm/v14"])
 @pytest.mark.parametrize("row_index", [0, 1])
 @pytest.mark.parametrize("field", ["transport_retry_limit", "transport_retry_index",
                                    "transport_retry_delay_s", "transport_diagnostics"])
@@ -144,7 +145,8 @@ def test_v13_prompt_transmits_hints_without_overriding_the_model_or_completion(t
                 "LLM_MODEL": "configured-model"}
     # A hint remains advisory: the model can choose a different legal fresh exit.
     selected = {"action": "explore", "params": {"exit_angle": -90}}
-    body = json.dumps({"model": "served-model", "choices": [{"message": {"content": canonical(selected)}}]})
+    body = json.dumps({"model": "served-model", "choices": [
+        {"message": {"content": canonical(selected)}, "finish_reason": "stop"}]})
     with patch("autonomous_brain.llm.os.environ.get", side_effect=settings.get), \
             patch("urllib.request.urlopen", return_value=io.BytesIO(body.encode())) as send:
         with LLMClient(tmp_path / "live.jsonl", stream=False) as client:
@@ -158,4 +160,4 @@ def test_v13_prompt_transmits_hints_without_overriding_the_model_or_completion(t
                    "每轮重新检查", "空 exploration_hints 不代表探索完成", "不证明物理路口身份相同",
                    "没有未探索路段", "没有待确认目标", "go_to 和 pick 只能选择当前状态为 CONFIRMED"):
         assert phrase in prompt
-    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v13"
+    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v14"

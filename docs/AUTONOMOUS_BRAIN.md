@@ -1,6 +1,8 @@
 # WorldModel + 单动作大模型自主小车
 
-[第二十一局](../artifacts/autonomous-brain/map05-run-21/FAILURE_ANALYSIS.md)已完整结束：**整体FAIL，实际有效交付2/2**。第181轮收到Kimi余额不足错误，HTTP429 / exceeded_current_quota_error，初次加5次重试均失败，未生成该轮动作、未自主done；没有外停、SIGTERM、轮数或仿真时间上限触发。余额恢复前不发起新模型请求，十布局未启动。
+当前供应商已切换为用户指定的DeepSeek Flash，图片能力与生产客户端的虚构状态调用均通过实测。密钥仅保存在忽略的本机配置中，证据见[配置验证](../artifacts/autonomous-brain/deepseek-setup-20260926/REPORT.md)。模型支持图片输入；当前大脑仍按既定方案传WorldModel状态JSON，不宣称已接入相机图片直传。
+
+[第二十一局](../artifacts/autonomous-brain/map05-run-21/FAILURE_ANALYSIS.md)已完整结束：**整体FAIL，实际有效交付2/2**。第181轮收到Kimi余额不足错误，HTTP429 / exceeded_current_quota_error，初次加5次重试均失败，未生成该轮动作、未自主done；没有外停、SIGTERM、轮数或仿真时间上限触发。该局的Kimi配额失败记录保留，十布局未启动。
 
 本局180个实际动作、181个决策记录、190次模型调用、1104次观测，仿真861.32秒；模型调用累计2234.2267384270012秒，重试等待另31秒。两球原生有效交付分别为281.32秒和516.92秒，最终均在区内且未持有。白名单外调用0。8份冻结源码、5项导出和181轮/190条严格离线模型回放均通过核验；原record按原字节分为5片并恢复验证。生产及启动提交为`1d9b0a79aed7a67a539a03a2c7d5b181bbcbec21`，Kimi K2.6非思考模式、温度0.6沿用用户批准配置。
 
@@ -20,7 +22,7 @@ driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显
 
 本轮按用户新的范围执行：平台够用即可，外部 Python 大脑每轮观测、调用大模型选择一个动作、确定性执行、再观测。octos 编排、技能契约和逐条确定性验收暂缓。历史 v4 严格 FAIL 报告保留，其召回率与跨运行时浮点复算不再阻挡本轮开发。
 
-平台够用门禁已通过，Kimi K2.6已配置为用户批准的非思考模式、温度0.6。当前尚无正式自主完成的map-05成功局，十布局未开始。第十九局使用上述冻结提交完成正式运行，FAIL结论保留；第十八局冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`的完整证据与FAIL结论保留。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
+平台够用门禁已通过。本机现已按用户要求切换为DeepSeek Flash，关闭思考、温度0；此前Kimi配置只属于历史运行。当前尚无正式自主完成的map-05成功局，十布局未开始。第十九局使用上述冻结提交完成正式运行，FAIL结论保留；第十八局冻结提交`258ebab8555344805eabd1c5b2fe4773d97d7df2`的完整证据与FAIL结论保留。第十七局从冻结提交`33b16ca7ea5c849bfecb080353cdd4f28d8bcd62`运行完毕，仍为FAIL：实际交付1/2，但首次放置的观测判定漏判并进入当前实现无法恢复的释放未验证状态。
 
 此前第十六局实际有效交付0/2，第十五局1/2，均因连续模型服务错误耗尽当时的重试上限而失败。第十四局及后续诊断的物理交付2/2也未满足完整自主完成条件，保留FAIL。全部历史日志和结论保持不变；当前状态见[CURRENT_REPORT.md](../artifacts/autonomous-brain/CURRENT_REPORT.md)，正式运行索引见[LIVE_RUNS.md](../artifacts/autonomous-brain/LIVE_RUNS.md)。
 
@@ -48,7 +50,7 @@ WorldModel 依赖来自官方 main，当前锁定 `fef0ba9b754ce9652836fdb720d11
 
 上限为 200 轮和仿真 1200 秒，到限失败。driver 同时给平台设置 1200 秒硬上限。`--max-rounds`、`--max-simulation-seconds` 只允许降低上限，供联调使用；联调结果不充当正式成功局。
 
-大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。用户已批准本机 Kimi K2.6 非思考模式、温度 0.6；程序不会按服务错误自动改模型或温度。完整但不合法的输出最多修复一次，仍非法就停止。
+大模型请求为兼容 Chat Completions 的 HTTP 请求，temperature 默认 0，要求 JSON 对象。`LLM_TEMPERATURE` 允许显式设置有限的 0–2 数值；`LLM_THINKING` 可设 `enabled` 或 `disabled`，未设置时不向服务商发送该参数。当前本机为用户指定的DeepSeek：`LLM_BASE_URL=https://api.deepseek.com/v1`、`LLM_MODEL=deepseek-flash`、`LLM_TEMPERATURE=0`、`LLM_THINKING=disabled`。该模型的图片输入已经合成图片实测；现有机器人决策输入仍是WorldModel状态JSON，没有直接发送相机图片。此前用户批准的Kimi温度0.6仅适用于历史Kimi运行；程序不会按服务错误自动改模型或温度。完整但不合法的输出最多修复一次，仍非法就停止。
 
 客户端默认网络重试为0；runtime v9正式设为5，仅对列明的瞬态连接错误重发相同请求，最多初次加五次，等待1、2、4、8、16秒。每次失败和重试均完整记录，永久错误立即停止，耗尽后整局失败。非法JSON仍只允许修正一次；网络恢复不改变模型、温度、动作或成功判据。连接/读取等待参数仍为180秒，记入`transport_timeout_s`，不是整次请求耗时的硬上限；调用耗时与重试等待分别保存。见[有限网络恢复验证](../artifacts/autonomous-brain/llm-recovery-fix-20260926/REPORT.md)。
 
@@ -109,7 +111,7 @@ python3 tools/evaluate_autonomous_brain.py \
 
 评测同时核对未撤销的 package_delivered 事件和最终存放区内位置，报告原始首次看到、WM 首次入库、确认、抓到、送达与位置误差。身份只能由同帧真值投影与检测框唯一匹配建立；歧义明确报告，不能按 WM id 猜球的真实身份。
 
-LLM 自 v6 起使用流式传输，收到 `[DONE]` 后才校验单个动作；原始 SSE 和中断时的部分响应保存在 `llm.jsonl`。旧记录仍保留原非流式请求。见[流式修复报告](../artifacts/autonomous-brain/llm-streaming-fix-20260925/REPORT.md)。
+LLM v14要求正常 `finish_reason=stop`，且流式响应收到完整 `[DONE]` 后才允许动作；完整异常响应仍只给原有一次修复机会，旧v1–v13回放按原语义保留。861项完整回归和Run21的181轮/190条离线回放通过，见[正常结束校验](../artifacts/autonomous-brain/deepseek-finish-validation-20260926/REPORT.md)。LLM 自 v6 起使用流式传输；原始 SSE 和中断时的部分响应保存在 `llm.jsonl`。旧记录仍保留原非流式请求。见[流式修复报告](../artifacts/autonomous-brain/llm-streaming-fix-20260925/REPORT.md)。
 
 模型回放调试（不访问模型 API，仍使用本地机器人桥）：
 

@@ -41,7 +41,7 @@ def response(content, *, stream=True, **extra):
         return sse_response([{"model": "served-model", "choices": [
             {"index": 0, "delta": {"content": content}, "finish_reason": "stop"}], **extra}])
     return io.BytesIO(json.dumps({"model": "served-model", "choices": [
-        {"message": {"content": content}}], **extra}).encode())
+        {"message": {"content": content}, "finish_reason": "stop"}], **extra}).encode())
 
 
 def legacy_record(saved, version):
@@ -159,7 +159,7 @@ def test_request_contract_complete_flushed_record_and_recent_five(tmp_path, stat
             assert json.loads(body["messages"][1]["content"])["recent_actions"] == state["recent_actions"][-5:]
             assert len(state["recent_actions"]) == 8
             assert saved["request"] == body
-            assert saved["version"] == "autonomous-brain-llm/v13"
+            assert saved["version"] == "autonomous-brain-llm/v14"
             assert saved["transport_timeout_s"] == 180
             assert saved["raw_output"] == raw
             assert saved["action"] == json.loads(raw)
