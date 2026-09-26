@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v10"
+VERSION = "autonomous-brain-perception/v11"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -55,6 +55,39 @@ def calibrate_reading(distance_cm: float, bearing_deg: float) -> tuple[float, fl
     forward = RANGE_CAL["L_cm"] + rho * math.cos(beta)
     right = rho * math.sin(beta)
     return math.hypot(forward, right), math.degrees(math.atan2(right, forward))
+
+
+def discovery_pixel_match(camera, source, position):
+    """Reproject a public position into an original red detection's pixels.
+
+    This is a stricter discovery proof, never a replacement WM admission gate.
+    Bounds account for integer bbox coordinates and the existing detector's
+    centimetre / .01 degree rounding. The original width is used even when the
+    legacy range adapter clipped a far reading to 100 cm.
+    """
+    pose = odometry_to_pose(source["odometry"])
+    right, forward = pose.to_local(position["x"], position["z"])
+    right, forward = right * 100, forward * 100 - RANGE_CAL["L_cm"]
+    if forward <= 0:
+        return False
+    beta = math.atan2(right, forward)
+    predicted_u = camera["cx"] + camera["fx"] * math.tan(beta)
+    predicted_range = ((math.hypot(right, forward) - RANGE_CAL["a_cm"])
+                       * math.cos(beta) / RANGE_CAL["k"])
+    box = source["bbox"]
+    center = box["x"] + box["w"] / 2
+    observed_beta = math.atan2(center - camera["cx"], camera["fx"])
+
+    def raw_range(width):
+        return (DETECTOR_WIDTH_CM["red-ball"] * camera["fy"] /
+                (max(1., width) * max(.35, math.cos(observed_beta)))
+                + camera["mount"]["forwardCm"])
+
+    reading = raw_range(box["w"])
+    range_tolerance = .5 + max(abs(raw_range(box["w"] + delta) - reading) for delta in (-1, 1))
+    pixel_tolerance = 1.5 + camera["fx"] * math.tan(math.radians(.005))
+    return (abs(predicted_u - center) <= pixel_tolerance
+            and abs(predicted_range - reading) <= range_tolerance)
 
 
 class Perception:
@@ -96,7 +129,11 @@ class Perception:
         self._release_intents: dict[str, dict[str, Any]] = {}
         self._identity_ambiguities: dict[str, dict[str, Any]] = {}
         self._candidate_set_hypotheses: set[str] = set()
-        self._unresolved_discoveries: list[dict[str, Any]] = []
+        self._discovery_records: list[dict[str, Any]] = []
+        self._discovery_resolutions: dict[str, dict[str, Any]] = {}
+        self._discovery_associations: list[dict[str, Any]] = []
+        self._discovery_motion_windows: list[dict[str, Any]] = []
+        self._discovery_resolution_revocations: list[dict[str, Any]] = []
         self._reacquisitions: dict[str, dict[str, Any]] = {}
         self._observed_frames: dict[str, dict[str, Any]] = {}
         self._last_timestamp: float | None = None
@@ -322,37 +359,249 @@ class Perception:
             "detections": [item for _, item in converted],
             "newly_confirmed": newly_confirmed,
         }
-        for detection_index, (_, item) in enumerate(converted):
-            ambiguity = item.get("identity_ambiguity")
-            if (item.get("category") != "red-ball" or item.get("fed_to_world_model") is not False
-                    or not isinstance(ambiguity, dict) or not ambiguity):
-                continue
-            # An out-of-window observation cannot confirm a WM track, but it
-            # remains a discovered identity obligation. Keep each raw detection
-            # separately: two boxes competing for one already delivered ID are
-            # not resolved merely because all candidate IDs are delivered.
-            self._unresolved_discoveries.append({
-                "id": f"untracked-red-discovery-{len(self._unresolved_discoveries) + 1}",
-                "category": "red-ball", "frame_id": frame_id,
-                "observation_index": observation_index,
-                "perception_observation_index": len(self._observed_frames),
-                "tick": observation["tick"], "round": round_index,
-                "simulation_time_s": timestamp, "detection_index": detection_index,
-                "bbox": copy.deepcopy(observation["detections"][detection_index]["bbox"]),
-                "candidate_ids": copy.deepcopy(ambiguity["candidate_ids"]),
-                "identity_ambiguity": copy.deepcopy(ambiguity),
-                "reason": ambiguity["reason"], "admission_reason": item.get("reason")})
+        self._record_discoveries(observation_index)
         return copy.deepcopy(self.last_evidence)
 
     def discovery_evidence(self):
-        """Return persistent public discoveries, not an inferred physical count.
+        """Preserve sources and explicit explanations; never infer a target count."""
+        self._resolve_discoveries()
+        return copy.deepcopy({"schema": "brain-discovery-evidence/v2",
+            "records": self._discovery_records,
+            "associations": self._discovery_associations,
+            "resolutions": list(self._discovery_resolutions.values()),
+            "motion_boundaries": self._discovery_motion_windows,
+            "resolution_revocations": self._discovery_resolution_revocations,
+            "unresolved": [r for r in self._discovery_records
+                if self._discovery_pending(r) and r["id"] not in self._discovery_resolutions]})
 
-        No general resolver is implemented. Empty views, elapsed time, new
-        frame numbers, or delivered candidate labels do not prove which
-        physical objects produced earlier competing out-of-window detections.
+    def _discovery_canonical(self, oid):
+        seen = set()
+        while oid not in seen:
+            seen.add(oid)
+            successor = self._delivery_aliases.get(oid)
+            if successor is None:
+                successor = self._reacquisitions.get(oid, {}).get("current_object_id")
+            if successor is None and oid is not None:
+                track = self.wm.get_archived(oid)
+                if (track is not None and track.state == ObjectState.LOST
+                        and self._times.get(oid, {}).get("confirmed_s") is None and oid not in self._lifecycle):
+                    sources = [r for r in self._discovery_records if r.get("initial_object_id") == oid]
+                    proofs = [self._discovery_resolutions.get(r["id"]) for r in sources]
+                    targets = {p["canonical_object_id"] for p in proofs if p is not None}
+                    if sources and all(p is not None for p in proofs) and len(targets) == 1:
+                        successor = next(iter(targets))
+            if successor is None:
+                break
+            oid = successor
+        return oid
+
+    def _discovery_pending(self, record):
+        oid = self._discovery_canonical(record.get("initial_object_id"))
+        row = self.get_object(oid) if oid is not None else None
+        return (row is None or (row["state"] == "LOST" and row.get("ever_confirmed") is False))
+
+    def _record_discoveries(self, observation_index):
+        frame = self.last_evidence
+        previous = {}
+        for row in self._discovery_records:
+            if self._discovery_pending(row) and row["id"] not in self._discovery_resolutions:
+                previous[row["hypothesis_id"]] = row
+        current = []
+        for index, item in enumerate(frame["detections"]):
+            if item["category"] != "red-ball":
+                continue
+            ambiguity = copy.deepcopy(item.get("identity_ambiguity") or {})
+            ident = f"red-discovery-{len(self._discovery_records) + len(current) + 1}"
+            row = {"id": ident, "hypothesis_id": ident, "category": "red-ball",
+                "frame_id": frame["frame_id"], "observation_index": observation_index,
+                "perception_observation_index": len(self._observed_frames), "tick": frame["tick"],
+                "round": frame["round"], "simulation_time_s": frame["simulation_time_s"],
+                "detection_index": index, "bbox": copy.deepcopy(frame["raw_observation"]["detections"][index]["bbox"]),
+                "odometry": copy.deepcopy(frame["odometry"]), "position_m": copy.deepcopy(item["position_m"]),
+                "raw_distance_cm": item.get("raw_distance_cm"),
+                "raw_bearing_deg": item.get("raw_bearing_deg"),
+                "position_is_range_clipped": item.get("raw_distance_cm") == 100,
+                "initial_object_id": item.get("track_id") if not ambiguity else None,
+                "observed_track_id": item.get("track_id"), "identity_ambiguity": ambiguity,
+                "candidate_ids": copy.deepcopy(ambiguity.get("candidate_ids", [])),
+                "reason": ambiguity.get("reason") or ("associated_observed_identity" if item.get("track_id")
+                                                        else "unassociated_target_detection"),
+                "admission_reason": item.get("reason")}
+            item["discovery_id"] = ident
+            current.append(row)
+        # Link observations only by a bidirectionally unique pixel-consistent
+        # edge. Same-frame detections always remain separate source obligations.
+        edges = {r["id"]: [key for key, old in previous.items()
+            if discovery_pixel_match(self.camera, old, r["position_m"])
+            and discovery_pixel_match(self.camera, r, old["position_m"])
+            and not self._discovery_motion_boundaries(old, r)] for r in current}
+        for row in current:
+            candidates = edges[row["id"]]
+            if len(candidates) == 1 and sum(candidates[0] in v for v in edges.values()) == 1:
+                row["hypothesis_id"] = candidates[0]
+                self._discovery_associations.append({"rule": "mutually_unique_original_pixel_views/v1",
+                    "from_discovery_id": previous[candidates[0]]["id"], "to_discovery_id": row["id"],
+                    "hypothesis_id": candidates[0], "candidate_matrix": copy.deepcopy(edges)})
+        self._discovery_records.extend(current)
+        self._resolve_discoveries()
+
+    def note_manipulation_boundary(self, motion, after_observation=None):
+        """Record a public grab/release command window, including uncertain calls.
+
+        A command intent does not prove that an action happened, but it prevents
+        a static-object proof from silently crossing a possibly moving object.
+        A later observed result enriches the same window without erasing intent.
         """
-        return {"schema": "brain-discovery-evidence/v1",
-                "unresolved": copy.deepcopy(self._unresolved_discoveries)}
+        if motion.get("method") not in {"grab", "release"}:
+            return
+        before = motion.get("before_observation")
+        window = next((w for w in self._discovery_motion_windows
+                       if w["method"] == motion["method"] and w["before_observation"] == before), None)
+        if window is None:
+            window = {"method": motion["method"], "before_observation": before,
+                      "after_observation": None, "outcome_unknown": True, "observations": []}
+            self._discovery_motion_windows.append(window)
+        evidence = {"after_observation": after_observation,
+                    "outcome_unknown": motion.get("outcome_unknown", after_observation is None)}
+        if motion.get("bridge_request_id") is not None:
+            evidence["bridge_request_id"] = motion["bridge_request_id"]
+        if evidence not in window["observations"]:
+            window["observations"].append(evidence)
+        if after_observation is not None:
+            window.update(after_observation=after_observation, outcome_unknown=evidence["outcome_unknown"])
+
+    def _discovery_motion_boundaries(self, source, support):
+        boundaries = []
+        first, last = source.get("observation_index"), support.get("observation_index")
+        for window in self._discovery_motion_windows:
+            end = window["after_observation"]
+            if end is None:
+                crossed = (last is None or window["before_observation"] is None
+                           or last > window["before_observation"])
+            else:
+                crossed = first is None or last is None or first < end <= last
+            if crossed:
+                boundaries.append(copy.deepcopy(window))
+        source_time, support_time = source["simulation_time_s"], support["simulation_time_s"]
+        for event in self._action_evidence:
+            if event.get("action") not in {"pick", "place", "release_unverified", "release_recovery"}:
+                continue
+            evidence = event.get("evidence") or {}
+            release = evidence.get("release_observation") or {}
+            event_index = (evidence.get("grasp_chain") or {}).get("grab", {}).get("after_observation")
+            if event_index is None:
+                event_index = (release.get("command_ref") or {}).get("after_observation")
+            frame_id = release.get("frame_id") or evidence.get("frame_id")
+            if isinstance(event_index, int) and first is not None and last is not None:
+                crossed = first < event_index <= last
+            elif str(frame_id) in self._observed_frames:
+                index = self._observed_frames[str(frame_id)]["index"] + 1
+                crossed = source["perception_observation_index"] < index <= support["perception_observation_index"]
+            else:
+                boundary = release.get("simulation_time_s", event.get("simulation_time_s"))
+                crossed = not isinstance(boundary, (float, int)) or source_time <= boundary <= support_time
+            if crossed:
+                boundaries.append({"action": event["action"], "frame_id": frame_id,
+                                   "after_observation": event_index})
+        return boundaries
+
+    def _resolve_discoveries(self):
+        if not self._discovery_records:
+            return
+        indexed = {r["id"]: r for r in self._discovery_records}
+        # Delayed confirmation may supply an earlier actual grab reference.
+        # Preserve the old proof and its explicit revocation instead of keeping
+        # a stale resolution or deleting the original discovery.
+        for key, proof in list(self._discovery_resolutions.items()):
+            crossed = [b for ref in proof["support_refs"]
+                       for b in self._discovery_motion_boundaries(indexed[key], indexed[ref])]
+            if crossed:
+                self._discovery_resolution_revocations.append({"resolution": copy.deepcopy(proof),
+                    "reason": "newly_observed_manipulation_boundary", "motion_boundaries": crossed})
+                del self._discovery_resolutions[key]
+        identities = {self._discovery_canonical(row["id"]): row for row in self.objects()
+                      if row["category"] == "red-ball"}
+        by_identity, frames = {}, {}
+        for row in self._discovery_records:
+            frames.setdefault(row["frame_id"], []).append(row)
+            oid = self._discovery_canonical(row.get("initial_object_id"))
+            if oid is not None:
+                by_identity.setdefault(oid, []).append(row)
+        for records in frames.values():
+            pending = [r for r in records if self._discovery_pending(r)
+                       and r["id"] not in self._discovery_resolutions]
+            if not pending:
+                continue
+            matrix, supports = {}, {}
+            for source in records:
+                matrix[source["id"]] = []
+                for oid, views in by_identity.items():
+                    # Identity membership alone is not evidence that an old
+                    # pixel belongs to it. Require new, separated raw views.
+                    later = [r for r in views if r["perception_observation_index"] > source["perception_observation_index"]
+                        and r["simulation_time_s"] >= source["simulation_time_s"]
+                        and discovery_pixel_match(self.camera, source, r["position_m"])
+                        and not self._discovery_motion_boundaries(source, r)]
+                    pair = next(((a, b) for i, a in enumerate(later) for b in later[i+1:]
+                        if math.hypot(a["odometry"]["rightCm"]-b["odometry"]["rightCm"],
+                                      a["odometry"]["forwardCm"]-b["odometry"]["forwardCm"]) / 100
+                           >= self.wm.assoc_cfg.min_hit_pose_gap_m
+                        and discovery_pixel_match(self.camera, a, b["position_m"])
+                        and discovery_pixel_match(self.camera, b, a["position_m"])), None)
+                    if later:
+                        matrix[source["id"]].append(oid)
+                    if pair:
+                        supports[(source["id"], oid)] = pair
+            for source in pending:
+                candidates = matrix[source["id"]]
+                if len(candidates) != 1 or sum(candidates[0] in v for v in matrix.values()) != 1:
+                    continue
+                oid = candidates[0]
+                if (source["id"], oid) not in supports:
+                    continue
+                target = identities.get(oid)
+                times = self._times.get(oid, {})
+                poses = self._accepted_poses.get(oid, [])
+                if (target is None or times.get("confirmed_s") is None
+                        or target.get("identity_ambiguity") or len(poses) < self.wm.decay_cfg.confirm_hits
+                        or target["state"] not in {"CONFIRMED", "HELD", "DELIVERED"}):
+                    continue
+                old_id = source.get("initial_object_id")
+                if old_id is not None and old_id != oid:
+                    # A retired tentative identity is not erased. Competing
+                    # archived identities also prevent a unique replacement.
+                    rivals = [r["id"] for r in self.objects() if r["category"] == "red-ball"
+                        and self._discovery_canonical(r["id"]) != oid
+                        and math.hypot(r["position_m"]["x"]-target["position_m"]["x"],
+                                       r["position_m"]["z"]-target["position_m"]["z"]) <= .30]
+                    if rivals != [old_id]:
+                        continue
+                pair = supports[(source["id"], oid)]
+                opposing = []
+                for rival in {self._discovery_canonical(x) for x in source["candidate_ids"]} - {oid}:
+                    for support in pair:
+                        seen_rivals = [r for r in frames[support["frame_id"]]
+                            if self._discovery_canonical(r.get("initial_object_id")) == rival
+                            and not discovery_pixel_match(self.camera, source, r["position_m"])]
+                        if len(seen_rivals) != 1:
+                            break
+                        opposing.append(seen_rivals[0]["id"])
+                    else:
+                        continue
+                    break
+                else:
+                    self._discovery_resolutions[source["id"]] = {
+                        "discovery_id": source["id"], "canonical_object_id": oid,
+                        "previous_object_id": old_id, "rule": "independent_views_original_pixels_unique_identity/v1",
+                        "source_ref": source["id"], "support_refs": [r["id"] for r in pair],
+                        "opposing_refs": [r["id"] for r in records if r["id"] != source["id"]],
+                        "opposing_identity_refs": opposing,
+                        "candidate_matrix": copy.deepcopy(matrix), "motion_boundaries": [],
+                        "confirmation_evidence": {"confirmed_s": times["confirmed_s"],
+                            "hit_poses": copy.deepcopy(poses), "required_hit_count": self.wm.decay_cfg.confirm_hits,
+                            "min_hit_pose_gap_m": self.wm.assoc_cfg.min_hit_pose_gap_m},
+                        "resolved_frame_id": self._last_frame,
+                        "resolved_simulation_time_s": self._last_timestamp}
 
     def begin_release(self, object_id, aim_position):
         """Register a brain-side competitor before the release's first frame."""

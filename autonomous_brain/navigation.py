@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v8"
+VERSION = "autonomous-brain-navigation/v9"
 
 
 def evidence_version(value):
@@ -101,6 +101,32 @@ class RoadMemory:
                 matched = [i for i, e in enumerate(node["exits"]) if e["id"] == binding["exit_id"]]
                 if len(matched) == 1:
                     self._exit_anchors.setdefault((node["id"], matched[0]), []).append(copy.deepcopy(anchor))
+        # Identity changes rewrite every derived view by raw observation ref;
+        # raw frames/motions and the ledger's before-resolution copies remain.
+        for selection in self._selections.values():
+            anchor = self._frame_anchors.get(selection["anchor"]["observation_index"])
+            if anchor is not None:
+                selection["anchor"] = copy.deepcopy(anchor)
+                node = next(n for n in self.nodes if n["id"] == anchor["node_id"])
+                matches = [i for i, e in enumerate(node["exits"])
+                           if abs(wrap(e["heading_deg"] - selection["departure_heading_deg"])) <= 5]
+                if len(matches) == 1:
+                    selection["exit_index"] = matches[0]
+        for trip in self._trips:
+            semantic = self._semantic.trips.get(trip["trip_id"])
+            if semantic is None:
+                continue
+            for side in ("departure", "arrival"):
+                trip[side] = copy.deepcopy(self._frame_anchors[trip[side]["observation_index"]])
+            node = next(n for n in self.nodes if n["id"] == trip["departure"]["node_id"])
+            trip["departure_exit_index"] = next(i for i, e in enumerate(node["exits"])
+                                                 if e["id"] == semantic["departure"]["exit_id"])
+        segments = list(self._road_segments.values())
+        segments += [e for adjacent in self._approach_edges.values() for e in adjacent.values()]
+        for segment in segments:
+            for side in ("departure", "arrival"):
+                raw = segment[side]
+                raw["registered_junction_anchor"] = copy.deepcopy(self._frame_anchors.get(raw["observation_index"]))
 
     def current_node(self, odo):
         anchor = self._frame_anchors.get(self._latest_index)
@@ -125,6 +151,9 @@ class RoadMemory:
 
     def exploration_status(self):
         return self._semantic.status()
+
+    def reconnection_state(self):
+        return self._semantic.reconnection_state()
 
     def unexplored(self):
         return self.exploration_status()["pending_exit_count"]
@@ -434,6 +463,8 @@ class RoadMemory:
         sensor = observation.get("observation")
         if isinstance(sensor, dict):
             current["observation"] = {k: sensor[k] for k in ("frameId", "tick") if k in sensor}
+        if isinstance(observation.get("holding"), dict):
+            current["holding"] = copy.deepcopy(observation["holding"])
         old_public = self._semantic.frames.get(current["observation_index"])
         if old_public is not None and old_public != current:
             self._invalid_indices.add(current["observation_index"])
@@ -613,7 +644,7 @@ class RoadMemory:
         return copy.deepcopy(self._trips)
 
     def observation_anchor(self, observation_index):
-        """Read-only anchor captured at update time, never remapped later."""
+        """Read-only raw observation anchor with the current proved identity."""
         if observation_index in self._invalid_indices:
             return None
         return copy.deepcopy(self._frame_anchors.get(observation_index))

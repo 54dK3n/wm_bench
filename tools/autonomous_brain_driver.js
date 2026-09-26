@@ -13,7 +13,7 @@ const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v8";
+const VERSION = "wm-autonomous-brain-driver/v9";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -187,12 +187,27 @@ async function waitFor(check, label, timeoutMs = 180000) {
 
 function validateFormalLLMConfig(env = process.env) {
   for (const name of LLM_REQUIRED_KEYS) assert.ok(env[name], `${name} must be configured before a formal run`);
+  let endpointValid = false;
+  const endpoint = env.LLM_BASE_URL;
+  if (typeof endpoint === 'string' && /^https?:\/\/[^/?#]+/i.test(endpoint)
+      && !/^https?:\/\/[^/?#]*@/i.test(endpoint) && !/[\\\s\u0000-\u001f\u007f]/.test(endpoint)) {
+    try {
+      const url = new URL(endpoint);
+      endpointValid = ['http:', 'https:'].includes(url.protocol) && Boolean(url.hostname)
+        && !url.username && !url.password && !url.search && !url.hash
+        && (!url.port || Number(url.port) >= 1);
+    } catch { /* Parser errors can contain configuration; discard them. */ }
+  }
+  if (!endpointValid) throw new Error('invalid_configuration:LLM_BASE_URL');
+  if (typeof env.LLM_API_KEY !== 'string' || /[\u0000-\u001f\u007f]/.test(env.LLM_API_KEY)) {
+    throw new Error('invalid_configuration:LLM_API_KEY');
+  }
   let temperature;
   try { temperature = JSON.parse(env.LLM_TEMPERATURE ?? '0'); }
   catch { throw new Error('Formal run requires temperature=0'); }
-  assert.equal(env.LLM_MODEL, FORMAL_MODEL, 'Formal run requires deepseek-flash');
-  assert.equal(temperature, 0, 'Formal run requires temperature=0');
-  assert.equal(env.LLM_THINKING, 'disabled', 'Formal run requires thinking=disabled');
+  if (env.LLM_MODEL !== FORMAL_MODEL) throw new Error('Formal run requires deepseek-flash');
+  if (temperature !== 0) throw new Error('Formal run requires temperature=0');
+  if (env.LLM_THINKING !== 'disabled') throw new Error('Formal run requires thinking=disabled');
   return {model: env.LLM_MODEL, temperature, thinking: env.LLM_THINKING,
     response_format: {type: 'json_object'}, stream: true, formal_run: true};
 }

@@ -24,7 +24,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v14"
+RUNTIME_VERSION = "autonomous-brain-runtime/v15"
 
 
 def dump(path, value):
@@ -232,6 +232,8 @@ class Runtime:
         observation = self.bridge.call("observe", {"category": None, "confidence": 0})
         if odo["tick"] != observation["tick"] or road["tick"] != odo["tick"]:
             raise RuntimeError("sensor snapshots do not share a simulation tick")
+        if motion is not None and hasattr(self.perception, "note_manipulation_boundary"):
+            self.perception.note_manipulation_boundary(motion, self.observation_count + 1)
         perception = self.perception.update(observation, odo,
             simulation_time_s=self.bridge.seconds, round_index=self.round,
             observation_index=self.observation_count + 1)
@@ -242,6 +244,7 @@ class Runtime:
                          "road": road, "holding": holding, "observation": observation,
                          "perception": perception, "objects": self.perception.objects(),
                          "discovery_evidence": self.perception.discovery_evidence()}
+        self.actions.observe_pending_grasp(self.snapshot)
         finalized_motion = (dict(motion, after_observation=self.observation_count)
                             if motion is not None else None)
         traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
@@ -273,13 +276,30 @@ class Runtime:
         task_spec = getattr(self, "task_spec", None) or parse_task(self.config["task"])
         exploration = (self.roads.exploration_status()
                        if hasattr(self.roads, "exploration_status") else None)
+        discoveries = (self.perception.discovery_evidence()
+                       if hasattr(self.perception, "discovery_evidence") else None)
+        pending_discoveries = (discoveries or {}).get("unresolved", [])
+        pending_hypotheses = {}
+        for item in pending_discoveries:
+            pending_hypotheses[item.get("hypothesis_id", item["id"])] = item
+        discovery_state = {"schema": (discoveries or {}).get("schema"),
+            "pending_count": len(pending_hypotheses), "pending_record_count": len(pending_discoveries),
+            "pending": [{key: copy.deepcopy(item[key]) for key in (
+                "id", "hypothesis_id", "frame_id", "observation_index", "position_m",
+                "position_is_range_clipped", "raw_bearing_deg", "candidate_ids", "reason") if key in item}
+                for item in list(pending_hypotheses.values())[-6:]],
+            "required_evidence": "fresh_separated_views_with_unique_pixel_and_identity_support"}
+        for item in discovery_state["pending"]:
+            item["candidate_ids"] = [value[:128] for value in item.get("candidate_ids", [])[:12]
+                                     if isinstance(value, str)]
+            if isinstance(item.get("reason"), str):
+                item["reason"] = item["reason"][:256]
         completion = completion_progress(rows, self.perception.action_evidence(), task_spec,
             holding=self.snapshot["holding"]["holding"], held_object_id=self.held_object_id,
             pending_grasp=self.pending_grasp, nodes=len(self.roads.nodes),
             unexplored=self.roads.unexplored(), exploration=exploration,
             observed_detections=self.snapshot.get("perception", {}).get("detections"),
-            discovery_evidence=(self.perception.discovery_evidence()
-                                if hasattr(self.perception, "discovery_evidence") else None))
+            discovery_evidence=discoveries)
         return {"task": self.config["task"], "round": self.round,
                 "task_spec": copy.deepcopy(task_spec),
                 "simulation_seconds": self.bridge.seconds,
@@ -295,6 +315,7 @@ class Runtime:
                     "object_bearing_to_relative_turn": "negate"},
                 "objects": objects,
                 "completion": completion,
+                "discovery": discovery_state,
                 "navigation": (self.actions.navigation_state() if hasattr(self, "actions")
                                and hasattr(self.actions, "navigation_state") else {}),
                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],

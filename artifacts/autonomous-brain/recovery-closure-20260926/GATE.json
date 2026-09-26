@@ -1,0 +1,53 @@
+{
+  "schema": "brain-recovery-joint-preflight/v1",
+  "status": "PASS",
+  "python": {
+    "tests": 1323,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "node": {
+    "tests": 29,
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0
+  },
+  "frozen_platform_boundary": {
+    "tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "historical_model_replay": {
+    "rounds": 111,
+    "calls": 115,
+    "network_calls": 0,
+    "exact_match": true,
+    "scope": "original_model_transcript_only"
+  },
+  "historical_integrity": {
+    "stage1_original_and_restore": 79,
+    "prior_stop_original_and_restore": 95,
+    "platform_unchanged_files": 58,
+    "world_model_unchanged_files": 50
+  },
+  "curved_road_diagnostic": {
+    "scope": "synthetic_public_sensors_not_formal",
+    "passed": true
+  },
+  "formal_runs_at_gate": 0,
+  "source_inventory": "raw/gate/integrity-final.json",
+  "gate_commands": [
+    "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2 python3 -m pytest -q tests/test_brain_*.py --junitxml=artifacts/autonomous-brain/recovery-closure-20260926/raw/gate/python-full.xml",
+    "node --test tools/tests/test_autonomous_brain_*.js",
+    "node --test workspaces/guangyang-platform/projects/car-python/tests/robot-bridge.test.js",
+    "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2 python3 tools/diagnose_road_reposition.py --output <new-json>",
+    "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2 python3 tools/verify_brain_revision_inputs.py --restore artifacts/autonomous-brain/recovery-closure-20260926/raw/restored-stage1 --out <new-json>"
+  ],
+  "notes": [
+    "Development subsets overlap; counts are not summed.",
+    "Frozen-platform first sandbox attempt had 2 localhost EPERM environment failures; unchanged authorized retry passed all 15.",
+    "Fixed-sensor historical diagnostics are not a closed-loop acceptance gate; sufficient fresh-view recovery is tested separately."
+  ]
+}

@@ -22,7 +22,7 @@ test("local config accepts literal values, comments and only the allowed LLM key
     LLM_MODEL: "$(do-not-execute) ${NO_EXPANSION}",
     LLM_TEMPERATURE: "0", LLM_THINKING: "disabled",
   });
-  assert.equal(VERSION, "wm-autonomous-brain-driver/v8");
+  assert.equal(VERSION, "wm-autonomous-brain-driver/v9");
 });
 
 test("existing environment wins and missing files are optional", () => {
@@ -72,6 +72,29 @@ test("formal configuration fails closed without changing requested settings", ()
     assert.deepEqual(configured, original);
   }
   assert.ok(!JSON.stringify(validateFormalLLMConfig(valid)).includes('synthetic-key'));
+});
+
+test("malformed endpoint and wrong model settings never echo configuration in errors", () => {
+  const marker = 'endpoint-sensitive-synthetic-marker';
+  const valid = {LLM_API_KEY: 'synthetic-key', LLM_BASE_URL: 'https://example.invalid/v1',
+    LLM_MODEL: 'deepseek-flash', LLM_TEMPERATURE: '0', LLM_THINKING: 'disabled'};
+  for (const endpoint of [marker, `file:///${marker}`, `https://${marker}@example.invalid`,
+    `https://example.invalid/?token=${marker}`, `https://example.invalid/#${marker}`,
+    `https://[${marker}`, `https://example.invalid:${marker}`, `https:///missing/${marker}`,
+    ` https://example.invalid/${marker}`, `https://example.invalid/\n${marker}`]) {
+    assert.throws(() => validateFormalLLMConfig({...valid, LLM_BASE_URL: endpoint}), error => {
+      assert.equal(error.message, 'invalid_configuration:LLM_BASE_URL');
+      assert.ok(!error.stack.includes(marker));
+      assert.equal(error.cause, undefined);
+      return true;
+    });
+  }
+  for (const name of ['LLM_MODEL', 'LLM_TEMPERATURE', 'LLM_THINKING']) {
+    assert.throws(() => validateFormalLLMConfig({...valid, [name]: marker}), error => {
+      assert.ok(!error.stack.includes(marker));
+      return true;
+    });
+  }
 });
 
 test("default stage-1 instruction and limits are explicit; stage-1 cannot unlock other layouts", () => {

@@ -7,11 +7,11 @@ from test_brain_stage1_source_proof import formal_proof, verdict
 from test_brain_evaluation import fixture_data
 
 
-@pytest.fixture
-def v8_proof(formal_proof):
+@pytest.fixture(params=["wm-autonomous-brain-driver/v8","wm-autonomous-brain-driver/v9"])
+def v8_proof(formal_proof, request):
     data = formal_proof
     manifest = data["source_manifest"]
-    manifest["version"] = "wm-autonomous-brain-driver/v8"
+    manifest["version"] = request.param
     manifest["brain"]["autonomous_brain/road_evidence.py"] = "5" * 64
     data["summary"]["source_sha256"]["road_evidence.py"] = "5" * 64
     manifest["evaluatorDependencies"] = {

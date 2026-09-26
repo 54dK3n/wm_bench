@@ -410,79 +410,163 @@ def _audit_topology(summary, observations, motions, record, bridge, captures):
             fail("topology_traversal_progress_not_observed",traversal_id=tid);continue
         verified_trips[tid]=selected;covered.add(selected)
 
-    # Alias claims retain their original nodes. A label alone cannot shrink N.
-    valid_aliases=set()
+    # Re-evaluate each public proof independently; retained alias labels alone
+    # can never shrink the node denominator or retire a road obligation.
     valid_nonroad_returns=[]
+    def alias_proof_valid(proof,cid,anchor_indices=None):
+        a,b=proof.get("from_observation"),proof.get("to_observation")
+        first,last=proof.get("first_observation"),proof.get("last_observation")
+        kind=proof.get("kind")
+        valid=False
+        if (a not in anchor_truth or b not in anchor_truth or anchor_truth[a]!=anchor_truth[b]
+                or type(first) is not int or type(last) is not int or not a<b==last or first>=last
+                or kind != "route_endpoint_revisit" and first>a or (anchor_indices is not None and b not in anchor_indices)
+                or canonical.get(anchors[a].get("node_id"))!=cid or canonical.get(anchors[b].get("node_id"))!=cid):
+            return False
+        oa,ob=by_index[a]["odometry"],by_index[b]["odometry"]
+        ha=[wrap(oa["headingDeg"]+e["angleDeg"]) for e in by_index[a]["road"].get("exits",[])]
+        hb=[wrap(ob["headingDeg"]+e["angleDeg"]) for e in by_index[b]["road"].get("exits",[])]
+        if (len(ha)!=len(hb) or any(sum(abs(wrap(x-y))<=5 for y in hb)!=1 for x in ha)
+                or any(sum(abs(wrap(x-y))<=5 for x in ha)!=1 for y in hb)):
+            return False
+        good,_=window_refs(first,last,proof.get("motion_refs",[]),identity=True,nonroad=kind=="observed_nonroad_return")
+        if not good: return False
+        if kind=="continuous_node_episode":
+            valid=all(anchor_truth.get(i)==anchor_truth[a] for i in range(first,last+1))
+        elif kind=="structural_revisit":
+            tids=proof.get("traversal_ids",[])
+            valid=bool(tids) and all(t in verified_trips for t in tids)
+            if valid:
+                sequence=[trips[t] for t in tids]
+                valid=(sequence[0]["first_observation"]>=first and sequence[-1]["last_observation"]<=last
+                    and anchor_truth.get(sequence[0]["first_observation"])==anchor_truth[a]
+                    and anchor_truth.get(sequence[-1]["last_observation"])==anchor_truth[b]
+                    and len(tids)==len(set(tids))
+                    and all(left["last_observation"]<=right["first_observation"]
+                            and anchor_truth.get(left["last_observation"])==anchor_truth.get(right["first_observation"])
+                            for left,right in zip(sequence,sequence[1:])))
+        elif kind=="route_endpoint_revisit":
+            current=[t for t in verified_trips if trips[t]["first_observation"]==first and trips[t]["last_observation"]==last]
+            previous=proof.get("traversal_ids",[])
+            valid=bool(current and previous) and all(t in verified_trips and trips[t]["last_observation"]<first for t in previous)
+            if valid:
+                current_key=verified_trips[current[0]]
+                gap=math.hypot(oa["rightCm"]-ob["rightCm"],oa["forwardCm"]-ob["forwardCm"])
+                valid=gap<15 and all(verified_trips[t][0]==current_key[0] for t in previous)
+                start=by_index[first]["odometry"]
+                for tid in previous:
+                    old=trips[tid]
+                    oldstart=old["first_observation"] if verified_trips[tid]==current_key else old["last_observation"]
+                    oldend=old["last_observation"] if verified_trips[tid]==current_key else old["first_observation"]
+                    old_odo=by_index[oldstart]["odometry"]
+                    start_gap=math.hypot(start["rightCm"]-old_odo["rightCm"],start["forwardCm"]-old_odo["forwardCm"])
+                    oldtravel=by_index[old["last_observation"]]["odometry"]["distanceCm"]-by_index[old["first_observation"]]["odometry"]["distanceCm"]
+                    valid=valid and anchor_truth[oldend]==anchor_truth[a] and abs((ob["distanceCm"]-start["distanceCm"])-oldtravel)<=start_gap+gap+.2
+        elif kind=="observed_anchor_return":
+            valid=(first==a and oa["rightCm"]==ob["rightCm"] and oa["forwardCm"]==ob["forwardCm"]
+                and ob["distanceCm"]>oa["distanceCm"] and not proof.get("traversal_ids")
+                and all(pairs[(r["before_observation"],r["after_observation"])]["method"] in {"forward","backward","turn"}
+                    for r in proof.get("motion_refs",[])))
+        elif kind=="observed_nonroad_return":
+            valid=(first==a and math.hypot(ob["rightCm"]-oa["rightCm"],ob["forwardCm"]-oa["forwardCm"])<=.2
+                and abs(wrap(ob["headingDeg"]-oa["headingDeg"]))<=.2
+                and any(by_index[i]["road"].get("onRoad") is False for i in range(first+1,last))
+                and ob["distanceCm"]>oa["distanceCm"])
+            if valid:
+                valid_nonroad_returns.append(proof)
+        return valid
+
+    resolutions=unique_index(evidence.get("identity_resolutions",[]),lambda r:r.get("id"),failures,"topology_identity_resolution_id")
+    exit_aliases=unique_index(evidence.get("exit_aliases",[]),lambda r:r.get("id"),failures,"topology_exit_alias_id")
+    valid_resolutions=set()
+    for rid,resolution in resolutions.items():
+        old_id,cid=resolution.get("from_node_id"),resolution.get("canonical_node_id")
+        proof=resolution.get("proof",{});before=resolution.get("before",{})
+        old_nodes={n.get("id"):n for n in before.get("nodes",[])}
+        old_anchors={a.get("observation_index"):a for a in before.get("anchors",[])}
+        old_exits={e.get("id"):e for e in before.get("exits",[])}
+        old_trips={t.get("id"):t for t in before.get("traversals",[])}
+        indices=resolution.get("anchor_indices",[]);mapping=resolution.get("exit_id_map",{})
+        first,last=proof.get("first_observation"),proof.get("last_observation")
+        route=proof.get("route_revisit_proof",{})
+        current=[t for t in verified_trips if trips[t]["first_observation"]==route.get("first_observation")
+                 and trips[t]["last_observation"]==route.get("last_observation")]
+        valid=(resolution.get("rule")=="completed_route_revisit_resolves_old_exact_anchor"
+            and old_id in old_nodes and old_id in nodes and cid in nodes and cid!=old_id
+            and canonical.get(old_id)==cid and canonical.get(cid)==cid and nodes[cid].get("status")=="confirmed"
+            and old_nodes[old_id].get("status")=="unresolved" and old_nodes[old_id].get("canonical_id")==old_id
+            and proof.get("kind")=="retrospective_route_identity_resolution" and proof.get("resolution_id")==rid
+            and bool(indices) and len(indices)==len(set(indices)) and set(indices)==set(old_anchors)
+            and set(indices)==set(old_nodes[old_id].get("anchor_indices",[]))
+            and first==min(indices) and proof.get("from_observation")==first and proof.get("to_observation")==last
+            and last in anchors and first<last and canonical.get(anchors[last]["node_id"])==cid
+            and route.get("kind")=="route_endpoint_revisit" and route.get("last_observation")==last
+            and alias_proof_valid(route,cid) and len(current)==1
+            and proof.get("traversal_ids")==route.get("traversal_ids",[])+current
+            and proof in nodes[old_id].get("merge_evidence_refs",[]) and proof in nodes[cid].get("merge_evidence_refs",[])
+            and {"status":"unresolved","canonical_id":old_id,"resolution_id":rid} in nodes[old_id].get("identity_history",[])
+            and all(n in nodes and canonical.get(n)==cid and original.get("canonical_id")==old_id for n,original in old_nodes.items()))
+        if valid:
+            valid=window_refs(first,last,proof.get("motion_refs",[]),identity=True)[0]
+        if valid:
+            valid=(any(cid in a.get("candidate_ids",[]) for a in old_anchors.values())
+                and set(mapping)==set(old_exits) and len(set(mapping.values()))==len(mapping)
+                and len(old_nodes)==len(before.get("nodes",[])) and len(old_exits)==len(before.get("exits",[]))
+                and len(old_trips)==len(before.get("traversals",[])))
+        for index,original in old_anchors.items():
+            after=anchors.get(index,{})
+            original_bindings=original.get("exit_bindings",[])
+            remapped=[dict(binding,exit_id=mapping.get(binding.get("exit_id"),binding.get("exit_id"))) for binding in original_bindings]
+            history={"node_id":original.get("node_id"),"candidate_ids":original.get("candidate_ids"),
+                     "exit_bindings":original_bindings,"resolution_id":rid}
+            valid=valid and (original.get("node_id") in old_nodes and original.get("valid") is True
+                and original.get("position_m")==anchors[last].get("position_m")==after.get("position_m")
+                and anchor_truth.get(index)==anchor_truth.get(last) and original.get("heading_deg")==after.get("heading_deg")
+                and original.get("fresh_headings_deg")==after.get("fresh_headings_deg")
+                and history in after.get("identity_history",[]) and remapped==after.get("exit_bindings"))
+        for eid,original in old_exits.items():
+            target=exits.get(mapping.get(eid),{})
+            valid=valid and (eid not in exits and original.get("node_id") in old_nodes and target.get("node_id")==cid
+                and abs(wrap(original.get("heading_deg",math.inf)-target.get("heading_deg",math.inf)))<=5
+                and set(original.get("observation_refs",[]))=={i for i,a in old_anchors.items()
+                    if any(b.get("exit_id")==eid for b in a.get("exit_bindings",[]))}
+                and set(original.get("observation_refs",[]))<=set(target.get("observation_refs",[]))
+                and set(original.get("completion_traversal_ids",[]))<=set(target.get("completion_traversal_ids",[]))
+                and exit_aliases.get(eid)=={"id":eid,"canonical_exit_id":mapping[eid],"resolution_id":rid})
+        affected={tid for tid,t in trips.items() if t["last_observation"]<=last and
+                  any(t[side].get("observation_index") in old_anchors for side in ("departure","arrival"))}
+        valid=valid and set(old_trips)==affected
+        for tid,original in old_trips.items():
+            expected={**original,"departure":dict(original.get("departure",{})),"arrival":dict(original.get("arrival",{}))}
+            for side in ("departure","arrival"):
+                if expected[side].get("node_id") in old_nodes:expected[side]["node_id"]=cid
+            expected["departure"]["exit_id"]=mapping.get(expected["departure"].get("exit_id"),expected["departure"].get("exit_id"))
+            valid=valid and (tid in verified_trips and expected==trips.get(tid)
+                and {original.get("departure",{}).get("node_id"),original.get("arrival",{}).get("node_id")}!={old_id,cid})
+        if valid:valid_resolutions.add(rid)
+        else:fail("topology_retrospective_identity_resolution_invalid",resolution_id=rid)
+    for eid,alias in exit_aliases.items():
+        if alias.get("resolution_id") not in valid_resolutions:
+            fail("topology_exit_alias_resolution_invalid",exit_id=eid)
+
+    valid_aliases=set()
     for nid,node in nodes.items():
-        cid=canonical.get(nid)
-        anchor_indices=node.get("anchor_indices",[])
+        cid=canonical.get(nid);anchor_indices=node.get("anchor_indices",[])
         if not anchor_indices or any(i not in anchors or canonical.get(anchors[i].get("node_id"))!=cid for i in anchor_indices):
             fail("topology_node_anchor_reference_invalid",node_id=nid)
         if cid==nid:
-            if node.get("status")!="confirmed": fail("topology_node_unresolved",node_id=nid)
+            if node.get("status")!="confirmed":fail("topology_node_unresolved",node_id=nid)
             continue
-        refs=node.get("merge_evidence_refs",[])
         valid=False
-        for proof in refs:
-            a,b=proof.get("from_observation"),proof.get("to_observation")
-            first,last=proof.get("first_observation"),proof.get("last_observation")
-            kind=proof.get("kind")
-            if (a not in anchor_truth or b not in anchor_truth or anchor_truth[a]!=anchor_truth[b]
-                    or type(first) is not int or type(last) is not int or not a<b==last or first>=last
-                    or kind != "route_endpoint_revisit" and first>a or b not in anchor_indices
-                    or canonical.get(anchors[a].get("node_id"))!=cid or canonical.get(anchors[b].get("node_id"))!=cid):
-                continue
-            oa,ob=by_index[a]["odometry"],by_index[b]["odometry"]
-            ha=[wrap(oa["headingDeg"]+e["angleDeg"]) for e in by_index[a]["road"].get("exits",[])]
-            hb=[wrap(ob["headingDeg"]+e["angleDeg"]) for e in by_index[b]["road"].get("exits",[])]
-            if (len(ha)!=len(hb) or any(sum(abs(wrap(x-y))<=5 for y in hb)!=1 for x in ha)
-                    or any(sum(abs(wrap(x-y))<=5 for x in ha)!=1 for y in hb)):
-                continue
-            good,_=window_refs(first,last,proof.get("motion_refs",[]),identity=True,nonroad=kind=="observed_nonroad_return")
-            if not good: continue
-            if kind=="continuous_node_episode":
-                valid=all(anchor_truth.get(i)==anchor_truth[a] for i in range(first,last+1))
-            elif kind=="structural_revisit":
-                tids=proof.get("traversal_ids",[])
-                valid=bool(tids) and all(t in verified_trips for t in tids)
-                if valid:
-                    sequence=[trips[t] for t in tids]
-                    valid=(sequence[0]["first_observation"]>=first and sequence[-1]["last_observation"]<=last
-                        and anchor_truth.get(sequence[0]["first_observation"])==anchor_truth[a]
-                        and anchor_truth.get(sequence[-1]["last_observation"])==anchor_truth[b]
-                        and len(tids)==len(set(tids))
-                        and all(left["last_observation"]<=right["first_observation"]
-                                and anchor_truth.get(left["last_observation"])==anchor_truth.get(right["first_observation"])
-                                for left,right in zip(sequence,sequence[1:])))
-            elif kind=="route_endpoint_revisit":
-                current=[t for t in verified_trips if trips[t]["first_observation"]==first and trips[t]["last_observation"]==last]
-                previous=proof.get("traversal_ids",[])
-                valid=bool(current and previous) and all(t in verified_trips and trips[t]["last_observation"]<first for t in previous)
-                if valid:
-                    current_key=verified_trips[current[0]]
-                    gap=math.hypot(oa["rightCm"]-ob["rightCm"],oa["forwardCm"]-ob["forwardCm"])
-                    valid=gap<15 and all(verified_trips[t][0]==current_key[0] for t in previous)
-                    start=by_index[first]["odometry"]
-                    for tid in previous:
-                        old=trips[tid]
-                        oldstart=old["first_observation"] if verified_trips[tid]==current_key else old["last_observation"]
-                        oldend=old["last_observation"] if verified_trips[tid]==current_key else old["first_observation"]
-                        old_odo=by_index[oldstart]["odometry"]
-                        start_gap=math.hypot(start["rightCm"]-old_odo["rightCm"],start["forwardCm"]-old_odo["forwardCm"])
-                        oldtravel=by_index[old["last_observation"]]["odometry"]["distanceCm"]-by_index[old["first_observation"]]["odometry"]["distanceCm"]
-                        valid=valid and anchor_truth[oldend]==anchor_truth[a] and abs((ob["distanceCm"]-start["distanceCm"])-oldtravel)<=start_gap+gap+.2
-            elif kind=="observed_nonroad_return":
-                valid=(first==a and math.hypot(ob["rightCm"]-oa["rightCm"],ob["forwardCm"]-oa["forwardCm"])<=.2
-                    and abs(wrap(ob["headingDeg"]-oa["headingDeg"]))<=.2
-                    and any(by_index[i]["road"].get("onRoad") is False for i in range(first+1,last))
-                    and ob["distanceCm"]>oa["distanceCm"])
-                if valid:
-                    valid_nonroad_returns.append(proof)
-            if valid: break
-        if node.get("status")!="alias" or not valid:
-            fail("topology_alias_merge_evidence_invalid",node_id=nid)
-        else:
-            valid_aliases.add(nid)
+        for proof in node.get("merge_evidence_refs",[]):
+            if proof.get("kind")=="retrospective_route_identity_resolution":
+                rid=proof.get("resolution_id");resolution=resolutions.get(rid,{})
+                valid=(rid in valid_resolutions and resolution.get("from_node_id")==nid and resolution.get("canonical_node_id")==cid
+                    and resolution.get("proof")==proof)
+            else:valid=alias_proof_valid(proof,cid,anchor_indices)
+            if valid:break
+        if node.get("status")!="alias" or not valid:fail("topology_alias_merge_evidence_invalid",node_id=nid)
+        else:valid_aliases.add(nid)
     for cid,node in nodes.items():
         if canonical.get(cid)!=cid:
             continue
@@ -528,7 +612,8 @@ def _audit_topology(summary, observations, motions, record, bridge, captures):
         if resolved and item.get("kind")=="connection":
             resolved=trips[tid]["departure"]["exit_id"]==item.get("exit_id")
         elif resolved and item.get("kind")=="node":
-            resolved=canonical.get(item.get("node_id"))==canonical.get(trips[tid]["arrival"]["node_id"])
+            resolved=(canonical.get(item.get("node_id"))==canonical.get(trips[tid]["arrival"]["node_id"])
+                and (not item.get("resolution_identity_id") or item["resolution_identity_id"] in valid_resolutions))
         elif item.get("resolved") is True and item.get("kind")=="connection" and isinstance(item.get("resolution"),dict):
             resolution=item["resolution"]
             resolved=any(all(resolution.get(k)==proof.get(k) for k in ("kind","first_observation","last_observation","motion_refs"))
@@ -550,7 +635,7 @@ def _audit_topology(summary, observations, motions, record, bridge, captures):
     result.update(complete=not failures,brain_node_count=numerator,true_node_count=denominator,node_ratio=ratio,
         missing_nodes=missing_nodes,duplicate_nodes=duplicate_nodes,false_merges=false_merges,
         missing_directed_exits=missing_exits,verified_traversal_count=len(verified_trips),
-        valid_alias_count=len(valid_aliases),exploration=exploration,
+        valid_alias_count=len(valid_aliases),verified_identity_resolution_ids=sorted(valid_resolutions),exploration=exploration,
         node_truth_bindings={k:sorted(v) for k,v in node_truth.items()},
         failures=list(dict.fromkeys(failures)))
     return result

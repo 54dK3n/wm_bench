@@ -104,7 +104,7 @@ def test_literal_v12_extended_retry_replay_is_exact(tmp_path, state, limit, reco
 
 @pytest.mark.parametrize("version", ["autonomous-brain-llm/v12", "autonomous-brain-llm/v13",
                                      "autonomous-brain-llm/v14", "autonomous-brain-llm/v15",
-                                     "autonomous-brain-llm/v16"])
+                                     "autonomous-brain-llm/v16", "autonomous-brain-llm/v17"])
 @pytest.mark.parametrize("row_index", [0, 1])
 @pytest.mark.parametrize("field", ["transport_retry_limit", "transport_retry_index",
                                    "transport_retry_delay_s", "transport_diagnostics"])
@@ -162,4 +162,4 @@ def test_v13_prompt_transmits_hints_without_overriding_the_model_or_completion(t
                    "task_spec.quantity_mode", "known 时只按指令给出的 required_count", "无需探索完整地图",
                    "completion.ready_for_done", "unknown 时继续探索", "go_to 和 pick 只能选择当前状态为 CONFIRMED"):
         assert phrase in prompt
-    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v16"
+    assert read_rows(tmp_path / "live.jsonl")[0]["version"] == "autonomous-brain-llm/v17"

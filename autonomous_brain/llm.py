@@ -17,18 +17,19 @@ from pathlib import Path
 import time
 from typing import Any
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
-VERSION = "autonomous-brain-llm/v16"
+VERSION = "autonomous-brain-llm/v17"
 FORMAL_MODEL = "deepseek-flash"
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 17)}
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 18)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 17)}
+EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 18)}
 RETRY_METADATA_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
 DIAGNOSTICS_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
-NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 17)}
+NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 18)}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -43,7 +44,7 @@ exploration_hints 至多给出三个观测支持的探索建议：current_fresh_
 completion 中的 retired_unconfirmed_hypotheses 保留已归档且从未确认的 LOST 红球假设及依据，objects 的 retired_unconfirmed_hypothesis 分类只表示该历史假设不再阻止完成，不代表已送达，也不代表物体不存在；这些假设是否阻止完成由任务数量模式和 completion 决定；HELD、RELEASED_UNVERIFIED 和未解决交付身份不得忽略，后续新检测仍须正常确认。
 objects 中的 reacquired_as 仅表示 WorldModel 已依据原关联门控、双向唯一竞争检查和新轨迹自身的三个位点确认，记录了历史 LOST 身份到当前身份的重获绑定；历史对象和轨迹仍保留，不能自行猜测或合并物理身份。go_to/pick 只操作当前状态为 CONFIRMED 的身份，不操作历史 LOST ID。重获本身不等于送达；只有经过完整绑定链校验，且链终端真实状态已为 DELIVERED，completion.resolved_reacquired_identities 才会给出旧义务解除的 delivered_object_id 和 binding_chain 依据。终端未送达、证据不完整或有歧义时仍在 pending_objects；判断是否完成要检查 completion 的实际结果，不能因出现 reacquired_as 就 done。
 exploration 和 junction_history 中的出口 state 区分 unexplored（未探索）、exploring（正在探索）、verified（实际完整走过）、blocked（暂时受阻）和 unresolved（身份或连接待解决）。blocked 和 unresolved 都仍是待处理义务；命令 accepted、路点经过、反向可尝试或没有探索建议都不能替代 verified。未解决路口或连接也会阻止未知数量任务完成；按当前新鲜出口和实质新证据恢复探索，不能把任务改成只探索可达区域。节点身份来自结构与实际运动证据；candidate_ids 表示尚未确认的身份假设，不能自行合并。
-completion.unresolved_discovery_ids 是未知数量任务中从未确认且仍未解释的历史红球发现；归档或暂时看不见不证明它不存在或已交付。completion.untracked_discovery_ids 保留尚未进入物体表的歧义红球发现，空视野不能消除这些义务。当前红球 identity_ambiguity 也必须解决；歧义对象不能作为可抓取或交付见证。已知数量任务仍只按经过验证的不同对象数量完成，不需全图探索。
+completion.unresolved_discovery_ids 是未知数量任务中从未确认且仍未解释的历史红球发现；归档或暂时看不见不证明它不存在或已交付。completion.untracked_discovery_ids 保留尚未解释的普通或歧义红球发现，未达到 WorldModel 确认门槛和空视野都不能消除这些义务。discovery.pending 至多显示六个待验证发现及其观测位置、候选身份和原因；discovery.pending_count 是全部未解决假设数。可依据现有道路和新鲜观测自主选择 explore、look_around 来获取不同位置的新视角；这些发现 ID 不是可操作物体 ID，不能将其传给 go_to 或 pick。只有独立新视角、唯一身份与像素证据足够时，程序才会记录关联和消解；关联本身仍不等于交付。当前红球 identity_ambiguity 也必须解决；歧义对象不能作为可抓取或交付见证。已知数量任务仍只按经过验证的不同对象数量完成，不需全图探索。
 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
 
 
@@ -61,6 +62,26 @@ class LLMRequestError(RuntimeError):
 
 class ReplayError(RuntimeError):
     """A replay is incomplete, corrupt or does not match the current input."""
+
+
+def validate_base_url(value: str) -> str:
+    """Validate configuration without retaining a parser exception or its value."""
+    valid = False
+    if (isinstance(value, str) and value and '\\' not in value
+            and not any(ord(c) <= 32 or ord(c) == 127 for c in value)):
+        try:
+            parsed = urllib.parse.urlsplit(value)
+            valid = (parsed.scheme.lower() in {'http', 'https'} and bool(parsed.hostname)
+                and parsed.username is None and parsed.password is None
+                and not parsed.query and not parsed.fragment
+                and (parsed.port is None or 1 <= parsed.port <= 65535))
+        except (ValueError, TypeError):
+            # Raise outside the handler: even __context__ must not keep the
+            # original parser error, which may contain sensitive URL pieces.
+            pass
+    if not valid:
+        raise ValueError('invalid_configuration:LLM_BASE_URL')
+    return value.rstrip('/')
 
 
 def _canonical(value: Any) -> str:
@@ -102,12 +123,13 @@ def _partial_response_text(error: BaseException, prefix: bytes = b"") -> str | N
     return prefix.decode("utf-8", errors="replace") if prefix else None
 
 
-def _validate_transport_diagnostics(value: Any) -> None:
+def _validate_transport_diagnostics(value: Any, version: str | None = None) -> None:
     required = {"phase", "received_bytes"}
     optional = {"reason_type", "reason_errno"}
     if (not isinstance(value, dict) or not required <= set(value)
             or not set(value) <= required | optional
-            or value["phase"] not in ("open", "read_stream", "read_body")
+            or value["phase"] not in (("construct_request", "open", "read_stream", "read_body")
+                if version == "autonomous-brain-llm/v17" else ("open", "read_stream", "read_body"))
             or type(value["received_bytes"]) is not int or value["received_bytes"] < 0):
         raise ReplayError("Replay has invalid transport diagnostics")
     if "reason_type" in value:
@@ -316,11 +338,16 @@ class LLMClient:
             self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
             if not self._base_url or not self._api_key:
                 raise ValueError("Set LLM_BASE_URL and LLM_API_KEY before a live run")
+            self._base_url = validate_base_url(self._base_url)
+            if any(ord(c) < 32 or ord(c) == 127 for c in self._api_key):
+                raise ValueError('invalid_configuration:LLM_API_KEY')
+            temperature_valid = False
             try:
                 self.temperature = _strict_loads(os.environ.get("LLM_TEMPERATURE", "0"))
-            except (TypeError, ValueError) as exc:
-                raise ValueError("LLM_TEMPERATURE must be a finite number from 0 through 2") from exc
-            if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
+                temperature_valid = _finite_number(self.temperature) and 0 <= self.temperature <= 2
+            except (TypeError, ValueError):
+                pass
+            if not temperature_valid:
                 raise ValueError("LLM_TEMPERATURE must be a finite number from 0 through 2")
             self.thinking = os.environ.get("LLM_THINKING")
             if self.thinking is not None and self.thinking not in ("enabled", "disabled"):
@@ -496,29 +523,30 @@ class LLMClient:
             if (replay_record["version"] in DIAGNOSTICS_REQUIRED_VERSIONS
                     or "transport_diagnostics" in replay_record):
                 diagnostics = replay_record.get("transport_diagnostics")
-                _validate_transport_diagnostics(diagnostics)
+                _validate_transport_diagnostics(diagnostics, record["version"])
                 record["transport_diagnostics"] = dict(diagnostics)
             self._replay_cursor += 1
         else:
             record.update(retry_metadata)
             record["transport_timeout_s"] = self.timeout_s
-            diagnostics = {"phase": "open", "received_bytes": 0}
+            diagnostics = {"phase": "construct_request", "received_bytes": 0}
             # phase identifies the primary failure stage (HTTP status failures
             # occur at open), or the final successful read stage. Byte counts
             # cover captured data, including IncompleteRead.partial, not bytes
             # that might remain in the underlying socket.
             record["transport_diagnostics"] = diagnostics
-            outbound = urllib.request.Request(
-                f"{self._base_url}/chat/completions",
-                data=_canonical(request).encode("utf-8"),
-                headers={"Content-Type": "application/json",
-                         "Authorization": f"Bearer {self._api_key}"}, method="POST")
             self._write_lifecycle("started", record)
             if retry_metadata["transport_retry_delay_s"]:
                 time.sleep(retry_metadata["transport_retry_delay_s"])
             start = time.perf_counter()
             received = bytearray()
             try:
+                outbound = urllib.request.Request(
+                    f"{self._base_url}/chat/completions",
+                    data=_canonical(request).encode("utf-8"),
+                    headers={"Content-Type": "application/json",
+                             "Authorization": f"Bearer {self._api_key}"}, method="POST")
+                diagnostics["phase"] = "open"
                 with urllib.request.urlopen(outbound, timeout=self.timeout_s) as response:
                     if request.get("stream"):
                         diagnostics["phase"] = "read_stream"
@@ -562,6 +590,11 @@ class LLMClient:
                 record["response_body"] = _partial_response_text(exc, bytes(received))
                 record["transport_error"] = {"type": type(exc).__name__}
                 _record_transport_reason(diagnostics, exc, bytes(received))
+            except Exception:
+                # Constructor/header validation can echo endpoint or key text.
+                # Retain the phase and a fixed code, never text/cause/traceback.
+                record["transport_error"] = {"type": "RequestConstructionError"
+                    if diagnostics["phase"] == "construct_request" else "RequestBoundaryError"}
             finally:
                 record["elapsed_s"] = time.perf_counter() - start
 

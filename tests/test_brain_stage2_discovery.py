@@ -47,7 +47,7 @@ def test_two_unadmitted_red_boxes_keep_distinct_source_obligations_without_wm_ad
                and d['fed_to_world_model'] is False for d in current['detections'])
     assert len([row for row in p.objects() if row['category']=='red-ball'])==1
     ledger = p.discovery_evidence()
-    assert ledger['schema']=='brain-discovery-evidence/v1'
+    assert ledger['schema']=='brain-discovery-evidence/v2'
     assert len(ledger['unresolved'])==2
     assert len({row['id'] for row in ledger['unresolved']})==2
     for index,row in enumerate(ledger['unresolved']):
@@ -94,7 +94,7 @@ def test_discovery_query_is_detached_and_missing_original_index_is_reported_hone
 
 
 @pytest.mark.parametrize('case',['blue_ambiguity','admitted_red_ambiguity','isolated_old_red','no_old_identity'])
-def test_only_unadmitted_red_identity_ambiguity_creates_this_discovery_obligation(case):
+def test_every_unexplained_red_has_an_obligation_without_changing_admission(case):
     if case=='blue_ambiguity':
         p,_ = delivered_perception('blue-ball')
         items = [ball(30,bearing=-3,category='blue-ball'),ball(30,bearing=3,category='blue-ball')]
@@ -112,7 +112,12 @@ def test_only_unadmitted_red_identity_ambiguity_creates_this_discovery_obligatio
         p = Perception(CAMERA)
         _,current = current_public_frame(p)
         assert all(not d.get('identity_ambiguity') for d in current['detections'])
-    assert p.discovery_evidence()['unresolved']==[]
+    if case in {'admitted_red_ambiguity', 'no_old_identity'}:
+        # Recovery v2 records ordinary red discoveries as well as ambiguity;
+        # admission alone does not resolve a competing identity assignment.
+        assert len(p.discovery_evidence()['unresolved'])==2
+    else:
+        assert p.discovery_evidence()['unresolved']==[]
 
 
 def test_later_isolated_old_label_does_not_explain_the_earlier_second_box():
@@ -121,4 +126,7 @@ def test_later_isolated_old_label_does_not_explain_the_earlier_second_box():
     before = p.discovery_evidence()
     _,later = current_public_frame(p,frame=6,source_index=72,time=3.1,items=[ball(30)])
     assert later['detections'][0]['known_delivered_object_id']==old
-    assert p.discovery_evidence()==before
+    later_ledger=p.discovery_evidence()
+    assert later_ledger['unresolved']==before['unresolved']
+    assert later_ledger['records'][:len(before['records'])]==before['records']
+    assert later_ledger['resolutions']==before['resolutions']==[]

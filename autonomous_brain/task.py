@@ -126,13 +126,32 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
     if ambiguous or invalid:
         unmet.append("delivery_identity_or_evidence_unresolved")
     required = task_spec["required_count"]
-    discovery_unresolved, visible_ambiguities, untracked_ids = [], [], []
+    discovery_unresolved, visible_ambiguities, untracked_ids, unexplained_current = [], [], [], []
+    explained_archives = {}
+    # A never-confirmed archive can acquire a separately confirmed successor
+    # through the discovery ledger; its original records remain immutable.
+    if isinstance(discovery_evidence, dict) and discovery_evidence.get("schema") == "brain-discovery-evidence/v2":
+        records = discovery_evidence.get("records", [])
+        resolutions = {r.get("discovery_id"): r for r in discovery_evidence.get("resolutions", [])
+                       if isinstance(r, dict)}
+        for old in result["retired_unconfirmed_hypotheses"]:
+            sources = [r for r in records if r.get("initial_object_id") == old["object_id"]]
+            proofs = [resolutions.get(r.get("id")) for r in sources]
+            targets = {p.get("canonical_object_id") for p in proofs if isinstance(p, dict)}
+            if (sources and len(targets) == 1 and all(isinstance(p, dict)
+                    and p.get("previous_object_id") == old["object_id"]
+                    and p.get("rule") == "independent_views_original_pixels_unique_identity/v1"
+                    and len(p.get("support_refs", [])) >= 2
+                    and p.get("motion_boundaries") == [] for p in proofs)):
+                target = next(iter(targets))
+                if target in rows and root(target) in delivered:
+                    explained_archives[old["object_id"]] = target
     if task_spec["quantity_mode"] == "known":
         if len(delivered) < required:
             unmet.append("required_delivery_count_not_met")
     else:
         if (not isinstance(discovery_evidence, dict)
-                or discovery_evidence.get("schema") != "brain-discovery-evidence/v1"
+                or discovery_evidence.get("schema") not in {"brain-discovery-evidence/v1", "brain-discovery-evidence/v2"}
                 or not isinstance(discovery_evidence.get("unresolved"), list)):
             unmet.append("untracked_discovery_evidence_missing")
         elif discovery_evidence["unresolved"]:
@@ -142,7 +161,8 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
         if result["pending_objects"]:
             unmet.append("observed_targets_pending")
         discovery_unresolved = sorted({item["object_id"] for item in
-            result["retired_unconfirmed_hypotheses"] if root(item["object_id"]) not in delivered})
+            result["retired_unconfirmed_hypotheses"] if root(item["object_id"]) not in delivered
+            and item["object_id"] not in explained_archives})
         if discovery_unresolved:
             unmet.append("unconfirmed_discoveries_unresolved")
         if not isinstance(observed_detections, list) or any(
@@ -156,6 +176,13 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
                 and isinstance(item.get("identity_ambiguity"), dict) and item["identity_ambiguity"]]
             if visible_ambiguities:
                 unmet.append("current_target_identity_ambiguity")
+            unexplained_current = [{"frame_id": item.get("frame_id"), "bbox": copy.deepcopy(item.get("bbox")),
+                "discovery_id": item.get("discovery_id"), "track_id": item.get("track_id")}
+                for item in observed_detections if item.get("category") == task_spec["target_category"]
+                and (not isinstance(item.get("track_id"), str) or root(item["track_id"]) not in rows
+                     or item.get("identity_ambiguity"))]
+            if unexplained_current:
+                unmet.append("current_target_discovery_unexplained")
         states = (exploration or {}).get("state_counts") if isinstance(exploration, dict) else None
         count_keys = ("pending_exit_count", "unresolved_node_count", "unresolved_connection_count")
         valid_exploration = (isinstance(exploration, dict)
@@ -175,6 +202,8 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
                   unresolved_discovery_ids=discovery_unresolved,
                   untracked_discovery_ids=untracked_ids,
                   current_target_ambiguities=visible_ambiguities,
+                  current_unexplained_discoveries=unexplained_current,
+                  resolved_discovery_hypotheses=explained_archives,
                   exploration=copy.deepcopy(exploration),
                   ready_for_done=not unmet, unmet_conditions=unmet,
                   unexplored_exits=unexplored)

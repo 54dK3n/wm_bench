@@ -43,6 +43,21 @@ class RoadEvidence:
         self.last_failed_exit_id = None
         self.active_departure_index = None
         self.nonroad_excursion = None
+        self.reconnection_history = []
+        self.identity_resolutions = []
+        self.exit_aliases = []
+
+    def reconnection_state(self):
+        """Physical road reacquisition and proved map reconnection are distinct."""
+        current = self.frames.get(self.latest, {})
+        state = self.nonroad_excursion or (self.reconnection_history[-1] if self.reconnection_history else None)
+        if state is None:
+            return {"schema": "road-reconnection/v1", "status": "not_required", "pending": False,
+                    "physical_on_road": current.get("road", {}).get("onRoad"), "map_reconnected": True}
+        return copy.deepcopy({"schema": "road-reconnection/v1", **state,
+            "pending": state["status"] != "reconnected",
+            "physical_on_road": current.get("road", {}).get("onRoad"),
+            "map_reconnected": state["status"] == "reconnected"})
 
     def problem(self, kind, reason, indices, **fields):
         entry = {"kind": kind, "reason": reason, "observation_indices": list(indices),
@@ -160,6 +175,11 @@ class RoadEvidence:
         """Validate a physical excursion without treating it as road travel."""
         a, b = copy.deepcopy(before), copy.deepcopy(after)
         a["road"]["onRoad"] = b["road"]["onRoad"] = True
+        if motion is None or motion.get("method") not in {"grab", "release"}:
+            holdings = [f.get("holding", {}).get("holding") for f in (a, b)]
+            if any(h is not None for h in holdings) and (any(type(h) is not bool for h in holdings)
+                    or holdings[0] != holdings[1]):
+                return False
         if motion is None or motion.get("method") in {"forward", "backward", "turn"}:
             return cls.step_valid(a, b, motion)
         # Gripper commands do not prove translation; fresh stationary odometry
@@ -167,6 +187,7 @@ class RoadEvidence:
         return (motion.get("method") in {"grab", "release"} and cls.sensor_valid(a) and cls.sensor_valid(b)
             and b["observation_index"] == a["observation_index"] + 1
             and str(a["observation"]["frameId"]) != str(b["observation"]["frameId"])
+            and b["odometry"]["tick"] >= a["odometry"]["tick"]
             and all(a["odometry"][k] == b["odometry"][k]
                     for k in ("rightCm", "forwardCm", "headingDeg", "distanceCm")))
 
@@ -204,21 +225,36 @@ class RoadEvidence:
         if previous is not None:
             basic = self.manipulation_step_valid(previous, frame, motion)
             if (self.nonroad_excursion is None and previous["road"].get("onRoad") is True
-                    and frame["road"].get("onRoad") is False and basic):
+                    and frame["road"].get("onRoad") is False):
                 self.nonroad_excursion = {"start": previous["observation_index"],
+                    "id": f"road-reconnection-{len(self.reconnection_history) + 1}",
+                    "entry_odometry": copy.deepcopy(previous["odometry"]),
+                    "entry_road": copy.deepcopy(previous["road"]), "attempts": [],
+                    "status": "pending", "chain_verified": basic,
                     "chain": self.anchor_chains.get(previous["observation_index"], self.chain - 1)}
+                self.reconnection_history.append(self.nonroad_excursion)
             excursion = self.nonroad_excursion
             if excursion is not None:
+                excursion["last_observation"] = i
                 if not basic:
-                    self.nonroad_excursion = None
-                elif frame["road"].get("onRoad") is True:
+                    excursion.update(chain_verified=False, status="motion_evidence_unresolved")
+                    excursion["attempts"].append({"observation_index": i,
+                        "physical_on_road": frame["road"].get("onRoad"), "map_reconnected": False,
+                        "reason": "motion_evidence_unresolved"})
+                elif frame["road"].get("onRoad") is True and excursion["chain_verified"]:
                     origin = self.frames[excursion["start"]]
                     old_road, new_road = origin["road"], frame["road"]
                     old_h = [wrap(origin["odometry"]["headingDeg"] + e["angleDeg"]) for e in old_road.get("exits", [])]
                     new_h = [wrap(frame["odometry"]["headingDeg"] + e["angleDeg"]) for e in new_road.get("exits", [])]
-                    if (math.dist(point(origin), point(frame)) * 100 <= .2
-                            and abs(wrap(origin["odometry"]["headingDeg"] - frame["odometry"]["headingDeg"])) <= .2
-                            and old_road.get("atNode") == new_road.get("atNode") and structure(old_h, new_h)):
+                    gap = math.dist(point(origin), point(frame)) * 100
+                    angle_gap = abs(wrap(origin["odometry"]["headingDeg"] - frame["odometry"]["headingDeg"]))
+                    connected = (gap <= .2 and angle_gap <= .2
+                        and old_road.get("atNode") == new_road.get("atNode") and structure(old_h, new_h))
+                    excursion["attempts"].append({"observation_index": i, "physical_on_road": True,
+                        "position_error_cm": gap, "heading_error_deg": angle_gap,
+                        "map_reconnected": connected, "reason": "entry_anchor_verified" if connected
+                            else "entry_anchor_not_yet_verified"})
+                    if connected:
                         proof = {"kind": "observed_nonroad_return", "first_observation": excursion["start"],
                             "last_observation": i, "motion_refs": [
                                 {"before_observation": a, "after_observation": b} for a, b in self.motions
@@ -232,7 +268,8 @@ class RoadEvidence:
                         restored_anchor = self.anchors.get(excursion["start"])
                         restored_first = excursion["start"]
                         self.chain = excursion["chain"]
-                    self.nonroad_excursion = None
+                        excursion.update(status="reconnected", resolution=copy.deepcopy(proof))
+                        self.nonroad_excursion = None
         anchor = self.anchors.get(i)
         if anchor is not None:
             anchor["valid"] = bool(anchor["valid"] and valid)
@@ -256,16 +293,20 @@ class RoadEvidence:
                 exact = [a for a in prior if a["position_m"] == anchor["position_m"]
                          and self.anchor_chains.get(a["observation_index"]) == self.chain]
                 identities = {self.canonical(a["node_id"]) for a in exact}
-                if len(identities) == 1:
+                if len(identities) == 1 and self.nodes[next(iter(identities))]["status"] == "confirmed":
                     candidate = max(exact, key=lambda a: a["observation_index"])
                     kind, first = "structural_revisit", candidate["observation_index"]
+                    window = [m for (a, b), m in self.motions.items() if first <= a < b <= i]
+                    if window and all(m["method"] in {"forward", "backward", "turn"} for m in window):
+                        kind = "observed_anchor_return"
             if candidate is None and anchor["valid"] and contiguous and self.active_departure_index is not None:
                 start = self.anchors.get(self.active_departure_index)
                 supported = []
                 for trip in self.trips.values():
                     old_start = self.anchors[trip["departure"]["observation_index"]]
                     old_end = self.anchors[trip["arrival"]["observation_index"]]
-                    if start is None:
+                    if (start is None or any(self.nodes[a["node_id"]]["status"] != "confirmed"
+                                            for a in (start, old_start, old_end))):
                         continue
                     old, expected_heading = None, None
                     if (trip["departure"]["exit_id"] == self.active_exit_id
@@ -322,6 +363,7 @@ class RoadEvidence:
         e = self.exits[matches[0]["exit_id"]]
         e["visits"] += 1
         e["state"] = "blocked" if blocked else "exploring"
+        e["state_observation"] = observation_index
         self.active_exit_id = e["id"]
         self.last_failed_exit_id = None
         self.active_departure_index = observation_index
@@ -334,6 +376,7 @@ class RoadEvidence:
             self.last_failed_exit_id = ident
             e["state"] = "blocked" if blocked else "verified" if e["completion_traversal_ids"] else "unresolved"
             e["last_failure"] = reason
+            e["state_observation"] = self.latest
             self.active_exit_id = None
             self.active_departure_index = None
 
@@ -362,6 +405,7 @@ class RoadEvidence:
         e = self.exits[eid]
         e["completion_traversal_ids"].append(row["id"])
         e["state"] = "verified"
+        e["state_observation"] = b
         for item in self.unresolved:
             if item.get("exit_id") == eid and item["kind"] == "connection":
                 item.update(resolved=True, resolution_traversal_id=row["id"])
@@ -373,7 +417,124 @@ class RoadEvidence:
         self.active_exit_id = None
         self.active_departure_index = None
         self.last_failed_exit_id = None
+        self._resolve_provisional_roots(row)
         return True
+
+    def _resolve_provisional_roots(self, completed):
+        """Resolve old hypotheses only after an independently grounded revisit.
+
+        A short local out-and-back does not qualify. The new completed trip
+        must also match an already completed route between confirmed nodes.
+        Exact old/new observation positions bind the historical hypothesis;
+        no additional radius or proximity edge is introduced by this resolver.
+        """
+        arrival = self.anchors[completed["last_observation"]]
+        canonical = arrival["node_id"]
+        if self.nodes[canonical]["status"] != "confirmed":
+            return
+        proofs = [p for p in self.nodes[canonical]["merge_evidence_refs"]
+            if p["kind"] == "route_endpoint_revisit" and p["to_observation"] == completed["last_observation"]
+            and p["first_observation"] == completed["first_observation"]]
+        if not proofs:
+            return
+        route_proof = proofs[-1]
+        prior_trips = route_proof["traversal_ids"]
+        if not prior_trips or any(t not in self.trips or self.trips[t]["last_observation"] >= completed["first_observation"]
+                                  for t in prior_trips):
+            return
+        for old_id, old in list(self.nodes.items()):
+            if old["canonical_id"] != old_id or old["status"] != "unresolved":
+                continue
+            indices = list(old["anchor_indices"])
+            anchors = [self.anchors[j] for j in indices]
+            if (not anchors or any(a["position_m"] != arrival["position_m"] or not a["valid"]
+                    or not structure(a["fresh_headings_deg"], arrival["fresh_headings_deg"])
+                    or self.anchor_chains.get(a["observation_index"]) != self.anchor_chains.get(arrival["observation_index"])
+                    for a in anchors)
+                    or not any(canonical in {self.canonical(c) for c in a["candidate_ids"]} for a in anchors)):
+                continue
+            # A completed A↔U road is contrary evidence: do not collapse two
+            # adjacent, separately traversed endpoint identities.
+            if any({t["departure"]["node_id"], t["arrival"]["node_id"]} == {old_id, canonical}
+                   for t in self.trips.values()):
+                continue
+            old_exits = [e for e in self.exits.values() if e["node_id"] == old_id]
+            mapping = {}
+            for e in old_exits:
+                matches = [x["id"] for x in self.exits.values() if x["node_id"] == canonical
+                           and abs(wrap(x["heading_deg"] - e["heading_deg"])) <= 5]
+                if len(matches) == 1:
+                    mapping[e["id"]] = matches[0]
+            if len(mapping) != len(old_exits) or len(set(mapping.values())) != len(mapping):
+                continue
+            resolution_id = f"road-identity-resolution-{len(self.identity_resolutions) + 1}"
+            old_ids = [n["id"] for n in self.nodes.values() if n["canonical_id"] == old_id]
+            affected_trips = [t for t in self.trips.values()
+                              if any(t[side]["node_id"] in old_ids for side in ("departure", "arrival"))]
+            first, last = min(indices), arrival["observation_index"]
+            proof = {"kind": "retrospective_route_identity_resolution", "resolution_id": resolution_id,
+                "from_observation": first, "to_observation": last,
+                "first_observation": first, "last_observation": last,
+                "motion_refs": [{"before_observation": a, "after_observation": b}
+                                for a, b in self.motions if first <= a < b <= last],
+                "traversal_ids": list(prior_trips) + [completed["id"]],
+                "route_revisit_proof": copy.deepcopy(route_proof)}
+            record = {"id": resolution_id, "rule": "completed_route_revisit_resolves_old_exact_anchor",
+                "from_node_id": old_id, "canonical_node_id": canonical,
+                "anchor_indices": indices, "exit_id_map": mapping, "proof": proof,
+                "before": {"nodes": copy.deepcopy([self.nodes[n] for n in old_ids]),
+                    "anchors": copy.deepcopy(anchors), "exits": copy.deepcopy(old_exits),
+                    "traversals": copy.deepcopy(affected_trips)}}
+            self.identity_resolutions.append(record)
+            for n in old_ids:
+                self.nodes[n]["canonical_id"] = canonical
+                self.nodes[n]["status"] = "alias"
+            old.setdefault("identity_history", []).append({"status": "unresolved", "canonical_id": old_id,
+                                                            "resolution_id": resolution_id})
+            old["merge_evidence_refs"].append(proof)
+            target = self.nodes[canonical]
+            target["anchor_indices"] = sorted(set(target["anchor_indices"] + indices))
+            target["merge_evidence_refs"].append(proof)
+            for anchor in self.anchors.values():
+                if anchor["node_id"] in old_ids:
+                    anchor.setdefault("identity_history", []).append({"node_id": anchor["node_id"],
+                        "candidate_ids": list(anchor["candidate_ids"]),
+                        "exit_bindings": copy.deepcopy(anchor["exit_bindings"]), "resolution_id": resolution_id})
+                    anchor["node_id"] = canonical
+                anchor["candidate_ids"] = sorted({self.canonical(c) for c in anchor["candidate_ids"]
+                                                  if self.canonical(c) != anchor["node_id"]})
+                for binding in anchor["exit_bindings"]:
+                    binding["exit_id"] = mapping.get(binding["exit_id"], binding["exit_id"])
+            for original in old_exits:
+                destination = self.exits[mapping[original["id"]]]
+                destination["observation_refs"] = sorted(set(destination["observation_refs"] + original["observation_refs"]))
+                destination["completion_traversal_ids"] = list(dict.fromkeys(
+                    destination["completion_traversal_ids"] + original["completion_traversal_ids"]))
+                destination["visits"] += original["visits"]
+                if (original.get("state_observation", -1) > destination.get("state_observation", -1)
+                        and original["state"] in {"blocked", "exploring"}):
+                    destination.update(state=original["state"], state_observation=original["state_observation"])
+                    if "last_failure" in original:
+                        destination["last_failure"] = original["last_failure"]
+                elif destination["completion_traversal_ids"] and destination["state"] not in {"blocked", "exploring"}:
+                    destination["state"] = "verified"
+                self.exit_aliases.append({"id": original["id"], "canonical_exit_id": destination["id"],
+                    "resolution_id": resolution_id})
+                del self.exits[original["id"]]
+            for trip in self.trips.values():
+                for side in ("departure", "arrival"):
+                    if trip[side]["node_id"] in old_ids:
+                        trip[side]["node_id"] = canonical
+                trip["departure"]["exit_id"] = mapping.get(trip["departure"]["exit_id"], trip["departure"]["exit_id"])
+            self.active_exit_id = mapping.get(self.active_exit_id, self.active_exit_id)
+            self.last_failed_exit_id = mapping.get(self.last_failed_exit_id, self.last_failed_exit_id)
+            for item in self.unresolved:
+                if item["kind"] == "node" and item.get("node_id") in old_ids:
+                    item.update(resolved=True, resolution_identity_id=resolution_id,
+                                resolution_traversal_id=completed["id"])
+                if item.get("exit_id") in mapping:
+                    item.setdefault("original_exit_id", item["exit_id"])
+                    item["exit_id"] = mapping[item["exit_id"]]
 
     def node_views(self):
         return [{"id": n["id"], "position": tuple(n["position_m"] or (0, 0)), "status": n["status"],
@@ -384,7 +545,9 @@ class RoadEvidence:
     def evidence(self):
         return copy.deepcopy({"schema": "brain-road-evidence/v1", "nodes": list(self.nodes.values()),
             "anchors": list(self.anchors.values()), "exits": list(self.exits.values()),
-            "traversals": list(self.trips.values()), "unresolved": self.unresolved})
+            "traversals": list(self.trips.values()), "unresolved": self.unresolved,
+            "road_reconnections": self.reconnection_history, "identity_resolutions": self.identity_resolutions,
+            "exit_aliases": self.exit_aliases})
 
     def status(self):
         counts = {state: sum(e["state"] == state for e in self.exits.values()) for state in self.STATES}
