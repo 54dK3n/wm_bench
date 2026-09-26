@@ -35,7 +35,16 @@
 
 归档与原始日志均放在被 Git 忽略的目录中，不提交 raw、record、完整观测/模型日志或二进制分片。[RESTORE.md](RESTORE.md) 给出下载后校验、恢复到新 clone 和只读复算步骤。
 
-Release 标签 `stage1-known-two-20260926-d1538f7` 已非强制推送，精确指向原报告提交。Release 草稿已保存，但附件尚未上传，草稿不对外可读。归档发布状态必须以 GitHub Release 公共页面及下载核验为准；仅创建本地压缩包或 Release 草稿不算外部交付完成。浏览器扩展曾返回 `Not allowed`，上传工具要求启用文件 URL 访问权限，原生上传也遇到浏览器交互中断；未为此自行扩大扩展权限。当前环境没有可用的 GitHub API 上传凭据，SSH Git 推送凭据不具备 Release 附件上传接口；因此现有可用上传通道仍待上述浏览器权限或用户手动上传，不能以本地文件路径宣称外部 reviewer 已可下载。
+Release 标签 `stage1-known-two-20260926-d1538f7` 已非强制推送，精确指向原报告提交。五个附件已于 **2026-09-26 06:25:04 UTC** 发布；随后于 06:26:02 UTC 从公开下载地址匿名读取全部五个附件，均返回 HTTP 200，大小、SHA256 与冻结本地文件及 GitHub 提供的 digest 全部一致。验证记录见 [PUBLIC_RELEASE_VERIFICATION.json](PUBLIC_RELEASE_VERIFICATION.json)。
+
+- [公开 Release 页面](https://github.com/54dK3n/wm_bench/releases/tag/stage1-known-two-20260926-d1538f7)
+- [完整证据包](https://github.com/54dK3n/wm_bench/releases/download/stage1-known-two-20260926-d1538f7/wm-bench-stage1-20260926-evidence.tar.gz)
+- [压缩包 SHA256 文件](https://github.com/54dK3n/wm_bench/releases/download/stage1-known-two-20260926-d1538f7/wm-bench-stage1-20260926-evidence.tar.gz.sha256)
+- [恢复说明](https://github.com/54dK3n/wm_bench/releases/download/stage1-known-two-20260926-d1538f7/RESTORE.md)
+- [敏感信息检查记录](https://github.com/54dK3n/wm_bench/releases/download/stage1-known-two-20260926-d1538f7/SECRET_SCAN.json)
+- [三个复核入口](https://github.com/54dK3n/wm_bench/releases/download/stage1-known-two-20260926-d1538f7/REVIEWER_ENTRYPOINTS.md)
+
+此前上传曾因浏览器文件访问权限受阻；用户处理权限后，现有浏览器上传通道完成交付。该历史阻塞已解决。本次只追加发布状态与下载验证，不重打包、不更改原 79 项文件，也不改写原报告中记录的当时状态。
 
 ## 三个复核入口
 
