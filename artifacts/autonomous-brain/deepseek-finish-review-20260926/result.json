@@ -1,0 +1,331 @@
+{
+  "review": "deepseek-finish-v14-independent-review/v1",
+  "passed": true,
+  "base_commit": "d049ec79bfbc2187f182ada3444d20d1244e84bb",
+  "source_path": "autonomous_brain/llm.py",
+  "baseline": {
+    "version": "autonomous-brain-llm/v13",
+    "sha256": "6497acb290b543f6a6087e1861aaeb031de769987587dbecf9bdf6234cd51fce",
+    "file": "baseline-llm-v13.py"
+  },
+  "candidate": {
+    "version": "autonomous-brain-llm/v14",
+    "sha256": "92e1f2bc9f1545d9270186656b6ba0bed7269fa50436ef9a2f70536fbe6575be",
+    "file": "candidate-llm-v14.py"
+  },
+  "network_calls": 0,
+  "credentials_read": false,
+  "legacy_stream_equivalence": {
+    "total": 3013,
+    "explicit_cases": 13,
+    "generated_cases": 3000,
+    "seed": 44,
+    "mismatches": 0,
+    "generated_corpus_sha256": "35de69969f436476a4f31d9d016102c7671476ea68161593aeb4759c8babf439",
+    "algorithm": "Python random.Random(44); see review.py; corpus hash uses 8-byte big-endian byte length then UTF-8 body for each generated case"
+  },
+  "explicit_stream_results": [
+    {
+      "case": "stop_and_complete_done",
+      "body_sha256": "ec532a948e5a5d40c7cbec2670544857ec4beed46d32e26b1273196d978f9f57",
+      "could_validate_action": true,
+      "done": true,
+      "error": null
+    },
+    {
+      "case": "stop_and_unterminated_done",
+      "body_sha256": "c0eba8b747c368243d4fd12e62751095a4274a9f4d54843c2c3dd3efcc8b9ec6",
+      "could_validate_action": false,
+      "done": false,
+      "error": null
+    },
+    {
+      "case": "stop_and_one_newline_done",
+      "body_sha256": "3729453d58198d21c920470d574d643e395e2550c05349a3a7b53a79e00a38f0",
+      "could_validate_action": false,
+      "done": false,
+      "error": null
+    },
+    {
+      "case": "stop_and_crlf_done",
+      "body_sha256": "e87d570459d17449372f4324ff0a3773d9c9d8fd69c39907fba08f7d9ffae1d3",
+      "could_validate_action": true,
+      "done": true,
+      "error": null
+    },
+    {
+      "case": "stop_and_cr_done",
+      "body_sha256": "ff488c814f1525453632bd3d73d4de71f7ce8fddf68cf6869bb2f35b6b051221",
+      "could_validate_action": true,
+      "done": true,
+      "error": null
+    },
+    {
+      "case": "length_and_complete_done",
+      "body_sha256": "af3a09e38b19ffead383ef119888d09a68ac8843cf404b5301cdf748a699d48f",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Completion must end with finish_reason=stop"
+    },
+    {
+      "case": "content_filter",
+      "body_sha256": "621614dee84d3930e59432848a6ca30d2634c4a19e26e74b31f24dfa09c2172d",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Completion must end with finish_reason=stop"
+    },
+    {
+      "case": "tool_calls_finish",
+      "body_sha256": "a405a03980a6472ac0899206cd9fddfe67f48225ad886cbb690b8743a4885ac8",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Completion must end with finish_reason=stop"
+    },
+    {
+      "case": "missing_finish",
+      "body_sha256": "9c3720a054d2c24a40687fa7cb6eac7a04d90f0318eb8840b2be85d63e8ff2c3",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Stream is missing terminal finish_reason=stop"
+    },
+    {
+      "case": "duplicate_stop",
+      "body_sha256": "9ce0ec5a66ac2dcb4a0d1cd0c49fd67a451015a82d4b983139cfc8d7adfceeca",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Stream contains a choice after its terminal finish_reason"
+    },
+    {
+      "case": "choice_after_stop",
+      "body_sha256": "84aad884eb8b7fe21a8fae5d58832a61eaf1beb1e9c4ad56d14dfe6186d582e8",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Stream contains a choice after its terminal finish_reason"
+    },
+    {
+      "case": "usage_after_stop",
+      "body_sha256": "c9b2c20787411c7976af136f76d9132022138cc756f08ad199d9e98c30bec3f0",
+      "could_validate_action": true,
+      "done": true,
+      "error": null
+    },
+    {
+      "case": "done_then_choice",
+      "body_sha256": "7a1100f0e74737ffe1d3dc457252e47b72418c21873133e6af93b6c98929660c",
+      "could_validate_action": false,
+      "done": true,
+      "error": "Stream contains data after [DONE]"
+    }
+  ],
+  "nonstream_results": {
+    "total": 8,
+    "mismatches": 0,
+    "cases": [
+      {
+        "finish_reason": "stop",
+        "could_validate_action": true,
+        "error": null
+      },
+      {
+        "finish_reason": "length",
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": "content_filter",
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": "tool_calls",
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": null,
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": false,
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": {},
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "finish_reason": [],
+        "could_validate_action": false,
+        "error": "Completion must end with finish_reason=stop"
+      }
+    ]
+  },
+  "synthetic_live_call_results": {
+    "total": 16,
+    "abnormal_finish_produced_action": 0,
+    "cases": [
+      {
+        "stream": false,
+        "finish_reason": "stop",
+        "action": {
+          "action": "explore",
+          "params": {}
+        },
+        "validation_error": null
+      },
+      {
+        "stream": false,
+        "finish_reason": "length",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": "content_filter",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": "tool_calls",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": null,
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": false,
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": {},
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": false,
+        "finish_reason": [],
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": "stop",
+        "action": {
+          "action": "explore",
+          "params": {}
+        },
+        "validation_error": null
+      },
+      {
+        "stream": true,
+        "finish_reason": "length",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": "content_filter",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": "tool_calls",
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": null,
+        "action": null,
+        "validation_error": "Stream is missing terminal finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": false,
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": {},
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      },
+      {
+        "stream": true,
+        "finish_reason": [],
+        "action": null,
+        "validation_error": "Completion must end with finish_reason=stop"
+      }
+    ]
+  },
+  "capabilities": {
+    "EXTENDED_RETRY_VERSIONS": {
+      "before": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13"
+      ],
+      "after": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13",
+        "autonomous-brain-llm/v14"
+      ]
+    },
+    "RETRY_METADATA_REQUIRED_VERSIONS": {
+      "before": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13"
+      ],
+      "after": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13",
+        "autonomous-brain-llm/v14"
+      ]
+    },
+    "DIAGNOSTICS_REQUIRED_VERSIONS": {
+      "before": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13"
+      ],
+      "after": [
+        "autonomous-brain-llm/v12",
+        "autonomous-brain-llm/v13",
+        "autonomous-brain-llm/v14"
+      ]
+    },
+    "RETRYABLE_TRANSPORT_ERRORS": [
+      "ConnectionResetError",
+      "IncompleteRead",
+      "IncompleteStream",
+      "RemoteDisconnected",
+      "TimeoutError",
+      "URLError",
+      "timeout"
+    ],
+    "RETRYABLE_HTTP_STATUSES": [
+      408,
+      429,
+      500,
+      502,
+      503,
+      504
+    ]
+  },
+  "limits": [
+    "Legacy comparison uses saved HEAD v13 decoder semantics with require_stop=False; it is not a replay of every historical v1-v13 transcript.",
+    "Pure-memory urlopen replacement checks _call behavior; no actual provider/HTTP transport, robot action, or task execution occurred.",
+    "Live transport stops reading at the first complete DONE event; rejection of data after DONE applies to bytes supplied to the decoder, not unread provider bytes."
+  ]
+}

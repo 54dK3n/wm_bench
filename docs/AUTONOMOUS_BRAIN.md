@@ -1,5 +1,9 @@
 # WorldModel + 单动作大模型自主小车
 
+[第二十二局](../artifacts/autonomous-brain/map05-run-22/FAILURE_ANALYSIS.md)使用用户指定的DeepSeek Flash完成：**整体FAIL，实际有效交付1/2**。200轮上限正常结束，206次模型调用累计212.660415秒，仿真664.88秒，891次观测；没有连接失败、外部停止或参数回退。第一球有效交付于273.04秒，第二球确认后多次接近失败，未抓取或送达。抓放Judge两项均与真值一致；WM误差321有效/1未匹配，均值8.308437cm、RMSE8.400987cm。
+
+源码冻结`1708b2233a0aa64d88a16cc726572e8594409039`；200轮/206条严格离线模型回放、8份源码和5项导出均通过核验，原record四片无损恢复通过。DeepSeek温度0、关闭思考；实际图片能力单独验证，生产大脑仍使用WM状态JSON。十布局未启动，历史FAIL不变。
+
 当前供应商已切换为用户指定的DeepSeek Flash，图片能力与生产客户端的虚构状态调用均通过实测。密钥仅保存在忽略的本机配置中，证据见[配置验证](../artifacts/autonomous-brain/deepseek-setup-20260926/REPORT.md)。模型支持图片输入；当前大脑仍按既定方案传WorldModel状态JSON，不宣称已接入相机图片直传。
 
 [第二十一局](../artifacts/autonomous-brain/map05-run-21/FAILURE_ANALYSIS.md)已完整结束：**整体FAIL，实际有效交付2/2**。第181轮收到Kimi余额不足错误，HTTP429 / exceeded_current_quota_error，初次加5次重试均失败，未生成该轮动作、未自主done；没有外停、SIGTERM、轮数或仿真时间上限触发。该局的Kimi配额失败记录保留，十布局未启动。
@@ -36,10 +40,10 @@ driver v6默认`--wall-timeout-seconds 0`，表示关闭额外墙钟限制；显
 
 检出平台分支到 `workspaces/guangyang-platform`，或用 `GUANGYANG_PLATFORM_ROOT` 指定其 `projects/car-python` 目录。需要 Python、Node.js 和 Chrome；沿用本仓库已有的依赖与浏览器驱动环境。
 
-driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第二十一局实际启动命令，前置定向诊断已通过；重跑须改用尚不存在的新输出目录：
+driver v6 默认读取仓库根目录的 `.env.local`，无需每次手工 `export`。首次配置可复制无密钥的 [`.env.example`](../.env.example) 为 `.env.local`，填入 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`。以下为第二十二局实际启动命令，前置定向诊断已通过；重跑须改用尚不存在的新输出目录：
 
 ```sh
-node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-21
+node tools/autonomous_brain_driver.js --out artifacts/autonomous-brain/map05-run-22
 ```
 
 `.env.local` 已被 Git 忽略，不应提交或放入运行报告。读取器接受上述三个必需键，以及可选的 `LLM_TEMPERATURE` 和 `LLM_THINKING`，忽略其他键；进程环境中已存在的同名变量优先（包括空值）。支持简单 `KEY=value`、单引号或双引号值、空行和 `#` 注释，未加引号的行尾注释前需留空格。不执行 shell、变量替换或转义展开。配置错误只报告行号或配置键，不输出值或文件内容。离线模型回放不读取此文件，也不要求模型凭据。
