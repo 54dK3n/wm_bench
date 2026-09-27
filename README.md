@@ -1,6 +1,14 @@
 # wm_bench
 
-## 当前轮次：真实编排已接通，搬运 demo 尚未完成
+## 当前结果：真实一球搬运 PASS，双球阶段 1 NOT_RUN
+
+map-05 的“把一个红球送到绿色存放区”已真实完成：平台传感 → 同一 WorldModel → DeepSeek Flash → 既有 `octos_robots.orchestrator.executor.Executor` → Actions → 新观测；外部 Octos runtime 未接入。76 次真实模型调用、76 轮、299.7 仿真秒，物理交付、脑端 DELIVERED、独立观测命令链均为 1；模型主动 done、夹爪空、白名单外请求 0。独立一球评测 PASS；原 driver 固定双球结果仍为 false，不能将本局算作双球阶段 1。
+
+冻结主仓 `2adc8aecc085c2f99f14131f1f2c10e7b109021e`、编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`，本局源码未变。模型保持 DeepSeek Flash / temperature=0 / thinking=disabled，Executor 不叠加重试，原安全门不变。模型另选唯一可见目标完成搬运；原另一目标身份竞争未解决，本局也未证明离路 pick 逆归路成功。仅运行这一局后停止，不启动双球、阶段 2、十布局或真机。
+
+[一页结果与真实启动命令](artifacts/autonomous-brain/octos-minimal-demo-next/REPORT.md) · [可复算指标](artifacts/autonomous-brain/octos-minimal-demo-next/METRICS.json) · [恢复/校验](artifacts/autonomous-brain/octos-minimal-demo-next/RESTORE.md) · [原始证据与关键帧 Release](https://github.com/54dK3n/wm_bench/releases/tag/octos-one-ball-pass-20260927-2adc8ae)。
+
+## 上一轮历史：真实编排已接通，搬运 demo 尚未完成
 
 已在真实 map-05 上运行“平台传感 → 同一 WorldModel → DeepSeek Flash → 既有 Executor → Actions → 新观测”。复用 [octos_robots](https://github.com/54dK3n/octos_robots) 的框架无关 `orchestrator.executor.Executor`，不是外部 Octos runtime；平台模式 `max_retries=0`，原感知、动作、安全门和完成判据保留。
 

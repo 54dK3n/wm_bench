@@ -1,0 +1,170 @@
+{
+  "scope": "Counts from immutable logs; existing independent verdicts cited without rescoring.",
+  "one_ball_demo": "PASS",
+  "two_ball_stage1": "NOT_RUN",
+  "runs": [
+    {
+      "name": "smoke-01",
+      "task": "把一个红球送到绿色存放区",
+      "stage": "one-ball-smoke",
+      "result": "PASS",
+      "source_commit": "2adc8aecc085c2f99f14131f1f2c10e7b109021e",
+      "octos_robots_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+      "executor_max_retries": 0,
+      "external_octos_runtime": false,
+      "sources_unchanged": true,
+      "platform_run_id": "run-9c9248dc-4d5e-4808-aedb-843775f388c1",
+      "orchestration_run_ids": [
+        "5c7cf23c35b24af1bf7ac8642d804371"
+      ],
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "round_records": 76,
+      "completed_rounds": 76,
+      "llm_calls": 76,
+      "llm_records_complete": 76,
+      "llm_started": 76,
+      "llm_finished": 76,
+      "real_api_calls": 76,
+      "real_api_finished": 76,
+      "unfinished_call_indices": [],
+      "issued_llm_actions": 76,
+      "completed_actions_by_name": {
+        "done": 1,
+        "explore": 52,
+        "go_to": 16,
+        "look_around": 4,
+        "pick": 2,
+        "place": 1
+      },
+      "last_issued_decision_index": 76,
+      "last_completed_round": 76,
+      "executor_dispatch_records": 76,
+      "executor_judge_records": 76,
+      "world_model_observations": 361,
+      "bridge_observe_requests": 361,
+      "bridge_calls": 1654,
+      "bridge_calls_by_method": {
+        "backward": 10,
+        "camera_parameters": 1,
+        "follow_road": 69,
+        "forward": 18,
+        "grab": 4,
+        "holding": 361,
+        "local_road": 361,
+        "observe": 361,
+        "odometry": 361,
+        "release": 1,
+        "take_exit": 31,
+        "turn": 76
+      },
+      "bridge_motion_requests": 204,
+      "motion_records": 209,
+      "motions_after_last_completed_round": 0,
+      "grab_requests": 4,
+      "release_requests": 1,
+      "foreign_requests": 0,
+      "brain_delivered_objects": 1,
+      "independent_observation_delivery_chains": 1,
+      "platform_deliveries": 1,
+      "qualified_physical_deliveries": 1,
+      "model_done_actions": 1,
+      "model_done_verified": true,
+      "post_action_completion_verified": true,
+      "terminal_done_verified": true,
+      "simulation_seconds": 299.7,
+      "last_observed_holding": false,
+      "original_brain_status": "done",
+      "original_brain_reason": "observation_completion",
+      "development_stop": null,
+      "platform_export_complete": true,
+      "driver_fixed_two_ball_success": false,
+      "independent_verdict_failures": [],
+      "global_judge_counts": {
+        "match": 3,
+        "false_positive": 0,
+        "false_negative": 0,
+        "unverifiable": 0,
+        "not_evaluated": 73,
+        "eligible_actions": 3
+      },
+      "prefix_judge_counts": {
+        "match": 3
+      },
+      "strict_replay": {
+        "allPass": true,
+        "recorded_calls": 76,
+        "replayed_calls": 76,
+        "recorded_rounds": 76,
+        "replayed_rounds": 76,
+        "failures": [],
+        "replay_error": null
+      },
+      "verdict_source": "raw/smoke-01-evaluation/evaluation.json"
+    }
+  ],
+  "definitions": {
+    "completed_rounds": "Recorded action/result rows without exception error_type; interrupted tail is not completed.",
+    "real_api_calls": "Live lifecycle started events, including unfinished attempts; start does not assert a completed response.",
+    "llm_calls": "Complete rows in llm.jsonl; llm_started/finished separately retain interrupted request attempts.",
+    "issued_llm_actions": "Valid action dictionaries in the original LLM transcript, including an interrupted last round.",
+    "bridge_calls": "Original bridge request log rows, including sensors; method counts do not assert physical success.",
+    "motion_records": "Original motions.jsonl rows; may include a round without a completed round record.",
+    "qualified_physical_deliveries": "Existing independent evaluation qualifying_delivered_target_ids count.",
+    "independent_observation_delivery_chains": "Existing independent task_scope.observed_evidence.deliveries count.",
+    "driver_fixed_two_ball_success": "Unchanged two-ball driver verdict; not the one-ball smoke acceptance result.",
+    "original_brain_reason": "Copied unchanged from the original brain summary."
+  },
+  "script_sha256": "ea9d381c810fed124178b099d5fc59f6eab55ee54f35d54392f5cb53d119900b",
+  "inputs": {
+    "raw/smoke-01/manifest.json": {
+      "sha256": "485a4b036e359244b2b8a8e8be9881a7068418cc3995bee26e11462e7f18c85c",
+      "bytes": 16874
+    },
+    "raw/smoke-01/summary.json": {
+      "sha256": "ae1fb3cfbe20746f52fbb978b43d9c6b09b2b5cc6c303d21e61b2d4d4756e58c",
+      "bytes": 965870
+    },
+    "raw/smoke-01/map-05-run-1/brain/summary.json": {
+      "sha256": "f5ee6d8eb4e5dbf6008b82ca627302a1720f02cf48fdeb8c1f28729b9e743510",
+      "bytes": 770854
+    },
+    "raw/smoke-01/map-05-run-1/brain/rounds.jsonl": {
+      "sha256": "0263d97d083bdc263b3453c6b9aaa0131380d4bcd1959bf76bd0cd14addb5536",
+      "bytes": 8364384
+    },
+    "raw/smoke-01/map-05-run-1/brain/llm.jsonl": {
+      "sha256": "bc506d2aeeb8da3f9f6376f0c8bdba05b375aad7474ab8133bbd665b3d82a3dc",
+      "bytes": 4828609
+    },
+    "raw/smoke-01/map-05-run-1/brain/llm.lifecycle.jsonl": {
+      "sha256": "7db78be9b26ad11b7b20fa7b948d284601723f134d20b0a521ad68b43ee39ff6",
+      "bytes": 9252139
+    },
+    "raw/smoke-01/map-05-run-1/brain/bridge-calls.jsonl": {
+      "sha256": "82b94934f0a42a18a30a0ab4e9ed4c02c7fb7c3653875f021ff68961e30a9c3d",
+      "bytes": 744406
+    },
+    "raw/smoke-01/map-05-run-1/brain/observations.jsonl": {
+      "sha256": "8648b20260c956477974f642eb44a34ea5cd0c4ed858e2607c71bd1e04c6ddc9",
+      "bytes": 27736854
+    },
+    "raw/smoke-01/map-05-run-1/brain/motions.jsonl": {
+      "sha256": "b860301f38d66d6f0754ff1a646ea039f616a5086d9ee96e04febab618a3881c",
+      "bytes": 115993
+    },
+    "raw/smoke-01-evaluation/evaluation.json": {
+      "sha256": "24eb8beed52d029b22c448b7500947be23c311d466016ab91262294e940ab993",
+      "bytes": 414006
+    },
+    "raw/smoke-01/map-05-run-1/evaluation.json": {
+      "sha256": "164cfbc118b17674b5167bb273a10338351369a8343d2360af35b5a11bf55798",
+      "bytes": 831196
+    },
+    "raw/smoke-01/map-05-run-1/envelope.json": {
+      "sha256": "3c3db9ce3bcdcca3d969ee319e4bc867ddbf03259570c06fd38c9759dbe77a7f",
+      "bytes": 594
+    }
+  }
+}

@@ -1,4 +1,13 @@
-# 当前状态：真实编排闭环已运行，一球搬运 FAIL，停止开发迭代
+# 当前状态：真实一球搬运 PASS，已停止运行
+
+2026-09-27：冻结 `2adc8aecc085c2f99f14131f1f2c10e7b109021e` 在 map-05 完成一局真实“把一个红球送到绿色存放区”。真实 DeepSeek Flash、框架无关 `octos_robots` Executor（`33af31baefc9b3beaa855f33849d52254aaa8c4b`）、同一 WorldModel 和平台传感/动作闭环贯通；没有接入外部 Octos runtime。
+
+- 独立一球评测 **PASS**：76 次真实调用/76 轮，299.7 仿真秒，361 次观测；物理、脑端和独立观测命令链交付各 1。r37 HELD、r75 DELIVERED、r76 模型主动 done，最终夹爪空，白名单外请求 0。
+- 双球阶段 1 **NOT_RUN**，原 driver 的固定双球 false 保留。一球通过不替代双球门槛；阶段 2、十布局、真机均未启动，本轮不自动继续。
+- 另一目标身份竞争仍保留，模型另选唯一目标完成本局。r35 失败后的归路只证明 already_on_observed_road；本局未实测离路 pick 逆归路成功。恢复后 context 的静态局限未触发，冻结源码不再修改。
+- [一页结果与启动入口](../artifacts/autonomous-brain/octos-minimal-demo-next/REPORT.md) · [复算指标](../artifacts/autonomous-brain/octos-minimal-demo-next/METRICS.json) · [恢复说明](../artifacts/autonomous-brain/octos-minimal-demo-next/RESTORE.md) · [Release](https://github.com/54dK3n/wm_bench/releases/tag/octos-one-ball-pass-20260927-2adc8ae)。下一项是由用户决定是否单独验收原双球任务；历史 HTTP 402 与所有旧 PASS/FAIL 保留。
+
+## 上一轮历史：真实编排闭环已运行，一球搬运 FAIL，停止开发迭代
 
 2026-09-27：已复用 `54dK3n/octos_robots` 的框架无关 Executor，实际经过真实模型、技能分发、原 Actions、平台新观测与同一 WorldModel；外部 Octos runtime 未接入。保持原白名单、确认/抓放与完成标准，Executor 不叠加重试。
 
