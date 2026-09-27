@@ -1,7 +1,7 @@
-# 当前状态：局部通过，服务预检 HTTP402，正式未运行
+# 当前状态：真实编排已接通，一球搬运 FAIL
 
-当前冻结候选 `4fa8916f8570b467983c86337a46dc5d1b900cde`。逐次抓取授权、连续逆向支持、后退失视恢复、失败上下文循环与审计版本契约已修复；Python1717、驱动29、平台15项通过。
+真实平台、DeepSeek Flash、同一个 WorldModel、`octos_robots` 既有 Executor 和 Actions 已在 map-05 贯通。两局一球开发 demo 均 FAIL；模型调用 65/67 次，物理交付、脑端 DELIVERED、独立观测命令链均 0，无实际 grab/release、无模型 done、白名单外请求 0。
 
-一次独立服务预检仍返回HTTP402，未启动新阶段1正式局。阶段2、十布局和真机均未运行。HTTP状态不能确定账户原因。本轮停止于交付，不重试服务或续跑旧局。
+一次失败反馈小修后，第二局真实探索换位仍受身份竞争与离路恢复阻断。当前已停止；双球阶段 1 NOT_RUN，没有第三局、阶段 2、十布局或真机。冻结主仓 `c351695f8c878e0923159d6be60d293d3c77979b`，编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`；历史结果不覆盖。
 
-[当前报告](grab-sampling-contract-20260927/REPORT.md) · [指标](grab-sampling-contract-20260927/METRICS.json) · [复核入口](grab-sampling-contract-20260927/REVIEW.md) · [证据Release](https://github.com/54dK3n/wm_bench/releases/tag/grab-sampling-contract-20260927-4fa8916)
+[本轮一页报告](octos-live-demo-20260927/REPORT.md) · [指标](octos-live-demo-20260927/METRICS.json) · [恢复/复算](octos-live-demo-20260927/RESTORE.md) · [证据 Release](https://github.com/54dK3n/wm_bench/releases/tag/octos-live-demo-20260927-c351695)

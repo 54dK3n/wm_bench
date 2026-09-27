@@ -1,10 +1,12 @@
 # wm_bench
 
-## 当前轮次：真实平台 + LLM + 既有编排层
+## 当前轮次：真实编排已接通，搬运 demo 尚未完成
 
-本轮接回 [octos_robots](https://github.com/54dK3n/octos_robots) 的框架无关 `orchestrator.executor.Executor`，复用同一个 Runtime / WorldModel、现有 LLMClient 和 Actions；外部 Octos runtime 尚未接入。每步按新观测决策，技能结果由动作后 WorldModel 和现有证据判定，平台模式不叠加 Executor 自动重试。
+已在真实 map-05 上运行“平台传感 → 同一 WorldModel → DeepSeek Flash → 既有 Executor → Actions → 新观测”。复用 [octos_robots](https://github.com/54dK3n/octos_robots) 的框架无关 `orchestrator.executor.Executor`，不是外部 Octos runtime；平台模式 `max_retries=0`，原感知、动作、安全门和完成判据保留。
 
-当前模型为 **DeepSeek Flash、temperature=0、thinking=disabled**。独立真实生成已得到合法动作；平台接线仍在进行，一球 demo 与原双球阶段 1 目前均为 **NOT_RUN**。这不是搬运成功；阶段 2、十布局与真机暂缓。启动命令和实际成绩待接线确认后补齐，见[本轮一页报告](artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md)。历史结果保持不变。
+**两局一球开发 demo 均 FAIL，原双球阶段 1 NOT_RUN。** 真实模型请求分别 65、67 次，均为 DeepSeek Flash / temperature=0 / thinking=disabled；没有实际 grab/release、交付或主动 done。一次小修补齐身份竞争失败反馈后，第二局真实换位仍受身份竞争和离路恢复阻断，现已停止，没有第三局、阶段 2、十布局或真机。
+
+[本轮一页报告与启动命令](artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md) · [恢复与复算](artifacts/autonomous-brain/octos-live-demo-20260927/RESTORE.md) · [原始证据 Release](https://github.com/54dK3n/wm_bench/releases/tag/octos-live-demo-20260927-c351695)。冻结源码为 `c351695f8c878e0923159d6be60d293d3c77979b`，编排源码为 `33af31baefc9b3beaa855f33849d52254aaa8c4b`。历史 PASS / FAIL 和原证据均不覆盖。
 
 ## 历史说明：2026-09-25 外部单动作大脑
 

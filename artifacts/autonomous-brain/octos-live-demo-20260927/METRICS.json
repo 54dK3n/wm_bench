@@ -1,0 +1,379 @@
+{
+  "scope": "Counts from immutable logs; existing independent verdicts cited without rescoring.",
+  "one_ball_demo": "FAIL",
+  "two_ball_stage1": "NOT_RUN",
+  "standalone_service_checks": [
+    {
+      "name": "chat-format-fix",
+      "llm_calls": 1,
+      "real_api_calls": 1,
+      "llm_started": 1,
+      "llm_finished": 1,
+      "valid_actions": 1,
+      "result_file": "raw/service/chat-format-fix/RESULT.json",
+      "result_status": null
+    },
+    {
+      "name": "chat-once",
+      "llm_calls": 1,
+      "real_api_calls": 1,
+      "llm_started": 1,
+      "llm_finished": 1,
+      "valid_actions": 0,
+      "result_file": "raw/service/chat-once/RESULT.json",
+      "result_status": null
+    }
+  ],
+  "runs": [
+    {
+      "name": "smoke-01",
+      "task": "把一个红球送到绿色存放区",
+      "stage": "one-ball-smoke",
+      "result": "FAIL",
+      "source_commit": "6838a78c79af04d2e840c4a9d383924d63ef7644",
+      "octos_robots_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+      "sources_unchanged": true,
+      "platform_run_id": "run-75219d9e-4391-4f53-8fcd-bfae875ac29b",
+      "orchestration_run_ids": [
+        "46b0f1579b7042548976f8d70d0e09f4"
+      ],
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "round_records": 64,
+      "completed_rounds": 64,
+      "llm_calls": 65,
+      "llm_records_complete": 65,
+      "llm_started": 65,
+      "llm_finished": 65,
+      "real_api_calls": 65,
+      "real_api_finished": 65,
+      "unfinished_call_indices": [],
+      "issued_llm_actions": 65,
+      "completed_actions_by_name": {
+        "explore": 31,
+        "go_to": 12,
+        "look_around": 5,
+        "pick": 16
+      },
+      "last_issued_decision_index": 65,
+      "last_completed_round": 64,
+      "executor_dispatch_records": 64,
+      "executor_judge_records": 64,
+      "world_model_observations": 311,
+      "bridge_observe_requests": 312,
+      "bridge_calls": 1430,
+      "bridge_calls_by_method": {
+        "backward": 12,
+        "camera_parameters": 1,
+        "follow_road": 55,
+        "forward": 28,
+        "holding": 312,
+        "local_road": 312,
+        "observe": 312,
+        "odometry": 312,
+        "take_exit": 18,
+        "turn": 68
+      },
+      "bridge_motion_requests": 181,
+      "motion_records": 181,
+      "motions_after_last_completed_round": 2,
+      "grab_requests": 0,
+      "release_requests": 0,
+      "foreign_requests": 0,
+      "brain_delivered_objects": 0,
+      "independent_observation_delivery_chains": 0,
+      "platform_deliveries": 0,
+      "qualified_physical_deliveries": 0,
+      "model_done_actions": 0,
+      "model_done_verified": false,
+      "post_action_completion_verified": false,
+      "terminal_done_verified": false,
+      "simulation_seconds": 220.16,
+      "last_observed_holding": false,
+      "original_brain_status": "failed",
+      "original_brain_reason": "not_started",
+      "development_stop": {
+        "scope": "development one-ball smoke; not formal stage-1",
+        "reason": "Repeated grab identity competition with no delivery; bounded stop for original-pixel/canonical-identity diagnosis, no safety override.",
+        "signal": "SIGINT to this brain only; driver remains responsible for platform stop/export",
+        "completed_rounds_at_request": 64
+      },
+      "platform_export_complete": true,
+      "driver_fixed_two_ball_success": false,
+      "independent_verdict_failures": [
+        "insufficient_physical_deliveries",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "bridge_observation_count_mismatch",
+        "done_post_action_completion_not_corroborated",
+        "strict_model_transcript_replay_failed"
+      ],
+      "strict_replay": {
+        "allPass": false,
+        "recorded_calls": 65,
+        "replayed_calls": 64,
+        "recorded_rounds": 64,
+        "replayed_rounds": 64,
+        "failures": [
+          "strict_model_transcript_replay_failed"
+        ],
+        "replay_error": {
+          "type": "ReplayError",
+          "message": "Replay ended before all recorded calls were consumed"
+        }
+      },
+      "verdict_source": "raw/smoke-01-evaluation/evaluation.json"
+    },
+    {
+      "name": "smoke-02",
+      "task": "把一个红球送到绿色存放区",
+      "stage": "one-ball-smoke",
+      "result": "FAIL",
+      "source_commit": "c351695f8c878e0923159d6be60d293d3c77979b",
+      "octos_robots_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+      "sources_unchanged": true,
+      "platform_run_id": "run-5cc2fcc8-29f3-412f-84bd-29c5978a7744",
+      "orchestration_run_ids": [
+        "d6e36474f39d4c13943f8f7061db77a9"
+      ],
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "round_records": 55,
+      "completed_rounds": 55,
+      "llm_calls": 67,
+      "llm_records_complete": 67,
+      "llm_started": 67,
+      "llm_finished": 67,
+      "real_api_calls": 67,
+      "real_api_finished": 67,
+      "unfinished_call_indices": [],
+      "issued_llm_actions": 56,
+      "completed_actions_by_name": {
+        "explore": 42,
+        "go_to": 4,
+        "look_around": 7,
+        "pick": 2
+      },
+      "last_issued_decision_index": 56,
+      "last_completed_round": 55,
+      "executor_dispatch_records": 55,
+      "executor_judge_records": 55,
+      "world_model_observations": 294,
+      "bridge_observe_requests": 295,
+      "bridge_calls": 1363,
+      "bridge_calls_by_method": {
+        "backward": 3,
+        "camera_parameters": 1,
+        "follow_road": 58,
+        "forward": 14,
+        "holding": 295,
+        "local_road": 295,
+        "observe": 295,
+        "odometry": 295,
+        "take_exit": 19,
+        "turn": 88
+      },
+      "bridge_motion_requests": 182,
+      "motion_records": 182,
+      "motions_after_last_completed_round": 0,
+      "grab_requests": 0,
+      "release_requests": 0,
+      "foreign_requests": 0,
+      "brain_delivered_objects": 0,
+      "independent_observation_delivery_chains": 0,
+      "platform_deliveries": 0,
+      "qualified_physical_deliveries": 0,
+      "model_done_actions": 0,
+      "model_done_verified": false,
+      "post_action_completion_verified": false,
+      "terminal_done_verified": false,
+      "simulation_seconds": 231.18,
+      "last_observed_holding": false,
+      "original_brain_status": "failed",
+      "original_brain_reason": "not_started",
+      "development_stop": {
+        "scope": "development one-ball smoke; not formal stage-1",
+        "reason": "After the sole feedback repair, identity conflict persisted; pick had no proven confirmation-view recovery and subsequent road actions repeatedly refused not_on_observed_road. No further supported progress; bounded stop, no third trial.",
+        "signal": "SIGINT to this brain only; driver remains responsible for platform stop/export",
+        "completed_rounds_at_request": 55
+      },
+      "platform_export_complete": true,
+      "driver_fixed_two_ball_success": false,
+      "independent_verdict_failures": [
+        "insufficient_physical_deliveries",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:delivery_identity_or_evidence_unresolved",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "bridge_observation_count_mismatch",
+        "done_post_action_completion_not_corroborated",
+        "strict_model_transcript_replay_failed"
+      ],
+      "strict_replay": {
+        "allPass": false,
+        "recorded_calls": 67,
+        "replayed_calls": 65,
+        "recorded_rounds": 55,
+        "replayed_rounds": 55,
+        "failures": [
+          "strict_model_transcript_replay_failed"
+        ],
+        "replay_error": {
+          "type": "ReplayError",
+          "message": "Replay ended before all recorded calls were consumed"
+        }
+      },
+      "verdict_source": "raw/smoke-02-evaluation/evaluation.json"
+    }
+  ],
+  "definitions": {
+    "completed_rounds": "Recorded action/result rows without exception error_type; interrupted tail is not completed.",
+    "real_api_calls": "Live lifecycle started events, including unfinished attempts; start does not assert a completed response.",
+    "llm_calls": "Complete rows in llm.jsonl; llm_started/finished separately retain interrupted request attempts.",
+    "issued_llm_actions": "Valid action dictionaries in the original LLM transcript, including an interrupted last round.",
+    "bridge_calls": "Original bridge request log rows, including sensors; method counts do not assert physical success.",
+    "motion_records": "Original motions.jsonl rows; may include a round without a completed round record.",
+    "qualified_physical_deliveries": "Existing independent evaluation qualifying_delivered_target_ids count.",
+    "independent_observation_delivery_chains": "Existing independent task_scope.observed_evidence.deliveries count.",
+    "driver_fixed_two_ball_success": "Unchanged two-ball driver verdict; not the one-ball smoke acceptance result.",
+    "original_brain_reason": "Copied unchanged; consult development_stop and SMOKE01_NOTES.md for an interrupted tail."
+  },
+  "script_sha256": "1d838106e59fee35aeb219ded72387f4bab4f415124427a7716714d35e98f356",
+  "inputs": {
+    "raw/smoke-01/manifest.json": {
+      "sha256": "849de48ba7f5acc4a713e0b38e119044a1cac39d33925e22c0ffc59798c340f6",
+      "bytes": 16874
+    },
+    "raw/smoke-01/summary.json": {
+      "sha256": "bf66ecab06aea35f09addc83685bda13d1bd1b53f1443a291b8e372578dce48b",
+      "bytes": 756342
+    },
+    "raw/smoke-01/map-05-run-1/brain/summary.json": {
+      "sha256": "7fe163348e46eb89fd08b598d7f7b17180f379c3a2432f22c899f93950d8694b",
+      "bytes": 601278
+    },
+    "raw/smoke-01/map-05-run-1/brain/rounds.jsonl": {
+      "sha256": "403023d3c2419c83635d2573f48030b012a1a3bdb2388ff17349db2a25dd0c1b",
+      "bytes": 8242433
+    },
+    "raw/smoke-01/map-05-run-1/brain/llm.jsonl": {
+      "sha256": "4d2ebe56c2a75a47cac81c2820e6f1d875b1af24b4772600c69b54f17a889231",
+      "bytes": 4733735
+    },
+    "raw/smoke-01/map-05-run-1/brain/llm.lifecycle.jsonl": {
+      "sha256": "18870dbd36f5a95be590eed5e5746503f3afcbf562e7eb5f20d8be5aa868c3fe",
+      "bytes": 9114794
+    },
+    "raw/smoke-01/map-05-run-1/brain/bridge-calls.jsonl": {
+      "sha256": "0e8330c931beae041d6506fdd66deb535abaab8ce1e7bfba0d3d15e4e833ba1e",
+      "bytes": 650937
+    },
+    "raw/smoke-01/map-05-run-1/brain/observations.jsonl": {
+      "sha256": "fb9c438db3d22f844f855d9477f09a31fa734256598c7325dee6129e739d2874",
+      "bytes": 28836192
+    },
+    "raw/smoke-01/map-05-run-1/brain/motions.jsonl": {
+      "sha256": "4710a8a27635fe6b9a481c9e22a95846b733e861a4adc0be397dce468ef6e799",
+      "bytes": 102730
+    },
+    "raw/smoke-01-evaluation/evaluation.json": {
+      "sha256": "e683e084f6e037e1e3e648232036418f9052bd66b042081456dbffab5b5bde57",
+      "bytes": 573734
+    },
+    "raw/smoke-01/map-05-run-1/evaluation.json": {
+      "sha256": "61db98d46d38ef48e1d34db1ff2ef09a64845818f4d24127cc4ee2f5015385d2",
+      "bytes": 648548
+    },
+    "raw/smoke-01/map-05-run-1/envelope.json": {
+      "sha256": "50d9e1da6924c742ce3a5ae8d7ba40e6a558e225e28d4061b5ff39c9a469be29",
+      "bytes": 594
+    },
+    "raw/smoke-01/map-05-run-1/development-stop-request.json": {
+      "sha256": "f2bff40606ab0ef3f0007de59e4e939a26752e8412283e261c79249b57fa20ba",
+      "bytes": 530
+    },
+    "raw/smoke-02/manifest.json": {
+      "sha256": "be87649f1d9909696859645da80903b627a822ef70ea3a2668d3d9b9ba183875",
+      "bytes": 16874
+    },
+    "raw/smoke-02/summary.json": {
+      "sha256": "9618808896aa0f4ac94e829d10bbf33c202e012ec973c5da571cb15e4cde6132",
+      "bytes": 831676
+    },
+    "raw/smoke-02/map-05-run-1/brain/summary.json": {
+      "sha256": "3952fe18cbe576598f45adf6f74367d4f40134c33d56be438706c0c698e16698",
+      "bytes": 662168
+    },
+    "raw/smoke-02/map-05-run-1/brain/rounds.jsonl": {
+      "sha256": "f2e0ff10ab4b16caf58f282f01495e9591ccf2e5ba6de99cfd0d6712b74ba160",
+      "bytes": 7384525
+    },
+    "raw/smoke-02/map-05-run-1/brain/llm.jsonl": {
+      "sha256": "202cf6b2f86ad80e599f9b97eee467b8eb6511b67a349807d94b8eb694f82d15",
+      "bytes": 5067958
+    },
+    "raw/smoke-02/map-05-run-1/brain/llm.lifecycle.jsonl": {
+      "sha256": "3d9f1d9c76c5725781d481daf8d030a23d69f49a0165ff12bf7626efbeaadfde",
+      "bytes": 9788429
+    },
+    "raw/smoke-02/map-05-run-1/brain/bridge-calls.jsonl": {
+      "sha256": "8a3ecc790e82f106761607b23d133cdd86f3285b544917d8c24b1245a9bd3169",
+      "bytes": 594542
+    },
+    "raw/smoke-02/map-05-run-1/brain/observations.jsonl": {
+      "sha256": "6a74d460dbfaf11b74f421ebd06d44dee37ad0bea5151132ab3142689cc9f57c",
+      "bytes": 27283220
+    },
+    "raw/smoke-02/map-05-run-1/brain/motions.jsonl": {
+      "sha256": "57f843b200384646f3fe52c334ff9cd8fee71e54dc270496bbef1ea2ea11a4c9",
+      "bytes": 100690
+    },
+    "raw/smoke-02-evaluation/evaluation.json": {
+      "sha256": "de17f5904b05c20af77bd3662728f3336f8c6632a4bfe00313452e04b35f908c",
+      "bytes": 393378
+    },
+    "raw/smoke-02/map-05-run-1/evaluation.json": {
+      "sha256": "5cc25c4fe7d383e0d5443cfa063360d2895c96f19c772356c019b40a4d32719d",
+      "bytes": 714222
+    },
+    "raw/smoke-02/map-05-run-1/envelope.json": {
+      "sha256": "bac9be329367745db263c9a3a6476ea725bad04ca4fb939efd2d98a39636a603",
+      "bytes": 594
+    },
+    "raw/smoke-02/map-05-run-1/development-stop-request.json": {
+      "sha256": "dfd354a0bc93778edbe6de416c4a9abe23567df8b4c8a2a175b1c67585907eda",
+      "bytes": 623
+    },
+    "raw/service/chat-format-fix/llm.jsonl": {
+      "sha256": "5d7ad4ac7d7deb598c42b1998d395a78633f8b2104dfa14be74d73afffcc3c95",
+      "bytes": 5676
+    },
+    "raw/service/chat-format-fix/llm.lifecycle.jsonl": {
+      "sha256": "94ac85f0e4eb8253418d01a214cf6894d91aa5668d9c8caa983ac139d1ecbbea",
+      "bytes": 6889
+    },
+    "raw/service/chat-format-fix/RESULT.json": {
+      "sha256": "4e4b9a7c761907b27d57f8328b65d5fbd85f21db50e98d014c4ec59aeb8543c0",
+      "bytes": 535
+    },
+    "raw/service/chat-once/llm.jsonl": {
+      "sha256": "9ae4d923b62c127a44bf402e0438492b737ed2a1bb26553028be2c0d50a45f04",
+      "bytes": 10321
+    },
+    "raw/service/chat-once/llm.lifecycle.jsonl": {
+      "sha256": "03db8e7b05a6df1854c91ebecdc9e7e306868acf53887e96cfd7d726891a83a6",
+      "bytes": 11380
+    },
+    "raw/service/chat-once/RESULT.json": {
+      "sha256": "0d0d66464467d8a9b9f80205dff506b7d65fe35f933f8655883a7e68f9badd45",
+      "bytes": 575
+    }
+  }
+}

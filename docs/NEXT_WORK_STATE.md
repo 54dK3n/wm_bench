@@ -1,11 +1,12 @@
-# 当前任务：真实平台 + LLM + WorldModel + 既有编排层
+# 当前状态：真实编排闭环已运行，一球搬运 FAIL，停止开发迭代
 
-2026-09-27：优先接通并实际演示搬运闭环，复用 `54dK3n/octos_robots` 的框架无关 Executor；不将其称为外部 Octos runtime。现有感知、Actions、WorldModel、白名单与验收门槛保持，一个 Runtime 贯穿整局，Executor 平台模式不自动重试。
+2026-09-27：已复用 `54dK3n/octos_robots` 的框架无关 Executor，实际经过真实模型、技能分发、原 Actions、平台新观测与同一 WorldModel；外部 Octos runtime 未接入。保持原白名单、确认/抓放与完成标准，Executor 不叠加重试。
 
-- 模型：DeepSeek Flash / temperature=0 / thinking=disabled；第二次独立真实 Chat Completion 已返回合法动作，首次格式错误记录保留。这两次均不是平台任务。
-- 当前状态：接线中；一球 demo **NOT_RUN**，双球阶段 1 **NOT_RUN**。下一步是完成入口并运行真实平台，不用 mock、回放或计划代替演示。
-- 阶段 2、十布局与真机暂缓；新调试和正式局分别新建目录，运行期间源码固定。
-- [本轮一页报告](../artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md)；[上一轮 HTTP 402 / NOT_RUN 交付](../artifacts/autonomous-brain/grab-sampling-contract-20260927/REPORT.md)。旧 PASS / FAIL 与原证据保持。
+- 两局一球开发 demo 均 FAIL：完整轮 64/55，真实模型调用 65/67，观测命令链与物理交付均 0，未发出 grab/release，也没有主动 done。原双球阶段 1 **NOT_RUN**。
+- 模型为官方 DeepSeek Flash / temperature=0 / thinking=disabled。本轮真实生成与任务调用成功，不改写上一轮 HTTP 402 预检历史。
+- 唯一迭代补齐身份竞争失败及恢复的有界反馈。第二局模型选择探索并换位后，仍受身份竞争与离路恢复阻断，停止于新证据不足；没有第三局、阶段 2、十布局或真机。
+- 最新冻结主仓 `c351695f8c878e0923159d6be60d293d3c77979b`；编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`。两局运行期间源码不变，旧结果与原始记录保留。
+- [一页结果与真实启动命令](../artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md) · [指标与输入哈希](../artifacts/autonomous-brain/octos-live-demo-20260927/METRICS.json) · [恢复入口](../artifacts/autonomous-brain/octos-live-demo-20260927/RESTORE.md)。下一项直接阻塞是有唯一身份依据的重确认与安全归路，当前不再自行运行。
 
 ## 历史状态：2026-09-25 外部单动作大脑（以下保留原文）
 

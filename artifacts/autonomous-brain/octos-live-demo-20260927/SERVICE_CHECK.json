@@ -1,0 +1,39 @@
+{
+  "configuration_file": ".env.local (ignored; values not copied)",
+  "endpoint": "https://api.deepseek.com/v1",
+  "model": "deepseek-flash",
+  "temperature": 0,
+  "thinking": "disabled",
+  "chat_completion_requests": 2,
+  "attempts": [
+    {
+      "directory": "raw/service/chat-once",
+      "request_count": 1,
+      "available_action_format": false,
+      "model": "deepseek-flash",
+      "action": null,
+      "validation_error": "Expected exactly action and params fields",
+      "transport_error": null,
+      "robot_started": false,
+      "formal_task": false,
+      "llm_sha256": "9ae4d923b62c127a44bf402e0438492b737ed2a1bb26553028be2c0d50a45f04"
+    },
+    {
+      "directory": "raw/service/chat-format-fix",
+      "request_count": 1,
+      "available_action_format": true,
+      "model": "deepseek-flash",
+      "action": {
+        "action": "look_around",
+        "params": {}
+      },
+      "validation_error": null,
+      "transport_error": null,
+      "robot_started": false,
+      "formal_task": false,
+      "llm_sha256": "5d7ad4ac7d7deb598c42b1998d395a78633f8b2104dfa14be74d73afffcc3c95"
+    }
+  ],
+  "explanation": "The first request produced an availability-report JSON rather than action/params. Only the isolated format-test prompt was clarified; the second separately recorded real completion returned the required action. No endpoint, model, credential or action-validation change.",
+  "account_data_in_public_evidence": false
+}
