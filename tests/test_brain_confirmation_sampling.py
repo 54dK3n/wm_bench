@@ -55,8 +55,10 @@ class SensorBridge:
         if method == 'local_road':
             return {'tick':self.tick,'onRoad':True,'atNode':self.at_node,
                     'atJunction':self.at_node,'exits':[{'angleDeg':0}] if self.at_node else [],
-                    'headingErrorDeg':15 if self.mode=='turn_only' else 0,'frontClearanceCm':100,
-                    'leftClearanceCm':10,'rightClearanceCm':10}
+                    'headingErrorDeg':15 if self.mode=='turn_only' else 0,
+                    'frontClearanceCm':.1 if self.mode=='turn_only' else 100,
+                    'leftClearanceCm':.1 if self.mode=='turn_only' else 10,
+                    'rightClearanceCm':.1 if self.mode=='turn_only' else 10}
         if method == 'holding':return {'holding':False}
         if method == 'observe':
             return {'frameId':str(self.frame),'tick':self.tick,'width':640,'height':480,
@@ -201,8 +203,14 @@ def test_outside_window_discovery_must_get_three_real_hits_after_approach():
 
 def test_rotations_and_new_frames_alone_do_not_create_a_confirmation_hit():
     r=sampling_runtime(mode='turn_only')
+    # Rotations are explicit evidence here, rather than an expectation that
+    # the planner blindly repeats alignment despite having no useful view.
+    r.actions.move('turn',{'angleDeg':15,'speed':50});r.observe()
+    r.actions.move('turn',{'angleDeg':-15,'speed':50});r.observe()
+    previous_calls=len(r.bridge.calls)
     result=sample(r)
     assert not result['success']
+    assert len(r.bridge.calls)==previous_calls
     assert r.bridge.calls and all(method=='turn' for method,params in r.bridge.calls)
     assert all(o['hit_count']<=1 for o in r.perception.objects())
 

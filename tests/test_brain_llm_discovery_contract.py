@@ -28,7 +28,7 @@ def discovery_state():
 def test_v18_accepts_current_stable_hypothesis_or_original_source_without_rewriting(discovery_state,selected):
     action={'action':'explore','params':{'discovery_id':selected}}
     before=copy.deepcopy(discovery_state)
-    assert llm.validate_action(action,discovery_state)==action
+    assert llm.validate_action(action,discovery_state,transcript_version="autonomous-brain-llm/v18")==action
     assert discovery_state==before
 
 
@@ -37,13 +37,13 @@ def test_v18_accepts_current_stable_hypothesis_or_original_source_without_rewrit
     {'discovery_id':'unknown'},{'discovery_id':'latest-7'},
     {'discovery_id':'stable-1','exit_angle':0},{'discovery_id':'stable-1','route':[]}])
 def test_v18_rejects_invalid_hidden_latest_or_conflicting_selections(discovery_state,params):
-    with pytest.raises(llm.ActionValidationError):llm.validate_action({'action':'explore','params':params},discovery_state)
+    with pytest.raises(llm.ActionValidationError):llm.validate_action({'action':'explore','params':params},discovery_state,transcript_version='autonomous-brain-llm/v18')
 
 
 def test_v18_discovery_selection_must_identify_one_current_summary_row(discovery_state):
     discovery_state['discovery']['pending'].append(copy.deepcopy(discovery_state['discovery']['pending'][0]))
     with pytest.raises(llm.ActionValidationError):
-        llm.validate_action({'action':'explore','params':{'discovery_id':'stable-1'}},discovery_state)
+        llm.validate_action({'action':'explore','params':{'discovery_id':'stable-1'}},discovery_state,transcript_version='autonomous-brain-llm/v18')
 
 
 @pytest.mark.parametrize('state_name',['TENTATIVE','STALE','LOST'])
@@ -84,13 +84,14 @@ def test_literal_old_invalid_discovery_then_repair_replays_exactly(tmp_path,disc
     assert records(tmp_path/'replay.jsonl')==[dict(r,mode='replay') for r in original]
 
 
-def test_v18_live_selection_prompt_and_exact_offline_replay(tmp_path,discovery_state):
+def test_v19_live_selection_prompt_and_exact_offline_replay(tmp_path,discovery_state):
+    discovery_state["discovery"]["executable_candidates"]=[dict(discovery_state["discovery"]["pending"][0],sampling_executable=True)]
     selected={'action':'explore','params':{'discovery_id':'stable-1'}}
     source=tmp_path/'live.jsonl'
     with patch('urllib.request.urlopen',return_value=response(canonical(selected))):
         with llm.LLMClient(source) as client:assert client.decide(discovery_state)==selected
     row,=records(source)
-    assert row['version']=='autonomous-brain-llm/v18'
+    assert row['version']=='autonomous-brain-llm/v19'
     prompt=row['request']['messages'][0]['content']
     for phrase in ['discovery_id','source_discovery_id','互斥','只取得确认','不抓取','CONFIRMED']:
         assert phrase in prompt
@@ -154,3 +155,17 @@ def test_recent_sampling_viewpoint_constraints_are_bounded_and_copied():
                                         'no_reverse_support','pose_not_independent']
     out['viewpoint_constraints'][0]='changed'
     assert constraints[0]=='range_window_unavailable'
+
+
+def test_recent_sampling_restoration_is_bounded_and_not_confirmation():
+    from autonomous_brain.run import compact_action_result
+    recovery={'success':True,'reason':'view_restored','restored_observation':9,
+        'source_observation':2,'observed_pose_restored':True,'raw_path':[{}]*1000}
+    result={'success':False,'reason':'confirmation_no_safe_independent_viewpoint',
+        'evidence':{'confirmation_sampling':{'recovery_attempt':recovery}}}
+    out=compact_action_result(1,{'action':'explore','params':{'discovery_id':'stable'}},result,10)
+    assert not out['success']
+    assert out['evidence']['confirmation_sampling']['recovery_attempt']=={
+        'success':True,'reason':'view_restored','restored_observation':9}
+    out['evidence']['confirmation_sampling']['recovery_attempt']['reason']='tampered'
+    assert recovery['reason']=='view_restored'

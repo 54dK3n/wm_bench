@@ -11,7 +11,7 @@ import math
 from .navigation import distance, position, wrap
 from .perception import RANGE_CAL
 
-VERSION = "brain-confirmation-sampling/v1"
+VERSION = "brain-confirmation-sampling/v2"
 MAX_STEPS = 12
 MAX_TRAVEL_CM = 120
 
@@ -29,7 +29,7 @@ def _reading(point, xy, heading):
     return raw, math.degrees(beta)
 
 
-def _reverse_support(actions, length):
+def _reverse_support(actions, length, snapshot=None):
     """Only a collinear part of a recorded, accepted road motion may be backed.
 
     No inferred link between nearby roads, no blind rear clearance assumption,
@@ -38,8 +38,9 @@ def _reverse_support(actions, length):
     getter = getattr(actions.r.roads, 'road_segment_records', None)
     if getter is None:
         return None
-    p = position(actions.s['odometry'])
-    theta = math.radians(actions.s['odometry']['headingDeg'])
+    snapshot = actions.s if snapshot is None else snapshot
+    p = position(snapshot['odometry'])
+    theta = math.radians(snapshot['odometry']['headingDeg'])
     q = (p[0]+length/100*math.sin(theta),p[1]-length/100*math.cos(theta))
     segments=getter()
     for index in range(len(segments)-1,-1,-1):
@@ -49,7 +50,7 @@ def _reverse_support(actions, length):
         chord = distance(start,end)*100
         if (chord < .2 or abs(chord-segment['travelled_cm']) > .2
                 or abs(wrap(a['travel_heading_deg']-b['travel_heading_deg'])) > .2
-                or abs(wrap(b['travel_heading_deg']-actions.s['odometry']['headingDeg'])) > .2):
+                or abs(wrap(b['travel_heading_deg']-snapshot['odometry']['headingDeg'])) > .2):
             continue
         def on_segment(point):
             vx,vz=end[0]-start[0],end[1]-start[1]
@@ -81,27 +82,17 @@ def _reverse_support(actions, length):
     return None
 
 
-def _plan(actions, target, remaining, rejections):
+def _translation_choices(actions, target, snapshot, remaining, rejections):
+    """Evaluate only bounded translations; hypothetical poses never earn hits."""
     from .actions import road_translation_limit
-    road,odo=actions.s['road'],actions.s['odometry']
+    road,odo=snapshot['road'],snapshot['odometry']
     det=target['current_detection']
     poses=target['confirmation']['accepted_hit_poses']
     gap=target['confirmation']['min_hit_pose_gap_m']
     here=position(odo);heading=odo['headingDeg']
-    if road.get('atNode'):
-        turns=[e['angleDeg'] for e in road.get('exits',[]) if abs(e['angleDeg'])<=35]
-    else:
-        turns=[road.get('headingErrorDeg')]
-    turns=[a for a in turns if type(a) in (int,float) and math.isfinite(a)
-           and abs(det['raw_bearing_deg']+a)<=33]
     def reject(reason):
         rejections[reason]=rejections.get(reason,0)+1
 
-    if turns:
-        angle=min(turns,key=abs)
-        if abs(angle)>=1:
-            return {'method':'turn','params':{'angleDeg':angle,'speed':50},
-                    'basis':'fresh_observed_road_direction_preserving_target_view'}
     choices=[]
     for method in ('forward','backward'):
         for length in (15.5,16.,17.,18.,20.,10.):
@@ -125,11 +116,9 @@ def _plan(actions, target, remaining, rejections):
                 reject('insufficient_separation_from_accepted_hit_poses');continue
             support=None
             if method=='backward':
-                support=_reverse_support(actions,length)
+                support=_reverse_support(actions,length,snapshot)
                 if support is None:
                     reject('reverse_path_not_continuously_observed');continue
-            elif not turns:
-                reject('no_observed_road_direction_preserves_target_view');continue
             permitted,clearance=road_translation_limit(road,method,length)
             if permitted+1e-9<length:
                 reject('insufficient_local_road_clearance');continue
@@ -137,7 +126,8 @@ def _plan(actions, target, remaining, rejections):
             # observed node use the uniquely sensed exit direction and a
             # bounded basic step, avoiding take_exit's unbounded endpoint.
             motor=method
-            if method=='forward' and not road.get('atNode'):motor='follow_road'
+            if (method=='forward' and not road.get('atNode')
+                    and abs(road['headingErrorDeg'])<1):motor='follow_road'
             if method=='forward' and road.get('atNode'):
                 aligned=[e for e in road.get('exits',[]) if abs(e['angleDeg'])<1]
                 if len(aligned)!=1:
@@ -149,7 +139,124 @@ def _plan(actions, target, remaining, rejections):
                  'independent_pose_predicted':independent,'road_clearance':clearance,
                  'reverse_path_support':support,
                  'basis':'public_target_estimate_local_road_and_accepted_hit_poses'}))
-    return min(choices,key=lambda c:c[:4])[-1] if choices else None
+    return choices
+
+
+def _plan(actions, target, remaining, rejections, failed_viewpoints=(), comparison_out=None):
+    """Compare present translations with observed turns plus a next viewpoint.
+
+    A turn is useful only if its camera projection preserves the range and
+    bearing margins and a subsequent independent translation is feasible.
+    That next translation is advisory: fresh sensors must replan after turning.
+    """
+    current_rejections={}
+    direct=_translation_choices(actions,target,actions.s,remaining,current_rejections)
+    comparison={'schema':'brain-viewpoint-comparison/v1',
+                'current_translation_count':len(direct),
+                'current_rejections':current_rejections,'turns':[]}
+    choices=[((0,*score[:4]),score[-1]) for score in direct]
+    road,odo=actions.s['road'],actions.s['odometry']
+    if road.get('atNode'):
+        angles=[e.get('angleDeg') for e in road.get('exits',[])]
+        angles=[a for a in angles if type(a) in (int,float) and math.isfinite(a) and abs(a)<=35]
+    else:
+        angles=[road.get('headingErrorDeg')]
+    angles=sorted({a for a in angles if type(a) in (int,float)
+                   and math.isfinite(a) and 1<=abs(a)<=180},key=lambda a:(abs(a),a))[:6]
+    det=target['current_detection']
+    for angle in angles:
+        row={'angle_deg':angle,'rejections':{}}
+        comparison['turns'].append(row)
+        projected=copy.deepcopy(actions.s)
+        projected['odometry']['headingDeg']=wrap(odo['headingDeg']+angle)
+        reading=_reading(det['position_m'],position(odo),projected['odometry']['headingDeg'])
+        if reading is not None:
+            row.update(predicted_raw_distance_cm=reading[0],predicted_raw_bearing_deg=reading[1])
+        if reading is None or abs(reading[1])>33:
+            row['rejections']['turn_target_would_leave_view']=1
+            continue
+        far_probe=det['raw_distance_cm']>=90 and reading[0]>=42
+        if not (42<=reading[0]<=87 or far_probe):
+            row['rejections']['turn_target_would_leave_confirmation_window']=1
+            continue
+        error=road.get('headingErrorDeg')
+        if type(error) in (int,float) and math.isfinite(error):
+            projected['road']['headingErrorDeg']=wrap(error-angle)
+        projected['road']['exits']=[{**e,'angleDeg':wrap(e['angleDeg']-angle)}
+                                   for e in road.get('exits',[])
+                                   if type(e.get('angleDeg')) in (int,float) and math.isfinite(e['angleDeg'])]
+        successors=_translation_choices(actions,target,projected,remaining,row['rejections'])
+        row['next_translation_count']=len(successors)
+        row['reverse_path_preserved']=any(c[-1]['reverse_path_support'] for c in successors)
+        if not successors:
+            row['rejections']['turn_has_no_safe_next_viewpoint']=1
+            continue
+        next_choice=min(successors,key=lambda c:c[:4])
+        plan={'method':'turn','params':{'angleDeg':angle,'speed':50},
+              'predicted_raw_distance_cm':reading[0],'predicted_raw_bearing_deg':reading[1],
+              'next_independent_viewpoint':next_choice[-1],
+              'next_viewpoint_requires_fresh_observation':True,
+              'basis':'observed_road_turn_preserving_raw_window_with_next_viewpoint'}
+        choices.append(((1,*next_choice[:4],abs(angle)),plan))
+    for reasons in [current_rejections]+[t['rejections'] for t in comparison['turns']]:
+        for reason,count in reasons.items():rejections[reason]=rejections.get(reason,0)+count
+    usable=[]
+    for score,plan in choices:
+        repeated=any(distance(position(odo),f['position_m'])<=.002
+                     and abs(wrap(odo['headingDeg']-f['heading_deg']))<=.2
+                     and plan['method']==f['method']
+                     and all(abs(plan['params'][k]-f['params'][k])<=.2
+                             for k in ('angleDeg', 'distanceCm') if k in plan['params'])
+                     for f in failed_viewpoints)
+        if repeated:
+            rejections['same_action_viewpoint_already_lost']=rejections.get('same_action_viewpoint_already_lost',0)+1
+        else:usable.append((score,plan))
+    if comparison_out is not None:comparison_out.update(copy.deepcopy(comparison))
+    if not usable:return None
+    chosen=min(usable,key=lambda c:c[0])[1]
+    chosen['viewpoint_comparison']=comparison
+    return chosen
+
+
+def _restore_plan(actions, before, target, entry, remaining):
+    """One action-local return to a witnessed view, never an unseen search."""
+    from .actions import road_translation_limit
+    after=actions.s
+    det=target.get('current_detection')
+    if (not det or not 40<=det['raw_distance_cm']<90 or abs(det['raw_bearing_deg'])>35
+            or not before['road'].get('onRoad') or not after['road'].get('onRoad')):
+        return None,'previous_unique_admitted_view_unavailable'
+    p,q=position(before['odometry']),position(after['odometry'])
+    old_heading=before['odometry']['headingDeg']
+    heading=after['odometry']['headingDeg']
+    predicted=_reading(det['position_m'],p,old_heading)
+    if predicted is None or not 40<=predicted[0]<90 or abs(predicted[1])>35:
+        return None,'previous_view_no_longer_in_original_window'
+    plan={'phase':'restore_previous_view',
+          'restore_source_observation':before['observation_index'],
+          'planned_position_m':list(p),'planned_heading_deg':old_heading,
+          'predicted_raw_distance_cm':predicted[0],'predicted_raw_bearing_deg':predicted[1],
+          'basis':'same_action_last_unique_view_and_recorded_motion'}
+    if entry['method']=='turn':
+        if distance(p,q)>.002:return None,'turn_changed_position'
+        angle=wrap(old_heading-heading)
+        if abs(angle)<1:return None,'restore_turn_below_legal_minimum'
+        plan.update(method='turn',params={'angleDeg':angle,'speed':50})
+    elif entry['method'] in {'forward','follow_road'}:
+        length=distance(p,q)*100
+        if length<.2 or length>remaining:return None,'restore_outside_remaining_travel_budget'
+        support=_reverse_support(actions,length)
+        if support is None:return None,'reverse_path_not_continuously_observed'
+        if (distance(support['planned_position_m'],p)>.002
+                or abs(wrap(heading-old_heading))>.2):
+            return None,'reverse_would_not_restore_observed_view'
+        permitted,clearance=road_translation_limit(after['road'],'backward',length)
+        if permitted+1e-9<length:return None,'restore_local_road_clearance_insufficient'
+        plan.update(method='backward',params={'distanceCm':length,'speed':30},
+                    reverse_path_support=support,road_clearance=clearance)
+    else:
+        return None,'no_proven_inverse_motion_for_previous_step'
+    return plan,None
 
 
 def sample_discovery(actions, discovery_id):
@@ -161,6 +268,7 @@ def sample_discovery(actions, discovery_id):
            'travelled_cm':0.,'steps':[]}
     first=r.perception.discovery_target(discovery_id)
     locked=None
+    failed_viewpoints=[]
     start_odometer=actions.s['odometry']['distanceCm']
     initial_holding=actions.s['holding']['holding']
 
@@ -170,6 +278,45 @@ def sample_discovery(actions, discovery_id):
             independent_hits_added=max(0,obj.get('hit_count',0)-trace['initial_hit_count']),
             travelled_cm=actions.s['odometry']['distanceCm']-start_odometer)
         return actions.result(success,reason,confirmation_sampling=copy.deepcopy(trace))
+
+    def perform(plan,target):
+        before=copy.deepcopy(actions.s)
+        entry={**plan,'before_observation':before['observation_index'],
+               'before_detection':copy.deepcopy((target or {}).get('current_detection')),
+               'accepted_hit_poses_before':copy.deepcopy((target or {}).get('confirmation',{}).get('accepted_hit_poses',[]))}
+        trace['steps'].append(entry)
+        try:result=actions.move(plan['method'],plan['params'])
+        except ObservedMotionFailure as error:
+            entry['motion_failure']=error.evidence
+            return before,entry,r.perception.discovery_target(discovery_id),'confirmation_'+error.reason
+        except Exception as error:
+            # Primitive recovery only observes; preserve the original failure
+            # and every restore command, never resend an uncertain command.
+            trace['reason']='confirmation_motion_outcome_unknown'
+            trace['travelled_cm']=actions.s['odometry']['distanceCm']-start_odometer
+            evidence=copy.deepcopy(getattr(error,'action_evidence',{}))
+            evidence['confirmation_sampling']=copy.deepcopy(trace)
+            error.action_evidence=evidence
+            raise
+        after=actions.s
+        fresh=r.perception.discovery_target(discovery_id)
+        entry.update(after_observation=after['observation_index'],actuator_result=copy.deepcopy(result),
+                     actual_position_m=list(position(after['odometry'])),
+                     measured_displacement_cm=distance(position(before['odometry']),position(after['odometry']))*100,
+                     after_sampling_reason=(fresh or {}).get('reason'),
+                     after_detection=copy.deepcopy((fresh or {}).get('current_detection')))
+        if fresh:entry['accepted_hit_poses_after']=copy.deepcopy(fresh['confirmation']['accepted_hit_poses'])
+        failure=None
+        if after['odometry']['distanceCm']-start_odometer>MAX_TRAVEL_CM+1e-9:
+            failure='confirmation_actual_travel_budget_exceeded'
+        elif not after['road'].get('onRoad') or result.get('stoppedBy') in {
+                'collision','front_clearance','off_road','wrong_way'}:
+            failure='confirmation_motion_blocked'
+        elif after['holding']['holding']!=initial_holding:
+            failure='confirmation_holding_changed'
+        elif plan['method']!='turn' and entry['measured_displacement_cm']<.2:
+            failure='confirmation_no_observed_translation'
+        return before,entry,fresh,failure
 
     if first is None:return finish(False,'confirmation_discovery_not_available')
     r.active_discovery_id=first['hypothesis_id']
@@ -199,51 +346,57 @@ def sample_discovery(actions, discovery_id):
             return finish(False,'confirmation_not_on_observed_road',target)
         if actions.s['holding']['holding']!=initial_holding:
             return finish(False,'confirmation_holding_changed',target)
-        if step>=MAX_STEPS or travelled>=MAX_TRAVEL_CM:
+        if len(trace['steps'])>=MAX_STEPS or travelled>=MAX_TRAVEL_CM:
             return finish(False,'confirmation_sampling_budget_exhausted',target)
         rejections={}
-        plan=_plan(actions,target,MAX_TRAVEL_CM-travelled,rejections)
+        comparison={}
+        plan=_plan(actions,target,MAX_TRAVEL_CM-travelled,rejections,failed_viewpoints,comparison)
+        trace['last_viewpoint_comparison']=comparison
         if plan is None:
             trace['viewpoint_rejections']=rejections
             trace['viewpoint_constraints']=sorted(rejections)[:6]
             return finish(False,'confirmation_no_safe_independent_viewpoint',target)
-        before=copy.deepcopy(actions.s)
-        entry={**plan,'before_observation':before['observation_index'],
-               'before_detection':copy.deepcopy(target['current_detection']),
-               'accepted_hit_poses_before':copy.deepcopy(target['confirmation']['accepted_hit_poses'])}
-        trace['steps'].append(entry)
-        try:result=actions.move(plan['method'],plan['params'])
-        except ObservedMotionFailure as error:
-            entry['motion_failure']=error.evidence
-            return finish(False,'confirmation_'+error.reason,r.perception.discovery_target(discovery_id))
-        except Exception as error:
-            # The primitive already performed its read-only recovery. Preserve
-            # sampling intent alongside that evidence and never resend it.
-            trace['reason']='confirmation_motion_outcome_unknown'
-            trace['travelled_cm']=actions.s['odometry']['distanceCm']-start_odometer
-            evidence=copy.deepcopy(getattr(error,'action_evidence',{}))
-            evidence['confirmation_sampling']=copy.deepcopy(trace)
-            error.action_evidence=evidence
-            raise
-        after=actions.s
-        entry.update(after_observation=after['observation_index'],actuator_result=copy.deepcopy(result),
-                     actual_position_m=list(position(after['odometry'])),
-                     measured_displacement_cm=distance(position(before['odometry']),position(after['odometry']))*100)
-        if not after['road'].get('onRoad') or result.get('stoppedBy') in {
-                'collision','front_clearance','off_road','wrong_way'}:
-            return finish(False,'confirmation_motion_blocked',target)
-        if after['holding']['holding']!=initial_holding:
-            return finish(False,'confirmation_holding_changed',target)
-        if plan['method']!='turn' and entry['measured_displacement_cm']<.2:
-            return finish(False,'confirmation_no_observed_translation',target)
-        fresh=r.perception.discovery_target(discovery_id)
-        entry['after_sampling_reason']=(fresh or {}).get('reason')
-        entry['after_detection']=copy.deepcopy((fresh or {}).get('current_detection'))
-        if fresh and fresh['current_detection']:
-            current=fresh['current_detection'];prior=target['current_detection']
-            entry['accepted_hit_poses_after']=copy.deepcopy(fresh['confirmation']['accepted_hit_poses'])
-            if (40<=prior['raw_distance_cm']<90 and not 40<=current['raw_distance_cm']<90):
-                return finish(False,'confirmation_range_window_lost',fresh)
+        before,entry,fresh,failure=perform(plan,target)
+        if failure:return finish(False,failure,fresh)
+        current=(fresh or {}).get('current_detection')
+        prior=target['current_detection']
+        lost_window=bool(current and 40<=prior['raw_distance_cm']<90
+                         and (not 40<=current['raw_distance_cm']<90 or abs(current['raw_bearing_deg'])>35))
+        lost_view=bool(not current and (fresh or {}).get('reason') in {'needs_fresh_observation','target_confirmed'})
+        if lost_view or lost_window:
+            reason='confirmation_range_window_lost' if lost_window else 'confirmation_needs_fresh_observation'
+            if 'recovery_attempt' in trace:return finish(False,reason,fresh)
+            attempt={'trigger_observation':actions.s['observation_index'],
+                     'source_observation':before['observation_index'],
+                     'trigger_reason':reason,'success':False}
+            trace['recovery_attempt']=attempt
+            if len(trace['steps'])>=MAX_STEPS:
+                attempt['reason']='restore_step_budget_exhausted'
+                return finish(False,reason,fresh)
+            restore,unavailable=_restore_plan(actions,before,target,entry,
+                MAX_TRAVEL_CM-(actions.s['odometry']['distanceCm']-start_odometer))
+            if restore is None:
+                attempt['reason']=unavailable
+                return finish(False,reason,fresh)
+            failed_viewpoints.append({'position_m':list(position(before['odometry'])),
+                'heading_deg':before['odometry']['headingDeg'],'method':plan['method'],
+                'params':copy.deepcopy(plan['params'])})
+            _,restored_entry,restored,failure=perform(restore,fresh)
+            attempt['restored_observation']=actions.s['observation_index']
+            restored_obj=(restored or {}).get('associated_object') or {}
+            restored_detection=(restored or {}).get('current_detection') or {}
+            position_restored=(distance(position(actions.s['odometry']),position(before['odometry']))<=.002
+                and abs(wrap(actions.s['odometry']['headingDeg']-before['odometry']['headingDeg']))<=.2)
+            supported=bool(restored and restored.get('current_detection')
+                and (restored.get('sampling_allowed') or restored.get('current_confirmation_corroborated'))
+                and 40<=restored_detection.get('raw_distance_cm',0)<90
+                and abs(restored_detection.get('raw_bearing_deg',180))<=35
+                and position_restored and (locked is None or restored_obj.get('id')==locked))
+            attempt['observed_pose_restored']=position_restored
+            attempt.update(success=not failure and supported,
+                reason=failure or ('previous_unique_view_restored' if supported else 'previous_view_not_reacquired'))
+            if failure:return finish(False,failure,restored)
+            if not supported:return finish(False,'confirmation_previous_view_not_reacquired',restored)
     return finish(False,'confirmation_sampling_budget_exhausted')
 
 

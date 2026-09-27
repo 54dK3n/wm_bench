@@ -7,7 +7,7 @@ from autonomous_brain.perception import VERSION
 
 
 def test_new_guidance_contract_has_a_distinct_perception_version():
-    assert VERSION == 'autonomous-brain-perception/v12'
+    assert VERSION == 'autonomous-brain-perception/v13'
 
 
 def test_current_reobserved_old_hypothesis_is_not_hidden_by_dict_insertion_order():

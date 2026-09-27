@@ -24,7 +24,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v16"
+RUNTIME_VERSION = "autonomous-brain-runtime/v17"
 
 
 def dump(path, value):
@@ -112,6 +112,10 @@ def compact_action_result(number, action, result, after_observation):
             evidence["confirmation_sampling"]["viewpoint_constraints"] = [
                 value[:128] for value in raw["confirmation_sampling"]["viewpoint_constraints"][:6]
                 if isinstance(value, str)]
+        if isinstance(raw["confirmation_sampling"].get("recovery_attempt"), dict):
+            evidence["confirmation_sampling"]["recovery_attempt"] = fields(
+                raw["confirmation_sampling"]["recovery_attempt"],
+                ("reason", "success", "restored_observation"))
     for name, scalar_fields, id_lists in (
             ("road_progress", ("schema", "status", "before_observation", "after_observation",
                 "start_node_id", "end_node_id", "start_anchor_observation", "end_anchor_observation",
@@ -265,6 +269,8 @@ class Runtime:
                          "road": road, "holding": holding, "observation": observation,
                          "perception": perception, "objects": self.perception.objects(),
                          "discovery_evidence": self.perception.discovery_evidence()}
+        if hasattr(self.perception, "note_sampling_context"):
+            self.perception.note_sampling_context(self.snapshot)
         self.actions.observe_pending_grasp(self.snapshot)
         finalized_motion = (dict(motion, after_observation=self.observation_count)
                             if motion is not None else None)
@@ -454,6 +460,8 @@ def main(argv=None):
                    "action_evidence": runtime.perception.action_evidence() if runtime else [],
                    "discovery_evidence": (runtime.perception.discovery_evidence() if runtime
                                           and hasattr(runtime.perception, "discovery_evidence") else None),
+                   "sampling_progress": (runtime.perception.sampling_progress_evidence() if runtime
+                                         and hasattr(runtime.perception, "sampling_progress_evidence") else None),
                    "junction_history": runtime.roads.summary() if runtime else [],
                    "road_evidence": (runtime.roads.road_evidence() if runtime
                                      and hasattr(runtime.roads, "road_evidence") else None),

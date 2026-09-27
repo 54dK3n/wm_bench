@@ -1,0 +1,81 @@
+{
+  "schema": "executable-recovery-gate/v1",
+  "reviewed_baseline": "d68bddc2aa6ddca734add829f23127ee9e05fe50",
+  "classification": "offline_and_bounded_native_local_not_formal_acceptance",
+  "python": {
+    "tests": 1516,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "node": {
+    "driver": {
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0,
+      "log": "raw/gate/node-driver.txt"
+    },
+    "platform": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "log": "raw/gate/node-platform-localhost.txt"
+    }
+  },
+  "tested_brain_source_sha256": {
+    "autonomous_brain/__init__.py": "5f4a11f3ef47bad76588239300013e51ccbfb371b8e0eb261738072e28885eb7",
+    "autonomous_brain/actions.py": "e1db744904888533a48119b1485f0f09f16f09880ced82ebf95e17ffb6437cf1",
+    "autonomous_brain/bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+    "autonomous_brain/confirmation_sampling.py": "019ea3b35c2a2a0272e97957b7da2b813e3d19be654b1011b3f9ab157afbfa22",
+    "autonomous_brain/llm.py": "813886080750ae74297f5acb595b5e73fbf7b73237b068c3df4d16ce44d6e75a",
+    "autonomous_brain/navigation.py": "51c4ae34a8e0315e91d3dca78903d2ac73e92885d2d113d3875882edf01bd473",
+    "autonomous_brain/navigation_progress.py": "41b676c44284b6ac71a6b8e1acb00bfb2c7b07cccc861e68de0d21033a7f2174",
+    "autonomous_brain/perception.py": "0205a1ee99d3a2c565406020dd762fb9b62af2a1c0c34a1df007bfcb905dbdea",
+    "autonomous_brain/provenance.py": "87ce5564e72ca7eb7c9dc7a579c76f08e71678680ad8073a7c050e00d8d1f321",
+    "autonomous_brain/road_evidence.py": "34f88447e94d06b4be4d2f22f8d930e188555579500cf0e139bcd306c5d64e88",
+    "autonomous_brain/run.py": "cc8534eada71da2cdcc8159b51e49c847248835c704c63088878d428e03cd6fb",
+    "autonomous_brain/task.py": "5b3e7e80894457ec31c654fcc641aa291d09fc056cb5c2f77a51bf5adcfe97ab"
+  },
+  "unchanged_platform_runtime_files": 58,
+  "unchanged_world_model_package_files": 14,
+  "component_checks": {
+    "sources_unchanged": true,
+    "result_success": true,
+    "true_confirmed_identity": true,
+    "all_hits_independently_join_public_pixels": true,
+    "inverse_road_connection_sequence": true,
+    "no_premature_node_region_completion": true,
+    "fresh_visual_observation_after_route": true,
+    "original_standoff_gate": true,
+    "budget_not_extended": true,
+    "candidate_attempts_bounded": true
+  },
+  "viewpoint_cases": 10,
+  "native_local": {
+    "passed": true,
+    "primitive_count": 12,
+    "simulation_seconds": 10.32,
+    "cases": [
+      "native_basic_oblique_reverse"
+    ],
+    "native_sampling_visibility": {
+      "candidate_count": 0,
+      "attempts": 0,
+      "confirmation_success": false,
+      "refusal_reason": "no_current_executable_discovery_after_bounded_scan"
+    },
+    "limitation": "Local inverse primitive only; not full task acceptance or native sampling confirmation."
+  },
+  "evidence_sha256": {
+    "raw/gate/python-final.xml": "b025002b11ecf547b8f54a7d332173c2c90251b1baaf3e22282538fdf00591a9",
+    "raw/gate/python-final.txt": "e366bebe2085a19628f1cdeb6db041208fb3a6d511ca244b8e0bfac15885dffd",
+    "raw/gate/node-driver.txt": "78f01c0dd3bde20bf1ac5c09e1dccfab34d651f65298edf8254578a196f32828",
+    "raw/gate/node-platform-localhost.txt": "151dd42928b8fe337b1b0162ae45d35588268d06ca76d7e74cac283beae1566c",
+    "raw/gate/component-frozen-candidate.json": "e672e8713204e886d3a77b1e2db00f32b7e5d32a1b8868a7ea92c1153fc95692",
+    "raw/gate/viewpoint-frozen-candidate.json": "6889658159c26da5ea53c37296255c7e23b964498f41b67912eda8907d828bc9",
+    "raw/gate/prior-scenarios-frozen-candidate.json": "821b84270f7b381569cbd2d7502d5f086cadc8c00e19ea09c778c91a4bf4d102",
+    "raw/platform-local-final/platform-diagnostic.json": "6f1d0fe39d0a3156704b77e742f763946be9a10e2d60305166bea096085a579d",
+    "raw/platform-local-final/local-controller-diagnostic.json": "f1bd4676216f1ec7072c14e2aa34ab6b1378e16ce7c568b84dea830cc232f612",
+    "raw/recovery/historical-v18-replay/replay-checks.json": "6e6f89500f63237ca9e563b19ff5639912f1fc7666a32bca4e8955b9d8c9c260"
+  }
+}

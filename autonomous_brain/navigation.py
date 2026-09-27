@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v10"
+VERSION = "autonomous-brain-navigation/v11"
 
 
 def evidence_version(value):
@@ -83,6 +83,7 @@ class RoadMemory:
         self._approach_points = {}
         self._approach_edges = {}
         self._road_segments = {}
+        self._last_approach_query = {}
         self._semantic = RoadEvidence()
         self._unindexed_sequence = 0
 
@@ -188,8 +189,10 @@ class RoadMemory:
         exits = sorted(wrap(odo["headingDeg"] + item["angleDeg"])
                        for item in road.get("exits", []) if number(item.get("angleDeg")))
         matches = [heading for heading in exits if abs(wrap(heading - travel_heading)) <= 5]
+        error = road.get("headingErrorDeg")
         return {"observation_index": frame["observation_index"], "position_m": list(position(odo)),
                 "heading_deg": odo["headingDeg"], "travel_heading_deg": travel_heading,
+                "road_tangent_deg": wrap(odo["headingDeg"] + error) if number(error) else None,
                 "at_node": road.get("atNode") is True, "fresh_exit_headings_deg": exits,
                 "exit_heading_deg": matches[0] if len(matches) == 1 else None,
                 "exit_correspondence": "unique_observed_exit" if len(matches) == 1
@@ -259,6 +262,7 @@ class RoadMemory:
             # tiny displacement has arbitrarily large angular error; retain the
             # existing 0.2 cm axis tolerances used for basic-motion verification.
             if (not number(requested) or abs(measured - requested) > .2
+                    or abs(travelled - measured) > .2
                     or abs(wrap(odo["headingDeg"] - old["headingDeg"])) > .2
                     or along <= 0 or abs(along - requested) > .2 or abs(across) > .2):
                 return
@@ -291,11 +295,19 @@ class RoadMemory:
             "segment_id": f"road-segment-{previous['observation_index']}-{current['observation_index']}",
             "departure": departure, "arrival": arrival,
             "motion": copy.deepcopy(motion), "direction": "forward", "direction_status": "observed_forward"}
+        # Travel direction and body heading are different for a backward
+        # primitive. Its reverse is the opposite primitive at the same body
+        # heading, never a road-tangent approximation to the observed chord.
+        basic = method in {"forward", "backward"}
+        edge["execution"] = {"kind": "basic_translation" if basic else "road_following",
+            "method": method, "departure_body_heading_deg": old["headingDeg"],
+            "arrival_body_heading_deg": odo["headingDeg"]}
         semantic = {"from": list(a), "to": list(p), "method": method,
             "departure_heading": departure_heading, "arrival_heading": arrival_heading,
             "departure_exits": departure["fresh_exit_headings_deg"],
             "arrival_exits": arrival["fresh_exit_headings_deg"],
-            "departure_at_node": departure["at_node"], "arrival_at_node": arrival["at_node"]}
+            "departure_at_node": departure["at_node"], "arrival_at_node": arrival["at_node"],
+            "execution": edge["execution"]}
         edge["segment_version"] = evidence_version(semantic)
         self._road_segments[edge["segment_id"]] = copy.deepcopy(edge)
         self._approach_edges[a][p] = copy.deepcopy(edge)
@@ -303,6 +315,15 @@ class RoadMemory:
         reverse.update(direction="reverse_attempt", direction_status="reverse_not_yet_observed",
             departure=self._segment_anchor(current, wrap(arrival_heading + 180)),
             arrival=self._segment_anchor(previous, wrap(departure_heading + 180)))
+        if basic:
+            reverse["execution"] = {"kind": "basic_translation",
+                "method": "backward" if method == "forward" else "forward",
+                "departure_body_heading_deg": odo["headingDeg"],
+                "arrival_body_heading_deg": old["headingDeg"]}
+        else:
+            reverse["execution"] = {"kind": "road_following", "method": "follow_road",
+                "departure_body_heading_deg": wrap(arrival_heading + 180),
+                "arrival_body_heading_deg": wrap(departure_heading + 180)}
         # A newly observed direction supersedes a merely proposed reverse edge.
         existing = self._approach_edges[p].get(a)
         if existing is None or existing.get("direction_status") != "observed_forward":
@@ -317,7 +338,12 @@ class RoadMemory:
         optional predicate leaves all historical positional arguments valid.
         """
         start = position(odo)
+        query = {"schema": "brain-approach-candidate-query/v1", "observation_index": self._latest_index,
+            "generated_count": 0, "eligible_count": 0, "returned_count": 0,
+            "candidate_limit": max(0, min(limit, 3)), "filtered_candidates": []}
+        self._last_approach_query = query
         if start not in self._approach_edges or self._latest_index in self._invalid_indices:
+            query["reason"] = "current_position_has_no_valid_observed_connection"
             return []
         def available(edge):
             return not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
@@ -377,10 +403,51 @@ class RoadMemory:
                         if (point, other) == blocked_edge or not available(edge) or other in path:
                             continue
                         heapq.heappush(queue, (cost + edge["travelled_cm"], other, path + [other]))
-        eligible = [row for row in candidates if candidate_filter is None or candidate_filter(row)]
-        return sorted(eligible, key=lambda row: (
+        eligible = []
+        query["generated_count"] = len(candidates)
+        for row in candidates:
+            reason = self._approach_execution_unavailable(row, odo)
+            if reason is None and candidate_filter is not None and not candidate_filter(row):
+                reason = "context_version_failure_guard"
+            if reason is None:
+                eligible.append(row)
+            else:
+                query["filtered_candidates"].append({"route_version": row["route_version"],
+                    "position_m": row["position_m"], "reason": reason})
+        result = sorted(eligible, key=lambda row: (
             abs(distance(tuple(row["position_m"]), target) - .32), row["travelled_cm"],
             row["position_m"]))[:max(0, min(limit, 3))]
+        query.update(eligible_count=len(eligible), returned_count=len(result))
+        return result
+
+    def approach_candidate_diagnostics(self):
+        return copy.deepcopy(self._last_approach_query)
+
+    @staticmethod
+    def _approach_execution_unavailable(candidate, odo):
+        """Reject known controller-contract gaps before they take a shortlist slot.
+
+        This is recomputed for each query; no position is permanently excluded.
+        Fresh safety and actual motion are still checked during execution.
+        """
+        heading = odo["headingDeg"]
+        for segment in candidate["segments"]:
+            execution = segment.get("execution", {})
+            if execution.get("kind") == "basic_translation":
+                a, b = (execution.get(k) for k in ("departure_body_heading_deg", "arrival_body_heading_deg"))
+                if (execution.get("method") not in {"forward", "backward"}
+                        or not all(number(h) for h in (a, b))
+                        or not .1 <= segment["travelled_cm"] <= 500):
+                    return "basic_execution_contract_unavailable"
+                delta = abs(wrap(a - heading))
+                if .2 < delta < 1:
+                    return "basic_alignment_below_legal_turn_minimum"
+                heading = b
+            else:
+                if segment.get("method") in {"forward", "backward"}:
+                    return "basic_execution_contract_unavailable"
+                heading = segment["arrival"]["travel_heading_deg"]
+        return None
 
     def _anchor(self, frame):
         road, odo = frame["road"], frame["odometry"]

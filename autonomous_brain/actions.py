@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v24"
+VERSION = "autonomous-brain-actions/v25"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -676,7 +676,39 @@ class Actions:
                                    actuator_result=blocked_result, recovery_result=result)
         return self.result(False, "blocked_road_return_incomplete", actuator_result=blocked_result)
 
-    def take_observed_exit(self, angle):
+    def _sampling_opportunity(self, before):
+        """Yield only a newly eligible task-target view, never a new frame alone."""
+        category = (getattr(self.r, "task_spec", None) or {}).get("target_category")
+        if category is None or self.s.get("road", {}).get("onRoad") is not True:
+            return None
+        previous = {d.get("track_id") for d in before.get("perception", {}).get("detections", [])
+                    if d.get("category") == category and d.get("fed_to_world_model")}
+        getter = getattr(self.r.perception, "discovery_target", None)
+        if getter is None:
+            return None
+        for detected in self.s.get("perception", {}).get("detections", []):
+            if (detected.get("category") != category or not detected.get("fed_to_world_model")
+                    or detected.get("track_id") in previous or not detected.get("track_id")):
+                continue
+            target = getter(detected.get("discovery_id"))
+            if not target:
+                continue
+            evidence = target.get("current_confirmation_evidence") or {}
+            eligible = (target.get("sampling_allowed") and target.get("reason") == "ready_for_sampling"
+                        and evidence.get("unique_current_pixels") and evidence.get("source_pixels_supported"))
+            if not eligible and not target.get("current_confirmation_corroborated"):
+                continue
+            obj = target.get("associated_object") or {}
+            if obj.get("state") not in {"TENTATIVE", "CONFIRMED"}:
+                continue
+            return {"discovery_id": target["hypothesis_id"], "object_id": obj.get("id"),
+                    "before_observation": before["observation_index"],
+                    "after_observation": self.s["observation_index"],
+                    "hit_count": obj.get("hit_count"), "new_effective_observation": True,
+                    "basis": "new_unique_task_target_admitted_in_current_public_view"}
+        return None
+
+    def take_observed_exit(self, angle, *, yield_for_discovery=False):
         """Face a sensed exit, then reacquire that direction before driving.
 
         The road actuator can stop for clearance before changing heading.
@@ -684,9 +716,14 @@ class Actions:
         down the selected exit. All correspondence uses relative angles and
         odometry; no platform road identifiers enter this controller.
         """
+        before = copy.deepcopy(self.s)
         start_observation = self.s["observation_index"]
         wanted_heading = wrap(self.s["odometry"]["headingDeg"] + angle)
         self.turn(angle)
+        if yield_for_discovery:
+            opportunity = self._sampling_opportunity(before)
+            if opportunity is not None:
+                return {"sampling_opportunity": opportunity}
         road, odo = self.s["road"], self.s["odometry"]
         evidence = {"before_observation": start_observation,
                     "after_observation": self.s["observation_index"],
@@ -781,6 +818,12 @@ class Actions:
         if discovery_id is not None:
             if exit_angle is not None:
                 return self.result(False, "explore_intents_are_mutually_exclusive")
+            readiness = getattr(self.r.perception, "sampling_readiness", None)
+            if readiness is not None:
+                current = readiness(discovery_id, self.s)
+                if (current.get("progress") or {}).get("retry_blocked"):
+                    return self.result(False, "sampling_retry_without_relevant_new_evidence",
+                                       discovery_id=discovery_id, sampling_readiness=current)
             from .confirmation_sampling import sample_discovery
             return sample_discovery(self, discovery_id)
         before_ids = {o["id"] for o in self.r.perception.objects()}
@@ -804,7 +847,10 @@ class Actions:
                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
                     return finish(self.result(False, "requested_exit_not_observed", available_exits=exits))
-            result = self.take_observed_exit(chosen["angle_deg"])
+            result = self.take_observed_exit(chosen["angle_deg"], yield_for_discovery=True)
+            if result.get("sampling_opportunity"):
+                return finish(self.result(True, "target_sampling_opportunity_observed",
+                                          sampling_opportunity=result["sampling_opportunity"]))
             if result.get("selection_error"):
                 return finish(self.result(False, result["selection_error"], exit_selection=result))
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
@@ -1079,6 +1125,88 @@ class Actions:
                                      "choose_another_confirmed_target"] if blocked else []})
         return output
 
+    def _approach_node_connection(self, segment, remaining, started, known_nodes=()):
+        """Authorize only the remaining straight approach to a recorded node.
+
+        A local node flag describes a region. Matching that region authorizes
+        a bounded connection, not early segment completion or node merging.
+        """
+        terminal, departure = segment["arrival"], segment["departure"]
+        road, odo = self.s["road"], self.s["odometry"]
+        old = terminal.get("fresh_exit_headings_deg", [])
+        fresh = [wrap(odo["headingDeg"] + e["angleDeg"]) for e in road.get("exits", [])]
+        incoming = wrap(terminal["travel_heading_deg"] + 180)
+        execution = segment.get("execution", {})
+        body_offset = 180 if execution.get("kind") == "basic_translation" and execution.get("method") == "backward" else 0
+        observed_travel_heading = wrap(odo["headingDeg"] + body_offset)
+        getter = getattr(self.r.roads, "road_evidence", None)
+        ledger = getter() if callable(getter) else {}
+        nodes = {n["id"]: n for n in ledger.get("nodes", [])}
+        anchors = {a["observation_index"]: a for a in ledger.get("anchors", [])}
+        def canonical(index):
+            return nodes.get(anchors.get(index, {}).get("node_id"), {}).get("canonical_id")
+        current_id, terminal_id = canonical(self.s["observation_index"]), canonical(terminal.get("observation_index"))
+        if current_id in known_nodes and current_id != terminal_id:
+            return None
+        if (not started or terminal.get("at_node") is not True or not old
+                or distance(position(odo), tuple(terminal["position_m"])) > .15
+                or abs(wrap(observed_travel_heading - terminal["travel_heading_deg"])) > 10
+                or len(old) != len(fresh)
+                or any(sum(abs(wrap(a - b)) <= 5 for b in fresh) != 1 for a in old)
+                or sum(abs(wrap(a - incoming)) <= 5 for a in fresh) != 1):
+            return None
+        chord = distance(tuple(departure["position_m"]), tuple(terminal["position_m"])) * 100
+        if (abs(chord - segment["travelled_cm"]) > .2
+                or abs(wrap(departure["travel_heading_deg"] - terminal["travel_heading_deg"])) > .2):
+            return None
+        return {"kind": "recorded_terminal_region_connection",
+            "terminal_observation": terminal.get("observation_index"),
+            "current_observation": self.s["observation_index"],
+            "remaining_arc_cm": remaining, "incoming_heading_deg": incoming,
+            "historical_exit_headings_deg": old, "fresh_exit_headings_deg": fresh,
+            "terminal_node_id": terminal_id, "current_node_id": current_id,
+            "identity_scope": "route_local_remaining_path_only",
+            "node_identity_resolved": False}
+
+    def _approach_basic_plan(self, segment, remaining, started):
+        """Replay a measured basic primitive at its recorded body heading."""
+        execution = segment["execution"]
+        method = execution["method"]
+        wanted = execution["departure_body_heading_deg"]
+        if method not in {"forward", "backward"} or not .1 <= remaining <= 500:
+            return None
+        if not started and distance(position(self.s["odometry"]), tuple(segment["departure"]["position_m"])) * 100 > .2:
+            return None
+        odo, road = self.s["odometry"], self.s["road"]
+        if abs(wrap(odo["headingDeg"] - wanted)) > .2:
+            return None
+        p, q = position(odo), tuple(segment["arrival"]["position_m"])
+        theta = math.radians(wanted)
+        dx, dz = (q[0] - p[0]) * 100, (q[1] - p[1]) * 100
+        along = (-math.sin(theta) * dx + math.cos(theta) * dz) * (1 if method == "forward" else -1)
+        across = math.cos(theta) * dx + math.sin(theta) * dz
+        permitted, clearance = road_translation_limit(road, method, remaining)
+        if abs(along - remaining) > .2 or abs(across) > .2 or permitted < remaining:
+            return None
+        return {"method": method, "params": {"distanceCm": remaining, "speed": 30},
+            "remaining_arc_cm": remaining, "evidence_segment_ids": [segment["segment_id"]],
+            "body_heading_deg": wanted, "road_clearance": clearance,
+            "basis": "recorded_basic_primitive_and_fresh_local_clearance"}
+
+    def _align_approach_body(self, wanted, budget, steps):
+        """Keep alignment movement and its budget visible even if planning fails."""
+        angle = wrap(wanted - self.s["odometry"]["headingDeg"])
+        if abs(angle) >= 1:
+            if budget[0] <= 0:
+                return False
+            before = self.s["observation_index"]
+            budget[0] -= 1
+            result = self.move("turn", {"angleDeg": angle, "speed": 50})
+            steps.append({"kind": "recorded_basic_body_alignment", "before_observation": before,
+                "after_observation": self.s["observation_index"], "actuator_result": copy.deepcopy(result),
+                "body_heading_deg": self.s["odometry"]["headingDeg"]})
+        return budget[0] > 0 and abs(wrap(self.s["odometry"]["headingDeg"] - wanted)) <= .2
+
     def _follow_approach_path(self, candidate, budget):
         """Execute observed directions and exit bindings, never coordinate chords."""
         route = [tuple(p) for p in candidate["path"]]
@@ -1090,6 +1218,9 @@ class Actions:
             return False, "reposition_directional_evidence_unavailable", []
         index, steps, leg_travel, started = 0, [], 0., False
         execution_end = 0
+        getter = getattr(self.r.roads, "road_evidence", None)
+        known_nodes = {n["canonical_id"] for n in (getter() if callable(getter) else {}).get("nodes", [])
+                       if n.get("status") == "confirmed"}
         while index < len(segments) and budget[0] > 0:
             segment = segments[index]
             departure, arrival = segment["departure"], segment["arrival"]
@@ -1105,7 +1236,43 @@ class Actions:
             before_holding = self.s["holding"].get("holding")
             selected = None
             plan = None
-            if road.get("atNode"):
+            basic = segment.get("execution", {}).get("kind") == "basic_translation"
+            remaining_segment = segment["travelled_cm"] - leg_travel
+            unexpected_node = (road.get("atNode") and (departure.get("at_node") is False
+                or started and distance(p, tuple(departure["position_m"])) > .15))
+            connection = self._approach_node_connection(segment, remaining_segment, started, known_nodes) if unexpected_node else None
+            if unexpected_node and connection is None:
+                return False, "reposition_unrecorded_junction_inside_segment", steps
+            if basic:
+                if not self._align_approach_body(segment["execution"]["departure_body_heading_deg"], budget, steps):
+                    return False, ("reposition_motion_budget_exhausted" if budget[0] <= 0
+                                   else "reposition_basic_primitive_not_safe_or_aligned"), steps
+                plan = self._approach_basic_plan(segment, remaining_segment, started)
+                if plan is None:
+                    return False, "reposition_basic_primitive_not_safe_or_aligned", steps
+                plan["node_connection"] = connection
+                before, before_odo = self.s["observation_index"], copy.deepcopy(self.s["odometry"])
+                before_sensor = copy.deepcopy(self.s.get("observation", {}))
+                p = position(before_odo)
+                result = self.move(plan["method"], plan["params"])
+            elif connection is not None:
+                # The sensor region is the expected terminal context, but only
+                # a measured safe straight remainder can connect its old anchor.
+                local = copy.deepcopy(segment)
+                local["execution"] = {"kind": "basic_translation", "method": "forward",
+                    "departure_body_heading_deg": arrival["travel_heading_deg"]}
+                if not self._align_approach_body(arrival["travel_heading_deg"], budget, steps):
+                    return False, ("reposition_motion_budget_exhausted" if budget[0] <= 0
+                                   else "reposition_terminal_connection_not_safe"), steps
+                plan = self._approach_basic_plan(local, remaining_segment, True)
+                if plan is None:
+                    return False, "reposition_terminal_connection_not_safe", steps
+                plan["node_connection"] = connection
+                before, before_odo = self.s["observation_index"], copy.deepcopy(self.s["odometry"])
+                before_sensor = copy.deepcopy(self.s.get("observation", {}))
+                p = position(before_odo)
+                result = self.move(plan["method"], plan["params"])
+            elif road.get("atNode"):
                 if (started and distance(p, tuple(departure["position_m"])) > .15
                         or departure.get("at_node") is False):
                     return False, "reposition_unrecorded_junction_inside_segment", steps
@@ -1155,6 +1322,7 @@ class Actions:
                     current, following = segments[cursor], segments[cursor + 1]
                     if (current["arrival"].get("at_node")
                             or following["departure"].get("at_node")
+                            or following.get("execution", {}).get("kind") == "basic_translation"
                             or abs(wrap(current["arrival"]["travel_heading_deg"]
                                 - following["departure"]["travel_heading_deg"])) > 5):
                         break
@@ -1205,6 +1373,8 @@ class Actions:
                      "before_frame_id": before_sensor.get("frameId"),
                      "after_frame_id": self.s.get("observation", {}).get("frameId"),
                      "before_tick": before_odo.get("tick"), "after_tick": after_odo.get("tick"),
+                     "before_body_heading_deg": before_odo.get("headingDeg"),
+                     "after_body_heading_deg": after_odo.get("headingDeg"),
                      "before_position_m": list(p), "after_position_m": list(after),
                      "waypoint_m": list(route[index + 1]), "measured_cm": measured,
                      "odometer_travel_cm": travelled, "segment_id": segment.get("segment_id"),
@@ -1224,6 +1394,9 @@ class Actions:
                 and sensor.get("tick") == after_odo["tick"])
             if (self.s["observation_index"] <= before or self.s["road"].get("onRoad") is not True
                     or not fresh_sensor
+                    or result.get("accepted") is False
+                    or (plan is not None and plan["method"] in {"forward", "backward"}
+                        and result.get("completed") is not True)
                     or measured < .2 or not math.isfinite(travelled) or travelled < .2
                     or measured > travelled + .2 or before_holding is None
                     or self.s["holding"].get("holding") is not before_holding
@@ -1236,11 +1409,29 @@ class Actions:
             for other in range(index, len(segments)):
                 current = segments[other]
                 expected_distance += current["travelled_cm"]
-                arrived = (distance(after, route[other + 1]) <= .15
-                           and abs(wrap(after_odo["headingDeg"] - current["arrival"]["travel_heading_deg"])) <= 10)
+                exact = current.get("execution", {}).get("kind") == "basic_translation" or connection is not None
+                end_heading = (current["execution"]["arrival_body_heading_deg"]
+                    if current.get("execution", {}).get("kind") == "basic_translation"
+                    else current["arrival"]["travel_heading_deg"])
+                arrived = (distance(after, route[other + 1]) <= (.002 if exact else .15)
+                           and abs(wrap(after_odo["headingDeg"] - end_heading)) <= (.2 if exact else 10))
                 if arrived and abs(leg_travel - expected_distance) <= .2 * (other - index + 1):
+                    terminal = current["arrival"]
+                    sensed_node = self.s["road"].get("atNode") is True
+                    if type(terminal.get("at_node")) is bool and terminal["at_node"] != sensed_node:
+                        return False, "reposition_arrival_node_context_changed", steps
+                    if sensed_node and terminal.get("fresh_exit_headings_deg") is not None:
+                        old = terminal["fresh_exit_headings_deg"]
+                        fresh = [wrap(after_odo["headingDeg"] + e["angleDeg"])
+                                 for e in self.s["road"].get("exits", [])]
+                        if (len(old) != len(fresh)
+                                or any(sum(abs(wrap(a - b)) <= 5 for b in fresh) != 1 for a in old)):
+                            return False, "reposition_arrival_node_context_changed", steps
                     matched = other
                 if current["arrival"].get("at_node"):
+                    break
+                if basic or (other + 1 < len(segments)
+                        and segments[other + 1].get("execution", {}).get("kind") == "basic_translation"):
                     break
                 if (other + 1 < len(segments) and abs(wrap(current["arrival"]["travel_heading_deg"]
                         - segments[other + 1]["departure"]["travel_heading_deg"])) > 5):
@@ -1271,7 +1462,7 @@ class Actions:
         record = self._navigation_record(object_id)
         goal = (target["position_m"]["x"], target["position_m"]["z"])
         evidence = {"initial_failure": initial_failure["reason"], "attempts": [],
-                    "candidate_limit": 3, "source": "observed_on_road_motion_endpoints"}
+                    "candidate_limit": 3, "source": "observed_on_road_motion_endpoints", "candidate_queries": []}
         for _ in range(3):
             context = self._navigation_context(object_id)
             blocked = []
@@ -1285,6 +1476,9 @@ class Actions:
                 options["candidate_filter"] = eligible
             candidates = (get_candidates(self.s["odometry"], goal, **options)
                 if callable(get_candidates) else [])
+            diagnostic = getattr(self.r.roads, "approach_candidate_diagnostics", None)
+            if callable(diagnostic):
+                evidence["candidate_queries"].append(diagnostic())
             # Simple legacy providers may ignore the optional filter. Preserve
             # their old repeat guard; RoadMemory applies it before its cap.
             candidates = [c for c in candidates if eligible(c)]
@@ -1333,6 +1527,8 @@ class Actions:
             budget[0] -= 1
             target = self.r.perception.get_object(object_id) or target
             _, bearing = self.object_geometry(target)
+            attempt["road_arrival_body_heading_deg"] = self.s["odometry"]["headingDeg"]
+            attempt["final_operation_heading_deg"] = wrap(self.s["odometry"]["headingDeg"] - bearing)
             try:
                 self.turn(-bearing)
                 outcome = self.visual_standoff(object_id, navigation_budget=budget)
@@ -2357,6 +2553,14 @@ class Actions:
 
     def execute(self, action):
         before = self.s["observation_index"]
+        sampling_id = (action["params"].get("discovery_id") if action["action"] == "explore" else None)
+        sampling_before = copy.deepcopy(self.s) if sampling_id is not None else None
+        def record_sampling(outcome):
+            remember = getattr(self.r.perception, "record_sampling_attempt", None)
+            if sampling_id is not None and remember is not None:
+                outcome.setdefault("evidence", {})["sampling_progress"] = remember(
+                    sampling_id, sampling_before, outcome, self.s)
+            return outcome
         if action["action"] == "done":
             self.r.observe()
             outcome = self.done()
@@ -2377,6 +2581,9 @@ class Actions:
                     "held_object_id": getattr(self.r, "held_object_id", None),
                     "pending_grasp": copy.deepcopy(getattr(self.r, "pending_grasp", None)),
                     "outcome_unknown": True}
+                recorded = record_sampling({"success": False, "reason": "sampling_motion_outcome_unknown",
+                                            "evidence": error.action_evidence})
+                error.action_evidence = recorded["evidence"]
                 raise
         # A result always includes a fresh post-action observation, including
         # precondition failures. Motion actuator 'completed' is never the judge.
@@ -2390,10 +2597,24 @@ class Actions:
                 "pending_grasp": copy.deepcopy(getattr(self.r, "pending_grasp", None)),
                 "holding": (self.s.get("holding") or {}).get("holding"),
                 "outcome_unknown": True}
+            recorded = record_sampling({"success": False, "reason": "sampling_post_observation_unknown",
+                                        "evidence": error.action_evidence})
+            error.action_evidence = recorded["evidence"]
             raise
         if action["action"] == "explore" and action["params"].get("discovery_id") is not None:
             from .confirmation_sampling import corroborate_final
             outcome = corroborate_final(self, outcome)
+            record_sampling(outcome)
+        if outcome.get("reason") == "target_sampling_opportunity_observed":
+            opportunity = outcome["evidence"]["sampling_opportunity"]
+            current = self.r.perception.discovery_target(opportunity["discovery_id"])
+            retained = bool(current and ((current.get("sampling_allowed")
+                and current.get("reason") == "ready_for_sampling")
+                or current.get("current_confirmation_corroborated")))
+            opportunity.update(post_observation_retained=retained,
+                               post_observation=self.s["observation_index"])
+            if not retained:
+                outcome.update(success=False, reason="target_sampling_opportunity_no_longer_visible")
         if action["action"] == "go_to" and outcome["success"]:
             detected = self.visible(action["params"]["object_id"])
             prior_evidence = outcome["evidence"]

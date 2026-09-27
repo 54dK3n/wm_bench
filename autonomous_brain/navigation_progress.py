@@ -2,8 +2,128 @@
 from __future__ import annotations
 
 import copy
+import math
 
 from .navigation import distance, wrap
+
+
+class SamplingProgress:
+    """Sampling attempts are obligations, not identity or confirmation proofs."""
+    SCHEMA = "brain-sampling-progress/v1"
+
+    def __init__(self):
+        self.records = []
+
+    def find(self, target):
+        aliases = set(target.get("record_ids", [])) | set(target.get("hypothesis_ids", []))
+        oid = (target.get("associated_object") or {}).get("id")
+        return next((row for row in self.records if aliases.intersection(row["aliases"])
+            or oid is not None and oid in row["object_ids"]), None)
+
+    @staticmethod
+    def context(target, snapshot):
+        current = target.get("current_detection") or {}
+        observation, odo = snapshot.get("observation", {}), snapshot.get("odometry", {})
+        frame = observation.get("frameId")
+        tick = odo.get("tick")
+        road = snapshot.get("road", {})
+        fresh = (bool(current) and frame is not None and str(current.get("frame_id")) == str(frame)
+            and observation.get("tick") == tick and ("tick" not in road or road["tick"] == tick))
+        poses = target.get("confirmation", {}).get("accepted_hit_poses", [])
+        return {"observation_index": snapshot.get("observation_index"), "frame_id": str(frame) if frame is not None else None,
+            "tick": tick, "pose": {key: odo.get(key) for key in ("rightCm", "forwardCm", "headingDeg")},
+            "odometer_cm": odo.get("distanceCm"), "visible_unique": bool(fresh and target.get("sampling_allowed")),
+            "associated_object_id": (target.get("associated_object") or {}).get("id"),
+            "accepted_hit_frames": [str(p["frame_id"]) for p in poses],
+            "accepted_hit_count": len(poses), "min_hit_pose_gap_m": target.get("confirmation", {}).get("min_hit_pose_gap_m", .15),
+            "last_effective_view": copy.deepcopy(target.get("last_effective_view")),
+            "road": {key: copy.deepcopy(road.get(key)) for key in ("onRoad", "atNode", "headingErrorDeg",
+                "leftClearanceCm", "rightClearanceCm", "frontClearanceCm", "exits")},
+            "holding": snapshot.get("holding", {}).get("holding")}
+
+    @staticmethod
+    def new_evidence(before, after):
+        # Both an actual new frame and advanced simulation tick are necessary.
+        # Same-tick detector jitter cannot reopen a failed physical action.
+        if (not after.get("visible_unique") or before.get("frame_id") == after.get("frame_id")
+                or type(before.get("tick")) not in (int, float)
+                or type(after.get("tick")) not in (int, float) or after["tick"] <= before["tick"]):
+            return None
+        if set(after["accepted_hit_frames"]) - set(before["accepted_hit_frames"]):
+            return "new_accepted_hit"
+        if before.get("visible_unique") is not True:
+            return "fresh_unique_visibility_reacquired"
+        a, b = before["pose"], after["pose"]
+        finite = lambda value: type(value) in (int, float) and math.isfinite(value)
+        if all(finite(p.get(k)) for p in (a, b) for k in ("rightCm", "forwardCm")):
+            if math.hypot(a["rightCm"]-b["rightCm"], a["forwardCm"]-b["forwardCm"]) >= after["min_hit_pose_gap_m"]*100:
+                return "new_separated_visible_pose"
+        if all(finite(p.get("headingDeg")) for p in (a, b)) and abs(wrap(a["headingDeg"]-b["headingDeg"])) >= 5:
+            return "changed_observed_view_direction"
+        for key, gate in (("leftClearanceCm", 1), ("rightClearanceCm", 1), ("frontClearanceCm", 1), ("headingErrorDeg", 5)):
+            x, y = before["road"].get(key), after["road"].get(key)
+            delta = abs(wrap(x-y)) if key == "headingErrorDeg" and finite(x) and finite(y) else abs(x-y) if finite(x) and finite(y) else 0
+            if delta >= gate:
+                return "changed_observed_road_constraint"
+        for key in ("onRoad", "atNode"):
+            if type(before["road"].get(key)) is bool and type(after["road"].get(key)) is bool and before["road"][key] != after["road"][key]:
+                return "changed_observed_road_context"
+        old, new = before["road"].get("exits"), after["road"].get("exits")
+        if isinstance(old, list) and isinstance(new, list):
+            old = sorted(e.get("angleDeg") for e in old if finite(e.get("angleDeg")))
+            new = sorted(e.get("angleDeg") for e in new if finite(e.get("angleDeg")))
+            if len(old) != len(new) or any(abs(wrap(x-y)) >= 5 for x, y in zip(old, new)):
+                return "changed_observed_road_exits"
+        return None
+
+    def readiness(self, target, context):
+        row = self.find(target)
+        attempts = row["attempts"] if row else []
+        failure = next((item for item in reversed(attempts) if not item["success"]), None)
+        reason = self.new_evidence(failure["after_context"], context) if failure else None
+        blocked = failure is not None and reason is None
+        visible = context["visible_unique"]
+        effective = target.get("last_effective_view") or (row or {}).get("last_effective_view")
+        compact = lambda item: {key: copy.deepcopy(item[key]) for key in ("before_observation", "after_observation",
+            "success", "reason", "outcome_unknown", "actual_travelled_cm", "independent_hits_added", "step_count")}
+        progress = {"schema": self.SCHEMA, "attempt_count": len(attempts),
+            "last_effective_view": copy.deepcopy(effective), "last_failure": compact(failure) if failure else None,
+            "recent_attempts": [compact(item) for item in attempts[-3:]],
+            "independent_hits_added": sum(item["independent_hits_added"] for item in attempts),
+            "retry_blocked": blocked, "new_evidence_reason": reason,
+            "no_blind_motion": not visible}
+        return {"executable": bool(visible and not blocked),
+            "reason": target["reason"] if not target.get("sampling_allowed") or not visible else
+                "sampling_retry_without_relevant_new_evidence" if blocked else "fresh_sampling_candidate",
+            "progress": progress}
+
+    def record(self, target, before, after, outcome):
+        row = self.find(target)
+        if row is None:
+            row = {"hypothesis_id": target["hypothesis_id"], "aliases": [], "object_ids": [], "attempts": [], "last_effective_view": None}
+            self.records.append(row)
+        row["aliases"] = sorted(set(row["aliases"]) | set(target.get("record_ids", [])) | set(target.get("hypothesis_ids", [])))
+        oid = (target.get("associated_object") or {}).get("id")
+        if oid is not None and oid not in row["object_ids"]:
+            row["object_ids"].append(oid)
+        evidence = outcome.get("evidence") or {}
+        proof = evidence.get("confirmation_sampling") or {}
+        if not proof and isinstance(evidence.get("prior_action_result"), dict):
+            proof = evidence["prior_action_result"].get("evidence", {}).get("confirmation_sampling") or {}
+        actual = (after["odometer_cm"]-before["odometer_cm"]
+            if type(before.get("odometer_cm")) in (int, float) and type(after.get("odometer_cm")) in (int, float) else None)
+        item = {"before_observation": before.get("observation_index"), "after_observation": after.get("observation_index"),
+            "success": outcome.get("success") is True, "reason": str(outcome.get("reason", "missing_reason"))[:256],
+            "outcome_unknown": evidence.get("outcome_unknown") is True,
+            "actual_travelled_cm": actual, "independent_hits_added": len(set(after["accepted_hit_frames"])-set(before["accepted_hit_frames"])),
+            "step_count": len(proof.get("steps", [])), "before_context": copy.deepcopy(before), "after_context": copy.deepcopy(after),
+            "sampling_evidence": copy.deepcopy(proof)}
+        row["attempts"].append(item)
+        row["last_effective_view"] = copy.deepcopy(after.get("last_effective_view") or before.get("last_effective_view"))
+        return copy.deepcopy(item)
+
+    def evidence(self):
+        return copy.deepcopy({"schema": self.SCHEMA, "records": self.records})
 
 
 def changed(before, after):

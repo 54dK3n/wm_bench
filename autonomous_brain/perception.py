@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v12"
+VERSION = "autonomous-brain-perception/v13"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -512,12 +512,19 @@ class Perception:
         hit_records = [r for r in records if r["frame_id"] in hit_frames]
         progress = max(view_progress + hit_records, key=lambda r: r["perception_observation_index"], default=source)
         new_evidence = progress["frame_id"] == frame.get("frame_id")
+        effective = [r for r in view_progress + hit_records if not r.get("identity_ambiguity")
+            and sum(other["frame_id"] == r["frame_id"] and other["bbox"] == r["bbox"]
+                    for other in ledger["records"]) == 1]
+        effective = max(effective, key=lambda r: r["perception_observation_index"], default=None)
         result = {"schema": "brain-discovery-target/v1", "id": source["hypothesis_id"],
             "hypothesis_id": source["hypothesis_id"], "source_discovery_id": source["id"],
             "latest_discovery_id": latest["id"], "source": source, "latest_evidence": latest,
             "hypothesis_ids": list(dict.fromkeys(r["hypothesis_id"] for r in records)),
             "record_ids": [r["id"] for r in records],
             "current_record": current_record, "current_detection": current,
+            "last_effective_view": ({key: copy.deepcopy(effective.get(key)) for key in (
+                "frame_id", "observation_index", "tick", "odometry", "bbox", "raw_distance_cm", "raw_bearing_deg")}
+                if effective is not None else None),
             "source_frame_records": source_peers, "candidate_matrix": matrix,
             "associated_object": obj, "associated_object_ids": sorted(ids),
             "sampling_allowed": allowed, "reason": reason,
@@ -549,6 +556,64 @@ class Perception:
             if any(discovery_id in {r["id"], r["hypothesis_id"]} for r in records):
                 return self._discovery_sampling_target(records, ledger)
         return None
+
+    def _sampling_progress(self):
+        from .navigation_progress import SamplingProgress
+        if not hasattr(self, "_sampling_attempt_progress"):
+            self._sampling_attempt_progress = SamplingProgress()
+        return self._sampling_attempt_progress
+
+    def note_sampling_context(self, snapshot):
+        """Cache only the already acquired public context; never observe or move."""
+        self._sampling_public_context = {key: copy.deepcopy(snapshot.get(key)) for key in (
+            "observation_index", "odometry", "road", "holding")}
+        self._sampling_public_context["observation"] = {key: snapshot.get("observation", {}).get(key)
+            for key in ("frameId", "tick")}
+
+    def _sampling_context_for(self, target, snapshot=None):
+        from .navigation_progress import SamplingProgress
+        if snapshot is None:
+            frame = self.last_evidence or {}
+            snapshot = getattr(self, "_sampling_public_context", None) or {
+                "observation_index": getattr(self, "_discovery_observation_index", None),
+                "observation": frame.get("raw_observation", {}), "odometry": frame.get("odometry", {}),
+                "road": {}, "holding": {}}
+        historical = copy.deepcopy(target)
+        if "objects" in snapshot:
+            oid = (target.get("associated_object") or {}).get("id")
+            obj = next((o for o in snapshot["objects"] if o["id"] == oid), None)
+            historical["confirmation"]["accepted_hit_poses"] = (obj or {}).get("hit_poses", [])
+        # For a before_snapshot, use its original detection, not a later frame.
+        if "perception" in snapshot:
+            aliases = set(target.get("record_ids", []))
+            oid = (target.get("associated_object") or {}).get("id")
+            matches = [d for d in snapshot["perception"].get("detections", [])
+                if d.get("category") == "red-ball" and (d.get("discovery_id") in aliases
+                    or oid is not None and d.get("track_id") == oid)]
+            historical["current_detection"] = matches[0] if len(matches) == 1 else None
+            if str(snapshot.get("observation", {}).get("frameId")) != str((self.last_evidence or {}).get("frame_id")):
+                historical["sampling_allowed"] = bool(len(matches) == 1 and not matches[0].get("identity_ambiguity"))
+                effective = historical.get("last_effective_view")
+                if effective and (effective.get("observation_index") or 0) > (snapshot.get("observation_index") or 0):
+                    historical["last_effective_view"] = None
+        return SamplingProgress.context(historical, snapshot)
+
+    def sampling_readiness(self, discovery_id, snapshot=None):
+        target = self.discovery_target(discovery_id)
+        if target is None:
+            return {"executable": False, "reason": "sampling_discovery_not_available", "progress": None}
+        return self._sampling_progress().readiness(target, self._sampling_context_for(target, snapshot))
+
+    def record_sampling_attempt(self, discovery_id, before_snapshot, outcome, after_snapshot):
+        target = self.discovery_target(discovery_id)
+        if target is None:
+            return None
+        return self._sampling_progress().record(target,
+            self._sampling_context_for(target, before_snapshot),
+            self._sampling_context_for(target, after_snapshot), outcome)
+
+    def sampling_progress_evidence(self):
+        return self._sampling_progress().evidence()
 
     def discovery_summary(self, limit=6, current_discovery_id=None):
         """Rank bounded observation guidance explicitly; retain the full ledger."""
@@ -587,12 +652,18 @@ class Perception:
                 required_hit_count=target["confirmation"]["required_hit_count"],
                 min_hit_pose_gap_m=target["confirmation"]["min_hit_pose_gap_m"],
                 accepted_hit_poses=target["confirmation"]["accepted_hit_poses"][-3:], priority=priority)
+            readiness = self._sampling_progress().readiness(target, self._sampling_context_for(target))
+            row.update(sampling_executable=readiness["executable"], sampling_readiness_reason=readiness["reason"],
+                sampling_progress=readiness["progress"])
+            rank = (readiness["executable"],) + rank
             candidates.append((rank, row))
         candidates.sort(key=lambda pair: pair[1]["hypothesis_id"])
         candidates.sort(key=lambda pair: pair[0], reverse=True)
         return copy.deepcopy({"schema": ledger["schema"], "selection_rule": "current_independent_confirmation_evidence/v1",
             "pending_count": len({r["hypothesis_id"] for r in ledger["unresolved"]}),
             "pending_record_count": len(ledger["unresolved"]), "candidate_count": len(candidates),
+            "executable_candidate_count": sum(row["sampling_executable"] for _, row in candidates),
+            "executable_candidates": [row for _, row in candidates if row["sampling_executable"]][:limit],
             "pending": [row for _, row in candidates[:limit]],
             "required_evidence": "fresh_separated_views_with_unique_pixel_and_identity_support"})
 
