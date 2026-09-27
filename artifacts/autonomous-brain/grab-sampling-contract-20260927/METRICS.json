@@ -1,0 +1,166 @@
+{
+  "schema": "grab-sampling-round-metrics/v1",
+  "source_commit": "4fa8916f8570b467983c86337a46dc5d1b900cde",
+  "reviewed_baseline": "10e3c879d2499d6f893151f24857c315f12fe2e7",
+  "historical_results_preserved": {
+    "d1538f7570a42b760ad518f133eaefd7bcac83a8": "stage1_PASS",
+    "1117336bcb875e0700ebe6363d6154fc0409a8a0": "stage1_FAIL",
+    "dec5b078d6711bdfda972ca4632c200e235dfb7e": "stage1_FAIL",
+    "a847a3c538c2787864633753b74dd906098ff6fd": "stage1_FAIL"
+  },
+  "verification_layers": {
+    "function_regressions": {
+      "python": {
+        "tests": 1717,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "node": {
+        "driver": {
+          "tests": 29,
+          "pass": 29,
+          "fail": 0,
+          "skipped": 0
+        },
+        "platform": {
+          "tests": 15,
+          "pass": 15,
+          "fail": 0,
+          "skipped": 0
+        }
+      }
+    },
+    "synthetic_components": {
+      "sampling_cases": 5,
+      "sampling_checks_satisfied": true,
+      "grab_cases": 9,
+      "all_grab_audit_checks_satisfied": true
+    },
+    "historical_v19_replay": {
+      "scope": "offline_llm_transcript_replay",
+      "allPass": true,
+      "replayed_rounds": 97,
+      "replayed_calls": 97,
+      "network_calls": 0
+    },
+    "separate_live_service_preflight": {
+      "schema": "brain-model-availability/v1",
+      "formal_task": false,
+      "robot_started": false,
+      "max_requests": 1,
+      "available": false,
+      "configuration": {
+        "model": "deepseek-flash",
+        "temperature": 0,
+        "thinking": "disabled",
+        "stream": true,
+        "response_format": {
+          "type": "json_object"
+        },
+        "mode": "live",
+        "formal_run": false
+      },
+      "request_count": 1,
+      "transport_error": {
+        "type": "HTTPError",
+        "status": 402
+      },
+      "validation_error": null,
+      "elapsed_s": 0.771802,
+      "next_step": "stop_without_formal_run_or_service_changes"
+    },
+    "formal_stage1": {
+      "status": "NOT_RUN",
+      "runs": 0,
+      "reason": "separate_preflight_HTTP402",
+      "task": "把两个红球送到绿色存放区",
+      "map": "map-05",
+      "rounds": 0,
+      "model_calls": 0,
+      "physical_delivery": null,
+      "brain_DELIVERED": null,
+      "independent_verified_delivery_chains": null,
+      "global_judge": null,
+      "prefix_judge": null,
+      "active_done": null,
+      "limits": {
+        "rounds": 200,
+        "simulation_seconds": 1200
+      }
+    },
+    "stage2": {
+      "status": "NOT_RUN",
+      "runs": 0
+    },
+    "ten_layouts_and_hardware_started": false
+  },
+  "previous_a847a3c_unchanged": {
+    "source_commit": "a847a3c538c2787864633753b74dd906098ff6fd",
+    "status": "FAIL",
+    "metrics": {
+      "rounds": 97,
+      "llm_calls": 97,
+      "llm_total_elapsed_s": 183.28177841799993,
+      "simulation_seconds": 673.06,
+      "observations": 596,
+      "failed_rounds": 52,
+      "failed_actions": 51,
+      "execution_failures": 1,
+      "external_stop_failures": 0,
+      "bridge_calls": 2787,
+      "nonwhitelist_brain_requests": 0
+    },
+    "deliveries": {
+      "required": 2,
+      "brain_claimed": 1,
+      "independent_record_count": 1,
+      "observed_chain_verified": 0,
+      "observed_chain_failures": [
+        "pick_command_identity_confirmation_chain_invalid",
+        "delivery_release_command_reference_invalid",
+        "delivery_missing_prior_verified_pick"
+      ]
+    },
+    "judge": {
+      "match": 2,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 0,
+      "not_evaluated": 95,
+      "eligible_actions": 2
+    },
+    "prefix_judge": {
+      "match": 2
+    },
+    "done_actions": 0,
+    "repositioning": {
+      "internal_candidates_generated_total": 6,
+      "internal_candidates_eligible_total": 6,
+      "shortlist_rows_returned_total": 5,
+      "generation_limit": "Logged query totals count enumeration events, including repeated route versions across queries; they are not unique physical locations. Distinct route versions and actual attempts are separate below.",
+      "distinct_logged_route_versions": 18,
+      "candidate_attempts_directly_logged_in_action_results": 2,
+      "candidate_arrivals_directly_logged_in_action_results": 1,
+      "distinct_logged_candidate_attempts": 2,
+      "candidate_attempts_with_reported_arrival": 1,
+      "full_reposition_success_count": 1,
+      "full_success_definition": "One current go_to result with success=true and road_reposition.status=reposition_and_visual_standoff_verified; arrival alone is insufficient.",
+      "attempt_deduplication": "canonical object ID + route_version + before_observation; subsequent logged stages retained as versions."
+    },
+    "metrics_file_sha256": "2d14e96b9d974cfef342b1aaa153f6a9c97a4a079dc59066cefbf519eb3db560",
+    "release": "https://github.com/54dK3n/wm_bench/releases/tag/executable-recovery-20260927-a847a3c"
+  },
+  "stopped_after_preflight_failure": true,
+  "resumed_previous_run": false,
+  "new_formal_run_after_failure": false,
+  "service_configuration_changed": false,
+  "evidence_sha256": {
+    "GATE.json": "274679839d44007044acf197f99331d7defe589715634a18157820b6c4ce8f5b",
+    "FROZEN_INPUTS.json": "6e10feb9463e0b59456250b212aff4834f766ef211b16806a8803ac61fcf4403",
+    "raw/preflight/live-once/RESULT.json": "2124bfd27a3dee100fa55fa1dba5330d5c5c83491e5e8432feceebcf7e734f03",
+    "raw/preflight/live-once/llm.jsonl": "426727a707d1202cbbfd3010eda57f76db77372bae5a647130607069ad0644c1",
+    "raw/gate/grab-frozen-candidate.json": "9682e4ac638d5e9eea4d1e6a6ba34dfc4317544ba94130eaf9d0ecfeff682068",
+    "raw/gate/sampling-frozen-candidate.json": "f46b4969332ab8d94e09efad9961c8de02b2927afffe254c2fee25070db6ff17"
+  }
+}
