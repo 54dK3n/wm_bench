@@ -1,5 +1,15 @@
 # wm_bench
 
+## 当前轮次：真实平台 + LLM + 既有编排层
+
+本轮接回 [octos_robots](https://github.com/54dK3n/octos_robots) 的框架无关 `orchestrator.executor.Executor`，复用同一个 Runtime / WorldModel、现有 LLMClient 和 Actions；外部 Octos runtime 尚未接入。每步按新观测决策，技能结果由动作后 WorldModel 和现有证据判定，平台模式不叠加 Executor 自动重试。
+
+当前模型为 **DeepSeek Flash、temperature=0、thinking=disabled**。独立真实生成已得到合法动作；平台接线仍在进行，一球 demo 与原双球阶段 1 目前均为 **NOT_RUN**。这不是搬运成功；阶段 2、十布局与真机暂缓。启动命令和实际成绩待接线确认后补齐，见[本轮一页报告](artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md)。历史结果保持不变。
+
+## 历史说明：2026-09-25 外部单动作大脑
+
+以下保留当时描述；其中 Kimi 配置、Octos 暂缓和“下一局”编号不代表本轮状态。
+
 WorldModel × 广阳岛机器人仿真：运行程序、视点规划、双球流程、评测工具与实验报告。
 
 当前执行 **WorldModel + 外部单动作大模型自主小车**：平台提供传感器和执行器，大脑每轮观测、决策、行动、再观测。octos 编排、技能契约和逐条确定性门禁暂缓。平台的桥检测一致性与四类非空门禁已通过；外部大脑、M5 感知、模型记录回放和独立评测已实现。

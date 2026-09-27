@@ -115,6 +115,8 @@ test("default wall time can cross 7200 seconds and the child still exits natural
   assert.equal(result.capabilityPassed.max_simulation_seconds, 1200);
   assert.equal(f.spawns.length, 1);
   assert.deepEqual(f.spawns[0].args.slice(0, 2), ["-m", "autonomous_brain.run"]);
+  assert.equal(f.spawns[0].args.at(-2), '--orchestrator-root');
+  assert.equal(f.spawns[0].args.at(-1), f.parse().orchestratorRoot);
   assert.deepEqual(f.spawns[0].options.env, {PYTHONUNBUFFERED: "1"});
 });
 

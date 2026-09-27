@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, parseArgs} = require("../autonomous_brain_driver.js");
+const {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, orchestratorProvenance, parseArgs} = require("../autonomous_brain_driver.js");
 
 test("local config accepts literal values, comments and only the allowed LLM keys", () => {
   const parsed = parseLocalLLMConfig([
@@ -22,7 +22,7 @@ test("local config accepts literal values, comments and only the allowed LLM key
     LLM_MODEL: "$(do-not-execute) ${NO_EXPANSION}",
     LLM_TEMPERATURE: "0", LLM_THINKING: "disabled",
   });
-  assert.equal(VERSION, "wm-autonomous-brain-driver/v9");
+  assert.equal(VERSION, "wm-autonomous-brain-driver/v10");
 });
 
 test("existing environment wins and missing files are optional", () => {
@@ -105,6 +105,40 @@ test("default stage-1 instruction and limits are explicit; stage-1 cannot unlock
   validateStageGate(options);
   assert.throws(() => validateStageGate({...options, maps: ['map-05', 'map-01']}), /Stage-2/);
   assert.throws(() => validateStageGate({...options, stage2Success: '/tmp/stage1-success.json'}), /Stage-2/);
+});
+
+test("live tasks select the existing Executor while historical replay retains direct dispatch", () => {
+  const live = parseArgs(['--out', '/tmp/octos-wiring-test', '--task', '把一个红球送到绿色存放区']);
+  assert.ok(path.isAbsolute(live.orchestratorRoot));
+  assert.equal(live.task, '把一个红球送到绿色存放区');
+  const replay = parseArgs(['--out', '/tmp/octos-wiring-test', '--replay', '/tmp/historical.jsonl']);
+  assert.equal(replay.orchestratorRoot, null);
+  const explicit = parseArgs(['--out', '/tmp/octos-wiring-test', '--replay', '/tmp/historical.jsonl',
+    '--orchestrator-root', '/tmp/explicit-octos']);
+  assert.equal(explicit.orchestratorRoot, '/tmp/explicit-octos');
+});
+
+test("orchestration freeze records actual Executor and registry bytes, and observes source edits", t => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'brain-orchestration-freeze-'));
+  t.after(() => fs.rmSync(directory, {recursive: true, force: true}));
+  const root = path.resolve(__dirname, '../..');
+  const gitDir = require('node:child_process').spawnSync('git', ['rev-parse', '--absolute-git-dir'],
+    {cwd: root, encoding: 'utf8'}).stdout.trim();
+  fs.writeFileSync(path.join(directory, '.git'), 'gitdir: ' + gitDir + '\n');
+  fs.mkdirSync(path.join(directory, 'orchestrator'));
+  fs.mkdirSync(path.join(directory, 'skills'));
+  const executor = path.join(directory, 'orchestrator/executor.py');
+  fs.writeFileSync(executor, '# synthetic first source\n');
+  fs.writeFileSync(path.join(directory, 'skills/registry.json'), '{"skills":[]}\n');
+  const before = orchestratorProvenance(directory);
+  assert.equal(before.kind, 'octos_robots.Executor');
+  assert.equal(before.maxRetries, 0);
+  assert.equal(before.externalOctosRuntime, false);
+  assert.match(before.revision, /^[0-9a-f]{40}$/);
+  fs.appendFileSync(executor, '# changed source\n');
+  assert.notDeepEqual(orchestratorProvenance(directory), before);
+  fs.unlinkSync(executor);
+  assert.throws(() => orchestratorProvenance(directory), /no existing Executor/);
 });
 
 

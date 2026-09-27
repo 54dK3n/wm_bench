@@ -1,9 +1,10 @@
 """One-action decisions, complete JSONL transcripts, and network-free replay.
 
 Configuration follows octos: LLM_BASE_URL, LLM_API_KEY and LLM_MODEL, with
-optional LLM_TEMPERATURE and LLM_THINKING. The orchestrator is deliberately
-not imported. Call ``decide(state)`` once per observation round and execute
-its returned ``{action, params}`` elsewhere.
+optional LLM_TEMPERATURE and LLM_THINKING. The client stays independent of
+the execution backend: orchestration.py injects ``decide(state)`` into the
+existing octos_robots Executor, once per observation round. The returned
+``{action, params}`` contract and historical transcript semantics are unchanged.
 """
 
 from __future__ import annotations

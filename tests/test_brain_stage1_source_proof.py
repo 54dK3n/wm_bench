@@ -126,3 +126,26 @@ def test_incomplete_brain_coverage_is_not_a_valid_new_proof(formal_proof):
     formal_proof['summary']['source_sha256'].pop('actions.py')
     formal_proof['driver_summary']['sourceManifestAfterRun'] = copy.deepcopy(formal_proof['source_manifest'])
     assert verdict(formal_proof)['status'] == 'invalid'
+
+
+def test_current_orchestrator_source_is_checked_against_the_actual_loaded_executor(formal_proof):
+    manifest = formal_proof["source_manifest"]
+    manifest["version"] = "wm-autonomous-brain-driver/v10"
+    manifest["brain"].update({"autonomous_brain/road_evidence.py": "a" * 64,
+                              "autonomous_brain/orchestration.py": "b" * 64})
+    manifest["evaluatorDependencies"] = {"tools/" + name + ".py": "c" * 64 for name in (
+        "brain_evidence_audit", "replay_brain_llm", "brain_topology_audit")}
+    manifest["orchestrator"] = {"kind": "octos_robots.Executor", "root": "/selected/octos",
+        "revision": "d" * 40, "sources": {"orchestrator/executor.py": "e" * 64},
+        "maxRetries": 0, "externalOctosRuntime": False}
+    formal_proof["summary"].update(
+        source_sha256={key.split("/")[-1]: value for key, value in manifest["brain"].items()},
+        orchestration={"configured_root": "/selected/octos", "revision": "d" * 40,
+            "executor_file": "/selected/octos/orchestrator/executor.py",
+            "executor_sha256": "e" * 64, "max_retries": 0})
+    formal_proof["driver_summary"].update(schema=manifest["version"], sourceManifestAfterRun=copy.deepcopy(manifest))
+    assert verdict(formal_proof)["status"] == "verified"
+    formal_proof["summary"]["orchestration"]["executor_file"] = "/other/executor.py"
+    assert "source_proof_actual_orchestrator_mismatch" in verdict(formal_proof)["failures"]
+    formal_proof["summary"].pop("orchestration")
+    assert "source_proof_actual_orchestrator_mismatch" in verdict(formal_proof)["failures"]

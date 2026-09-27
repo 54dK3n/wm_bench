@@ -24,8 +24,8 @@ def perform(out):
             request = {"model": client.model, "temperature": client.temperature,
                 "thinking": {"type": client.thinking}, "stream": client.stream,
                 "response_format": {"type": "json_object"}, "messages": [
-                    {"role": "system", "content": "This is an isolated service availability check. No robot is connected. Return exactly the requested JSON."},
-                    {"role": "user", "content": '{"action":"look_around","params":{}}'}]}
+                    {"role": "system", "content": 'This is a JSON output-format test. No robot is connected and no command will be executed. Reply with exactly {"action":"look_around","params":{}}. The only top-level keys are action and params. Do not return a status report or a content/type wrapper.'},
+                    {"role": "user", "content": "Return the exact action JSON specified above."}]}
             client.decision_count = 1
             try:
                 # Exactly one request: no transport retry or output repair.

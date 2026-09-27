@@ -392,6 +392,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True)
     parser.add_argument("--replay")
+    parser.add_argument("--orchestrator-root", help="Pinned octos_robots checkout; live Executor callbacks")
     args = parser.parse_args(argv)
     out = Path(args.out).resolve()
     # Driver may create an empty directory for the child; no old evidence is
@@ -403,6 +404,7 @@ def main(argv=None):
     wall_start = time.monotonic()
     runtime = None
     llm = None
+    orchestration = None
     dependency = None
     formal_configuration = None
     rounds = JsonLog(out / "rounds.jsonl")
@@ -412,6 +414,9 @@ def main(argv=None):
         formal_configuration = llm.validate_formal_configuration()
         dependency = capture_world_model_provenance(WM_ROOT)
         runtime = Runtime(config, out)
+        if args.orchestrator_root:
+            from .orchestration import LiveOrchestration
+            orchestration = LiveOrchestration(runtime, llm, args.orchestrator_root)
         for number in range(1, config.get("max_rounds", 200) + 1):
             runtime.round = number
             runtime.observe()
@@ -420,11 +425,18 @@ def main(argv=None):
             state = runtime.state()
             action = None
             try:
-                action = llm.decide(state)
-                result = runtime.actions.execute(action)
+                if orchestration is not None:
+                    action, result = orchestration.run_next(number, state)
+                else:
+                    # Preserve the original entry for strict historical replay.
+                    action = llm.decide(state)
+                    result = runtime.actions.execute(action)
             except Exception as exc:
+                if orchestration is not None:
+                    action = orchestration.last_action
                 count = number
                 rounds.write({"round": number, "state": state, "action": action,
+                    **({"orchestration": orchestration.last_trace} if orchestration else {}),
                     "llm_output": llm.last_record,
                     "result": {"success": False, "reason": str(exc), "error_type": type(exc).__name__,
                                "evidence": copy.deepcopy(getattr(exc, "action_evidence", {}))},
@@ -433,6 +445,7 @@ def main(argv=None):
                 raise
             count = number
             rounds.write({"round": number, "state": state, "action": action,
+                          **({"orchestration": orchestration.last_trace} if orchestration else {}),
                           "llm_output": llm.last_record, "result": result,
                           "simulation_seconds": runtime.bridge.seconds,
                           "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
@@ -479,6 +492,8 @@ def main(argv=None):
                               "max_simulation_seconds": config.get("max_simulation_seconds", 1200)},
                    "world_model": dependency,
                    "formal_configuration": formal_configuration,
+                   **({"orchestration": dict(orchestration.provenance,
+                       run_id=orchestration.run_id)} if orchestration else {}),
                    "source_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                      for p in sorted(Path(__file__).parent.glob("*.py"))}}
         dump(out / "summary.json", summary)

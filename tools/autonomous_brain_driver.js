@@ -13,7 +13,7 @@ const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v9";
+const VERSION = "wm-autonomous-brain-driver/v10";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -65,6 +65,7 @@ function loadLocalLLMConfig(file = path.join(ROOT, ".env.local"), env = process.
 function parseArgs(argv) {
   const options = {maps: ["map-05"], runs: 1,
     platformRoot: process.env.GUANGYANG_PLATFORM_ROOT || path.join(ROOT, "workspaces/guangyang-platform/projects/car-python"),
+    orchestratorRoot: path.resolve(process.env.OCTOS_ROBOTS_ROOT || path.join(ROOT, "workspaces/octos_robots")),
     python: process.env.BRAIN_PYTHON || "python3", timeoutMs: 120000, wallTimeoutSeconds: 0,
     maxRounds: 200, maxSimulationSeconds: 1200, task: "把两个红球送到绿色存放区"};
   for (let i = 0; i < argv.length; i++) {
@@ -74,6 +75,7 @@ function parseArgs(argv) {
     else if (key === "--maps") options.maps = value.split(",");
     else if (key === "--runs") options.runs = Number(value);
     else if (key === "--platform-root") options.platformRoot = path.resolve(value);
+    else if (key === "--orchestrator-root") {options.orchestratorRoot = path.resolve(value); options.orchestratorExplicit = true;}
     else if (key === "--python") options.python = value;
     else if (key === "--task") options.task = value;
     else if (key === "--replay") options.replay = path.resolve(value);
@@ -93,6 +95,10 @@ function parseArgs(argv) {
   assert.ok(Number.isInteger(options.maxRounds) && options.maxRounds <= 200, "round cap must be <= 200");
   assert.ok(options.maxSimulationSeconds <= 1200, "simulation cap must be <= 1200 seconds");
   assert.ok(options.task.length > 0 && options.task.length <= 10000, "invalid task");
+  options.acceptanceScope = options.task === '把一个红球送到绿色存放区' ? 'one-ball-smoke' : 'formal-task';
+  // Historical transcripts retain their original direct action dispatch unless
+  // the caller explicitly requests the new orchestration path.
+  if (options.replay && !options.orchestratorExplicit) options.orchestratorRoot = null;
   return options;
 }
 
@@ -240,6 +246,20 @@ function gitRevision(directory) {
   return result.status === 0 ? result.stdout.trim() : null;
 }
 
+function orchestratorProvenance(directory) {
+  if (!directory) return {kind: 'direct', historicalReplayCompatibility: true};
+  const root = fs.realpathSync(directory);
+  const revision = gitRevision(root);
+  assert.match(revision || '', /^[0-9a-f]{40}$/, 'selected octos_robots checkout must have a Git revision');
+  const sources = Object.fromEntries(Object.entries(sourceTree(path.join(root, 'orchestrator'), new Set(['.py'])))
+    .map(([file, digest]) => ['orchestrator/' + file, digest]));
+  sources['skills/registry.json'] = sha(fs.readFileSync(path.join(root, 'skills/registry.json')));
+  assert.ok(sources['orchestrator/executor.py'], 'selected checkout has no existing Executor');
+  return {kind: 'octos_robots.Executor', root, revision, sources, maxRetries: 0,
+    externalOctosRuntime: false,
+    scope: 'Existing framework-independent Executor, in-process Actions and WorldModel callbacks; no mock skill subprocesses'};
+}
+
 function evaluatorDependencies(root = ROOT) {
   // These modules perform independent witness checking and raw model replay.
   // Their bytes belong to the frozen evaluator, even though they are helpers.
@@ -271,6 +291,7 @@ function sourceManifest(platformRoot, options = {}) {
     platformRoot: fs.realpathSync(platformRoot),
     platformRuntimeSources: sourceTree(platformRoot, new Set(['.js', '.mjs', '.html', '.json', '.wasm', '.css', '.onnx'])),
     worldModel: worldModelProvenance(options.python, process.env),
+    orchestrator: orchestratorProvenance(options.orchestratorRoot),
     modelConfiguration: options.replay ? {mode: 'replay', source: options.replay,
       sha256: sha(fs.readFileSync(options.replay)), formal_run: false} : validateFormalLLMConfig(),
     runConfiguration: {task: options.task ?? null, maxRounds: options.maxRounds ?? null,
@@ -557,6 +578,7 @@ async function runBrain(options, directory, capability, origin, evaluate) {
     max_rounds: options.maxRounds, max_simulation_seconds: options.maxSimulationSeconds};
   const args = ['-m', 'autonomous_brain.run', '--out', brainDir];
   if (options.replay) args.push('--replay', options.replay);
+  if (options.orchestratorRoot) args.push('--orchestrator-root', options.orchestratorRoot);
   const stdout = fs.createWriteStream(path.join(directory, 'brain-stdout.txt'));
   const stderr = fs.createWriteStream(path.join(directory, 'brain-stderr.txt'));
   const started = Date.now();
@@ -602,7 +624,8 @@ async function runBrain(options, directory, capability, origin, evaluate) {
   await Promise.all([new Promise(resolve => stdout.end(resolve)), new Promise(resolve => stderr.end(resolve))]);
   return {...terminal, spawnError, interrupted, wallSeconds: (Date.now() - started) / 1000,
     wallTimeoutSeconds: options.wallTimeoutSeconds,
-    invocation: {module: 'autonomous_brain.run', output: relative(brainDir), replay: options.replay ? relative(options.replay) : null},
+    invocation: {module: 'autonomous_brain.run', output: relative(brainDir), replay: options.replay ? relative(options.replay) : null,
+      orchestration: options.orchestratorRoot ? 'octos_robots.Executor' : 'direct'},
     capabilityPassed: {...config, origin: '<local robot bridge>', bridge_id: '<limited robot capability>', client_token: '<not recorded>'}};
 }
 
@@ -623,6 +646,7 @@ async function main(argv = process.argv.slice(2)) {
   assert.deepEqual(manifest.platform, frozenPlatform, 'selected platform source differs from the rechecked gate evidence');
   writeJson(path.join(options.out, 'manifest.json'), manifest);
   const summary = {schema: VERSION, status: 'running', maps: options.maps, runsPerMap: options.runs,
+    acceptanceScope: options.acceptanceScope,
     maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds,
     wallTimeoutSeconds: options.wallTimeoutSeconds,
     task: options.task, platformGatePass: true, trials: [], map05SuccessBeforeRun: map05Passed};
@@ -684,6 +708,7 @@ async function main(argv = process.argv.slice(2)) {
       for (let run = 1; run <= options.runs; run++) {
         const directory = path.join(options.out, `${map}-run-${run}`); fs.mkdirSync(directory);
         const trial = {map, run, directory: path.basename(directory), success: false,
+          acceptanceScope: options.acceptanceScope,
           maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds,
           wallTimeoutSeconds: options.wallTimeoutSeconds};
         const errorCursor = cdp.pageErrors.length;
@@ -748,7 +773,7 @@ async function main(argv = process.argv.slice(2)) {
         trial.pageErrors = cdp.pageErrors.slice(errorCursor);
         writeJson(path.join(directory, 'evaluation.json'), trial);
         summary.trials.push(trial);
-        if (map === 'map-05' && trial.success) map05Passed = true;
+        if (map === 'map-05' && trial.success && options.acceptanceScope !== 'one-ball-smoke') map05Passed = true;
         writeJson(path.join(options.out, 'progress.json'), summary);
         console.error(`BRAIN ${map} run ${run}: ${trial.success ? 'PASS' : 'FAIL'} ${JSON.stringify(trial.failures || trial.error)}`);
         if (trial.stopError || trial.evidenceExport?.complete === false) throw new Error('backend stop/export failed; aborting remaining trials');
@@ -786,7 +811,7 @@ async function main(argv = process.argv.slice(2)) {
   process.exitCode = summary.success ? 0 : 1;
   return summary;
 }
-module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, parseArgs, installEvaluationCapture,
+module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, orchestratorProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
   evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

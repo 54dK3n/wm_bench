@@ -21,7 +21,7 @@ import sys
 from typing import Any
 
 
-VERSION = "autonomous-brain-offline-evaluation/v8"
+VERSION = "autonomous-brain-offline-evaluation/v9"
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from autonomous_brain.task import parse_task, completion_progress
@@ -158,6 +158,12 @@ def terminal_done(rounds: list, observations: list, end_tick: Any) -> dict:
 
 def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
                       observations: list | None = None) -> dict:
+    """Original stage-1 gate: both original red targets remain required."""
+    return _evaluate_delivery(record, rounds, summary, metadata, observations, required_count=2)
+
+
+def _evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
+                       observations: list | None, *, required_count: int) -> dict:
     failures = []
     native = record.get("native", {})
     step_ms = record.get("clock", {}).get("stepMs", 20)
@@ -220,10 +226,13 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
                "position_world": [package.get("x"), package.get("z")] if package else None,
                "events": event_rows[truth_id]}
         finals.append(row)
-        if truth_id not in active:
+        if required_count == 2 and truth_id not in active:
             failures.append(f"no_active_delivery_event:{truth_id}")
-        if not inside:
+        if required_count == 2 and not inside:
             failures.append(f"final_position_outside_storage:{truth_id}")
+    qualifying = [row["truth_id"] for row in finals if row["active_delivery_event"] and row["inside_storage"]]
+    if required_count == 1 and len(qualifying) < required_count:
+        failures.append("insufficient_physical_deliveries")
     simulation_seconds = end_tick * step_ms / 1000 if finite(end_tick) and end_tick >= 0 else None
     if simulation_seconds is None:
         failures.append("simulation_end_tick_missing")
@@ -254,6 +263,7 @@ def evaluate_delivery(record: dict, rounds: list, summary: dict, metadata: dict,
             or metadata.get("error") or metadata.get("stopError") or metadata.get("controllerErrors")):
         failures.append("execution_or_controller_error")
     return {"failures": failures, "expected_target_ids": expected,
+            "required_delivery_count": required_count, "qualifying_delivered_target_ids": qualifying,
             "delivered_target_ids": sorted(active), "final_positions": finals,
             "rounds": count, "round_records": len(rounds),
             "max_rounds": cap_rounds, "simulation_seconds": simulation_seconds,
@@ -493,7 +503,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
 
     def valid(value):
         if not isinstance(value, dict) or value.get("version") not in {
-                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 10)}:
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 11)}:
             return False
         driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
         base_valid = (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
@@ -504,14 +514,27 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
                 and len({Path(key).name for key in brain}) == len(brain)
                 and isinstance(platform, dict) and bool(platform) and all(sha(value) for value in platform.values())
                 and sha(value.get("evaluatorCaptureSha256")))
-        modern = value["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"}
+        modern = value["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"}
         dependencies = value.get("evaluatorDependencies")
         dependency_valid = (isinstance(dependencies, dict)
             and set(dependencies) == {"tools/brain_evidence_audit.py", "tools/replay_brain_llm.py", "tools/brain_topology_audit.py"}
             and all(sha(digest) for digest in dependencies.values())
             and isinstance(brain, dict) and sha(brain.get("autonomous_brain/road_evidence.py")))
-        return base_valid and (not modern or valid_v7(value)) and (
-            value["version"] not in {"wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"} or dependency_valid)
+        orchestration_valid = True
+        if value["version"] == "wm-autonomous-brain-driver/v10":
+            orchestration = value.get("orchestrator", {})
+            orchestration_valid = (isinstance(orchestration, dict)
+                and orchestration.get("kind") == "octos_robots.Executor"
+                and absolute(orchestration.get("root"))
+                and isinstance(orchestration.get("revision"), str)
+                and re.fullmatch(r"[0-9a-f]{40}", orchestration["revision"]) is not None
+                and type(orchestration.get("maxRetries")) is int and orchestration["maxRetries"] == 0
+                and orchestration.get("externalOctosRuntime") is False
+                and hashed_files(orchestration.get("sources"))
+                and sha(orchestration["sources"].get("orchestrator/executor.py"))
+                and isinstance(brain, dict) and sha(brain.get("autonomous_brain/orchestration.py")))
+        return base_valid and orchestration_valid and (not modern or valid_v7(value)) and (
+            value["version"] not in {"wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"} or dependency_valid)
 
     if (not isinstance(manifest, dict) or not isinstance(driver_summary, dict)
             or not isinstance(brain_summary, dict)):
@@ -526,7 +549,18 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     result["recorded_before_after_equal"] = manifest == after
     expected = {Path(path).name: value for path, value in manifest["brain"].items()}
     result["brain_summary_hashes_match"] = brain_summary.get("source_sha256") == expected
-    if manifest["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"}:
+    if manifest["version"] == "wm-autonomous-brain-driver/v10":
+        recorded = manifest["orchestrator"]
+        loaded = brain_summary.get("orchestration")
+        result["actual_orchestrator_matches"] = (isinstance(loaded, dict)
+            and loaded.get("configured_root") == recorded["root"]
+            and loaded.get("revision") == recorded["revision"]
+            and loaded.get("executor_file") == str(Path(recorded["root"]) / "orchestrator/executor.py")
+            and loaded.get("executor_sha256") == recorded["sources"]["orchestrator/executor.py"]
+            and type(loaded.get("max_retries")) is int and loaded["max_retries"] == 0)
+        if not result["actual_orchestrator_matches"]:
+            result["failures"].append("source_proof_actual_orchestrator_mismatch")
+    if manifest["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"}:
         expected_wm = dict(manifest["worldModel"])
         expected_wm.pop("selection")
         result["actual_world_model_matches"] = expected_wm == brain_summary.get("world_model")
@@ -557,6 +591,12 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
 
 
 def evaluate_task_scope(summary, observations, rounds, calls, bridge=None, motions=None, *, native_record=None, captures=None):
+    return _evaluate_task_scope(summary, observations, rounds, calls, bridge, motions,
+        native_record=native_record, captures=captures, one_ball_smoke=False)
+
+
+def _evaluate_task_scope(summary, observations, rounds, calls, bridge=None, motions=None, *,
+                         native_record=None, captures=None, one_ball_smoke=False):
     """New task-aware runs require both a legal ledger and an explicit LLM done."""
     spec = summary.get("task_spec")
     if spec is None:
@@ -569,6 +609,11 @@ def evaluate_task_scope(summary, observations, rounds, calls, bridge=None, motio
     if spec != parsed:
         failures.append("instruction_task_spec_mismatch")
     stage = "stage-1" if parsed["quantity_mode"] == "known" else "stage-2"
+    if one_ball_smoke:
+        stage = "one-ball-smoke"
+        if (parsed["quantity_mode"] != "known" or parsed["required_count"] != 1
+                or summary["task"] != "把一个红球送到绿色存放区"):
+            failures.append("one_ball_smoke_requires_exact_one_ball_instruction")
     if stage == "stage-1" and (parsed["required_count"] != 2
             or summary["task"] != "把两个红球送到绿色存放区"):
         failures.append("stage1_requires_exact_two_ball_instruction")
@@ -865,6 +910,16 @@ def evaluate_action_identity_audits(record, captures, summary, observations, rou
 
 
 def evaluate_run(directory: Path) -> dict:
+    """Formal evaluator retains the exact original two-ball stage-1 gate."""
+    return _evaluate_run(directory, one_ball_smoke=False)
+
+
+def evaluate_one_ball_smoke(directory: Path) -> dict:
+    """A distinct wiring demonstration; never constitutes stage-1 acceptance."""
+    return _evaluate_run(directory, one_ball_smoke=True)
+
+
+def _evaluate_run(directory: Path, *, one_ball_smoke: bool) -> dict:
     directory = Path(directory).resolve()
     inputs = {}
     failures = []
@@ -899,13 +954,15 @@ def evaluate_run(directory: Path) -> dict:
     bridge = load("brain/bridge-calls.jsonl", [], lines=True)
     motions = load("brain/motions.jsonl", [], required=False, lines=True)
     metadata = load("evaluation.json", {})
+    if one_ball_smoke and metadata.get("map") != "map-05":
+        failures.append("one_ball_smoke_requires_map05")
     evidence = load("evidence.json", {})
     manifest = load("../manifest.json", {})
     driver_summary = load("../summary.json", {})
     lifecycle = load("brain/llm.lifecycle.jsonl", [],
-        required=manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"}, lines=True)
+        required=manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"}, lines=True)
     lifecycle_audit = (evaluate_call_lifecycle(calls, lifecycle)
-        if lifecycle or manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"} else None)
+        if lifecycle or manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"} else None)
     if lifecycle_audit:
         failures.extend(lifecycle_audit["failures"])
     stop = load("../evaluator-stop.json", {}, required=False)
@@ -923,12 +980,16 @@ def evaluate_run(directory: Path) -> dict:
                     or ("bytes" in expected and expected["bytes"] != found["bytes"])
                     or ("expandedBytes" in expected and expected["expandedBytes"] != found["expanded_bytes"])):
                 failures.append("evidence_sha_mismatch:" + key)
-    delivery = evaluate_delivery(record, rounds, summary, metadata, observations)
+    delivery = (_evaluate_delivery(record, rounds, summary, metadata, observations, required_count=1)
+        if one_ball_smoke else evaluate_delivery(record, rounds, summary, metadata, observations))
     failures.extend(delivery["failures"])
-    task_scope = evaluate_task_scope(summary, observations, rounds, calls, bridge, motions,native_record=record,captures=captures)
+    task_scope = _evaluate_task_scope(summary, observations, rounds, calls, bridge, motions,
+        native_record=record, captures=captures, one_ball_smoke=one_ball_smoke)
+    if one_ball_smoke and task_scope["stage"] != "one-ball-smoke":
+        failures.append("one_ball_smoke_missing_instruction_scope")
     topology=task_scope.get("topology")
     failures.extend(task_scope["failures"])
-    if manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9"} and task_scope["stage"] == "legacy-unscoped":
+    if manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10"} and task_scope["stage"] == "legacy-unscoped":
         failures.append("new_run_missing_instruction_task_spec")
     if not rounds:
         failures.append("no_completed_round_logs")
@@ -997,7 +1058,8 @@ def report_text(result: dict) -> str:
         return fmt(value.get("simulation_seconds")) if value else "未能确定"
     def safe(value):
         return str(value).replace(str(ROOT) + os.sep, "").replace("|", "\\|").replace("\n", " ")
-    lines = [f"# 小车自主大脑离线评测：{result['map']}", "",
+    scope = "一球接线 smoke（不等于双球阶段 1）" if result.get("stage") == "one-ball-smoke" else "小车自主大脑离线评测"
+    lines = [f"# {scope}：{result['map']}", "",
              f"结论：**{'PASS' if result['success'] else 'FAIL'}**。评测器版本 `{VERSION}`。",
              "结果由 record 中的红球交付事件、撤销事件和最终存放区内位置独立复算；没有使用 driver 的 success 布尔值。真值只在离线评测中使用。", "",
              f"输入目录：`{result['run_directory']}`。大脑状态：`{safe(result['brain_status'])}`；原因：{safe(result['brain_reason'])}。", "",
@@ -1060,12 +1122,13 @@ def report_text(result: dict) -> str:
                   "## 完整日志与复算", "", "以下全部为仓库相对路径；逐轮状态、模型原文、动作和结果保存在对应日志。", ""])
     for name, value in result["inputs"].items():
         lines.append(f"- `{value['path']}` — SHA256 `{value['sha256']}`")
+    entrypoint = "evaluate_one_ball_smoke.py" if result.get("stage") == "one-ball-smoke" else "evaluate_autonomous_brain.py"
     lines.extend(["", f"评测器 SHA256：`{result['evaluator_sha256']}`。", "",
-                  f"复算：`python3 tools/evaluate_autonomous_brain.py --input {result['run_directory']} --out <新的报告目录>`。", ""])
+                  f"复算：`python3 tools/{entrypoint} --input {result['run_directory']} --out <新的报告目录>`。", ""])
     return "\n".join(lines)
 
 
-def main(argv=None) -> int:
+def main(argv=None, *, one_ball_smoke=False) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
@@ -1074,7 +1137,7 @@ def main(argv=None) -> int:
         parser.error("--input must be an existing run directory")
     if args.out.exists():
         parser.error("--out must be a new directory; old evidence is never overwritten")
-    result = evaluate_run(args.input)
+    result = evaluate_one_ball_smoke(args.input) if one_ball_smoke else evaluate_run(args.input)
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out / "evaluation.json").write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     (args.out / "REPORT.md").write_text(report_text(result), encoding="utf-8")

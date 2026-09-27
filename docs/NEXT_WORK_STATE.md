@@ -1,3 +1,14 @@
+# 当前任务：真实平台 + LLM + WorldModel + 既有编排层
+
+2026-09-27：优先接通并实际演示搬运闭环，复用 `54dK3n/octos_robots` 的框架无关 Executor；不将其称为外部 Octos runtime。现有感知、Actions、WorldModel、白名单与验收门槛保持，一个 Runtime 贯穿整局，Executor 平台模式不自动重试。
+
+- 模型：DeepSeek Flash / temperature=0 / thinking=disabled；第二次独立真实 Chat Completion 已返回合法动作，首次格式错误记录保留。这两次均不是平台任务。
+- 当前状态：接线中；一球 demo **NOT_RUN**，双球阶段 1 **NOT_RUN**。下一步是完成入口并运行真实平台，不用 mock、回放或计划代替演示。
+- 阶段 2、十布局与真机暂缓；新调试和正式局分别新建目录，运行期间源码固定。
+- [本轮一页报告](../artifacts/autonomous-brain/octos-live-demo-20260927/REPORT.md)；[上一轮 HTTP 402 / NOT_RUN 交付](../artifacts/autonomous-brain/grab-sampling-contract-20260927/REPORT.md)。旧 PASS / FAIL 与原证据保持。
+
+## 历史状态：2026-09-25 外部单动作大脑（以下保留原文）
+
 # 当前任务：WorldModel + 外部单动作大模型自主小车
 
 2026-09-25 最新范围已替代下文旧 v4 阶段门禁：平台够用即可，octos 编排、技能契约和逐条确定性对照暂缓。旧 FAIL 与历史证据不变。
