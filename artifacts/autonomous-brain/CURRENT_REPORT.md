@@ -1,9 +1,9 @@
-# 当前状态：新一球回归 PASS，双球阶段 1 NOT_RUN
+# 当前状态：双球开发基线 FAIL，已停止
 
-冻结 `c4bf08e1114363ddff3c0f5bce7cdcb1c041af27` 完成两处小修后的一次真实 map-05 一球回归：67 次调用、67 轮、268.82 仿真秒，高层 pick 2 次、实际 grab 4 次；物理、脑端 DELIVERED、独立观测命令链交付各 1。r37 HELD、r66 DELIVERED、r67 模型主动 done，夹爪空，白名单外请求 0。独立一球 PASS/evaluator exit 0；driver 固定双球 false/exit 1 原样保留。
+冻结 `d6c107f197a1845f8cc1ba66a413512f9a1c5b71`（生产文件同 c4bf08e）的真实双球基线已执行，独立 evaluator 实际生成 FAIL；driver/evaluator 均 exit 1。73 次模型调用、73 dispatch / 72 judge、349 观测，pick 2、grab 4、观测抓持成功 1，release / 脑端 DELIVERED / done 均 0。
 
-编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`，平台和实际 vendored WM 与上一成功局一致。最终相关回归 93 PASS；[上一成功基线](octos-minimal-demo-next/REPORT.md) 原件与冻结源码离线复算 PASS 保留。r32 身份采样 31cm/+2 hit 未解除竞争；新 pick 失败上下文锁与 pick 离路逆归路本局未触发，不以整局 PASS 代替分支实测。
+首球持物后的存放路线重复受净空阻塞，r73 turn 与恢复 odometry 均收到 409 BRIDGE_CLOSED；未知结果未重发。record/captures/envelope 等导出失败，物理两球身份、物理交付数及平台 run ID 无法独立核验，不能用缺失推断为真值 0。控制器关闭根因未知。首球未交付，交付后第二球采样窗口 NOT_EXERCISED，未实施新窗口修复。
 
-仅本局后停止；双球阶段 1、阶段 2、十布局、真机均未启动。所有旧 PASS/FAIL 不覆盖。
+未做推测性小修、未开第二局；阶段 2、十布局和真机未启动。[第一局一球 PASS](octos-minimal-demo-next/REPORT.md) 与[第二局一球 PASS](one-ball-review-next/REPORT.md) 原样保留，不据此推算成功率。
 
-[本轮一页报告](one-ball-review-next/REPORT.md) · [指标与输入哈希](one-ball-review-next/METRICS.json) · [恢复/复算](one-ball-review-next/RESTORE.md) · [原始证据与关键帧](https://github.com/54dK3n/wm_bench/releases/tag/one-ball-review-20260927-c4bf08e)
+[本轮一页报告与实际命令/恢复/复算](two-ball-demo-next/REPORT.md) · [指标](two-ball-demo-next/METRICS.json) · [原始日志 Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-baseline-20260927-d6c107f)

@@ -1,6 +1,14 @@
 # wm_bench
 
-## 当前结果：两处小修后，一次真实一球回归 PASS
+## 当前结果：真实双球开发基线 FAIL，已停止
+
+map-05 的“把两个红球送到绿色存放区”已真实运行并独立评测 FAIL，driver/evaluator 均 exit 1。73 次真实模型调用、73 次 Executor dispatch / 72 次 judge、349 次观测；高层 pick 2、grab 4，观测抓持成功 1，release / 脑端 DELIVERED / 模型 done 均 0。首球持物后的存放路线重复受净空阻塞，r73 turn 和恢复 odometry 均收到 409 BRIDGE_CLOSED，未知结果未重发。
+
+冻结 `d6c107f197a1845f8cc1ba66a413512f9a1c5b71`，生产文件与上一轮 c4bf08e 相同。record/captures/envelope 等导出失败，物理两球身份、物理交付数及平台 run ID 无法独立核验，不能把缺失当作真值 0。控制器关闭根因未知。首球未交付，交付后第二球采样窗口未实施、未实测；不将它写成本局终因。未做推测性小修或第二局，阶段 2、十布局、真机未启动。
+
+[本轮报告、实际命令及恢复/复算](artifacts/autonomous-brain/two-ball-demo-next/REPORT.md) · [原始日志 Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-baseline-20260927-d6c107f)。此前两次一球 PASS 保留，不据此推算成功率。
+
+## 上一轮历史：两处小修后，一次真实一球回归 PASS
 
 冻结 `c4bf08e1114363ddff3c0f5bce7cdcb1c041af27` 在 map-05 完成“把一个红球送到绿色存放区”：67 次真实 DeepSeek Flash 调用、67 轮、268.82 仿真秒，高层 pick 2 次、实际 grab 4 次、有效交付 1 颗。物理、脑端 DELIVERED、独立观测命令链均为 1，r67 模型主动 done，夹爪空，白名单外调用 0。独立一球 PASS；driver 固定双球 false/exit 1 保留，双球阶段 1 **NOT_RUN**。
 

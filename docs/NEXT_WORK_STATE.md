@@ -1,4 +1,14 @@
-# 当前状态：两处小修后，一球真实回归 PASS，已停止
+# 当前状态：双球开发基线 FAIL，停止开发和运行
+
+2026-09-27 的一次真实双球基线已结束，`evaluate_autonomous_brain.py` 实际生成 FAIL，driver/evaluator 均 exit 1。冻结主仓 `d6c107f197a1845f8cc1ba66a413512f9a1c5b71`，生产文件同 c4bf08e；Executor、平台、实际 vendored WM、模型及安全门不变。
+
+- 73 次真实调用、73 dispatch / 72 judge、349 观测；pick 2、grab 4、观测抓持成功 1，release 0、DELIVERED 0、done 0。末次有效观测 obs349/tick17684/353.68 秒，夹爪持物。
+- r59 首球持物后的净空阻塞在 r62/65/70 普通 go_to 重现；r73 turn 1602 与恢复 odometry 1603 均 409 BRIDGE_CLOSED，保留未知结果、未重发。控制器关闭原因未取得。
+- record/captures/envelope 等导出失败，物理身份/交付和平台 run ID 不可独立核验，不把缺失当真值 0。严格转录 73/73 PASS 只证明转录一致。
+- 既有 r32 身份采样 31cm/+2 hit 未消解；摘要出现 manipulation_boundary_unresolved，但首球未交付，交付后第二球窗口 NOT_EXERCISED，新窗口逻辑未实施。仅拒绝旧失败路段不能证明后继可行，因此没有小修或第二局。
+- [报告与恢复/复算](../artifacts/autonomous-brain/two-ball-demo-next/REPORT.md) · [Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-baseline-20260927-d6c107f)。此前两次一球 PASS 保留，不推算成功率；阶段 2、十布局、真机未启动。
+
+## 上一轮历史：两处小修后，一球真实回归 PASS
 
 2026-09-27：冻结主仓 `c4bf08e1114363ddff3c0f5bce7cdcb1c041af27`，既有编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`。真实平台 → 同一 WM → DeepSeek Flash → Executor → Actions → 新观测链路运行一局；模型、阈值和预算不变，没有外部 Octos runtime。
 
