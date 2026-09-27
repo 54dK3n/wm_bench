@@ -172,8 +172,15 @@ def grasp_identity_change(before, after):
     if not old or not new or after.get("grasp_identity_authorized") is not True:
         return None
     matrix = old.get("candidate_ids_by_detection") or []
-    competing = {oid for index in old.get("target_detection_indices", [])
-                 if type(index) is int and 0 <= index < len(matrix) for oid in matrix[index]}
+    indices = {index for index in old.get("target_detection_indices", [])
+               if type(index) is int and 0 <= index < len(matrix)}
+    competing = {oid for index in indices for oid in matrix[index]}
+    # Empty/reduced recovery context is not an original competition. Preserve
+    # legitimate multi-detection ambiguity, but never invent a singleton duty
+    # whose "all other competitors" test would pass vacuously.
+    if (old.get("canonical_object_id") not in competing
+            or not (len(competing) > 1 or len(indices) > 1)):
+        return None
     competing.add(old.get("canonical_object_id"))
     competing.discard(None)
     canonical = new.get("canonical_object_id")

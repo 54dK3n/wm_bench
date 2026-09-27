@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v15"
+VERSION = "autonomous-brain-perception/v16"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -639,16 +639,22 @@ class Perception:
     def sampling_progress_evidence(self):
         return self._sampling_progress().evidence()
 
-    def discovery_summary(self, limit=6, current_discovery_id=None):
-        """Rank bounded observation guidance explicitly; retain the full ledger."""
+    def discovery_summary(self, limit=6, current_discovery_id=None, *, object_id=None):
+        """Rank bounded guidance, optionally selecting an identity before truncation."""
         if type(limit) is not int or not 0 <= limit <= 6:
             raise ValueError("discovery summary limit must be an integer from 0 to 6")
         ledger = self.discovery_evidence()
+        selected_object_id = self._discovery_canonical(object_id) if object_id is not None else None
         candidates = []
         for records in self._discovery_sampling_groups(ledger):
             target = self._discovery_sampling_target(records, ledger)
             obj = target["associated_object"] or {}
-            if not target["has_pending_discovery"] and obj.get("state") not in {"TENTATIVE", "STALE"}:
+            if object_id is not None and obj.get("id") != selected_object_id:
+                continue
+            # Confirmation settles the discovery obligation, but retained
+            # competing identities still require fresh independent views.
+            if (not target["has_pending_discovery"] and obj.get("state") not in {"TENTATIVE", "STALE"}
+                    and not target["identity_resolution_required"]):
                 continue
             selected = (current_discovery_id in target["record_ids"] + target["hypothesis_ids"]
                         and target["progress"]["new_independent_evidence"] and target["sampling_allowed"])
@@ -668,7 +674,7 @@ class Perception:
             row = {key: copy.deepcopy(latest[key]) for key in ("frame_id", "observation_index", "bbox",
                 "odometry", "position_m", "position_is_range_clipped", "raw_distance_cm", "raw_bearing_deg")}
             row.update({key: target[key] for key in ("id", "hypothesis_id", "source_discovery_id",
-                "latest_discovery_id", "sampling_allowed", "reason", "progress")})
+                "latest_discovery_id", "sampling_allowed", "reason", "progress", "identity_resolution_required")})
             row.update(associated_object_id=obj.get("id"), associated_object_state=obj.get("state"),
                 candidate_ids=sorted(set(target["associated_object_ids"] + latest.get("candidate_ids", [])))[:12],
                 hit_count=target["confirmation"]["accepted_hit_count"],
@@ -1226,7 +1232,8 @@ class Perception:
         Current visibility is not a resolution. Consumers must retain the old
         competing IDs and use their verified canonical mapping, or genuinely
         independent unique views, rather than treating a smaller visible matrix
-        as progress. No frame, tick or heading is part of the stable relations.
+        as progress. Accepted hits retain their original frame references;
+        the comparator uses independent positions, never a new frame alone.
         """
         items = (self.last_evidence or {}).get("detections", [])
         candidates = self._grasp_identity_candidates(items)
@@ -1271,9 +1278,7 @@ class Perception:
             "canonical_mappings": mappings,
             "verified_resolutions": proofs,
             "discovery_hypotheses": [hypotheses[key] for key in sorted(hypotheses)],
-            "accepted_independent_hit_poses": {oid: [
-                {"x_m": pose["x_m"], "z_m": pose["z_m"]}
-                for pose in self._accepted_poses.get(oid, [])]
+            "accepted_independent_hit_poses": {oid: self._accepted_poses.get(oid, [])
                 for oid in history_ids}})
 
     def authorize_grab(self, object_id, snapshot, command_ref):

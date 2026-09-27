@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v26"
+VERSION = "autonomous-brain-actions/v27"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -1059,6 +1059,9 @@ class Actions:
         object_id = object_id or "current-gripper-obligation"
         record = self._navigation_record(object_id)
         context = self._navigation_context(object_id)
+        context["observation_ref"] = {"observation_index": self.s["observation_index"],
+            "frame_id": str(self.s["observation"]["frameId"]),
+            "tick": self.s["observation"].get("tick")}
         pending = getattr(self.r, "pending_grasp", None)
         context["manipulation_state"] = {"held_object_id": getattr(self.r, "held_object_id", None),
                                         "pending_grasp_object_id": (pending or {}).get("object_id")}
@@ -1104,7 +1107,8 @@ class Actions:
         summary = getattr(self.r.perception, "discovery_summary", None)
         if summary is not None and self.s["road"].get("onRoad"):
             from .confirmation_sampling import _plan, MAX_TRAVEL_CM
-            rows = summary(current_discovery_id=getattr(self.r, "active_discovery_id", None))
+            rows = summary(current_discovery_id=getattr(self.r, "active_discovery_id", None),
+                           object_id=object_id)
             for row in rows.get("executable_candidates", []):
                 if row.get("associated_object_id") != object_id:
                     continue
@@ -1147,7 +1151,7 @@ class Actions:
             return None
         key, context = state
         def relevant_change(row):
-            if row["reason"] == "grab_identity_competition" and "grasp_identity" in row["context"]:
+            if row["reason"] == "grab_identity_competition":
                 return grasp_identity_change(row["context"], context)
             return changed(row["context"], context)
         previous = next((row for row in reversed(self.r.navigation_progress.action_failures.get(key, []))
@@ -1173,8 +1177,21 @@ class Actions:
         if state is None:
             return
         key, context = state
+        recovery_context = None
+        if outcome["reason"] == "grab_identity_competition":
+            recovery_context = copy.deepcopy(context)
+            original = (outcome.get("evidence") or {}).get("identity_failure_context") or {}
+            # The failure observation, not the recovery/final frame, owns the
+            # old competitors. Missing original evidence cannot imply closure.
+            captured = original.get("context")
+            context = (captured if isinstance(captured, dict)
+                       and original.get("action_key", [])[:1] == [key[0]]
+                       and (captured.get("grasp_identity") or {}).get("object_id")
+                           == action.get("params", {}).get("object_id") else
+                       {"identity_failure_context_missing": True})
         self.r.navigation_progress.action_failures.setdefault(key, []).append({
             "reason": outcome["reason"], "context": copy.deepcopy(context),
+            **({"recovery_context": recovery_context} if recovery_context is not None else {}),
             "after_observation": self.s["observation_index"]})
 
     def navigation_state(self):
@@ -1184,6 +1201,9 @@ class Actions:
         output = []
         def failure_summary(failure):
             result = copy.deepcopy(failure)
+            # Keep full recovery evidence internally; the model already has
+            # its current view and only needs the original failure obligation.
+            result.pop("recovery_context", None)
             context = result.get("context", {})
             identity = context.get("grasp_identity")
             if identity is not None:
@@ -1879,11 +1899,14 @@ class Actions:
         confirmed_grasp = None
         valid_view = None
         remaining_road_path = None
+        identity_failure_context = None
 
         def finish(success, reason, **evidence):
             # Fix the manipulation witness before road recovery changes the
             # camera frame. Grasp and return are independent outcomes.
             evidence.setdefault("post_observation", self.s["observation_index"])
+            if identity_failure_context is not None:
+                evidence["identity_failure_context"] = copy.deepcopy(identity_failure_context)
             if confirmed_grasp is not None:
                 evidence["grasp_confirmation"] = copy.deepcopy(confirmed_grasp)
             recovery = evidence.pop("_road_return", None)
@@ -1921,7 +1944,11 @@ class Actions:
                 pick_move("turn", {"angleDeg": angle, "speed": 50})
 
         def invalid_authorization(reason, **evidence):
-            nonlocal remaining_road_path
+            nonlocal remaining_road_path, identity_failure_context
+            if reason == "grab_identity_competition" and identity_failure_context is None:
+                key, context = self._manipulation_failure_context(
+                    {"action": "pick", "params": {"object_id": object_id}})
+                identity_failure_context = {"action_key": list(key), "context": copy.deepcopy(context)}
             # Return only along this action's measured path. This is a failed
             # pick even if the return provides new confirmation; a fresh
             # decision must authorize any subsequent physical grab.
@@ -2153,6 +2180,8 @@ class Actions:
             return finish(False, failure.reason, **failure.evidence)
         except Exception as error:
             error.action_evidence = {**getattr(error, "action_evidence", {}),
+                **({"identity_failure_context": copy.deepcopy(identity_failure_context)}
+                   if identity_failure_context is not None else {}),
                 "object_id": object_id, "attempts": copy.deepcopy(attempts),
                 "pick_trajectory": copy.deepcopy(trajectory),
                 "road_return": {"success": False, "reason": "execution_outcome_unknown"}}
