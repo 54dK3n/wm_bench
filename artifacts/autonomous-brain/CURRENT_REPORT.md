@@ -1,7 +1,9 @@
-# 当前轮次：主动确认局部通过，阶段 1 FAIL，已停止
+# 当前轮次：可执行恢复局部通过，阶段 1 FAIL，已停止
 
-冻结源码 `dec5b078d6711bdfda972ca4632c200e235dfb7e`。主动确认采样、短段聚合、候选过滤、探索语义及发现摘要修复，经 Python **1448**、Node **29**、冻结平台 **15** 项验证通过。唯一正式 map-05 已知两球局达到 **200 轮**上限，**1047.64** 仿真秒、**206** 次模型调用，仅 **1/2** 有效交付，未主动 done，独立评测 **FAIL**。第二候选在第105轮已确认，第106轮开始因净空与记录路线到达姿态受阻；5次候选换位均未完成。失败后未改源码或重跑；阶段 2 **未运行、未验收**，十布局和真机未启动。
+冻结源码 `a847a3c538c2787864633753b74dd906098ff6fd`。最终 Python **1516**、驱动 **29**、平台 **15** 项通过；合成组件、视点恢复与原生局部逆向执行分别留证。唯一正式 map-05 局在 **r97 / 673.06 秒**因模型 **HTTP 402**终止，97 次模型调用、596 次观测、白名单外调用 0、done 0，未到预算上限。
 
-[本轮报告](active-confirmation-20260926/REPORT.md) · [统计](active-confirmation-20260926/METRICS.json) · [修复范围](active-confirmation-20260926/REVIEW.md) · [首次阻塞](active-confirmation-20260926/FIRST_BLOCKER.md) · [命令和范围](active-confirmation-20260926/TEST_COMMANDS.md) · [Release 证据](https://github.com/54dK3n/wm_bench/releases/tag/active-confirmation-20260926-dec5b07) · [恢复说明](active-confirmation-20260926/RESTORE.md)
+正式完整候选换位 **1 次成功**（2 尝试/1 到达）；主动采样3次、选定目标新增1个有效 hit，确认成功0次。脑端与 record 各记1球送达，独立观测命令链验收为0：第二次grab前已为STALE，抓取及后续交付链未通过。原全局与前缀Judge各2 match不能抵消这一拒绝。失败后未修源码、未重跑；阶段2未运行，十布局和真机未启动。
 
-[历史 d1538f7 阶段 1 PASS](stage1-review-20260926/REPORT.md) 及全局 2 match / 2 unverifiable、动作前缀 4 match 原样保留；[1117336 阶段 1 FAIL](recovery-closure-20260926/REPORT.md) 亦保留，均不作为本候选结果。原始日志只在 Release 附件，未加入 Git。
+[报告](executable-recovery-20260927/REPORT.md) · [指标](executable-recovery-20260927/METRICS.json) · [修复复核](executable-recovery-20260927/REVIEW.md) · [首次阻塞与恢复](executable-recovery-20260927/FIRST_BLOCKER.md) · [抓放证据链](executable-recovery-20260927/EVIDENCE_CHAIN_REVIEW.md) · [复算命令](executable-recovery-20260927/TEST_COMMANDS.md) · [Release](https://github.com/54dK3n/wm_bench/releases/tag/executable-recovery-20260927-a847a3c) · [恢复说明](executable-recovery-20260927/RESTORE.md)
+
+历史 [d1538f7 PASS](stage1-review-20260926/REPORT.md)、[1117336 FAIL](recovery-closure-20260926/REPORT.md)、[dec5b07 FAIL](active-confirmation-20260926/REPORT.md) 均保留；历史 Judge 口径与原始字节未改。raw、record和完整模型/观测日志仅在Release，不进Git。

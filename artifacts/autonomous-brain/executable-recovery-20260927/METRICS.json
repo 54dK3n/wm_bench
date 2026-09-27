@@ -1,0 +1,358 @@
+{
+  "schema": "executable-recovery-round-metrics/v1",
+  "reviewed_baseline": "d68bddc2aa6ddca734add829f23127ee9e05fe50",
+  "source_commit": "a847a3c538c2787864633753b74dd906098ff6fd",
+  "historical_results_preserved": {
+    "d1538f7570a42b760ad518f133eaefd7bcac83a8": "stage1_PASS",
+    "1117336bcb875e0700ebe6363d6154fc0409a8a0": "stage1_FAIL",
+    "dec5b078d6711bdfda972ca4632c200e235dfb7e": "stage1_FAIL"
+  },
+  "verification_layers": {
+    "function_regressions": {
+      "python": {
+        "tests": 1516,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "node": {
+        "driver": {
+          "passed": 29,
+          "failed": 0,
+          "skipped": 0,
+          "log": "raw/gate/node-driver.txt"
+        },
+        "platform": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0,
+          "log": "raw/gate/node-platform-localhost.txt"
+        }
+      }
+    },
+    "synthetic_component_checks": {
+      "sources_unchanged": true,
+      "result_success": true,
+      "true_confirmed_identity": true,
+      "all_hits_independently_join_public_pixels": true,
+      "inverse_road_connection_sequence": true,
+      "no_premature_node_region_completion": true,
+      "fresh_visual_observation_after_route": true,
+      "original_standoff_gate": true,
+      "budget_not_extended": true,
+      "candidate_attempts_bounded": true
+    },
+    "synthetic_viewpoint_cases": {
+      "cases": 10,
+      "all_checks_satisfied": true
+    },
+    "synthetic_prior_cases": {
+      "cases": 16,
+      "all_checks_satisfied": true
+    },
+    "native_local": {
+      "passed": true,
+      "primitive_count": 12,
+      "simulation_seconds": 10.32,
+      "cases": [
+        "native_basic_oblique_reverse"
+      ],
+      "native_sampling_visibility": {
+        "candidate_count": 0,
+        "attempts": 0,
+        "confirmation_success": false,
+        "refusal_reason": "no_current_executable_discovery_after_bounded_scan"
+      },
+      "limitation": "Local inverse primitive only; not full task acceptance or native sampling confirmation."
+    },
+    "historical_v18_transcript": {
+      "allPass": true,
+      "recorded_rounds": 200,
+      "recorded_calls": 206,
+      "network_calls": 0,
+      "environment_access_attempts": 0
+    },
+    "formal_stage1": {
+      "runs": 1,
+      "map": "map-05",
+      "task": "把两个红球送到绿色存放区",
+      "success": false,
+      "brain_status": "failed",
+      "brain_reason": "LLMRequestError: LLM request failed: HTTPError HTTP 402; see transcript",
+      "metrics": {
+        "rounds": 97,
+        "llm_calls": 97,
+        "llm_total_elapsed_s": 183.28177841799993,
+        "simulation_seconds": 673.06,
+        "observations": 596,
+        "failed_rounds": 52,
+        "failed_actions": 51,
+        "execution_failures": 1,
+        "external_stop_failures": 0,
+        "bridge_calls": 2787,
+        "nonwhitelist_brain_requests": 0
+      },
+      "limits": {
+        "rounds": 200,
+        "simulation_seconds": 1200
+      },
+      "deliveries": {
+        "required": 2,
+        "brain_claimed": 1,
+        "independent_record_count": 1,
+        "observed_chain_verified": 0,
+        "observed_chain_failures": [
+          "pick_command_identity_confirmation_chain_invalid",
+          "delivery_release_command_reference_invalid",
+          "delivery_missing_prior_verified_pick"
+        ]
+      },
+      "done_actions": 0,
+      "judge": {
+        "match": 2,
+        "false_positive": 0,
+        "false_negative": 0,
+        "unverifiable": 0,
+        "not_evaluated": 95,
+        "eligible_actions": 2
+      },
+      "prefix_judge": {
+        "match": 2
+      },
+      "evaluator_failures": [
+        "no_active_delivery_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "pick_command_identity_confirmation_chain_invalid",
+        "delivery_release_command_reference_invalid",
+        "delivery_missing_prior_verified_pick",
+        "done_post_action_completion_not_corroborated"
+      ],
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_world_model_matches": true,
+        "formal_configuration_matches": true,
+        "run_configuration_matches": true,
+        "recorded_brain_and_driver_files": 13
+      },
+      "strict_transcript_replay": {
+        "allPass": true,
+        "recorded_rounds": 97,
+        "replayed_rounds": 97,
+        "recorded_calls": 97,
+        "replayed_calls": 97,
+        "all_records_consumed": true,
+        "full_records_equal_except_mode": true,
+        "mismatched_record_indexes": [],
+        "replay_error": null,
+        "network_calls": 0,
+        "environment_access_attempts": 0,
+        "source_evidence_unchanged": true,
+        "failures": []
+      },
+      "driver_exit_code": 1,
+      "evaluator_exit_code": 1
+    },
+    "stage2": {
+      "runs": 0,
+      "status": "not_run_stage1_failed"
+    },
+    "ten_layouts_and_hardware_started": false
+  },
+  "public_counts": {
+    "rounds": 97,
+    "observations": 596,
+    "motions": 402,
+    "model_calls_reported_by_summary": 97,
+    "model_calls_reported_by_last_round": 97,
+    "actions": {
+      "explore": 78,
+      "go_to": 15,
+      "pick": 1,
+      "look_around": 1,
+      "place": 1,
+      "no_valid_action": 1
+    },
+    "successful_actions": {
+      "explore": 38,
+      "go_to": 4,
+      "pick": 1,
+      "look_around": 1,
+      "place": 1
+    },
+    "result_reasons": {
+      "next_junction_observed": 9,
+      "other_objects_observed": 20,
+      "road_blocked_returned_to_observed_node": 17,
+      "target_sampling_opportunity_observed": 1,
+      "confirmation_source_pixels_not_compatible": 1,
+      "road_node_observed_without_completed_traversal": 2,
+      "other_objects_confirmed": 7,
+      "confirmation_needs_fresh_observation": 1,
+      "confirmation_no_safe_independent_viewpoint": 1,
+      "target_objects_confirmed": 1,
+      "visual_standoff_requires_road_reposition": 1,
+      "target_seen_at_standoff": 4,
+      "grasp_observed": 1,
+      "known_route_exhausted_needs_exploration": 6,
+      "full_circle_views_observed": 1,
+      "junction_identity_unresolved": 18,
+      "navigation_repeat_without_new_evidence": 2,
+      "visual_standoff_target_not_observed": 1,
+      "ball_observed_in_storage": 1,
+      "visual_standoff_range_not_supported": 1,
+      "LLM request failed: HTTPError HTTP 402; see transcript": 1
+    },
+    "result_reasons_by_action": {
+      "explore": {
+        "next_junction_observed": 9,
+        "other_objects_observed": 20,
+        "road_blocked_returned_to_observed_node": 17,
+        "target_sampling_opportunity_observed": 1,
+        "confirmation_source_pixels_not_compatible": 1,
+        "road_node_observed_without_completed_traversal": 2,
+        "other_objects_confirmed": 7,
+        "confirmation_needs_fresh_observation": 1,
+        "confirmation_no_safe_independent_viewpoint": 1,
+        "target_objects_confirmed": 1,
+        "junction_identity_unresolved": 18
+      },
+      "go_to": {
+        "visual_standoff_requires_road_reposition": 1,
+        "target_seen_at_standoff": 4,
+        "known_route_exhausted_needs_exploration": 6,
+        "navigation_repeat_without_new_evidence": 2,
+        "visual_standoff_target_not_observed": 1,
+        "visual_standoff_range_not_supported": 1
+      },
+      "pick": {
+        "grasp_observed": 1
+      },
+      "look_around": {
+        "full_circle_views_observed": 1
+      },
+      "place": {
+        "ball_observed_in_storage": 1
+      },
+      "no_valid_action": {
+        "LLM request failed: HTTPError HTTP 402; see transcript": 1
+      }
+    },
+    "motor_methods": {
+      "take_exit": 73,
+      "turn": 121,
+      "follow_road": 178,
+      "forward": 18,
+      "backward": 9,
+      "grab": 2,
+      "release": 1
+    },
+    "raw_red_detection_rows": 163,
+    "observations_with_raw_red": 150,
+    "observations_without_raw_red": 446,
+    "fed_detection_rows": 37,
+    "accepted_hit_detection_rows": 12,
+    "unique_accepted_track_frame_hits": 12,
+    "red_track_ids_seen": 3,
+    "sampling_intents": 3,
+    "sampling_controller_entries": 3,
+    "sampling_evidence_entries": 3,
+    "sampling_successful_actions": 0,
+    "sampling_result_reasons": {
+      "confirmation_source_pixels_not_compatible": 1,
+      "confirmation_needs_fresh_observation": 1,
+      "confirmation_no_safe_independent_viewpoint": 1
+    },
+    "sampling_recovery_attempts": 1,
+    "sampling_successful_view_restorations": 0,
+    "sampling_window_all_red_new_accepted_track_frame_hits": 2,
+    "sampling_selected_new_accepted_track_frame_hits": 1,
+    "repeat_guard_actions": 2,
+    "repeat_guard_reasons": {
+      "navigation_repeat_without_new_evidence": 2
+    },
+    "explore_sampling_handoffs": 1,
+    "handoffs_retained_after_fresh_observation": 1
+  },
+  "public_motion": {
+    "whole_run_odometer_delta_cm": 5640.9,
+    "net_displacement_cm": 105.25264842273565,
+    "motion_counts_do_not_equal_independent_target_viewpoints": true
+  },
+  "repositioning": {
+    "internal_candidates_generated_total": 6,
+    "internal_candidates_eligible_total": 6,
+    "shortlist_rows_returned_total": 5,
+    "generation_limit": "Logged query totals count enumeration events, including repeated route versions across queries; they are not unique physical locations. Distinct route versions and actual attempts are separate below.",
+    "distinct_logged_route_versions": 18,
+    "candidate_attempts_directly_logged_in_action_results": 2,
+    "candidate_arrivals_directly_logged_in_action_results": 1,
+    "distinct_logged_candidate_attempts": 2,
+    "candidate_attempts_with_reported_arrival": 1,
+    "full_reposition_success_count": 1,
+    "full_success_definition": "One current go_to result with success=true and road_reposition.status=reposition_and_visual_standoff_verified; arrival alone is insufficient.",
+    "attempt_deduplication": "canonical object ID + route_version + before_observation; subsequent logged stages retained as versions."
+  },
+  "confirmed_track_timeline": [
+    {
+      "track_id": "target_027",
+      "first_confirmed": {
+        "observation_index": 113,
+        "round": 30,
+        "frame_id": "113",
+        "tick": 4769,
+        "simulation_seconds": 95.38,
+        "ref": {
+          "file": "observations.jsonl",
+          "line": 113,
+          "line_sha256": "ebe734ef28989035b854d588beed518d7b368a6a63d1247a4e40ce61b9983006",
+          "pointer": "/objects"
+        },
+        "before": "STALE",
+        "after": "CONFIRMED"
+      },
+      "go_to_rounds": [
+        31,
+        33
+      ],
+      "pick_rounds": [
+        34
+      ],
+      "final_logged_state": "DELIVERED"
+    }
+  ],
+  "final_obligations": {
+    "holding": {
+      "holding": false
+    },
+    "held_object_id": null,
+    "pending_grasp": null,
+    "object_state_counts": {
+      "LOST": 2,
+      "DELIVERED": 1
+    },
+    "unresolved_discovery_record_count": 62,
+    "unresolved_discovery_hypothesis_count": 58
+  },
+  "stopped_after_failure": true,
+  "new_formal_run_after_failure": false,
+  "evidence_sources": {
+    "GATE.json": "93e82d5dbe4a4138ee60079756b3c5785200475e42c3d4ebc98b0612615ddf95",
+    "FROZEN_INPUTS.json": "f132c56adb0c37916f3aaa6e8ad8d1a8547851fda8fef2a885cc9231f1c90424",
+    "raw/analysis/formal-public-diagnosis.json": "cdb730d03f40dc2aa3b5402f1a96fc1804f747d0e89ecb7617806c0ca065a0dc",
+    "raw/evaluation/formal-stage1/evaluation.json": "9cb2b17b000841eb32068d64ac594f4ec6be6c00cb2f6e9383593956bdbd1758",
+    "raw/formal-stage1/summary.json": "3f832e80abf0ba2aaeea860e7c402778154f4df501e7f5fc8b12326d24dcfa95",
+    "raw/recovery/historical-v18-replay/replay-checks.json": "6e6f89500f63237ca9e563b19ff5639912f1fc7666a32bca4e8955b9d8c9c260",
+    "raw/gate/component-frozen-candidate.json": "e672e8713204e886d3a77b1e2db00f32b7e5d32a1b8868a7ea92c1153fc95692",
+    "raw/gate/viewpoint-frozen-candidate.json": "6889658159c26da5ea53c37296255c7e23b964498f41b67912eda8907d828bc9",
+    "raw/gate/prior-scenarios-frozen-candidate.json": "821b84270f7b381569cbd2d7502d5f086cadc8c00e19ea09c778c91a4bf4d102"
+  }
+}
