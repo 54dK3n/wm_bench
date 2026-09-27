@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v14"
+VERSION = "autonomous-brain-perception/v15"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -487,6 +487,26 @@ class Perception:
             and current.get("fed_to_world_model")
             and 40 <= current["raw_distance_cm"] < 90 and abs(current["raw_bearing_deg"]) <= 35
             and (source_supported or original_proof is not None))
+        # A confirmed track can still compete with retained historical tracks.
+        # Sampling the uniquely observed pixel is allowed to gather evidence;
+        # it does not authorize manipulation or erase any competing identity.
+        identity_matrix = (self._grasp_identity_candidates(frame.get("detections", []))
+            if obj is not None and obj["state"] == "CONFIRMED" else None)
+        identity_rows = [row for row in (identity_matrix or []) if oid is not None and oid in row]
+        identity_competitors = sorted({candidate for row in identity_rows for candidate in row if candidate != oid})
+        identity_resolution_required = bool(obj is not None and obj["state"] == "CONFIRMED"
+            and (identity_competitors or len(identity_rows) > 1))
+        if identity_resolution_required:
+            corroborated = False
+            identity_view_supported = (len(ids) == 1 and not obj.get("identity_ambiguity")
+                and not boundaries and current_unique and current is not None
+                and not current.get("identity_ambiguity")
+                and self._discovery_canonical(current.get("track_id")) == oid)
+            if identity_view_supported:
+                allowed = True
+                reason = ("needs_bearing_adjustment" if abs(current["raw_bearing_deg"]) > 35 else
+                          "needs_range_adjustment" if not 40 <= current["raw_distance_cm"] < 90 else
+                          "identity_resolution_required")
 
         # Progress uses separated translations and actual accepted WM hits. A
         # repeated frame/tick or an in-place turn contributes no new hit/pose.
@@ -530,6 +550,8 @@ class Perception:
             "source_frame_records": source_peers, "candidate_matrix": matrix,
             "associated_object": obj, "associated_object_ids": sorted(ids),
             "sampling_allowed": allowed, "reason": reason,
+            "identity_resolution_required": identity_resolution_required,
+            "identity_competitor_ids": identity_competitors,
             "current_confirmation_corroborated": corroborated,
             "current_confirmation_evidence": {"frame_id": frame.get("frame_id"),
                 "observation_index": now["observation_index"], "unique_current_pixels": current_unique,
@@ -1127,12 +1149,11 @@ class Perception:
         return next((copy.deepcopy(item) for item in self.last_evidence["detections"]
                      if item["track_id"] == object_id), None)
 
-    def authorize_grab(self, object_id, snapshot, command_ref):
-        """Bind this command to the latest public identity and empty gripper.
+    def check_grasp_identity(self, object_id, snapshot):
+        """Read the same current identity gate before approaching a ball.
 
-        Reading authorization never moves the gripper or revives a WM track.
-        Near pixels may corroborate an existing confirmation, but cannot create
-        one. Keep the complete competition matrix for independent replay.
+        This neither grants a grab nor includes the final distance/bearing gate.
+        It does not register command authorization or revive a WorldModel track.
         """
         frame = self.last_evidence or {}
         row = self.confirmed(object_id)
@@ -1159,6 +1180,24 @@ class Perception:
         if len(indices) != 1 or items[indices[0]].get("identity_ambiguity"):
             return {"authorized": False, "reason": "grab_identity_not_uniquely_visible"}
         selected = indices[0]
+        candidates = self._grasp_identity_candidates(items)
+        if candidates is None:
+            return {"authorized": False, "reason": "grab_competition_geometry_unavailable"}
+        matching_indices = [i for i, ids in enumerate(candidates) if object_id in ids]
+        if candidates[selected] != [object_id] or matching_indices != [selected]:
+            return {"authorized": False, "reason": "grab_identity_competition",
+                    "candidate_ids_by_detection": candidates,
+                    "target_detection_indices": matching_indices}
+        return {"authorized": True, "reason": "current_unique_confirmation", "evidence": {
+            "object": copy.deepcopy(row), "canonical_object_id": object_id,
+            "observation_index": snapshot["observation_index"], "frame_id": frame["frame_id"],
+            "tick": frame["tick"], "simulation_time_s": self._last_timestamp, "holding": False,
+            "odometry": copy.deepcopy(frame["odometry"]), "detection_index": selected,
+            "detections": copy.deepcopy(items), "candidate_ids_by_detection": candidates,
+            "target_detection_indices": matching_indices}}
+
+    def _grasp_identity_candidates(self, items):
+        """Original complete competition set, including retained LOST tracks."""
         tracks = [track for oid in self._history if oid not in self._delivery_aliases
                   if (track := self.wm.get_object(oid, include_lost=True)) is not None]
         positioned = [i for i, d in enumerate(items) if isinstance(d.get("position_m"), Mapping)
@@ -1166,7 +1205,7 @@ class Perception:
                               and math.isfinite(d["position_m"][k]) for k in ("x", "z"))]
         if any(i not in positioned and d["category"] in {"red-ball", "blue-ball"}
                for i, d in enumerate(items)):
-            return {"authorized": False, "reason": "grab_competition_geometry_unavailable"}
+            return None
         detections = [Detection(class_name=PUBLIC_TO_WM[d["category"]],
             x=d["position_m"]["x"], z=d["position_m"]["z"], confidence=d["confidence"],
             timestamp=self._last_timestamp, frame_id=self._last_frame, source=d["source"])
@@ -1179,11 +1218,71 @@ class Perception:
         for j, source_index in enumerate(positioned):
             candidates[source_index] = sorted({self._discovery_canonical(track.obj_id)
                 for i, track in enumerate(tracks) if math.isfinite(costs[i][j])})
-        matching_indices = [i for i, ids in enumerate(candidates) if object_id in ids]
-        if candidates[selected] != [object_id] or matching_indices != [selected]:
-            return {"authorized": False, "reason": "grab_identity_competition",
-                    "candidate_ids_by_detection": candidates,
-                    "target_detection_indices": matching_indices}
+        return candidates
+
+    def grasp_identity_context(self, object_id):
+        """Full read-only relations for a failed identity obligation.
+
+        Current visibility is not a resolution. Consumers must retain the old
+        competing IDs and use their verified canonical mapping, or genuinely
+        independent unique views, rather than treating a smaller visible matrix
+        as progress. No frame, tick or heading is part of the stable relations.
+        """
+        items = (self.last_evidence or {}).get("detections", [])
+        candidates = self._grasp_identity_candidates(items)
+        canonical = self._discovery_canonical(object_id)
+        relevant = {object_id, canonical}
+        # Retain the complete connected relation, not merely the first visible
+        # detection or a bounded model-summary prefix.
+        relations = candidates or []
+        while True:
+            expanded = relevant | {oid for group in relations if relevant.intersection(group) for oid in group}
+            expanded |= {oid for oid in self._history if self._discovery_canonical(oid) in expanded}
+            if expanded == relevant:
+                break
+            relevant = expanded
+        records = [r for r in self._discovery_records
+            if relevant.intersection(set(r.get("candidate_ids", [])) | {
+                r.get("initial_object_id"), r.get("observed_track_id")})]
+        hypotheses = {}
+        for record in records:
+            group = hypotheses.setdefault(record["hypothesis_id"], {
+                "hypothesis_id": record["hypothesis_id"], "record_ids": [],
+                "unresolved_record_ids": [], "resolved_record_ids": []})
+            group["record_ids"].append(record["id"])
+            if record["id"] in self._discovery_resolutions:
+                group["resolved_record_ids"].append(record["id"])
+            elif self._discovery_pending(record):
+                group["unresolved_record_ids"].append(record["id"])
+        ids = {r["id"] for r in records}
+        proofs = [p for key, p in sorted(self._discovery_resolutions.items()) if key in ids]
+        # An old competitor may now have its own separate unique detection.
+        # Preserve its mapping/hits even after it leaves today's connected set;
+        # the caller decides which previously failed identities are relevant.
+        history_ids = sorted(set(self._history) | {object_id})
+        mappings = [{"object_id": oid, "canonical_object_id": self._discovery_canonical(oid)}
+                    for oid in history_ids]
+        return copy.deepcopy({"object_id": object_id, "canonical_object_id": canonical,
+            "competition_geometry_available": candidates is not None,
+            "candidate_ids_by_detection": candidates,
+            "target_detection_indices": [i for i, group in enumerate(relations) if canonical in group],
+            "target_candidate_relations": sorted(group for group in relations if relevant.intersection(group)),
+            "related_object_ids": sorted(oid for oid in relevant if isinstance(oid, str)),
+            "canonical_mappings": mappings,
+            "verified_resolutions": proofs,
+            "discovery_hypotheses": [hypotheses[key] for key in sorted(hypotheses)],
+            "accepted_independent_hit_poses": {oid: [
+                {"x_m": pose["x_m"], "z_m": pose["z_m"]}
+                for pose in self._accepted_poses.get(oid, [])]
+                for oid in history_ids}})
+
+    def authorize_grab(self, object_id, snapshot, command_ref):
+        """Authorize one physical grab using fresh identity, geometry and reference."""
+        identity = self.check_grasp_identity(object_id, snapshot)
+        if not identity["authorized"]:
+            return identity
+        proof = identity["evidence"]
+        row, items, selected = proof["object"], proof["detections"], proof["detection_index"]
         x, z = self.pose.to_local(row["position_m"]["x"], row["position_m"]["z"])
         remaining = math.hypot(x, z) * 100
         bearing = items[selected]["bearing_deg"]
@@ -1194,15 +1293,9 @@ class Perception:
                 or type(command_ref.get("bridge_sequence")) is not int
                 or command_ref.get("bridge_request_id") != f"brain-{command_ref['bridge_sequence']:06d}"):
             return {"authorized": False, "reason": "grab_command_reference_unavailable"}
-        proof = {"schema": "brain-grab-authorization/v1", "object": copy.deepcopy(row),
-            "canonical_object_id": object_id, "observation_index": snapshot["observation_index"],
-            "frame_id": frame["frame_id"], "tick": frame["tick"],
-            "simulation_time_s": self._last_timestamp, "holding": False,
-            "odometry": copy.deepcopy(frame["odometry"]),
-            "detection_index": selected, "detections": copy.deepcopy(items),
-            "candidate_ids_by_detection": candidates, "target_detection_indices": matching_indices,
-            "remembered_distance_cm": remaining, "bearing_deg": bearing,
-            "command_ref": copy.deepcopy(command_ref)}
+        proof.update(schema="brain-grab-authorization/v1",
+            remembered_distance_cm=remaining, bearing_deg=bearing,
+            command_ref=copy.deepcopy(command_ref))
         self._grab_authorizations[command_ref["bridge_request_id"]] = copy.deepcopy(proof)
         return {"authorized": True, "reason": "current_unique_confirmation", "evidence": proof}
 

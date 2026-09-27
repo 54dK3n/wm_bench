@@ -902,6 +902,9 @@ class Actions:
         """
         observed = None
         for step in range(9):
+            identity_failure = self.preapproach_identity_failure(object_id)
+            if identity_failure is not None:
+                return identity_failure
             observed = self.visible(object_id)
             if (observed is None
                     or str(observed.get("frame_id")) != str(self.s["observation"]["frameId"])):
@@ -979,10 +982,15 @@ class Actions:
         holding = self.s["holding"].get("holding")
         category = (target or {}).get("category")
         operation = "place" if category == "storage-zone" else "pick"
-        operation_ready = ready and (holding is True if operation == "place" else holding is False)
+        identity_check = getattr(self.r.perception, "check_grasp_identity", None)
+        identity = identity_check(object_id, self.s) if operation == "pick" and identity_check else None
+        operation_ready = (ready and (holding is True if operation == "place" else holding is False)
+                           and (identity is None or identity["authorized"]))
         return {"object_id": object_id, "standoff_ready": ready,
                 "operation": operation, "operation_ready": operation_ready,
-                "operation_readiness_scope": "navigation_standoff_and_current_gripper; action rechecks all other conditions",
+                "operation_readiness_scope": "navigation_standoff_gripper_and_current_identity; grab rechecks fresh full authorization",
+                "identity_ready": identity["authorized"] if identity is not None else None,
+                "identity_reason": identity["reason"] if identity is not None else None,
                 "memory_position_m": copy.deepcopy((target or {}).get("position_m")),
                 "memory_source": "world_model_geometric_history",
                 "current_visual": ({key: observed.get(key) for key in (
@@ -1028,6 +1036,8 @@ class Actions:
         self.r.navigation_progress.remember(row, self._navigation_context(object_id), outcome, readiness)
         outcome["evidence"]["navigation_subgoal"] = readiness
         outcome["evidence"]["canonical_object_id"] = row["canonical_object_id"]
+        if readiness.get("identity_reason") == "grab_identity_competition":
+            outcome["evidence"]["identity_recovery_choices"] = self.identity_recovery_choices(object_id)
         return outcome
 
     def _manipulation_failure_context(self, action):
@@ -1070,16 +1080,78 @@ class Actions:
                           "bearing_deg": finite(detection.get("bearing_deg")),
                           "bbox": values if len(values) == 4 and None not in values else None})
         context["manipulation_views"] = sorted(views, key=lambda view: repr(view["identity"]))
+        identity_context = getattr(self.r.perception, "grasp_identity_context", None)
+        if name == "pick" and identity_context is not None:
+            context["grasp_identity"] = identity_context(object_id)
+            context["grasp_identity_authorized"] = self.r.perception.check_grasp_identity(object_id, self.s)["authorized"]
         return (name, record["canonical_object_id"]), context
 
+    def preapproach_identity_failure(self, object_id):
+        check = getattr(self.r.perception, "check_grasp_identity", None)
+        target = self.r.perception.get_object(object_id)
+        if check is None or not target or target.get("category") not in {"red-ball", "blue-ball"}:
+            return None
+        identity = check(object_id, self.s)
+        if identity["reason"] != "grab_identity_competition":
+            return None
+        return self.result(False, identity["reason"], object_id=object_id,
+            grab_authorization=identity, approach_started=False,
+            identity_recovery_choices=self.identity_recovery_choices(object_id))
+
+    def identity_recovery_choices(self, object_id):
+        """Offer bounded observed options; the model still selects the action."""
+        options = []
+        summary = getattr(self.r.perception, "discovery_summary", None)
+        if summary is not None and self.s["road"].get("onRoad"):
+            from .confirmation_sampling import _plan, MAX_TRAVEL_CM
+            rows = summary(current_discovery_id=getattr(self.r, "active_discovery_id", None))
+            for row in rows.get("executable_candidates", []):
+                if row.get("associated_object_id") != object_id:
+                    continue
+                target = self.r.perception.discovery_target(row["hypothesis_id"])
+                if not target or not target.get("current_detection"):
+                    continue
+                rejections = {}
+                plan = _plan(self, target, MAX_TRAVEL_CM, rejections)
+                options.append({"action": "explore", "params": {"discovery_id": row["hypothesis_id"]},
+                    "executable": plan is not None, "purpose": "independent_view_for_identity_resolution",
+                    "next_view": ({k: copy.deepcopy(plan[k]) for k in ("method", "params",
+                        "predicted_raw_distance_cm", "predicted_raw_bearing_deg") if k in plan} if plan else None),
+                    "rejections": rejections, "requires_fresh_recheck": True})
+                break
+        checker = getattr(self.r.perception, "check_grasp_identity", None)
+        getter = getattr(self.r.perception, "objects", None)
+        if checker is not None and getter is not None and self.s["road"].get("onRoad"):
+            for obj in getter():
+                if obj["id"] == object_id or obj.get("state") != "CONFIRMED" or obj.get("category") != "red-ball":
+                    continue
+                if not checker(obj["id"], self.s)["authorized"]:
+                    continue
+                ready = self.navigation_readiness(obj["id"])
+                context = self._navigation_context(obj["id"])
+                if ready["operation_ready"] or context["known_paths"]:
+                    options.append({"action": "pick" if ready["operation_ready"] else "go_to",
+                        "params": {"object_id": obj["id"]}, "executable": True,
+                        "purpose": "other_currently_unique_confirmed_red_ball", "requires_fresh_recheck": True})
+                if len(options) >= 3:
+                    break
+        return {"observation_index": self.s["observation_index"], "choices": options,
+                "reason": "observed_options_require_new_model_decision" if any(o["executable"] for o in options)
+                          else "no_current_safe_identity_recovery_option",
+                "grasp_remains_unauthorized": True}
+
     def action_failure_guard(self, action):
-        from .navigation_progress import changed
+        from .navigation_progress import changed, grasp_identity_change
         state = self._manipulation_failure_context(action)
         if state is None:
             return None
         key, context = state
+        def relevant_change(row):
+            if row["reason"] == "grab_identity_competition" and "grasp_identity" in row["context"]:
+                return grasp_identity_change(row["context"], context)
+            return changed(row["context"], context)
         previous = next((row for row in reversed(self.r.navigation_progress.action_failures.get(key, []))
-                         if not changed(row["context"], context)), None)
+                         if not relevant_change(row)), None)
         if previous is None:
             return None
         recovery_options = (["沿已观测合法道路explore取得独立视角，再由感知消解身份竞争",
@@ -1090,7 +1162,9 @@ class Actions:
              "go_to_a_confirmed_operation_position", "choose_another_confirmed_target"])
         return self.result(False, "action_repeat_without_new_evidence", canonical_object_id=key[1],
             previous_failure=previous["reason"], failure_context=previous["context"],
-            recovery_options=recovery_options)
+            recovery_options=recovery_options,
+            **({"identity_recovery_choices": self.identity_recovery_choices(action["params"]["object_id"])}
+               if previous["reason"] == "grab_identity_competition" and "grasp_identity" in context else {}))
 
     def remember_action_result(self, action, outcome):
         if outcome["success"] or outcome["reason"] == "action_repeat_without_new_evidence":
@@ -1108,6 +1182,19 @@ class Actions:
         if progress is None:
             return []
         output = []
+        def failure_summary(failure):
+            result = copy.deepcopy(failure)
+            context = result.get("context", {})
+            identity = context.get("grasp_identity")
+            if identity is not None:
+                relations = identity.get("target_candidate_relations", [])
+                context["grasp_identity"] = {
+                    "canonical_object_id": identity.get("canonical_object_id"),
+                    "target_relation_count": len(relations),
+                    "target_candidate_relations": [row[:12] for row in relations[:3]],
+                    "related_object_count": len(identity.get("related_object_ids", [])),
+                    "verified_resolution_count": len(identity.get("verified_resolutions", []))}
+            return result
         for row in progress.summary():
             object_id = row["identity_ids"][-1]
             current = next((oid for oid in row["identity_ids"]
@@ -1123,7 +1210,7 @@ class Actions:
                 "current_subgoal": self.navigation_readiness(current),
                 "last_achieved_subgoal": row["subgoal"],
                 "manipulation_failures": [{"action": key[0], "attempt_count": len(failures),
-                    "last_failure": copy.deepcopy(failures[-1])}
+                    "last_failure": failure_summary(failures[-1])}
                     for key, failures in progress.action_failures.items()
                     if key[1] in row["identity_ids"]],
                 "recovery_options": ["explore_observed_exits", "look_around_for_changed_target_or_road_evidence",
@@ -1624,6 +1711,9 @@ class Actions:
             navigation_budget[0] -= 1
             if not self.s["road"]["onRoad"]:
                 return self.result(False, "not_on_observed_road")
+            identity_failure = self.preapproach_identity_failure(object_id)
+            if identity_failure is not None:
+                return identity_failure
             current = self.r.perception.get_object(object_id) or target
             remaining, bearing = self.object_geometry(current)
             observed = self.visible(object_id)
@@ -1788,6 +1878,7 @@ class Actions:
         action_before = self.s["observation_index"]
         confirmed_grasp = None
         valid_view = None
+        remaining_road_path = None
 
         def finish(success, reason, **evidence):
             # Fix the manipulation witness before road recovery changes the
@@ -1797,7 +1888,7 @@ class Actions:
                 evidence["grasp_confirmation"] = copy.deepcopy(confirmed_grasp)
             recovery = evidence.pop("_road_return", None)
             if recovery is None:
-                recovery = self.return_place_path(trajectory)
+                recovery = self.return_place_path(trajectory if remaining_road_path is None else remaining_road_path)
             if (self.s.get("holding") or {}).get("holding") is False:
                 if getattr(self.r, "held_object_id", None) == object_id:
                     marked = self.r.perception.mark_release_unverified(object_id,
@@ -1830,6 +1921,7 @@ class Actions:
                 pick_move("turn", {"angleDeg": angle, "speed": 50})
 
         def invalid_authorization(reason, **evidence):
+            nonlocal remaining_road_path
             # Return only along this action's measured path. This is a failed
             # pick even if the return provides new confirmation; a fresh
             # decision must authorize any subsequent physical grab.
@@ -1839,6 +1931,7 @@ class Actions:
                 frame_id=str(self.s["observation"]["frameId"]),
                 holding=(self.s.get("holding") or {}).get("holding"))
             restored = {"success": False, "reason": "no_recorded_confirmed_view", "motions": []}
+            recovery_start = len(trajectory)
             if valid_view is not None:
                 restored["source_observation"] = valid_view["observation_index"]
                 rows = copy.deepcopy(trajectory[valid_view["trajectory_index"]:])
@@ -1895,11 +1988,22 @@ class Actions:
                             break
                     else:
                         restored.update(success=True, reason="returned_to_recorded_confirmed_view")
+                        # Every inverse ended at its recorded start. Keep the
+                        # original full trace, but do not undo this successful
+                        # restoration again when following the road prefix.
+                        remaining_road_path = trajectory[:valid_view["trajectory_index"]]
+                        restored["remaining_road_path_motion_count"] = len(remaining_road_path)
                     restored["after_observation"] = self.s["observation_index"]
-            if not restored["success"]:
+            if (not restored["success"] and (len(trajectory) != recovery_start
+                    or (self.s.get("holding") or {}).get("holding") is not False
+                    or getattr(self.r, "pending_grasp", None)
+                    or any(row.get("motion_verification", {}).get("motion_verified") is not True
+                           for row in trajectory))):
                 evidence["_road_return"] = {"success": False,
-                    "reason": "authorization_return_not_verified", "motions": [],
+                    "reason": "authorization_return_path_unresolved", "motions": [],
                     "after_observation": self.s["observation_index"]}
+            if reason == "grab_identity_competition":
+                evidence["identity_recovery_choices"] = self.identity_recovery_choices(object_id)
             return finish(False, reason, authorization_recovery=restored, **evidence)
 
         target = self.r.perception.confirmed(object_id)
@@ -1925,6 +2029,11 @@ class Actions:
                     target = self.r.perception.confirmed(object_id)
                     if target is None:
                         return invalid_authorization("object_not_currently_confirmed")
+                    identity_check = getattr(self.r.perception, "check_grasp_identity", None)
+                    if identity_check is not None:
+                        identity = identity_check(object_id, self.s)
+                        if not identity["authorized"]:
+                            return invalid_authorization(identity["reason"], grab_authorization=identity)
                     remaining, memory_bearing = self.object_geometry(target)
                     observed = self.visible(object_id)
                     if (observed is not None and not observed.get("identity_ambiguity")

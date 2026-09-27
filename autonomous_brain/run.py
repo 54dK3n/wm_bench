@@ -8,6 +8,7 @@ import json
 import math
 import os
 from pathlib import Path
+import signal
 import sys
 import time
 
@@ -104,6 +105,9 @@ def compact_action_result(number, action, result, after_observation):
                             "delivered_count", "required_count"))
     detection(raw, evidence)
     authorization = raw.get("grab_authorization")
+    choices = raw.get("identity_recovery_choices")
+    if isinstance(choices, dict):
+        evidence["identity_recovery_choices"] = copy.deepcopy(choices)
     if isinstance(authorization, dict) and authorization.get("authorized") is False:
         compact = fields(authorization, ("authorized", "reason", "object_id",
             "canonical_object_id", "observation_index", "frame_id", "holding"))
@@ -168,7 +172,7 @@ def compact_action_result(number, action, result, after_observation):
         subgoal = raw["navigation_subgoal"]
         evidence["navigation_subgoal"] = fields(subgoal, (
             "object_id", "standoff_ready", "operation", "operation_ready", "visual_fresh",
-            "operation_readiness_scope", "memory_source", "after_observation"))
+            "operation_readiness_scope", "memory_source", "after_observation", "identity_ready", "identity_reason"))
         if isinstance(subgoal.get("current_visual"), dict):
             evidence["navigation_subgoal"]["current_visual"] = fields(
                 subgoal["current_visual"], ("distance_cm", "bearing_deg", "frame_id"))
@@ -432,20 +436,78 @@ def main(argv=None):
     formal_configuration = None
     rounds = JsonLog(out / "rounds.jsonl")
     status, reason, count = "failed", "not_started", 0
+    phase, completed_rounds = "startup", 0
+    stop_request = interruption = None
+    state = action = None
+    before_observation = None
+
+    def request_stop(signum, _frame):
+        nonlocal stop_request
+        if phase == "export":
+            return  # Finish the existing evidence export without another action.
+        first = stop_request is None
+        if first:
+            stop_request = {"signal": signal.Signals(signum).name, "requested_phase": phase,
+                "requested_round": getattr(runtime, "round", 0),
+                "requested_observation": getattr(runtime, "observation_count", 0)}
+        # One SIGINT lets the current bounded Actions call finish its readback.
+        # SIGTERM (driver's short deadline), or a second SIGINT, aborts promptly.
+        if signum == signal.SIGINT and first and phase == "action":
+            return
+        stop_request["aborting_signal"] = signal.Signals(signum).name
+        raise KeyboardInterrupt
+
+    def stop_position(*, safe_boundary):
+        snapshot = getattr(runtime, "snapshot", None) or {}
+        odo = snapshot.get("odometry", {})
+        return {**(stop_request or {"signal": "KeyboardInterrupt", "requested_phase": phase}),
+            "stopped_phase": phase, "active_round": getattr(runtime, "round", 0),
+            "completed_rounds": completed_rounds, "action": copy.deepcopy(action),
+            "before_observation": before_observation,
+            "last_observation": snapshot.get("observation_index"),
+            "bridge_sequence": getattr(getattr(runtime, "bridge", None), "sequence", None),
+            "odometry": {key: odo[key] for key in
+                ("rightCm", "forwardCm", "headingDeg", "distanceCm", "tick") if key in odo},
+            "safe_action_boundary": safe_boundary,
+            "action_outcome_unknown": not safe_boundary and phase == "action"}
+
+    previous_handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+    for sig in previous_handlers:
+        signal.signal(sig, request_stop)
     try:
         llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay, transport_retries=5)
         formal_configuration = llm.validate_formal_configuration()
+        decide = llm.decide
+
+        def decide_at_action_boundary(state):
+            nonlocal phase
+            phase = "decision"
+            result = decide(state)
+            phase = "dispatch"
+            return result
+
+        llm.decide = decide_at_action_boundary
         dependency = capture_world_model_provenance(WM_ROOT)
         runtime = Runtime(config, out)
+        execute = runtime.actions.execute
+
+        def execute_at_action_boundary(action):
+            nonlocal phase
+            phase = "action"
+            return execute(action)
+
+        runtime.actions.execute = execute_at_action_boundary
         if args.orchestrator_root:
             from .orchestration import LiveOrchestration
             orchestration = LiveOrchestration(runtime, llm, args.orchestrator_root)
         for number in range(1, config.get("max_rounds", 200) + 1):
             runtime.round = number
+            phase, state, action, before_observation = "observation", None, None, None
             runtime.observe()
             if runtime.bridge.seconds >= runtime.bridge.max_seconds:
                 raise SimulationLimit("simulation_time_limit")
             state = runtime.state()
+            before_observation = runtime.snapshot["observation_index"]
             action = None
             try:
                 if orchestration is not None:
@@ -454,15 +516,24 @@ def main(argv=None):
                     # Preserve the original entry for strict historical replay.
                     action = llm.decide(state)
                     result = runtime.actions.execute(action)
-            except Exception as exc:
+            except (Exception, KeyboardInterrupt) as exc:
                 if orchestration is not None:
                     action = orchestration.last_action
                 count = number
+                error_evidence = copy.deepcopy(getattr(exc, "action_evidence", {}))
+                if isinstance(exc, KeyboardInterrupt):
+                    interruption = stop_position(safe_boundary=False)
+                    error_evidence.update(interruption=interruption,
+                        held_object_id=runtime.held_object_id,
+                        pending_grasp=copy.deepcopy(runtime.pending_grasp))
+                    if interruption["action_outcome_unknown"]:
+                        error_evidence["outcome_unknown"] = True
                 rounds.write({"round": number, "state": state, "action": action,
                     **({"orchestration": orchestration.last_trace} if orchestration else {}),
-                    "llm_output": llm.last_record,
-                    "result": {"success": False, "reason": str(exc), "error_type": type(exc).__name__,
-                               "evidence": copy.deepcopy(getattr(exc, "action_evidence", {}))},
+                    "llm_output": None if isinstance(exc, KeyboardInterrupt) and phase == "decision" else llm.last_record,
+                    "result": {"success": False,
+                               "reason": f"interrupted_during_{phase}" if isinstance(exc, KeyboardInterrupt) else str(exc),
+                               "error_type": type(exc).__name__, "evidence": error_evidence},
                     "simulation_seconds": runtime.bridge.seconds,
                     "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
                 raise
@@ -472,23 +543,38 @@ def main(argv=None):
                           "llm_output": llm.last_record, "result": result,
                           "simulation_seconds": runtime.bridge.seconds,
                           "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
+            completed_rounds = number
+            phase = "action_boundary"
             runtime.recent.append(compact_action_result(number, action, result,
                                                         runtime.snapshot["observation_index"]))
             runtime.recent = runtime.recent[-5:]
             print(json.dumps({"round": number, "action": action["action"], "success": result["success"],
                               "reason": result["reason"], "simulation_seconds": runtime.bridge.seconds}), flush=True)
+            if stop_request is not None:
+                interruption = stop_position(safe_boundary=True)
+                status, reason = "interrupted", "SIGINT: stopped_at_action_boundary"
+                break
             if action["action"] == "done" and result["success"]:
                 status, reason = "done", "observation_completion"
                 break
             if number >= config.get("max_rounds", 200):
                 reason = "round_limit"
                 break
-        if args.replay:
+        if args.replay and interruption is None:
             llm.assert_replay_consumed()
+    except KeyboardInterrupt:
+        interruption = interruption or stop_position(safe_boundary=phase == "action_boundary")
+        aborted = interruption.get("aborting_signal") == "SIGTERM"
+        status = "aborted" if aborted else "interrupted"
+        reason = f"{interruption.get('aborting_signal', interruption['signal'])}: stopped_during_{phase}"
     except Exception as exc:
         status, reason = "failed", f"{type(exc).__name__}: {exc}"
     finally:
+        if stop_request is not None and interruption is None:
+            interruption = stop_position(safe_boundary=False)
+        phase = "export"
         summary = {"version": VERSION, "runtime_version": RUNTIME_VERSION, "status": status, "reason": reason,
+                   **({"interruption": interruption} if interruption is not None else {}),
                    "task": config["task"], "rounds": count,
                    "task_spec": getattr(runtime, "task_spec", None),
                    "llm_calls": llm.call_count if llm else 0,
@@ -526,6 +612,8 @@ def main(argv=None):
         if runtime:
             for log in (runtime.bridge.log, runtime.observation_log, runtime.motion_log):
                 log.close()
+        for sig, handler in previous_handlers.items():
+            signal.signal(sig, handler)
     return 0 if status == "done" else 1
 
 

@@ -367,6 +367,12 @@ def sample_discovery(actions, discovery_id):
            'independent_hits_added':0,'max_steps':MAX_STEPS,'max_travel_cm':MAX_TRAVEL_CM,
            'travelled_cm':0.,'steps':[]}
     first=r.perception.discovery_target(discovery_id)
+    identity_obligation=None
+    if first and first.get('identity_resolution_required'):
+        oid=(first.get('associated_object') or {}).get('id')
+        identity_obligation={'grasp_identity':r.perception.grasp_identity_context(oid)}
+        trace['identity_resolution_required']=True
+        trace['initial_identity_relations']=copy.deepcopy(identity_obligation['grasp_identity'])
     locked=None
     failed_viewpoints=[]
     start_odometer=actions.s['odometry']['distanceCm']
@@ -437,6 +443,15 @@ def sample_discovery(actions, discovery_id):
         if target['reason']=='target_confirmed' and obj.get('state')=='CONFIRMED':
             if not target.get('current_confirmation_corroborated'):
                 return finish(False,'confirmation_current_evidence_not_corroborated',target)
+            if identity_obligation is not None:
+                from .navigation_progress import grasp_identity_change
+                fresh_identity={'grasp_identity':r.perception.grasp_identity_context(obj['id']),
+                    'grasp_identity_authorized':r.perception.check_grasp_identity(obj['id'],actions.s)['authorized'],
+                    'relevant_object_states':[(o['id'],o.get('state')) for o in r.perception.objects()]}
+                resolved=grasp_identity_change(identity_obligation,fresh_identity)
+                if not resolved:
+                    return finish(False,'confirmation_identity_resolution_not_verified',target)
+                trace['identity_resolution_reason']=resolved
             trace['confirmed_object_id']=obj['id']
             trace['confirmation_evidence']=copy.deepcopy(target['current_confirmation_evidence'])
             return finish(True,'discovery_confirmed_from_independent_views',target)
@@ -464,7 +479,8 @@ def sample_discovery(actions, discovery_id):
         prior=target['current_detection']
         lost_window=bool(current and 40<=prior['raw_distance_cm']<90
                          and (not 40<=current['raw_distance_cm']<90 or abs(current['raw_bearing_deg'])>35))
-        lost_view=bool(not current and (fresh or {}).get('reason') in {'needs_fresh_observation','target_confirmed'})
+        lost_view=bool(not current and ((fresh or {}).get('reason') in {'needs_fresh_observation','target_confirmed'}
+                                      or (fresh or {}).get('identity_resolution_required')))
         if lost_view or lost_window:
             reason='confirmation_range_window_lost' if lost_window else 'confirmation_needs_fresh_observation'
             if 'recovery_attempt' in trace:return finish(False,reason,fresh)

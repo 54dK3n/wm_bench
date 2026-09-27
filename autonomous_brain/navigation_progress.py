@@ -162,6 +162,45 @@ class SamplingProgress:
         return copy.deepcopy({"schema": self.SCHEMA, "records": self.records})
 
 
+def grasp_identity_change(before, after):
+    """Reopen an identity failure only with evidence about its old competitors.
+
+    Turning away can shrink today's detection matrix. It cannot erase the
+    identities which competed at the failed attempt.
+    """
+    old, new = before.get("grasp_identity"), after.get("grasp_identity")
+    if not old or not new or after.get("grasp_identity_authorized") is not True:
+        return None
+    matrix = old.get("candidate_ids_by_detection") or []
+    competing = {oid for index in old.get("target_detection_indices", [])
+                 if type(index) is int and 0 <= index < len(matrix) for oid in matrix[index]}
+    competing.add(old.get("canonical_object_id"))
+    competing.discard(None)
+    canonical = new.get("canonical_object_id")
+    mappings = {row["object_id"]: row["canonical_object_id"]
+                for row in new.get("canonical_mappings", [])}
+    if not competing or canonical is None:
+        return None
+    # These mappings come only from Perception's verified all-source resolver.
+    if (len(competing) > 1 and all(mappings.get(oid, oid) == canonical for oid in competing)
+            and any(mappings.get(oid, oid) != oid for oid in competing)):
+        return "perception_verified_competing_identities_resolved"
+    def new_hit(oid):
+        poses = lambda context: {(p["x_m"], p["z_m"]) for p in
+            context.get("accepted_independent_hit_poses", {}).get(oid, [])}
+        return bool(poses(new) - poses(old))
+    if not new_hit(canonical):
+        return None
+    current = new.get("candidate_ids_by_detection") or []
+    states = dict(after.get("relevant_object_states", []))
+    others = {mappings.get(oid, oid) for oid in competing} - {canonical}
+    if all(states.get(oid) == "CONFIRMED" and new_hit(oid)
+           and current.count([oid]) == 1
+           and sum(oid in row for row in current) == 1 for oid in others):
+        return "new_independent_unique_views_of_competing_objects"
+    return None
+
+
 def changed(before, after):
     """Only changes relevant to a failed approach permit another attempt."""
     if distance(before["position_m"], after["position_m"]) >= .02:
