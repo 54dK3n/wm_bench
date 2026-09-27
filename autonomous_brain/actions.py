@@ -1082,10 +1082,15 @@ class Actions:
                          if not changed(row["context"], context)), None)
         if previous is None:
             return None
+        recovery_options = (["沿已观测合法道路explore取得独立视角，再由感知消解身份竞争",
+            "选择其他已确认且身份唯一的任务目标",
+            "go_to成功、原地转向或新frame本身不能解除身份竞争"]
+            if previous["reason"] == "grab_identity_competition" else
+            ["look_around_for_changed_target_or_road_evidence",
+             "go_to_a_confirmed_operation_position", "choose_another_confirmed_target"])
         return self.result(False, "action_repeat_without_new_evidence", canonical_object_id=key[1],
             previous_failure=previous["reason"], failure_context=previous["context"],
-            recovery_options=["look_around_for_changed_target_or_road_evidence",
-                              "go_to_a_confirmed_operation_position", "choose_another_confirmed_target"])
+            recovery_options=recovery_options)
 
     def remember_action_result(self, action, outcome):
         if outcome["success"] or outcome["reason"] == "action_repeat_without_new_evidence":

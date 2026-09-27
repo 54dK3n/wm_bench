@@ -103,6 +103,29 @@ def compact_action_result(number, action, result, after_observation):
                             "previous_failure", "canonical_object_id", "ready_for_done",
                             "delivered_count", "required_count"))
     detection(raw, evidence)
+    authorization = raw.get("grab_authorization")
+    if isinstance(authorization, dict) and authorization.get("authorized") is False:
+        compact = fields(authorization, ("authorized", "reason", "object_id",
+            "canonical_object_id", "observation_index", "frame_id", "holding"))
+        matrix = authorization.get("candidate_ids_by_detection")
+        indices = authorization.get("target_detection_indices")
+        if isinstance(matrix, list) and isinstance(indices, list):
+            target_indices = [i for i in indices if type(i) is int and 0 <= i < len(matrix)]
+            compact["target_detection_count"] = len(target_indices)
+            compact["target_candidates"] = []
+            for index in target_indices[:3]:
+                ids = sorted({value for value in matrix[index] if isinstance(value, str)}) \
+                    if isinstance(matrix[index], list) else []
+                compact["target_candidates"].append({"detection_index": index,
+                    "candidate_count": len(ids), "candidate_ids": [value[:128] for value in ids[:12]]})
+        if authorization.get("reason") == "grab_identity_competition":
+            compact["recovery_guidance"] = (
+                "go_to成功、原地转向或新frame本身不能解除身份竞争；"
+                "沿已观测合法道路explore取得独立视角并由感知消解，或选择其他已确认且身份唯一的任务目标。")
+        evidence["grab_authorization"] = compact
+    if isinstance(raw.get("authorization_recovery"), dict):
+        evidence["authorization_recovery"] = fields(raw["authorization_recovery"],
+            ("success", "reason", "after_observation", "restored_observation"))
     if isinstance(raw.get("confirmation_sampling"), dict):
         evidence["confirmation_sampling"] = fields(raw["confirmation_sampling"], (
             "schema", "discovery_id", "initial_object_id", "confirmed_object_id",
