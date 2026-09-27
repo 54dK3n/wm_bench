@@ -1,6 +1,14 @@
 # wm_bench
 
-## 当前结果：真实一球搬运 PASS，双球阶段 1 NOT_RUN
+## 当前结果：两处小修后，一次真实一球回归 PASS
+
+冻结 `c4bf08e1114363ddff3c0f5bce7cdcb1c041af27` 在 map-05 完成“把一个红球送到绿色存放区”：67 次真实 DeepSeek Flash 调用、67 轮、268.82 仿真秒，高层 pick 2 次、实际 grab 4 次、有效交付 1 颗。物理、脑端 DELIVERED、独立观测命令链均为 1，r67 模型主动 done，夹爪空，白名单外调用 0。独立一球 PASS；driver 固定双球 false/exit 1 保留，双球阶段 1 **NOT_RUN**。
+
+复用既有 `octos_robots.Executor`（`33af31baefc9b3beaa855f33849d52254aaa8c4b`）、同一 WorldModel 和原平台；外部 Octos runtime 未接入。两修保留 CONFIRMED 身份采样候选并在截断前筛选指定对象，以及锁定失败当帧竞争上下文；原阈值、白名单和预算不变。r32 实际采样 31cm、增加 2 hit，旧身份竞争仍未消解；新 pick 上下文锁与 pick 离路逆归路本局未触发。上一成功基线原件和离线复算 PASS 保留。只运行本局后停止，后续阶段均未启动。
+
+[一页结果与实际命令](artifacts/autonomous-brain/one-ball-review-next/REPORT.md) · [复算指标](artifacts/autonomous-brain/one-ball-review-next/METRICS.json) · [恢复/校验](artifacts/autonomous-brain/one-ball-review-next/RESTORE.md) · [原日志与 delivered-frame300.png](https://github.com/54dK3n/wm_bench/releases/tag/one-ball-review-20260927-c4bf08e)。
+
+## 上一成功基线：2adc8ae 一球 PASS，原文保留
 
 map-05 的“把一个红球送到绿色存放区”已真实完成：平台传感 → 同一 WorldModel → DeepSeek Flash → 既有 `octos_robots.orchestrator.executor.Executor` → Actions → 新观测；外部 Octos runtime 未接入。76 次真实模型调用、76 轮、299.7 仿真秒，物理交付、脑端 DELIVERED、独立观测命令链均为 1；模型主动 done、夹爪空、白名单外请求 0。独立一球评测 PASS；原 driver 固定双球结果仍为 false，不能将本局算作双球阶段 1。
 

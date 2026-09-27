@@ -1,0 +1,319 @@
+{
+  "scope": "Counts from immutable logs; existing independent verdicts cited without rescoring.",
+  "one_ball_demo": "PASS",
+  "two_ball_stage1": "NOT_RUN",
+  "runs": [
+    {
+      "driver_exit_code": 1,
+      "evaluation_exit_code": 0,
+      "name": "one-ball-regression-20260927T222206",
+      "task": "把一个红球送到绿色存放区",
+      "stage": "one-ball-smoke",
+      "result": "PASS",
+      "source_commit": "c4bf08e1114363ddff3c0f5bce7cdcb1c041af27",
+      "platform_commit": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+      "world_model_source_tree_sha256": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+      "octos_robots_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+      "executor_max_retries": 0,
+      "external_octos_runtime": false,
+      "sources_unchanged": true,
+      "platform_run_id": "run-0dacc29a-ac3e-4685-a06a-393c77f336fa",
+      "orchestration_run_ids": [
+        "eb1829032a8e4d7cbcf71c09dac7e1fc"
+      ],
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "round_records": 67,
+      "completed_rounds": 67,
+      "llm_calls": 67,
+      "llm_records_complete": 67,
+      "llm_started": 67,
+      "llm_finished": 67,
+      "real_api_calls": 67,
+      "real_api_finished": 67,
+      "unfinished_call_indices": [],
+      "issued_llm_actions": 67,
+      "completed_actions_by_name": {
+        "done": 1,
+        "explore": 49,
+        "go_to": 13,
+        "look_around": 1,
+        "pick": 2,
+        "place": 1
+      },
+      "high_level_pick_actions": 2,
+      "last_issued_decision_index": 67,
+      "last_completed_round": 67,
+      "executor_dispatch_records": 67,
+      "executor_judge_records": 67,
+      "world_model_observations": 311,
+      "bridge_observe_requests": 311,
+      "bridge_calls": 1422,
+      "bridge_calls_by_method": {
+        "backward": 10,
+        "camera_parameters": 1,
+        "follow_road": 69,
+        "forward": 18,
+        "grab": 4,
+        "holding": 311,
+        "local_road": 311,
+        "observe": 311,
+        "odometry": 311,
+        "release": 1,
+        "take_exit": 27,
+        "turn": 48
+      },
+      "bridge_motion_requests": 172,
+      "motion_records": 177,
+      "motions_after_last_completed_round": 0,
+      "grab_requests": 4,
+      "release_requests": 1,
+      "foreign_requests": 0,
+      "brain_delivered_objects": 1,
+      "independent_observation_delivery_chains": 1,
+      "platform_deliveries": 1,
+      "qualified_physical_deliveries": 1,
+      "model_done_actions": 1,
+      "model_done_verified": true,
+      "post_action_completion_verified": true,
+      "terminal_done_verified": true,
+      "simulation_seconds": 268.82,
+      "last_observed_holding": false,
+      "original_brain_status": "done",
+      "original_brain_reason": "observation_completion",
+      "development_stop": null,
+      "platform_export_complete": true,
+      "driver_fixed_two_ball_success": false,
+      "independent_verdict_failures": [],
+      "global_judge_counts": {
+        "match": 3,
+        "false_positive": 0,
+        "false_negative": 0,
+        "unverifiable": 0,
+        "not_evaluated": 64,
+        "eligible_actions": 3
+      },
+      "prefix_judge_counts": {
+        "match": 3
+      },
+      "strict_replay": {
+        "allPass": true,
+        "recorded_calls": 67,
+        "replayed_calls": 67,
+        "recorded_rounds": 67,
+        "replayed_rounds": 67,
+        "failures": [],
+        "replay_error": null
+      },
+      "verdict_source": "raw/one-ball-regression-20260927T222206-evaluation/evaluation.json"
+    }
+  ],
+  "recorded_commands": {
+    "driver_command": [
+      "node",
+      "tools/autonomous_brain_driver.js",
+      "--maps",
+      "map-05",
+      "--runs",
+      "1",
+      "--platform-root",
+      "workspaces/guangyang-platform/projects/car-python",
+      "--orchestrator-root",
+      "workspaces/octos_robots",
+      "--task",
+      "把一个红球送到绿色存放区",
+      "--out",
+      "artifacts/autonomous-brain/one-ball-review-next/raw/one-ball-regression-20260927T222206"
+    ],
+    "evaluation_command": [
+      "python3",
+      "tools/evaluate_one_ball_smoke.py",
+      "--input",
+      "artifacts/autonomous-brain/one-ball-review-next/raw/one-ball-regression-20260927T222206/map-05-run-1",
+      "--out",
+      "artifacts/autonomous-brain/one-ball-review-next/raw/one-ball-regression-20260927T222206-evaluation"
+    ],
+    "evaluation_environment": {
+      "PYTHONPATH": "vendor/wm_kit_opt2:.",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    }
+  },
+  "baseline_recomputation": {
+    "source_commit": "2adc8aecc085c2f99f14131f1f2c10e7b109021e",
+    "success": true,
+    "evaluation_exit_code": 0,
+    "original_manifest": {
+      "sha256": "787d04b48ed1c51de4eebae571d9e5a579fd1373ad22a10e5e460600e8345446",
+      "verified_files": 53,
+      "all_matched_before": true,
+      "all_unchanged_after": true
+    },
+    "original_archive_sha256": "7eb511cdbbb67ac9dc3874583dc31babbb0805d4c579b7cdd21422ce297ad194",
+    "archive_hash_matched": true,
+    "metrics_byte_equal": true,
+    "metrics_sha256": "3447731e6e3df513518549e307bd8eea10c293d5b4b82ca36e60bc2747738602",
+    "driver_fixed_two_ball_success": false,
+    "scope": "Offline independent recomputation of unchanged successful baseline; no new API request or simulator run"
+  },
+  "targeted_tests": {
+    "original_context_reproducer": {
+      "failed": 6,
+      "passed": 1,
+      "output": "failure-boundary-before.txt"
+    },
+    "original_candidate_reproducer": {
+      "failed": 3,
+      "passed": 2,
+      "output": "confirmed-candidates-before.txt",
+      "note": "Initial five-test reproducer; final file adds filter-before-limit test."
+    },
+    "first_related": {
+      "passed": 91,
+      "failed": 1,
+      "output": "related-first.txt",
+      "failure": "Pre-existing v14 assertion against baseline perception v15; updated with this round explicit v16 guidance/identity context declaration."
+    },
+    "final_related": {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_brain_identity_failure_boundary.py",
+        "tests/test_brain_confirmed_identity_sampling_candidates.py",
+        "tests/test_brain_grasp_identity_failure_lock.py",
+        "tests/test_brain_approach_identity.py",
+        "tests/test_brain_pick_road_identity_recovery.py",
+        "tests/test_brain_grab_authorization.py",
+        "tests/test_brain_identity_failure_feedback.py",
+        "tests/test_brain_identity_sampling_live_components.py",
+        "tests/test_brain_active_discovery_summary.py",
+        "tests/test_brain_confirmation_sampling.py",
+        "tests/test_one_ball_smoke.py",
+        "tests/test_brain_octos_orchestration.py"
+      ],
+      "environment": {
+        "PYTHONPATH": "vendor/wm_kit_opt2:tests:.",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "passed": 93,
+      "failed": 0,
+      "output": "related-final.txt"
+    },
+    "new_test_counts_are_not_added_to_overlapping_regression_totals": true
+  },
+  "exercised_branches": {
+    "identity_sampling": {
+      "status": "ATTEMPTED_NOT_RESOLVED",
+      "candidate_presentation_status": "EXERCISED",
+      "exact_has_pending_discovery_false_branch": "NOT_ESTABLISHED_FROM_RECORDED_SUMMARY",
+      "independent_hits_added": 2,
+      "travelled_cm": 30.999999999999886,
+      "result_reason": "confirmation_no_safe_independent_viewpoint",
+      "end_resolution_count": 0
+    },
+    "pick_identity_failure_context": {
+      "status": "NOT_EXERCISED",
+      "pick_identity_competition_failures": 0,
+      "explanation": "Round 31 identity competition was go_to/preapproach. Round 35 pick failed as grab_identity_not_uniquely_visible. Neither pick invoked the new grab_identity_competition failure-context capture."
+    },
+    "pick_offroad_inverse_return": {
+      "status": "NOT_EXERCISED",
+      "explanation": "Both pick trajectories and their public observations stayed on-road. Both road_return outcomes were already_on_observed_road with zero motions. Round 37 backward holding checks are not an off-road road-return demonstration."
+    },
+    "visibility_reacquisition_status": "EXERCISED_PUBLIC_OBSERVATION_SUPPORTED",
+    "source": "raw/checks/recovery-exercise-review.json"
+  },
+  "same_world_model_and_executor_as_successful_baseline": true,
+  "definitions": {
+    "completed_rounds": "Recorded action/result rows without exception error_type; interrupted tail is not completed.",
+    "real_api_calls": "Live lifecycle started events, including unfinished attempts; start does not assert a completed response.",
+    "llm_calls": "Complete rows in llm.jsonl; llm_started/finished separately retain interrupted request attempts.",
+    "issued_llm_actions": "Valid action dictionaries in the original LLM transcript, including an interrupted last round.",
+    "bridge_calls": "Original bridge request log rows, including sensors; method counts do not assert physical success.",
+    "motion_records": "Original motions.jsonl rows; may include a round without a completed round record.",
+    "qualified_physical_deliveries": "Existing independent evaluation qualifying_delivered_target_ids count.",
+    "independent_observation_delivery_chains": "Existing independent task_scope.observed_evidence.deliveries count.",
+    "driver_fixed_two_ball_success": "Unchanged two-ball driver verdict; not the one-ball smoke acceptance result.",
+    "high_level_pick_actions": "Completed pick decisions; distinct from physical grab requests and qualified deliveries.",
+    "strict_replay": "Existing LLM transcript replay; not physical validation of all navigation actions.",
+    "exercised_branches": "Existing public-log branch review; not new scoring or a claim that unexercised paths ran.",
+    "original_brain_reason": "Copied unchanged from the original brain summary."
+  },
+  "script_sha256": "6296cf49775206226bc80b7cceb8e3d3e5b1e6d6cab7905a32d8ac53338d19b8",
+  "inputs": {
+    "raw/one-ball-regression-20260927T222206/manifest.json": {
+      "sha256": "2ad2066ae475a1339d2ded543b04bdb7d341d9792c1e501b9972df3569be6490",
+      "bytes": 16874
+    },
+    "raw/one-ball-regression-20260927T222206/summary.json": {
+      "sha256": "911e42d30ded1813c52ea465e5f9a4346fcccacbd25b3c8efc5ac52395c7349e",
+      "bytes": 901652
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/summary.json": {
+      "sha256": "834c7fb7e857615b23b29916128c90efb49eba127a88c710a04158a9cb8a9280",
+      "bytes": 719633
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/rounds.jsonl": {
+      "sha256": "44c23c73713106ab19e863504616bd0f93880651e0d6e8f5187820329758a304",
+      "bytes": 7168108
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/llm.jsonl": {
+      "sha256": "15c21a55b77012b0b096ad0378dbda5ae16670d72de2b04e56ab4c4cf912219e",
+      "bytes": 4136428
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/llm.lifecycle.jsonl": {
+      "sha256": "510af443e79b7c5bfb3d60e6becddbd10382cd0864e6eb44292853e0c1f49a03",
+      "bytes": 7915396
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/bridge-calls.jsonl": {
+      "sha256": "4ee3cb6b4a0f88de7690e6d3bf69aafabbe3f7830a5a8bb9c7d90170d5c84395",
+      "bytes": 649405
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/observations.jsonl": {
+      "sha256": "62c38ab3af02e015c9eadff915d31aab524a02020ddacc425f4c68808efc28f4",
+      "bytes": 21930289
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/brain/motions.jsonl": {
+      "sha256": "06b6bc4640cc0f000a3b460a4d3f6ad1e91f8ac277cfbb16b5cd4b0828e0f15c",
+      "bytes": 98984
+    },
+    "raw/one-ball-regression-20260927T222206-evaluation/evaluation.json": {
+      "sha256": "980cb87256fec03e5c6c1db6bd10842fa7df9840679c9a2d4834e2bdfa7b8d1e",
+      "bytes": 376534
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/evaluation.json": {
+      "sha256": "5663d1d0466d772f67bc3a2a55667ce795c1a77cc7d0b819b59ea3a0052022b2",
+      "bytes": 775670
+    },
+    "raw/one-ball-regression-20260927T222206/map-05-run-1/envelope.json": {
+      "sha256": "621f61fe294797de26d724a951e9600b5dfa76d190226488cf84dbd56976511e",
+      "bytes": 594
+    },
+    "raw/one-ball-regression-20260927T222206.exits.json": {
+      "sha256": "94c772fe2acfe41711dc7d99a97ac051c85791c116b99b00a90fb27b050a2fff",
+      "bytes": 114
+    },
+    "raw/RUN.json": {
+      "sha256": "2da63b9cd0be2e2354e3841ee6b656bb8578f7e4fd4aa91681afbb484e785892",
+      "bytes": 1330
+    },
+    "raw/baseline-recompute/RESULT.json": {
+      "sha256": "9e0ebc13c282d4263d6e0d4fec64e571876f1703b5d405ad2caa02aa98f8b661",
+      "bytes": 6245
+    },
+    "raw/checks/recovery-exercise-review.json": {
+      "sha256": "9b8c30d813f3008b74e47bdec074230e58ab1395eb3ece5e7a1a4cf8a3e09305",
+      "bytes": 40780
+    },
+    "raw/checks/TEST_RESULTS.json": {
+      "sha256": "85fedd1bad3c3a7ec445fe877393c98f3eb5e52ed1da174e8847eb04083eab6c",
+      "bytes": 1878
+    },
+    "raw/checks/config-and-dependencies.json": {
+      "sha256": "a7797da3a94708537914fadfefd4afea0b3c3c4e037a1abd45cd5cbcd7010576",
+      "bytes": 6859
+    }
+  }
+}

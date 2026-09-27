@@ -1,4 +1,14 @@
-# 当前状态：真实一球搬运 PASS，已停止运行
+# 当前状态：两处小修后，一球真实回归 PASS，已停止
+
+2026-09-27：冻结主仓 `c4bf08e1114363ddff3c0f5bce7cdcb1c041af27`，既有编排 `33af31baefc9b3beaa855f33849d52254aaa8c4b`。真实平台 → 同一 WM → DeepSeek Flash → Executor → Actions → 新观测链路运行一局；模型、阈值和预算不变，没有外部 Octos runtime。
+
+- 独立一球 **PASS**：67 次调用/67 轮、268.82 仿真秒、311 观测、1422 桥请求；高层 pick 2 次、grab 4 次，物理/脑端/独立链交付各 1。r37 HELD、r66 DELIVERED、r67 主动 done，夹爪空，白名单外 0。
+- driver exit 1 / 固定双球 false 保留；独立一球 evaluator exit 0。双球阶段 1 **NOT_RUN**，未启动阶段 2、十布局或真机，不自动继续。
+- 两修为 CONFIRMED 身份采样候选及指定对象截断前筛选、失败当帧上下文与恢复终点分存。最终针对性回归 93 PASS（重叠不累计）；旧 v14 断言漂移和首次失败输出保留。上一成功 2adc 基线离线复算 PASS，53 文件、包 SHA 和原指标不变。
+- 实测身份采样 31cm/+2 hit，竞争仍未消解；pick 竞争上下文锁和 pick 离路逆归路本局均未触发。严格转录 67/67 PASS 不等于全部导航物理验收。
+- [一页报告](../artifacts/autonomous-brain/one-ball-review-next/REPORT.md) · [指标](../artifacts/autonomous-brain/one-ball-review-next/METRICS.json) · [恢复入口](../artifacts/autonomous-brain/one-ball-review-next/RESTORE.md) · [Release](https://github.com/54dK3n/wm_bench/releases/tag/one-ball-review-20260927-c4bf08e)。当前交付完成即停止；未触发分支和未解身份关系保留为后续范围，未继续修改或补跑。
+
+## 上一成功基线：2adc8ae 一球 PASS，原文保留
 
 2026-09-27：冻结 `2adc8aecc085c2f99f14131f1f2c10e7b109021e` 在 map-05 完成一局真实“把一个红球送到绿色存放区”。真实 DeepSeek Flash、框架无关 `octos_robots` Executor（`33af31baefc9b3beaa855f33849d52254aaa8c4b`）、同一 WorldModel 和平台传感/动作闭环贯通；没有接入外部 Octos runtime。
 
