@@ -208,6 +208,22 @@ class RoadMemory:
         """
         return copy.deepcopy(list(self._road_segments.values()))
 
+    def observation_records(self, first, last):
+        """Copy registered public sensor/motion records for a closed window.
+
+        Missing observations stay missing. This read-only interface neither
+        constructs a connection nor exports semantic/scene state as sensors.
+        """
+        if not index(first) or not index(last) or first > last:
+            return {"observations": [], "motions": [], "invalid_observation_indices": []}
+        public = ("observation_index", "odometry", "road", "observation", "holding")
+        return copy.deepcopy({
+            "observations": [{key: frame[key] for key in public if key in frame}
+                for i, frame in sorted(self._semantic.frames.items()) if first <= i <= last],
+            "motions": [motion for (a, b), motion in self._semantic.motions.items()
+                if index(a) and index(b) and first <= a < b <= last],
+            "invalid_observation_indices": sorted(i for i in self._invalid_indices if first <= i <= last)})
+
     def _record_approach_segment(self, observation, motion):
         """Keep exact measured endpoints; never connect nearby road branches.
 

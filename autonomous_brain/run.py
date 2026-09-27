@@ -24,7 +24,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v17"
+RUNTIME_VERSION = "autonomous-brain-runtime/v18"
 
 
 def dump(path, value):
@@ -269,14 +269,22 @@ class Runtime:
                          "road": road, "holding": holding, "observation": observation,
                          "perception": perception, "objects": self.perception.objects(),
                          "discovery_evidence": self.perception.discovery_evidence()}
-        if hasattr(self.perception, "note_sampling_context"):
-            self.perception.note_sampling_context(self.snapshot)
         self.actions.observe_pending_grasp(self.snapshot)
         finalized_motion = (dict(motion, after_observation=self.observation_count)
                             if motion is not None else None)
         traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
         if traversal_events:
             self.snapshot["road_traversal_events"] = traversal_events
+        if hasattr(self.roads, "observation_records"):
+            from .confirmation_sampling import _reverse_support
+            # A finite semantic summary of freshly verified reverse options.
+            # Frame/segment identifiers alone never count as new route support.
+            # The sampler still revalidates the chosen path before executing it.
+            self.snapshot["sampling_path_support"] = {"schema": "brain-sampling-path-options/v1",
+                "reverse_lengths_cm": [length for length in (10, 15.5, 16, 17, 18, 20)
+                    if _reverse_support(self.actions, length) is not None]}
+        if hasattr(self.perception, "note_sampling_context"):
+            self.perception.note_sampling_context(self.snapshot)
         self.observation_log.write(self.snapshot)
         return self.snapshot
 

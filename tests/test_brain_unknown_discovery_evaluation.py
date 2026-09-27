@@ -19,7 +19,9 @@ def discovery_fixture():
         {"observation_index":2,"round":2,"simulation_seconds":.4,
          "observation":{"frameId":"empty","tick":20,"detections":[]},"perception":{"detections":[]},
          "discovery_evidence":copy.deepcopy(ledger)}]
-    return {"discovery_evidence":copy.deepcopy(ledger)},observations
+    # Explicit historical contract; this is a synthetic v1 discovery ledger.
+    return {"runtime_version":"autonomous-brain-runtime/v14",
+            "discovery_evidence":copy.deepcopy(ledger)},observations
 
 
 def test_empty_current_view_does_not_erase_prior_untracked_ambiguity():

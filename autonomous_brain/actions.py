@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v25"
+VERSION = "autonomous-brain-actions/v26"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -1732,6 +1732,11 @@ class Actions:
         pending = getattr(self.r, "pending_grasp", None)
         if not pending or not isinstance(pending.get("grab_ref"), dict):
             return
+        grab = pending["grab_ref"]
+        if snapshot["observation_index"] <= grab["before_observation"]:
+            return
+        if grab.get("after_observation") is None:
+            grab["after_observation"] = snapshot["observation_index"]
         row = {"observation_index": snapshot["observation_index"],
                "frame_id": str((snapshot.get("observation") or {}).get("frameId")),
                "tick": (snapshot.get("observation") or {}).get("tick"),
@@ -1749,6 +1754,8 @@ class Actions:
 
     def grasp_confirmation_chain(self, pending, action, before_observation):
         """Separate the original physical command from a later identity view."""
+        if not pending:
+            return False
         if not isinstance(pending.get("grab_ref"), dict):
             return None  # Legacy fixture evidence; new formal runs have bridge sequence IDs.
         self.observe_pending_grasp(self.s)
@@ -1760,6 +1767,7 @@ class Actions:
                 or current.get("category") != grab.get("category")
                 or current.get("position_m") != grab.get("original_position_m")
                 or grab.get("before_holding") is not False
+                or (hasattr(self.r.perception, "authorize_grab") and not grab.get("authorization"))
                 or not rows or rows[0]["observation_index"] != grab.get("after_observation")
                 or [row["observation_index"] for row in rows] != list(range(grab["after_observation"], self.s["observation_index"] + 1))
                 or any(row["holding"] is not True for row in rows)):
@@ -1774,6 +1782,7 @@ class Actions:
         trajectory, attempts = [], []
         action_before = self.s["observation_index"]
         confirmed_grasp = None
+        valid_view = None
 
         def finish(success, reason, **evidence):
             # Fix the manipulation witness before road recovery changes the
@@ -1781,7 +1790,9 @@ class Actions:
             evidence.setdefault("post_observation", self.s["observation_index"])
             if confirmed_grasp is not None:
                 evidence["grasp_confirmation"] = copy.deepcopy(confirmed_grasp)
-            recovery = self.return_place_path(trajectory)
+            recovery = evidence.pop("_road_return", None)
+            if recovery is None:
+                recovery = self.return_place_path(trajectory)
             if (self.s.get("holding") or {}).get("holding") is False:
                 if getattr(self.r, "held_object_id", None) == object_id:
                     marked = self.r.perception.mark_release_unverified(object_id,
@@ -1813,12 +1824,87 @@ class Actions:
             if abs(angle) >= 1:
                 pick_move("turn", {"angleDeg": angle, "speed": 50})
 
+        def invalid_authorization(reason, **evidence):
+            # Return only along this action's measured path. This is a failed
+            # pick even if the return provides new confirmation; a fresh
+            # decision must authorize any subsequent physical grab.
+            evidence.setdefault("grab_authorization", {}).update(authorized=False, reason=reason,
+                object_id=object_id, object=copy.deepcopy(self.r.perception.get_object(object_id)),
+                observation_index=self.s["observation_index"],
+                frame_id=str(self.s["observation"]["frameId"]),
+                holding=(self.s.get("holding") or {}).get("holding"))
+            restored = {"success": False, "reason": "no_recorded_confirmed_view", "motions": []}
+            if valid_view is not None:
+                restored["source_observation"] = valid_view["observation_index"]
+                rows = copy.deepcopy(trajectory[valid_view["trajectory_index"]:])
+                if ((self.s.get("holding") or {}).get("holding") is not False
+                        or getattr(self.r, "pending_grasp", None)
+                        or any(row.get("outcome_unknown") for row in rows)):
+                    restored["reason"] = "return_state_or_holding_unresolved"
+                else:
+                    restored["reason"] = "recorded_path_not_reversible"
+                    for row in reversed(rows):
+                        before, after = row["before"], row["after"]
+                        now = self.s["odometry"]
+                        if (distance(position(now), position(after)) * 100 > .2
+                                or abs(wrap(now["headingDeg"] - after["headingDeg"])) > .2
+                                or not row.get("motion_verification", {}).get("motion_verified")):
+                            break
+                        method = row["method"]
+                        measured = distance(position(before), position(after)) * 100
+                        angle = wrap(after["headingDeg"] - before["headingDeg"])
+                        odometers = (before.get("distanceCm"), after.get("distanceCm"))
+                        if not all(type(value) in (int, float) and math.isfinite(value) for value in odometers):
+                            break
+                        travelled = odometers[1] - odometers[0]
+                        if travelled < 0:
+                            break
+                        if method == "grab" and measured <= .2 and abs(angle) <= .2 and travelled <= .2:
+                            continue
+                        if method not in {"forward", "backward", "turn"}:
+                            break
+                        if method == "turn":
+                            if measured > .2 or travelled > .2 or 0 < abs(angle) < 1:
+                                break
+                            commands = [("turn", {"angleDeg": -angle, "speed": 50})] if angle else []
+                        else:
+                            theta = math.radians(before["headingDeg"])
+                            dx, dz = after["rightCm"]-before["rightCm"], after["forwardCm"]-before["forwardCm"]
+                            along = (-math.sin(theta)*dx + math.cos(theta)*dz) * (1 if method == "forward" else -1)
+                            across = math.cos(theta)*dx + math.sin(theta)*dz
+                            if (abs(angle) > .2 or abs(across) > .2 or along < -.1
+                                    or abs(travelled - measured) > .2
+                                    or measured > row["params"]["distanceCm"] + .2):
+                                break
+                            inverse = "backward" if method == "forward" else "forward"
+                            commands = [(inverse, {"distanceCm": measured, "speed": 20})] if measured >= .1 else []
+                        try:
+                            for inverse, params in commands:
+                                pick_move(inverse, params)
+                                restored["motions"].append(copy.deepcopy(trajectory[-1]))
+                        except ObservedMotionFailure as failure:
+                            restored.update(reason=failure.reason, evidence=failure.evidence)
+                            break
+                        if (distance(position(self.s["odometry"]), position(before)) * 100 > .2
+                                or abs(wrap(self.s["odometry"]["headingDeg"] - before["headingDeg"])) > .2):
+                            break
+                    else:
+                        restored.update(success=True, reason="returned_to_recorded_confirmed_view")
+                    restored["after_observation"] = self.s["observation_index"]
+            if not restored["success"]:
+                evidence["_road_return"] = {"success": False,
+                    "reason": "authorization_return_not_verified", "motions": [],
+                    "after_observation": self.s["observation_index"]}
+            return finish(False, reason, authorization_recovery=restored, **evidence)
+
         target = self.r.perception.confirmed(object_id)
         if target is None:
             return finish(False, "object_not_confirmed")
         if target["category"] not in {"red-ball", "blue-ball"}:
             return finish(False, "object_is_not_a_ball")
-        if self.s["holding"]["holding"]:
+        if getattr(self.r, "pending_grasp", None):
+            return finish(False, "pending_grasp_requires_identity_reobservation")
+        if self.s["holding"]["holding"] is not False:
             return finish(False, "gripper_already_holding")
         if not self.s["road"]["onRoad"]:
             return finish(False, "pick_requires_observed_road_entry")
@@ -1831,8 +1917,18 @@ class Actions:
                 # M5's near-field range is extrapolated. Keep the existing
                 # confirmed-position/odometry standoff and fresh pixel bearing.
                 for _ in range(10):
+                    target = self.r.perception.confirmed(object_id)
+                    if target is None:
+                        return invalid_authorization("object_not_currently_confirmed")
                     remaining, memory_bearing = self.object_geometry(target)
                     observed = self.visible(object_id)
+                    if (observed is not None and not observed.get("identity_ambiguity")
+                            and len([d for d in self.s.get("perception", {}).get("detections", [])
+                                     if d.get("category") == target["category"]]) == 1
+                            and (observed.get("fed_to_world_model")
+                            or not hasattr(self.r.perception, "authorize_grab"))):
+                        valid_view = {"observation_index": self.s["observation_index"],
+                                      "trajectory_index": len(trajectory)}
                     if observed is None and remaining > 30:
                         pick_turn(-memory_bearing)
                         observed = self.visible(object_id)
@@ -1845,6 +1941,9 @@ class Actions:
                     if remaining - 22 < 0.1:
                         break
                     pick_move("forward", {"distanceCm": min(6, remaining - 22), "speed": 30})
+                target = self.r.perception.confirmed(object_id)
+                if target is None:
+                    return invalid_authorization("object_not_currently_confirmed")
                 remaining, memory_bearing = self.object_geometry(target)
                 observed = self.visible(object_id)
                 bearing = observed["bearing_deg"] if observed is not None else memory_bearing
@@ -1857,33 +1956,54 @@ class Actions:
                 before = self.s["observation_index"]
                 command_sequence = getattr(self.r.bridge, "sequence", None)
                 before_holding = self.s["holding"]["holding"]
+                if before_holding is not False or getattr(self.r, "pending_grasp", None):
+                    return invalid_authorization("gripper_not_observed_empty")
+                command_ref = {"round": self.r.round, "before_observation": before,
+                    "bridge_sequence": command_sequence + 1 if type(command_sequence) is int else None,
+                    "bridge_request_id": f"brain-{command_sequence + 1:06d}" if type(command_sequence) is int else None}
+                authorize = getattr(self.r.perception, "authorize_grab", None)
+                authorization = authorize(object_id, self.s, command_ref) if authorize else None
+                if authorization is not None and not authorization["authorized"]:
+                    return invalid_authorization(authorization["reason"], grab_authorization=authorization)
+                original = (target["position_m"]["x"], target["position_m"]["z"])
+                pending = {"object_id": object_id, "original_position_m": original,
+                           "category": target["category"], "attempts": attempts}
+                if type(command_sequence) is int:
+                    pending["grab_ref"] = {**command_ref, "object_id": object_id,
+                        "category": target["category"], "original_position_m": copy.deepcopy(target["position_m"]),
+                        "before_holding": before_holding, "after_observation": None, "outcome_unknown": True,
+                        **({"authorization": copy.deepcopy(authorization["evidence"])} if authorization else {})}
+                # Preserve intent before submission: an absent receipt and an
+                # unavailable readback do not prove the motor never acted.
+                self.r.pending_grasp = pending
                 self.grab_attempts[object_id] = self.grab_attempts.get(object_id, 0) + 1
+                command_completed = False
                 try:
                     pick_move("grab", {})
+                    command_completed = True
                 finally:
                     # A grab can already have taken effect when the following
                     # pose check fails. Preserve its fresh sensor outcome and
                     # pending identity without claiming a verified grasp.
+                    unknown = bool(not trajectory or trajectory[-1]["method"] != "grab"
+                                   or trajectory[-1].get("outcome_unknown"))
+                    if "grab_ref" in pending:
+                        pending["grab_ref"]["outcome_unknown"] = unknown
                     if self.s["observation_index"] > before:
                         attempts.append({"attempt": attempt, "before_observation": before,
                                          "after_observation": self.s["observation_index"],
                                          "holding": self.s["holding"]["holding"],
                                          "alignment": {"mode": "camera_bearing+confirmed_position_odometry" if observed else "confirmed_position_odometry_near_field",
                                                        "detection": observed, "remembered_distance_cm": remaining,
-                                                       "bearing_deg": bearing}})
-                        if self.s["holding"]["holding"]:
-                            self.r.pending_grasp = {"object_id": object_id, "original_position_m": original,
-                                                    "category": target["category"], "attempts": attempts}
-                            if type(command_sequence) is int:
-                                self.r.pending_grasp["grab_ref"] = {"object_id": object_id,
-                                    "category": target["category"], "original_position_m": {"x": original[0], "z": original[1]},
-                                    "round": self.r.round, "before_observation": before,
-                                    "after_observation": self.s["observation_index"],
-                                    "before_holding": before_holding,
-                                    "bridge_sequence": command_sequence + 1,
-                                    "bridge_request_id": f"brain-{command_sequence + 1:06d}",
-                                    "outcome_unknown": bool(trajectory and trajectory[-1].get("outcome_unknown"))}
-                                self.observe_pending_grasp(self.s)
+                                                       "bearing_deg": bearing},
+                                         **({"grab_ref": copy.deepcopy(pending["grab_ref"])} if "grab_ref" in pending else {})})
+                        self.observe_pending_grasp(self.s)
+                        if command_completed and self.s["holding"]["holding"] is False:
+                            self.r.pending_grasp = None
+                    else:
+                        # No readback covers this command boundary. Later
+                        # holding alone cannot fill the missing interval.
+                        pending.update(continuity_broken=True, initial_readback_missing=True)
                 if self.s["holding"]["holding"]:
                     # Keep identity pending until the full 30 cm separation
                     # and old-position camera witness have been observed.
@@ -1911,6 +2031,8 @@ class Actions:
                     return finish(marked, "grasp_observed" if marked else "holding_but_original_position_ambiguous",
                                   old_position_matches=len(old_position_detections))
                 if attempt < 3:
+                    if self.r.perception.confirmed(object_id) is None:
+                        return invalid_authorization("object_not_currently_confirmed")
                     pick_move("forward", {"distanceCm": 6, "speed": 20})
             return finish(False, "three_grab_attempts_failed")
         except ObservedMotionFailure as failure:
@@ -2382,6 +2504,8 @@ class Actions:
             return finish(False, "pending_grasp_identity_requires_reobservation")
         if self.r.pending_grasp and self.s["holding"]["holding"]:
             pending = self.r.pending_grasp
+            if pending.get("continuity_broken"):
+                return finish(False, "grasp_command_or_holding_chain_unresolved")
             place_move("backward", {"distanceCm": 16, "speed": 30})
             view = self.original_position_evidence(pending["original_position_m"], pending["category"])
             matches = view.get("matches", [])

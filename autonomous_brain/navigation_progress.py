@@ -9,7 +9,7 @@ from .navigation import distance, wrap
 
 class SamplingProgress:
     """Sampling attempts are obligations, not identity or confirmation proofs."""
-    SCHEMA = "brain-sampling-progress/v1"
+    SCHEMA = "brain-sampling-progress/v2"
 
     def __init__(self):
         self.records = []
@@ -17,8 +17,21 @@ class SamplingProgress:
     def find(self, target):
         aliases = set(target.get("record_ids", [])) | set(target.get("hypothesis_ids", []))
         oid = (target.get("associated_object") or {}).get("id")
-        return next((row for row in self.records if aliases.intersection(row["aliases"])
-            or oid is not None and oid in row["object_ids"]), None)
+        matches = [row for row in self.records if aliases.intersection(row["aliases"])
+            or oid is not None and oid in row["object_ids"]]
+        if not matches:
+            return None
+        row = matches[0]
+        # A perception-verified alias join carries every prior obligation. It
+        # must not select just the first group's failures and forget the rest.
+        for other in matches[1:]:
+            row["aliases"] = sorted(set(row["aliases"]) | set(other["aliases"]))
+            row["object_ids"] = sorted(set(row["object_ids"]) | set(other["object_ids"]))
+            row["attempts"].extend(other["attempts"])
+            self.records.remove(other)
+        row["attempts"].sort(key=lambda item: (item.get("after_observation") or 0,
+                                              item.get("before_observation") or 0))
+        return row
 
     @staticmethod
     def context(target, snapshot):
@@ -39,6 +52,7 @@ class SamplingProgress:
             "last_effective_view": copy.deepcopy(target.get("last_effective_view")),
             "road": {key: copy.deepcopy(road.get(key)) for key in ("onRoad", "atNode", "headingErrorDeg",
                 "leftClearanceCm", "rightClearanceCm", "frontClearanceCm", "exits")},
+            "sampling_path_support": copy.deepcopy(snapshot.get("sampling_path_support") or {}),
             "holding": snapshot.get("holding", {}).get("holding")}
 
     @staticmethod
@@ -51,6 +65,10 @@ class SamplingProgress:
             return None
         if set(after["accepted_hit_frames"]) - set(before["accepted_hit_frames"]):
             return "new_accepted_hit"
+        old_paths = set(before.get("sampling_path_support", {}).get("reverse_lengths_cm", []))
+        new_paths = set(after.get("sampling_path_support", {}).get("reverse_lengths_cm", []))
+        if new_paths - old_paths:
+            return "new_verified_reverse_path_option"
         if before.get("visible_unique") is not True:
             return "fresh_unique_visibility_reacquired"
         a, b = before["pose"], after["pose"]
@@ -79,9 +97,19 @@ class SamplingProgress:
     def readiness(self, target, context):
         row = self.find(target)
         attempts = row["attempts"] if row else []
-        failure = next((item for item in reversed(attempts) if not item["success"]), None)
-        reason = self.new_evidence(failure["after_context"], context) if failure else None
-        blocked = failure is not None and reason is None
+        failures = [item for item in attempts if not item["success"]]
+        failure = failures[-1] if failures else None
+        # Every previous failed endpoint is an exhausted sampling intent. A
+        # turn cycle must differ substantively from *all* of them; frame/tick
+        # changes alone cannot reset a formerly tried view. Reacquisition is
+        # evaluated against each original missing-view context, so a later
+        # visible-but-unproductive failure still remains binding.
+        comparisons = [(item, self.new_evidence(item["after_context"], context))
+                       for item in failures]
+        blocking = next((item for item, change in reversed(comparisons) if change is None), None)
+        blocked = blocking is not None
+        reasons = list(dict.fromkeys(change for _, change in comparisons if change)) if not blocked else []
+        reason = comparisons[-1][1] if comparisons and not blocked else None
         visible = context["visible_unique"]
         effective = target.get("last_effective_view") or (row or {}).get("last_effective_view")
         compact = lambda item: {key: copy.deepcopy(item[key]) for key in ("before_observation", "after_observation",
@@ -89,8 +117,11 @@ class SamplingProgress:
         progress = {"schema": self.SCHEMA, "attempt_count": len(attempts),
             "last_effective_view": copy.deepcopy(effective), "last_failure": compact(failure) if failure else None,
             "recent_attempts": [compact(item) for item in attempts[-3:]],
+            "blocking_failure": compact(blocking) if blocking else None,
+            "failed_context_count": len(failures),
             "independent_hits_added": sum(item["independent_hits_added"] for item in attempts),
             "retry_blocked": blocked, "new_evidence_reason": reason,
+            "new_evidence_reasons": reasons,
             "no_blind_motion": not visible}
         return {"executable": bool(visible and not blocked),
             "reason": target["reason"] if not target.get("sampling_allowed") or not visible else
@@ -117,6 +148,11 @@ class SamplingProgress:
             "outcome_unknown": evidence.get("outcome_unknown") is True,
             "actual_travelled_cm": actual, "independent_hits_added": len(set(after["accepted_hit_frames"])-set(before["accepted_hit_frames"])),
             "step_count": len(proof.get("steps", [])), "before_context": copy.deepcopy(before), "after_context": copy.deepcopy(after),
+            "sampling_intent": {"action": "explore", "purpose": "confirm_discovery",
+                "canonical_object_id": oid, "hypothesis_id": row["hypothesis_id"],
+                "planned_views": [{key: copy.deepcopy(step[key]) for key in
+                    ("method", "params", "predicted_raw_distance_cm", "predicted_raw_bearing_deg") if key in step}
+                    for step in proof.get("steps", [])]},
             "sampling_evidence": copy.deepcopy(proof)}
         row["attempts"].append(item)
         row["last_effective_view"] = copy.deepcopy(after.get("last_effective_view") or before.get("last_effective_view"))

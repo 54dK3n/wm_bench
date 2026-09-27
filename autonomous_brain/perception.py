@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v13"
+VERSION = "autonomous-brain-perception/v14"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -123,6 +123,8 @@ class Perception:
         self._times: dict[str, dict[str, Any]] = {}
         self._accepted_poses: dict[str, list[dict[str, Any]]] = {}
         self._action_evidence: list[dict[str, Any]] = []
+        self._grab_authorizations: dict[str, dict[str, Any]] = {}
+        self._consumed_grab_authorizations: set[str] = set()
         self._delivered_positions: dict[str, dict[str, Any]] = {}
         self._delivery_aliases: dict[str, str] = {}
         self._unverified_releases: dict[str, dict[str, Any]] = {}
@@ -566,7 +568,7 @@ class Perception:
     def note_sampling_context(self, snapshot):
         """Cache only the already acquired public context; never observe or move."""
         self._sampling_public_context = {key: copy.deepcopy(snapshot.get(key)) for key in (
-            "observation_index", "odometry", "road", "holding")}
+            "observation_index", "odometry", "road", "holding", "sampling_path_support")}
         self._sampling_public_context["observation"] = {key: snapshot.get("observation", {}).get(key)
             for key in ("frameId", "tick")}
 
@@ -1125,6 +1127,85 @@ class Perception:
         return next((copy.deepcopy(item) for item in self.last_evidence["detections"]
                      if item["track_id"] == object_id), None)
 
+    def authorize_grab(self, object_id, snapshot, command_ref):
+        """Bind this command to the latest public identity and empty gripper.
+
+        Reading authorization never moves the gripper or revives a WM track.
+        Near pixels may corroborate an existing confirmation, but cannot create
+        one. Keep the complete competition matrix for independent replay.
+        """
+        frame = self.last_evidence or {}
+        row = self.confirmed(object_id)
+        reason = None
+        if self._discovery_canonical(object_id) != object_id:
+            reason = "canonical_identity_requires_new_decision"
+        elif row is None:
+            reason = "object_not_currently_confirmed"
+        elif row["category"] not in {"red-ball", "blue-ball"}:
+            reason = "object_is_not_a_ball"
+        elif (snapshot.get("holding") or {}).get("holding") is not False:
+            reason = "gripper_not_observed_empty"
+        elif (snapshot.get("observation") != frame.get("raw_observation")
+                or snapshot.get("odometry") != frame.get("odometry")
+                or snapshot.get("simulation_seconds") != frame.get("simulation_time_s")
+                or snapshot.get("perception") != frame
+                or type(snapshot.get("observation_index")) is not int
+                or type(frame.get("tick")) is not int):
+            reason = "grab_observation_not_current"
+        if reason:
+            return {"authorized": False, "reason": reason}
+        items = frame["detections"]
+        indices = [i for i, d in enumerate(items) if d.get("track_id") == object_id]
+        if len(indices) != 1 or items[indices[0]].get("identity_ambiguity"):
+            return {"authorized": False, "reason": "grab_identity_not_uniquely_visible"}
+        selected = indices[0]
+        tracks = [track for oid in self._history if oid not in self._delivery_aliases
+                  if (track := self.wm.get_object(oid, include_lost=True)) is not None]
+        positioned = [i for i, d in enumerate(items) if isinstance(d.get("position_m"), Mapping)
+                      and all(type(d["position_m"].get(k)) in (int, float)
+                              and math.isfinite(d["position_m"][k]) for k in ("x", "z"))]
+        if any(i not in positioned and d["category"] in {"red-ball", "blue-ball"}
+               for i, d in enumerate(items)):
+            return {"authorized": False, "reason": "grab_competition_geometry_unavailable"}
+        detections = [Detection(class_name=PUBLIC_TO_WM[d["category"]],
+            x=d["position_m"]["x"], z=d["position_m"]["z"], confidence=d["confidence"],
+            timestamp=self._last_timestamp, frame_id=self._last_frame, source=d["source"])
+            for i in positioned for d in [items[i]]]
+        costs = build_cost_matrix(tracks, detections, self.wm.aliases,
+                                  self.wm.assoc_cfg, now=self._last_timestamp)
+        # A ground-region projection can be unavailable. Keep its original
+        # index and empty candidate row; never omit a competing ball.
+        candidates = [[] for _ in items]
+        for j, source_index in enumerate(positioned):
+            candidates[source_index] = sorted({self._discovery_canonical(track.obj_id)
+                for i, track in enumerate(tracks) if math.isfinite(costs[i][j])})
+        matching_indices = [i for i, ids in enumerate(candidates) if object_id in ids]
+        if candidates[selected] != [object_id] or matching_indices != [selected]:
+            return {"authorized": False, "reason": "grab_identity_competition",
+                    "candidate_ids_by_detection": candidates,
+                    "target_detection_indices": matching_indices}
+        x, z = self.pose.to_local(row["position_m"]["x"], row["position_m"]["z"])
+        remaining = math.hypot(x, z) * 100
+        bearing = items[selected]["bearing_deg"]
+        if remaining > 22.5 or abs(bearing) > 3:
+            return {"authorized": False, "reason": "grab_geometry_not_authorized",
+                    "remembered_distance_cm": remaining, "bearing_deg": bearing}
+        if (command_ref.get("before_observation") != snapshot["observation_index"]
+                or type(command_ref.get("bridge_sequence")) is not int
+                or command_ref.get("bridge_request_id") != f"brain-{command_ref['bridge_sequence']:06d}"):
+            return {"authorized": False, "reason": "grab_command_reference_unavailable"}
+        proof = {"schema": "brain-grab-authorization/v1", "object": copy.deepcopy(row),
+            "canonical_object_id": object_id, "observation_index": snapshot["observation_index"],
+            "frame_id": frame["frame_id"], "tick": frame["tick"],
+            "simulation_time_s": self._last_timestamp, "holding": False,
+            "odometry": copy.deepcopy(frame["odometry"]),
+            "detection_index": selected, "detections": copy.deepcopy(items),
+            "candidate_ids_by_detection": candidates, "target_detection_indices": matching_indices,
+            "remembered_distance_cm": remaining, "bearing_deg": bearing,
+            "command_ref": copy.deepcopy(command_ref)}
+        self._grab_authorizations[command_ref["bridge_request_id"]] = copy.deepcopy(proof)
+        return {"authorized": True, "reason": "current_unique_confirmation", "evidence": proof}
+
     def original_position_evidence(self, original, category):
         """Absence needs a fresh, in-frame, unobstructed old-position view."""
         result = {"valid": False, "frame_id": self._last_frame, "matches": [],
@@ -1169,6 +1250,24 @@ class Perception:
         row = self.get_object(object_id)
         if row is None or self._times[object_id]["confirmed_s"] is None:
             return False
+        chain = evidence.get("grasp_chain")
+        if chain is not None:
+            grab = chain.get("grab", {}) if isinstance(chain, Mapping) else {}
+            authorization = grab.get("authorization")
+            stored = self._grab_authorizations.get(grab.get("bridge_request_id"))
+            if (not stored or grab.get("bridge_request_id") in self._consumed_grab_authorizations
+                    or authorization != stored or chain.get("schema") != "brain-grasp-chain/v1"
+                    or chain.get("object_id") != object_id or grab.get("object_id") != object_id
+                    or stored["canonical_object_id"] != object_id
+                    or stored["object"]["position_m"] != row["position_m"]
+                    or stored["object"]["category"] != row["category"]
+                    or grab.get("before_holding") is not False
+                    or any(grab.get(key) != value for key, value in stored["command_ref"].items())):
+                return False
+        elif row["state"] != "CONFIRMED":
+            # The low-level lifecycle API remains useful without an actuator,
+            # but past confirmation alone never authorizes a stale identity.
+            return False
         view = evidence.get("original_position_observation")
         if not isinstance(view, Mapping) or view.get("frame_id") != self._last_frame:
             return False
@@ -1186,6 +1285,8 @@ class Perception:
         if not self.wm.mark_removed(object_id, now=timestamp):
             return False
         self._lifecycle[object_id] = "HELD"
+        if chain is not None:
+            self._consumed_grab_authorizations.add(chain["grab"]["bridge_request_id"])
         self._times[object_id]["picked_s"] = timestamp
         self._times[object_id]["original_position_m"] = copy.deepcopy(row["position_m"])
         self._action_evidence.append({"action": "pick", "object_id": object_id,

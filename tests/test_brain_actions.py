@@ -15,7 +15,7 @@ class ActionEvidenceTests(unittest.TestCase):
                     "holding": {"holding": False},
                     "road": {"onRoad": True, "frontClearanceCm": 100},
                     "perception": {"detections": []}}
-        runtime = SimpleNamespace(snapshot=snapshot, pending_grasp=None,
+        runtime = SimpleNamespace(snapshot=snapshot, pending_grasp=None, round=1,
             perception=SimpleNamespace(confirmed=lambda oid: target, get_object=lambda oid: target,
                                        visible=lambda oid: detected, objects=lambda: []),
             bridge=SimpleNamespace(seconds=0, max_seconds=1200),

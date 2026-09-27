@@ -7,17 +7,67 @@ from __future__ import annotations
 
 from collections import defaultdict
 from contextlib import redirect_stdout
+from dataclasses import dataclass
 import hashlib
 import io
 import json
 import math
 from pathlib import Path
 import tempfile
+from types import MappingProxyType
 
 from autonomous_brain.actions import ball_inside_region, reacquisition_chains
 from autonomous_brain.llm import LLMClient, _strict_loads, validate_action
 from world_model.calibration import CameraCalibration
-from world_model.providers.guangyang import odometry_to_pose
+from world_model.providers.guangyang import odometry_to_pose, guangyang_static_association_config
+
+
+@dataclass(frozen=True)
+class RuntimeEvidenceCapability:
+    contract: str
+    requires_grasp_chain: bool
+    requires_release_command_ref: bool
+    requires_discovery_v2: bool
+    requires_grab_authorization: bool = False
+
+
+# Historical v1-v14 may use the existing same-action holding/bridge grab join
+# and the geometric release-boundary join without a command_ref. If a chain or
+# reference is present it is still checked in full. This allowance never grants
+# legacy cross-action grasp confirmation, nor bypasses an original CONFIRMED
+# identity check in a supplied chain. Historical discovery v1 remains readable.
+_LEGACY_EVIDENCE = RuntimeEvidenceCapability("legacy_same_action", False, False, False)
+_COMMAND_CHAIN_EVIDENCE = RuntimeEvidenceCapability("explicit_command_chain", True, True, True)
+_AUTHORIZED_COMMAND_CHAIN_EVIDENCE = RuntimeEvidenceCapability("authorized_command_chain", True, True, True, True)
+RUNTIME_EVIDENCE_CAPABILITIES = MappingProxyType({
+    "autonomous-brain-runtime/v1": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v2": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v3": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v4": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v5": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v6": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v7": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v8": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v9": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v10": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v11": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v12": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v13": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v14": _LEGACY_EVIDENCE,
+    "autonomous-brain-runtime/v15": _COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v16": _COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v17": _COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v18": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
+})
+
+
+def runtime_evidence_capability(summary):
+    """No version inference, numeric/string ordering or future-version fallback."""
+    version = summary.get("runtime_version")
+    if version is None:
+        return None, "runtime_evidence_version_missing"
+    capability = RUNTIME_EVIDENCE_CAPABILITIES.get(version) if isinstance(version, str) else None
+    return capability, None if capability is not None else "runtime_evidence_version_unsupported"
 
 
 def number(value):
@@ -91,7 +141,120 @@ def original_absence_verified(basis, grab, observed, bridge):
         return False
 
 
+def grab_authorization_verified(grab, source, bridge, aliases):
+    """Recompute the v18 pre-grab identity gate from public pixels and objects.
+
+    Every raw box of the target category competes with every public historical
+    identity of that category. The matrix in the authorization is a claim to
+    compare, never the source of candidate identities. Other categories cannot
+    enter the frozen profile's same-class gate.
+    """
+    try:
+        proof = grab["authorization"]
+        oid = grab["object_id"]
+        objects = source["objects"]
+        targets = [obj for obj in objects if obj["id"] == oid]
+        if (len(targets) != 1 or targets[0]["category"] not in {"red-ball", "blue-ball"}
+                or targets[0]["state"] != "CONFIRMED" or targets[0].get("identity_ambiguity")
+                or proof.get("schema") != "brain-grab-authorization/v1" or proof.get("object") != targets[0]
+                or proof.get("canonical_object_id") != oid or proof.get("holding") is not False
+                or source["holding"]["holding"] is not False
+                or proof.get("observation_index") != source["observation_index"]
+                or proof.get("frame_id") != frame(source) or proof.get("tick") != source["observation"]["tick"]
+                or proof.get("simulation_time_s") != source["simulation_seconds"]
+                or proof.get("odometry") != source["odometry"]
+                or proof.get("command_ref") != {k: grab[k] for k in
+                    ("round", "before_observation", "bridge_sequence", "bridge_request_id")}):
+            return False
+        def root(oid):
+            seen = set()
+            while oid in aliases:
+                if oid in seen:
+                    raise ValueError("cyclic identity aliases")
+                seen.add(oid)
+                oid = aliases[oid]
+            return oid
+        if root(oid) != oid:
+            return False
+        cameras = [call["terminal"]["result"] for call in bridge
+                   if call.get("request", {}).get("method") == "camera_parameters"
+                   and (call.get("terminal") or {}).get("status") == "completed"]
+        if not cameras or any(camera != cameras[0] for camera in cameras):
+            return False
+        camera = cameras[0]
+        raw = source["observation"]["detections"]
+        converted = source["perception"]["detections"]
+        selected = proof["detection_index"]
+        matrix = proof["candidate_ids_by_detection"]
+        if (proof.get("detections") != converted or len(raw) != len(converted) or len(matrix) != len(raw)
+                or type(selected) is not int or not 0 <= selected < len(raw)
+                or raw[selected]["category"] != targets[0]["category"]
+                or [i for i, item in enumerate(converted) if item.get("track_id") == oid] != [selected]
+                or converted[selected].get("identity_ambiguity")):
+            return False
+        pose = odometry_to_pose(source["odometry"])
+        cfg = guangyang_static_association_config()
+        if cfg.allow_cross_class:
+            return False  # This frozen contract has no cross-class candidates.
+        target_indices = []
+        selected_bearing = None
+        for index, detection in enumerate(raw):
+            if detection["category"] != targets[0]["category"]:
+                if oid in matrix[index]:
+                    return False
+                continue
+            item = converted[index]
+            if (box_key(detection) is None or box_key(detection) != box_key(item)
+                    or str(item.get("frame_id")) != frame(source) or detection.get("source") != "virtual-cv"):
+                return False
+            box = detection["bbox"]
+            beta = math.atan2(box["x"] + box["w"] / 2 - camera["cx"], camera["fx"])
+            reading = math.floor(min(100., max(.625, 5.5 * camera["fy"] / max(1., box["w"])
+                / max(.35, math.cos(beta)) + camera["mount"]["forwardCm"])) + .5)
+            beta = math.radians(float(f"{math.degrees(beta):.2f}"))
+            rho = 1.6239 + 1.0187 * reading / math.cos(beta)
+            local_x, local_z = rho * math.sin(beta) / 100, (5.1557 + rho * math.cos(beta)) / 100
+            x, z = pose.to_world(local_x, local_z)
+            bearing = math.degrees(math.atan2(local_x, local_z))
+            if (any(not number(item.get("position_m", {}).get(k)) or abs(item["position_m"][k] - value) > 1e-8
+                    for k, value in (("x", x), ("z", z)))
+                    or not number(item.get("bearing_deg")) or abs(item["bearing_deg"] - bearing) > 1e-8):
+                return False
+            candidates = set()
+            for obj in objects:
+                if obj["category"] != detection["category"]:
+                    continue
+                gate = min(cfg.gate_distance_m + cfg.max_speed_mps * max(0., source["simulation_seconds"] - obj["last_seen_s"]),
+                           cfg.max_gate_distance_m)
+                if math.hypot(x - obj["position_m"]["x"], z - obj["position_m"]["z"]) <= gate:
+                    candidates.add(root(obj["id"]))
+            if matrix[index] != sorted(candidates):
+                return False
+            if oid in candidates:
+                target_indices.append(index)
+            if index == selected:
+                if candidates != {oid}:
+                    return False
+                selected_bearing = bearing
+        original = targets[0]["position_m"]
+        remaining = math.hypot(*pose.to_local(original["x"], original["z"])) * 100
+        # These are the existing _pick_action execution gates, not new ranges.
+        return (target_indices == [selected] and proof["target_detection_indices"] == target_indices
+                and remaining <= 22.5 and abs(selected_bearing) <= 3
+                and number(proof.get("remembered_distance_cm"))
+                and abs(proof["remembered_distance_cm"] - remaining) <= 1e-8
+                and number(proof.get("bearing_deg")) and abs(proof["bearing_deg"] - selected_bearing) <= 1e-8)
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError, ZeroDivisionError, OverflowError):
+        return False
+
+
 def audit_observed_ledger(summary, observations, rounds, bridge, motions):
+    capability, version_failure = runtime_evidence_capability(summary)
+    contract = {"runtime_version": summary.get("runtime_version"),
+                "contract": capability.contract if capability is not None else None}
+    if version_failure:
+        return {"scope": "bridge_observation_action_and_delivery_evidence", "picks": [], "deliveries": [],
+                "runtime_evidence_capability": contract, "failures": [version_failure]}
     failures, deliveries, picks = [], [], []
     by_index = unique_index(observations, lambda r: r.get("observation_index"), failures, "observation_index")
     by_frame = unique_index(observations, frame, failures, "observation_frame")
@@ -169,6 +332,31 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
         return (type(first) is int and type(last) is int and first<=last
             and all(i in by_index and by_index[i].get("holding",{}).get("holding") is True for i in range(first,last+1)))
 
+    def authorization_aliases(source):
+        objects = source["objects"]
+        aliases = {oid: binding["terminal"]["id"] for oid, binding in reacquisition_chains(objects).items()}
+        retired = [obj for obj in objects if obj.get("state") == "LOST" and obj.get("ever_confirmed") is False]
+        ledger = source.get("discovery_evidence")
+        if retired and isinstance(ledger, dict) and ledger.get("schema") == "brain-discovery-evidence/v2":
+            index = source["observation_index"]
+            prefix = [row for row in observations if row["observation_index"] <= index]
+            prefix_bridge = bridge[:bridge_frames[frame(source)]["bridge_index"] + 1]
+            prefix_motions = [m for m in motions or [] if type(m.get("after_observation")) is int and m["after_observation"] <= index]
+            context = {"runtime_version": summary["runtime_version"],
+                "discovery_evidence": ledger, "final_objects": objects,
+                "action_evidence": [e for e in summary.get("action_evidence", [])
+                    if e.get("simulation_time_s", math.inf) <= source["simulation_seconds"]]}
+            audit = audit_unknown_discoveries(context, prefix, prefix_bridge, prefix_motions)
+            if set(audit["failures"]) - {"discovery_historical_obligations_unresolved"}:
+                raise ValueError("unverified discovery identity aliases")
+            resolutions = {row["discovery_id"]: row for row in audit["evidence"]["resolutions"]}
+            for obj in retired:
+                sources = [r for r in audit["evidence"]["records"] if r.get("initial_object_id") == obj["id"]]
+                targets = {resolutions[r["id"]]["canonical_object_id"] for r in sources if r["id"] in resolutions}
+                if sources and all(r["id"] in resolutions for r in sources) and len(targets) == 1:
+                    aliases[obj["id"]] = next(iter(targets))
+        return aliases
+
     def grasp_chain_verified(chain,basis,oid,index):
         try:
             grab,confirmation=chain["grab"],chain["confirmation"]
@@ -187,6 +375,9 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
             original=[o for o in by_index[before].get("objects",[]) if o.get("id")==oid]
             if (len(original)!=1 or original[0].get("state")!="CONFIRMED" or original[0].get("identity_ambiguity")
                     or original[0].get("category")!=grab.get("category") or original[0].get("position_m")!=grab.get("original_position_m")):
+                return False
+            if capability.requires_grab_authorization and not grab_authorization_verified(
+                    grab, by_index[before], bridge, authorization_aliases(by_index[before])):
                 return False
             moves=[m for m in (motions or []) if m.get("method")=="grab" and m.get("before_observation")==before and m.get("after_observation")==after]
             if len(moves)!=1 or moves[0].get("round")!=grab.get("round"):
@@ -249,8 +440,10 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
                     "confirmation_observation_index":index,"grab":chain.get("grab") if isinstance(chain,dict) else None,
                     "confirmation":chain.get("confirmation") if isinstance(chain,dict) else None})
                 continue
-            if summary.get("runtime_version") == "autonomous-brain-runtime/v15":
+            if capability.requires_grasp_chain:
                 failures.append("pick_command_identity_confirmation_chain_missing")
+                picks.append({"object_id": oid, "event_index": event_index, "verified": False,
+                              "confirmation_observation_index": index, "grab": None, "confirmation": None})
                 continue
             windows = action_window(index, "pick", oid) if type(index) is int else []
             valid = observed.get("holding", {}).get("holding") is True and len(windows) == 1
@@ -357,7 +550,7 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
                     c.get("request",{}).get("method") in {"grab","release"} for c in bridge[first+1:last])):
                     row_failures.append("delivery_intervening_gripper_command")
             reference=release.get("command_ref")
-            if reference is not None or summary.get("runtime_version")=="autonomous-brain-runtime/v15":
+            if reference is not None or capability.requires_release_command_ref:
                 commands=[(i,c) for i,c in enumerate(bridge) if isinstance(reference,dict)
                     and c.get("request",{}).get("requestId")==reference.get("bridge_request_id")]
                 m=release_motions[0]
@@ -384,7 +577,7 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
             "verified": not row_failures, "failures": row_failures})
         failures.extend(row_failures)
     return {"scope": "bridge_observation_action_and_delivery_evidence", "picks":picks, "deliveries": deliveries,
-            "failures": list(dict.fromkeys(failures))}
+            "runtime_evidence_capability": contract, "failures": list(dict.fromkeys(failures))}
 
 
 def audit_done_bytes(last, calls, progress, observations):
@@ -688,6 +881,11 @@ def audit_unknown_discoveries(summary, observations, bridge=None, motions=None):
     A v2 source requires original-pixel competition and separated views; empty
     later frames or delivered labels alone never resolve an obligation.
     """
+    capability, version_failure = runtime_evidence_capability(summary)
+    if version_failure:
+        return {"evidence": {"schema": "brain-discovery-evidence/v2",
+                            "unresolved": [{"id": "unsupported-runtime-evidence-contract"}]},
+                "failures": [version_failure]}
     if (summary.get("discovery_evidence") or {}).get("schema")=="brain-discovery-evidence/v2":
         try:
             return audit_discovery_lifecycle(summary,observations,bridge or [],motions or [])
@@ -695,7 +893,7 @@ def audit_unknown_discoveries(summary, observations, bridge=None, motions=None):
             return {"evidence":{"schema":"brain-discovery-evidence/v2","unresolved":[{"id":"malformed-discovery-proof"}]},
                     "failures":["discovery_lifecycle_evidence_malformed"]}
     failures, expected = [], []
-    if summary.get("runtime_version")=="autonomous-brain-runtime/v15":
+    if capability.requires_discovery_v2:
         failures.append("discovery_v2_ledger_missing")
     def same_ledger(ledger):
         if not isinstance(ledger, dict) or ledger.get("schema") != "brain-discovery-evidence/v1":

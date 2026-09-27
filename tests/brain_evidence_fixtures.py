@@ -66,7 +66,9 @@ def task_fixture():
             "evidence": dict(copy.deepcopy(basis), object_id=oid, before_observation=start, final_observation=final)}})
     before, final = observe(5, False), observe(5, False)
     spec = parse_task("把两个红球送到绿色存放区")
-    summary = {"task": spec["source_instruction"], "task_spec": spec, "action_evidence": events,
+    # This synthetic fixture intentionally exercises the pre-command-chain contract.
+    summary = {"runtime_version": "autonomous-brain-runtime/v14",
+        "task": spec["source_instruction"], "task_spec": spec, "action_evidence": events,
         "final_objects": copy.deepcopy(objects), "held_object_id": None, "pending_grasp": None,
         "junction_history": [{"exits": [{"completed": False}]}]}
     progress = completion_progress(objects, events, spec, holding=False, nodes=1, unexplored=1)

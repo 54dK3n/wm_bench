@@ -11,7 +11,7 @@ import math
 from .navigation import distance, position, wrap
 from .perception import RANGE_CAL
 
-VERSION = "brain-confirmation-sampling/v2"
+VERSION = "brain-confirmation-sampling/v3"
 MAX_STEPS = 12
 MAX_TRAVEL_CM = 120
 
@@ -29,57 +29,140 @@ def _reading(point, xy, heading):
     return raw, math.degrees(beta)
 
 
-def _reverse_support(actions, length, snapshot=None):
-    """Only a collinear part of a recorded, accepted road motion may be backed.
+def _observed_motion_window(actions, first, snapshot):
+    """Read a complete registered window; absent motion is only stationary."""
+    from .road_evidence import RoadEvidence
+    getter = getattr(actions.r.roads, 'observation_records', None)
+    last = snapshot.get('observation_index')
+    if not callable(getter) or type(first) is not int or type(last) is not int or first > last:
+        return None
+    window = getter(first, last)
+    if not isinstance(window, dict) or window.get('invalid_observation_indices'):
+        return None
+    frames, motions = window.get('observations', []), window.get('motions', [])
+    if [f.get('observation_index') for f in frames] != list(range(first, last + 1)):
+        return None
+    if (not frames or any(not RoadEvidence.sensor_valid(f) for f in frames)
+            or any(frames[-1].get(k) != snapshot.get(k) for k in ('odometry', 'road'))
+            or any(frames[-1]['observation'].get(k) != snapshot.get('observation', {}).get(k)
+                   for k in ('frameId', 'tick'))):
+        return None
+    by_pair = {}
+    for motion in motions:
+        pair = (motion.get('before_observation'), motion.get('after_observation'))
+        if pair in by_pair or motion.get('outcome_unknown'):
+            return None
+        by_pair[pair] = motion
+    expected_pairs = {(a['observation_index'], b['observation_index']) for a, b in zip(frames, frames[1:])}
+    if set(by_pair) - expected_pairs:
+        return None
+    for a, b in zip(frames, frames[1:]):
+        motion = by_pair.get((a['observation_index'], b['observation_index']))
+        if not RoadEvidence.step_valid(a, b, motion):
+            return None
+        if (motion is not None and motion['method'] == 'turn'
+                and abs(b['odometry']['distanceCm'] - a['odometry']['distanceCm']) > .2):
+            return None  # A stationary heading change cannot account for extra travel.
+    return frames, by_pair
 
-    No inferred link between nearby roads, no blind rear clearance assumption,
-    no straight reverse of a curve. Fresh local side clearance is checked too.
+
+def _recorded_translation_support(actions, length, method, snapshot=None):
+    """Cover a straight requested path with a continuous actual motion suffix.
+
+    Every segment and intervening observation is checked. Backtracking may
+    revisit the same interval, but never increases its covered extent. No
+    distance sum, proximity bridge, unseen node crossing or curved shortcut.
     """
+    from .actions import road_translation_limit
     getter = getattr(actions.r.roads, 'road_segment_records', None)
-    if getter is None:
+    if (not callable(getter) or method not in {'forward', 'backward'}
+            or type(length) not in (int, float) or not math.isfinite(length)
+            or not .2 <= length <= MAX_TRAVEL_CM):
         return None
     snapshot = actions.s if snapshot is None else snapshot
-    p = position(snapshot['odometry'])
-    theta = math.radians(snapshot['odometry']['headingDeg'])
-    q = (p[0]+length/100*math.sin(theta),p[1]-length/100*math.cos(theta))
-    segments=getter()
-    for index in range(len(segments)-1,-1,-1):
-        segment=segments[index]
-        a,b = segment['departure'],segment['arrival']
-        start,end = a['position_m'],b['position_m']
-        chord = distance(start,end)*100
-        if (chord < .2 or abs(chord-segment['travelled_cm']) > .2
-                or abs(wrap(a['travel_heading_deg']-b['travel_heading_deg'])) > .2
-                or abs(wrap(b['travel_heading_deg']-snapshot['odometry']['headingDeg'])) > .2):
-            continue
-        def on_segment(point):
-            vx,vz=end[0]-start[0],end[1]-start[1]
-            along=((point[0]-start[0])*vx+(point[1]-start[1])*vz)/(chord/100)**2
-            projected=(start[0]+along*vx,start[1]+along*vz)
-            return 0<=along<=1 and distance(point,projected)<=.002
+    odo = snapshot['odometry']
+    p = position(odo)
+    theta = math.radians(odo['headingDeg'])
+    sign = 1 if method == 'forward' else -1
+    unit = (-sign * math.sin(theta), sign * math.cos(theta))
+    q = (p[0] + length / 100 * unit[0], p[1] + length / 100 * unit[1])
+    permitted, clearance = road_translation_limit(snapshot['road'], method, length)
+    if permitted + 1e-9 < length:
+        return None
 
-        # Explicit perpendicular error, not ellipse excess: a long segment
-        # must not authorize a parallel neighbouring lane. Require actual
-        # continuous recorded motion from its arrival to the present pose.
-        cursor=end
-        continuous=True
-        for later in segments[index+1:]:
-            departure=later['departure']['position_m'];arrival=later['arrival']['position_m']
-            if (distance(cursor,departure)>.002 or not on_segment(departure)
-                    or not on_segment(arrival)
-                    or abs(distance(departure,arrival)*100-later['travelled_cm'])>.2):
-                continuous=False
+    def coordinates(point):
+        dx, dz = (point[0] - p[0]) * 100, (point[1] - p[1]) * 100
+        return dx * unit[0] + dz * unit[1], dx * unit[1] - dz * unit[0]
+
+    segments = sorted(getter(), key=lambda s: s['after_observation'])
+    selected, intervals = [], []
+    cursor, end_index = p, snapshot['observation_index']
+    for segment in reversed(segments):
+        a, b = segment['departure'], segment['arrival']
+        start, end = a['position_m'], b['position_m']
+        chord = distance(start, end) * 100
+        x, lateral_a = coordinates(start)
+        y, lateral_b = coordinates(end)
+        if (segment['after_observation'] > end_index or distance(end, cursor) > .002
+                or chord < .2 or abs(chord - segment['travelled_cm']) > .2
+                or max(abs(lateral_a), abs(lateral_b)) > .2
+                or abs(wrap(a['travel_heading_deg'] - b['travel_heading_deg'])) > .2
+                or min(abs(wrap(b['travel_heading_deg'] - odo['headingDeg'])),
+                       abs(wrap(b['travel_heading_deg'] - odo['headingDeg'] - 180))) > .2):
+            return None
+        selected.insert(0, segment)
+        intervals.append((min(x, y), max(x, y)))
+        cursor, end_index = start, segment['before_observation']
+        # Union actual collinear intervals, without counting repeated travel.
+        covered = 0.
+        for left, right in sorted(intervals):
+            if left > covered + 1e-7:
                 break
-            cursor=arrival
-        if continuous and distance(cursor,p)<=.002 and all(on_segment(x) for x in (p,q)):
-            if b['at_node'] and distance(p,end)*100>.2:
+            covered = max(covered, right)
+        if covered + 1e-7 < length:
+            continue
+        window = _observed_motion_window(actions, selected[0]['before_observation'], snapshot)
+        if window is None:
+            return None
+        frames, motions = window
+        selected_pairs = {(s['before_observation'], s['after_observation']): s for s in selected}
+        for pair, motion in motions.items():
+            if motion['method'] == 'turn':
+                # Turns can bridge registered stationary frames, never a kink
+                # within a translated interval; current axis still must agree.
                 continue
-            return {'segment_id':segment['segment_id'],
-                    'continuation_segment_ids':[s['segment_id'] for s in segments[index+1:]],
-                    'before_observation':segment['before_observation'],
-                    'after_observation':segment['after_observation'],
-                    'position_m':list(p),'planned_position_m':list(q)}
+            saved = selected_pairs.get(pair)
+            if saved is None or saved['motion'] != motion:
+                return None
+        for frame in frames:
+            along, across = coordinates(position(frame['odometry']))
+            if (abs(across) > .2 or frame['road'].get('atNode')
+                    and .2 < along < length - .2):
+                return None
+        return {'schema': 'brain-recorded-translation-support/v1',
+                'method': method, 'requested_cm': length, 'body_heading_deg': odo['headingDeg'],
+                'segment_id': selected[0]['segment_id'],
+                'segment_ids': [s['segment_id'] for s in selected],
+                'continuation_segment_ids': [s['segment_id'] for s in selected[1:]],
+                'segments': copy.deepcopy(selected),
+                'before_observation': selected[0]['before_observation'],
+                'after_observation': selected[0]['after_observation'],
+                'last_motion_observation': selected[-1]['after_observation'],
+                'current_observation_index': snapshot['observation_index'],
+                'observation_refs': [{'observation_index': f['observation_index'],
+                    'frame_id': str(f['observation']['frameId']), 'tick': f['observation']['tick']}
+                    for f in frames],
+                'motion_refs': [{'before_observation': a, 'after_observation': b,
+                    'method': motion['method']} for (a, b), motion in sorted(motions.items())],
+                'covered_intervals_cm': [list(i) for i in sorted(intervals)],
+                'position_m': list(p), 'planned_position_m': list(q),
+                'road_clearance': clearance}
     return None
+
+
+def _reverse_support(actions, length, snapshot=None):
+    """Backward-compatible entry point for recorded backward translations."""
+    return _recorded_translation_support(actions, length, 'backward', snapshot)
 
 
 def _translation_choices(actions, target, snapshot, remaining, rejections):
@@ -224,8 +307,18 @@ def _restore_plan(actions, before, target, entry, remaining):
     after=actions.s
     det=target.get('current_detection')
     if (not det or not 40<=det['raw_distance_cm']<90 or abs(det['raw_bearing_deg'])>35
+            or str(det.get('frame_id'))!=str(before.get('observation',{}).get('frameId'))
             or not before['road'].get('onRoad') or not after['road'].get('onRoad')):
         return None,'previous_unique_admitted_view_unavailable'
+    observed=_observed_motion_window(actions,before['observation_index'],after)
+    if observed is None:return None,'restore_previous_motion_not_verified'
+    _,motions=observed
+    motion=motions.get((before['observation_index'],after['observation_index']))
+    if (len(motions)!=1 or motion is None or motion['method']!=entry['method']
+            or motion.get('params')!=entry.get('params')
+            or entry.get('before_observation')!=before['observation_index']
+            or entry.get('after_observation')!=after['observation_index']):
+        return None,'restore_previous_motion_reference_mismatch'
     p,q=position(before['odometry']),position(after['odometry'])
     old_heading=before['odometry']['headingDeg']
     heading=after['odometry']['headingDeg']
@@ -242,17 +335,24 @@ def _restore_plan(actions, before, target, entry, remaining):
         angle=wrap(old_heading-heading)
         if abs(angle)<1:return None,'restore_turn_below_legal_minimum'
         plan.update(method='turn',params={'angleDeg':angle,'speed':50})
-    elif entry['method'] in {'forward','follow_road'}:
+    elif entry['method'] in {'forward','follow_road','backward'}:
         length=distance(p,q)*100
         if length<.2 or length>remaining:return None,'restore_outside_remaining_travel_budget'
-        support=_reverse_support(actions,length)
+        inverse='forward' if entry['method']=='backward' else 'backward'
+        permitted,clearance=road_translation_limit(after['road'],inverse,length)
+        if permitted+1e-9<length:return None,'restore_local_road_clearance_insufficient'
+        support=_recorded_translation_support(actions,length,inverse)
         if support is None:return None,'reverse_path_not_continuously_observed'
         if (distance(support['planned_position_m'],p)>.002
                 or abs(wrap(heading-old_heading))>.2):
             return None,'reverse_would_not_restore_observed_view'
-        permitted,clearance=road_translation_limit(after['road'],'backward',length)
-        if permitted+1e-9<length:return None,'restore_local_road_clearance_insufficient'
-        plan.update(method='backward',params={'distanceCm':length,'speed':30},
+        last=support['segments'][-1]
+        if (last['method']!=entry['method'] or last['before_observation']!=before['observation_index']
+                or last['after_observation']!=after['observation_index']
+                or entry.get('before_observation')!=before['observation_index']
+                or entry.get('after_observation')!=after['observation_index']):
+            return None,'restore_previous_motion_reference_mismatch'
+        plan.update(method=inverse,params={'distanceCm':length,'speed':30},
                     reverse_path_support=support,road_clearance=clearance)
     else:
         return None,'no_proven_inverse_motion_for_previous_step'
@@ -358,6 +458,8 @@ def sample_discovery(actions, discovery_id):
             return finish(False,'confirmation_no_safe_independent_viewpoint',target)
         before,entry,fresh,failure=perform(plan,target)
         if failure:return finish(False,failure,fresh)
+        if locked is not None and fresh is not None and (fresh.get('associated_object') or {}).get('id')!=locked:
+            return finish(False,'confirmation_identity_changed',fresh)
         current=(fresh or {}).get('current_detection')
         prior=target['current_detection']
         lost_window=bool(current and 40<=prior['raw_distance_cm']<90
