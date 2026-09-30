@@ -354,6 +354,65 @@ class RoadMemory:
         """
         return copy.deepcopy(list(self._road_segments.values()))
 
+    def observed_road_return_support(self, frame):
+        """A bounded reverse road attempt from an unchanged measured endpoint.
+
+        This query neither joins nearby positions nor declares the reverse
+        traversal successful. Its caller must turn, observe, and check the
+        current road before sending any return translation.
+        """
+        def synchronized(row):
+            odo, road, sensor = row.get("odometry", {}), row.get("road", {}), row.get("observation", {})
+            return (all(number(odo.get(k)) for k in ("rightCm", "forwardCm", "headingDeg", "distanceCm", "tick"))
+                    and sensor.get("frameId") is not None and sensor.get("tick") == odo["tick"]
+                    and road.get("tick") == odo["tick"] and road.get("onRoad") is True
+                    and type(row.get("holding", {}).get("holding")) is bool)
+        if (not synchronized(frame) or frame["road"].get("atNode") is not False
+                or self._latest_index != frame["observation_index"]):
+            return None
+        point, odo = position(frame["odometry"]), frame["odometry"]
+        incoming = [s for s in self._road_segments.values() if tuple(s["arrival"]["position_m"]) == point]
+        if not incoming:
+            return None
+        segment = max(incoming, key=lambda s: s["after_observation"])
+        if (segment["method"] not in {"take_exit", "follow_road"}
+                or segment["execution"]["kind"] != "road_following"
+                or segment["departure"]["at_node"] is not True
+                or segment["motion"].get("outcome_unknown")
+                or not segment["motion"].get("bridge_request_id")):
+            return None
+        start, end = segment["before_observation"], segment["after_observation"]
+        window = self.observation_records(start, frame["observation_index"])
+        rows = {row["observation_index"]: row for row in window["observations"]}
+        if (window["invalid_observation_indices"] or any(i not in rows for i in range(start, frame["observation_index"]+1))
+                or any(m["after_observation"] > end for m in window["motions"])):
+            return None
+        for i, row in rows.items():
+            if not synchronized(row) or row["holding"]["holding"] != frame["holding"]["holding"]:
+                return None
+            if i >= end and (position(row["odometry"]) != point
+                    or any(row["odometry"][k] != odo[k] for k in ("headingDeg", "distanceCm"))
+                    or row["road"].get("atNode") is not False):
+                return None
+        if (snapshot(rows[frame["observation_index"]]) != snapshot(frame)
+                or any(rows[frame["observation_index"]].get("observation", {}).get(k)
+                       != frame.get("observation", {}).get(k) for k in ("frameId", "tick"))):
+            return None
+        reverse = self._approach_edges.get(point, {}).get(tuple(segment["departure"]["position_m"]))
+        if (reverse is None or reverse.get("execution", {}).get("kind") != "road_following"
+                or abs(wrap(reverse["departure"]["travel_heading_deg"]-odo["headingDeg"]-180)) > 10
+                or self.edge_passage_blocked(reverse) is not None):
+            return None
+        return {"segment_id": segment["segment_id"], "segment_version": segment["segment_version"],
+            "direction": "reverse_attempt", "execution_kind": "road_following",
+            "before_observation": start, "after_observation": end,
+            "current_observation": frame["observation_index"],
+            "motion_request_id": segment["motion"]["bridge_request_id"],
+            "current_position_m": list(point), "target_anchor": copy.deepcopy(segment["departure"]),
+            "return_heading_deg": wrap(odo["headingDeg"]+180),
+            "max_travel_cm": min(segment["travelled_cm"], reverse["travelled_cm"]),
+            "holding": frame["holding"]["holding"]}
+
     def observation_records(self, first, last):
         """Copy registered public sensor/motion records for a closed window.
 

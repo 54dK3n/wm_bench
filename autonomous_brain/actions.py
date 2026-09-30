@@ -680,44 +680,129 @@ class Actions:
                 return finish(True, "road_node_observed")
         return finish(False, "junction_stop_not_observed_after_bounded_recovery")
 
-    def return_from_blocked_road(self, blocked_result):
+    def return_from_blocked_road(self, blocked_result, *, pre_motion_rejection=None, return_support=None):
         """Turn back and follow the observed road, including its bends."""
+        proof = return_support
+        def finish(reason, **evidence):
+            if blocked_result is not None:
+                evidence["actuator_result"] = blocked_result
+            if pre_motion_rejection is not None:
+                evidence.update(pre_motion_rejection=copy.deepcopy(pre_motion_rejection),
+                                recorded_road_return=copy.deepcopy(proof))
+            return self.result(False, reason, **evidence)
+        def record_step(method, before, sequence):
+            if proof is not None:
+                proof.setdefault("steps", []).append({"method": method,
+                    "before_observation": before, "after_observation": self.s["observation_index"],
+                    "bridge_request_id": f"brain-{sequence+1:06d}" if type(sequence) is int else None})
+        stop_reason = ((blocked_result or {}).get("stoppedBy") or
+                       (pre_motion_rejection or {}).get("reason"))
         self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
                                      "tick": self.s["odometry"]["tick"],
-                                     "reason": blocked_result.get("stoppedBy")})
+                                     "reason": stop_reason})
         self.r.roads.mark_blocked()
-        if not self.s["road"]["onRoad"] or blocked_result.get("stoppedBy") == "off_road":
-            return self.result(False, "not_on_observed_road", actuator_result=blocked_result)
+        if not self.s["road"]["onRoad"] or stop_reason == "off_road":
+            return finish("not_on_observed_road")
         if self.s["road"].get("atNode"):
-            return self.result(False, "road_blocked_at_junction", actuator_result=blocked_result)
+            return finish("road_blocked_at_junction")
+        start_distance = self.s["odometry"].get("distanceCm") if proof is not None else None
+        last_observation, sequence = self.s["observation_index"], getattr(self.r.bridge, "sequence", None)
         self.turn(180)
+        record_step("turn", last_observation, sequence)
         for step in range(45):
             if not self.s["road"]["onRoad"]:
-                return self.result(False, "blocked_road_return_left_road", actuator_result=blocked_result)
+                return finish("blocked_road_return_left_road")
+            length = 20
+            if proof is not None:
+                road, odo = self.s["road"], self.s["odometry"]
+                travelled = odo["distanceCm"]-start_distance
+                proof["actual_travel_cm"] = travelled
+                if (self.s["holding"].get("holding") is not proof["holding"]
+                        or getattr(self.r, "pending_grasp", None) is not None):
+                    return finish("blocked_road_return_holding_unverified")
+                if (self.s.get("observation", {}).get("tick") != odo["tick"]
+                        or road.get("tick") != odo["tick"]
+                        or self.s["observation_index"] <= last_observation
+                        or not all(type(road.get(k)) in (int, float) and math.isfinite(road[k])
+                            for k in ("headingErrorDeg", "leftClearanceCm", "rightClearanceCm", "frontClearanceCm"))):
+                    return finish("blocked_road_return_current_sensors_unverified")
+                if step == 0 and (list(position(odo)) != proof["current_position_m"]
+                        or abs(wrap(odo["headingDeg"]-proof["return_heading_deg"])) > .2):
+                    return finish("blocked_road_return_turn_unverified")
+                if travelled < 0 or travelled > proof["max_travel_cm"]+.2:
+                    return finish("blocked_road_return_recorded_distance_exceeded")
             if self.s["road"].get("atNode"):
-                return self.result(False, "road_blocked_returned_to_junction",
-                                   actuator_result=blocked_result, recovery_steps=step)
+                return finish("road_blocked_returned_to_junction", recovery_steps=step)
+            if proof is not None:
+                length = min(20, proof["max_travel_cm"]-travelled,
+                             max(0, road["frontClearanceCm"]-.1))
+                if (length < 10 or abs(wrap(road["headingErrorDeg"])) > 10
+                        or min(road["leftClearanceCm"], road["rightClearanceCm"]) <= .1):
+                    return finish("blocked_road_return_no_safe_legal_step")
             before = position(self.s["odometry"])
-            result = self.move("follow_road", {"distanceCm": 20, "speed": 30})
+            before_observation, sequence = self.s["observation_index"], getattr(self.r.bridge, "sequence", None)
+            before_frame = self.s.get("observation", {}).get("frameId")
+            before_tick = self.s["odometry"]["tick"]
+            result = self.move("follow_road", {"distanceCm": length, "speed": 30})
+            record_step("follow_road", before_observation, sequence)
+            if proof is not None:
+                proof["actual_travel_cm"] = self.s["odometry"]["distanceCm"]-start_distance
+                if self.s["holding"].get("holding") is not proof["holding"]:
+                    return finish("blocked_road_return_holding_unverified", recovery_result=result)
+                if (self.s["observation_index"] <= before_observation
+                        or str(self.s.get("observation", {}).get("frameId")) == str(before_frame)
+                        or self.s["odometry"]["tick"] <= before_tick
+                        or self.s.get("observation", {}).get("tick") != self.s["odometry"]["tick"]
+                        or self.s["road"].get("tick") != self.s["odometry"]["tick"]):
+                    return finish("blocked_road_return_current_sensors_unverified", recovery_result=result)
+                if proof["actual_travel_cm"] > proof["max_travel_cm"]+.2:
+                    return finish("blocked_road_return_recorded_distance_exceeded", recovery_result=result)
+                if result.get("accepted") is not True or result.get("stoppedBy") in {
+                        "collision", "front_clearance", "wrong_way"}:
+                    return finish("blocked_road_return_blocked", recovery_result=result)
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
-                return self.result(False, "blocked_road_return_left_road",
-                                   actuator_result=blocked_result, recovery_result=result)
+                return finish("blocked_road_return_left_road", recovery_result=result)
             if self.observed_road_node():
-                return self.result(False, "road_blocked_returned_to_junction",
-                                   actuator_result=blocked_result, recovery_result=result,
-                                   recovery_steps=step + 1)
+                return finish("road_blocked_returned_to_junction", recovery_result=result, recovery_steps=step + 1)
             if result.get("stoppedBy") == "junction":
+                if proof is not None:
+                    return finish("blocked_road_return_junction_not_observed", recovery_result=result,
+                                  recovery_steps=step + 1)
                 recovery = self.recover_unobserved_junction(result)
-                return self.result(False, "road_blocked_returned_to_junction" if recovery["success"]
+                return finish("road_blocked_returned_to_junction" if recovery["success"]
                                    else "blocked_road_return_junction_not_observed",
-                                   actuator_result=blocked_result, recovery_result=result,
-                                   recovery_steps=step + 1,
-                                   junction_recovery=recovery["evidence"]["junction_recovery"])
+                              recovery_result=result, recovery_steps=step + 1,
+                              junction_recovery=recovery["evidence"]["junction_recovery"])
             moved = distance(before, position(self.s["odometry"])) * 100
             if moved < 0.2 or result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
-                return self.result(False, "blocked_road_return_blocked",
-                                   actuator_result=blocked_result, recovery_result=result)
-        return self.result(False, "blocked_road_return_incomplete", actuator_result=blocked_result)
+                return finish("blocked_road_return_blocked", recovery_result=result)
+            last_observation = before_observation
+        return finish("blocked_road_return_incomplete")
+
+    def return_after_known_road_rejection(self, failure):
+        """Recover only a known unsent forward request with recorded road support."""
+        if (failure.reason != "directed_passage_still_blocked"
+                or failure.evidence.get("motion_not_sent") is not True):
+            raise failure
+        rejected = {"reason": failure.reason, "evidence": copy.deepcopy(failure.evidence)}
+        holding = self.s.get("holding", {}).get("holding")
+        held_id = getattr(self.r, "held_object_id", None)
+        query = getattr(self.r.roads, "observed_road_return_support", None)
+        support = (query(self.s) if callable(query) and type(holding) is bool
+            and getattr(self.r, "pending_grasp", None) is None
+            and ((holding and held_id is not None) or (not holding and held_id is None)) else None)
+        if support is None:
+            return self.result(False, failure.reason, **failure.evidence,
+                pre_motion_rejection=rejected, recorded_road_return={"reason": "no_verified_return_support"})
+        try:
+            return self.return_from_blocked_road(None, pre_motion_rejection=rejected, return_support=support)
+        except ObservedMotionFailure as error:
+            error.evidence.update(pre_motion_rejection=rejected, recorded_road_return=support)
+            raise
+        except Exception as error:
+            error.action_evidence = {**getattr(error, "action_evidence", {}),
+                "pre_motion_rejection": rejected, "recorded_road_return": support}
+            raise
 
     def _sampling_opportunity(self, before):
         """Yield only a newly eligible task-target view, never a new frame alone."""
@@ -923,7 +1008,10 @@ class Actions:
                 return finish(self.result(True, "new_objects_observed", new_object_ids=new))
             before = position(self.s["odometry"])
             step_cm = 16 if self.fresh_tentative_views() else 20
-            result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
+            try:
+                result = self.move("follow_road", {"distanceCm": step_cm, "speed": 50})
+            except ObservedMotionFailure as failure:
+                return finish(self.return_after_known_road_rejection(failure))
             if not self.s["road"]["onRoad"] or result.get("stoppedBy") == "off_road":
                 return finish(self.return_from_blocked_road(result))
             if result.get("stoppedBy") in {"collision", "front_clearance", "wrong_way"}:
