@@ -1,7 +1,7 @@
-# 当前状态：运行中监控恢复已修复，本次双球受模型连接阻断
+# 当前状态：同环境连接检查仍 BLOCKED_MODEL_TRANSPORT；未开新局
 
-冻结 `e54ad6106123770880f407c82d2d3b9b2e75c5cd` 实跑一局，r1 的6次既有模型请求尝试均在连接建立阶段被重置（ConnectionResetError / errno54），有效回复0、分发0、grab/release/交付/done均0。驱动exit1；初次evaluator因空响应异常退出1，单独修复 `4cf908e4afe6134a9619dfa9a119fc0c5caa06f9` 后在新目录复算双球FAIL/exit1。五类原始物理导出完整，未改原件；网络重置根因UNKNOWN，没有无修改重跑。
+本轮使用driver原配置加载器、同一Python及子进程环境，1次无凭据官方GET在套接字创建后、TLS握手过程中被ConnectionResetError(54)重置；无HTTP状态，根因UNKNOWN。证书验证开启，urllib无有效代理。未更换配置或依赖，真实模型smoke和双球比赛均NOT_RUN，没有新增搬运成绩。
 
-运行中恢复最多一次/8秒、原运行和控制器身份核验、暂停新桥命令并只核对原在途请求；真实Chrome/子进程受控测试通过。本局未出现CDP故障，恢复和持球运输均NOT_EXERCISED，不能据测试宣称双球已通过。依赖、模型、预算及安全门保持；历史两次一球PASS和旧FAIL保留。已停止，下一阻塞为本机到官方模型服务的HTTPS连接被重置。
+保留监控恢复、空响应评测修复及历史两次一球PASS/全部旧FAIL。下一条件是同一环境模型连通性恢复；原单局预算、安全门和双球验收不变。
 
-[本轮报告与复算](two-ball-monitor-next/REPORT.md) · [指标](two-ball-monitor-next/METRICS.json)。
+[本轮报告](two-ball-model-ready-next/REPORT.md) · [脱敏网络证据](two-ball-model-ready-next/NETWORK_CHECK.json) · [依赖哈希](two-ball-model-ready-next/FROZEN_INPUTS.json)。

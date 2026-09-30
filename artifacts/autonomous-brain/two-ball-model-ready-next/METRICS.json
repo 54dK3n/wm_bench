@@ -1,0 +1,90 @@
+{
+  "status": "BLOCKED_MODEL_TRANSPORT",
+  "baseline_head": "c8bd522377cb7e8d47dfebcfed30c639cf77855b",
+  "production_changes": false,
+  "environment_changes": false,
+  "network": {
+    "mode": "network",
+    "status": "BLOCKED_MODEL_TRANSPORT",
+    "platform_started": false,
+    "actions_executed": 0,
+    "method": "GET",
+    "path": "/v1/models",
+    "authentication_sent": false,
+    "request_attempts": 1,
+    "http_status": null,
+    "response_bytes": 0,
+    "errors": [
+      {
+        "type": "URLError",
+        "errno": null,
+        "http_status": null
+      },
+      {
+        "type": "ConnectionResetError",
+        "errno": 54,
+        "http_status": null
+      }
+    ],
+    "events": [
+      {
+        "stage": "socket_create_connection",
+        "event": "started"
+      },
+      {
+        "stage": "socket_create_connection",
+        "event": "completed"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "started"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "failed",
+        "errors": [
+          {
+            "type": "ConnectionResetError",
+            "errno": 54,
+            "http_status": null
+          }
+        ]
+      }
+    ],
+    "elapsed_s": 0.23585675
+  },
+  "model_smoke": {
+    "status": "NOT_RUN",
+    "reason": "unauthenticated same-environment HTTPS did not produce an HTTP response",
+    "live_model_requests": 0
+  },
+  "formal_run": {
+    "status": "NOT_RUN",
+    "source_commit": null,
+    "driver_exit": null,
+    "evaluator_exit": null,
+    "platform_run_id": null,
+    "executor_run_id": null,
+    "valid_model_responses": null,
+    "dispatch": null,
+    "judge": null,
+    "bridge_requests": null,
+    "grab": null,
+    "release": null,
+    "delivered_distinct_balls": null,
+    "done": null,
+    "final_gripper": null
+  },
+  "recovery_branches": {
+    "monitor": "NOT_EXERCISED",
+    "held_transport": "NOT_EXERCISED",
+    "second_ball_sampling": "NOT_EXERCISED"
+  },
+  "checks": {
+    "js_syntax": "PASS",
+    "python_ast": "PASS",
+    "same_environment_read_only_review": "PASS"
+  },
+  "root_cause": "UNKNOWN",
+  "new_competition_runs": 0
+}

@@ -1,5 +1,7 @@
 # wm_bench
 
+> 最新检查：同driver环境的无凭据HTTPS仍在TLS握手阶段重置（errno54），模型smoke与新双球局均NOT_RUN；没有生产/环境修改。[本轮结果](artifacts/autonomous-brain/two-ball-model-ready-next/REPORT.md)。以下保留上一轮实跑记录。
+
 ## 当前结果：运行中监控恢复已修复，本次双球受模型连接阻断
 
 冻结 `e54ad6106123770880f407c82d2d3b9b2e75c5cd` 实跑一局，r1 的6次既有模型请求尝试均在连接建立阶段被重置（ConnectionResetError / errno54），有效回复0、分发0、grab/release/交付/done均0。驱动exit1；初次evaluator因空响应异常退出1，单独修复 `4cf908e4afe6134a9619dfa9a119fc0c5caa06f9` 后在新目录复算双球FAIL/exit1。五类原始物理导出完整，未改原件；网络重置根因UNKNOWN，没有无修改重跑。

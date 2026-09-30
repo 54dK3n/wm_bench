@@ -1,0 +1,92 @@
+{
+  "environment": {
+    "python_executable": "/Library/Developer/CommandLineTools/usr/bin/python3",
+    "python_version": "3.9.6 (default, Apr  7 2026, 02:38:40) \n[Clang 21.0.0 (clang-2100.0.123.102)]",
+    "tls_library": "LibreSSL 2.8.3",
+    "certificate_verification": true,
+    "hostname_verification": true,
+    "target": {
+      "scheme": "https",
+      "host": "api.deepseek.com",
+      "base_path": "/v1"
+    },
+    "urllib_environment_proxies": {},
+    "urllib_effective_proxies": {},
+    "target_proxy_bypass": false,
+    "selected_https_proxy": null,
+    "environment_changed": false,
+    "platform_started": false,
+    "actions_executed": 0
+  },
+  "launcher": {
+    "python_selection": "python3",
+    "cwd": "/Users/ken/Desktop/wm_bench",
+    "configuration_source": {
+      "LLM_BASE_URL": "driver_env_local_or_default",
+      "LLM_API_KEY": "driver_env_local_or_default",
+      "LLM_MODEL": "driver_env_local_or_default",
+      "LLM_TEMPERATURE": "driver_env_local_or_default",
+      "LLM_THINKING": "driver_env_local_or_default"
+    },
+    "child_environment": "same as runBrain: inherited loaded environment plus PYTHONUNBUFFERED=1",
+    "environment_overrides": {
+      "PYTHONUNBUFFERED": "1"
+    },
+    "mode": "network"
+  },
+  "result": {
+    "mode": "network",
+    "status": "BLOCKED_MODEL_TRANSPORT",
+    "platform_started": false,
+    "actions_executed": 0,
+    "method": "GET",
+    "path": "/v1/models",
+    "authentication_sent": false,
+    "request_attempts": 1,
+    "http_status": null,
+    "response_bytes": 0,
+    "errors": [
+      {
+        "type": "URLError",
+        "errno": null,
+        "http_status": null
+      },
+      {
+        "type": "ConnectionResetError",
+        "errno": 54,
+        "http_status": null
+      }
+    ],
+    "events": [
+      {
+        "stage": "socket_create_connection",
+        "event": "started"
+      },
+      {
+        "stage": "socket_create_connection",
+        "event": "completed"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "started"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "failed",
+        "errors": [
+          {
+            "type": "ConnectionResetError",
+            "errno": 54,
+            "http_status": null
+          }
+        ]
+      }
+    ],
+    "elapsed_s": 0.23585675
+  },
+  "exit": {
+    "exit_code": 1,
+    "signal": null,
+    "spawn_error_code": null
+  }
+}
