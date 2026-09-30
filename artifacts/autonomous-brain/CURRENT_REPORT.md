@@ -1,11 +1,7 @@
-# 当前状态：双球开发基线 FAIL，已停止
+# 当前状态：双球运输修复，两局真实 FAIL，已停止
 
-冻结 `d6c107f197a1845f8cc1ba66a413512f9a1c5b71`（生产文件同 c4bf08e）的真实双球基线已执行，独立 evaluator 实际生成 FAIL；driver/evaluator 均 exit 1。73 次模型调用、73 dispatch / 72 judge、349 观测，pick 2、grab 4、观测抓持成功 1，release / 脑端 DELIVERED / done 均 0。
+本轮两局真实双球均 **FAIL**，已经停止，无第三局。运输约束修复 `6e09544fa23d5b2546eb64743a4f4a372f3f1520`；第二局冻结 `ae35f9c8e8f0a6f34cce49d0b6fd91b2f905b4d9`，只追加一次原页面导出重连。两局各32次模型 started / 31次完整回复，31次 Executor dispatch、124观测、558桥请求；pick/grab/release/DELIVERED/done均0。r32因驱动CDP连接中断被SIGTERM停止，未耗尽200轮/1200秒；断连底层原因UNKNOWN。
 
-首球持物后的存放路线重复受净空阻塞，r73 turn 与恢复 odometry 均收到 409 BRIDGE_CLOSED；未知结果未重发。record/captures/envelope 等导出失败，物理两球身份、物理交付数及平台 run ID 无法独立核验，不能用缺失推断为真值 0。控制器关闭根因未知。首球未交付，交付后第二球采样窗口 NOT_EXERCISED，未实施新窗口修复。
+第二局成功重连健康原页面，五类物理数据完整导出，独立双球评测交付0、FAIL，driver/evaluator均exit 1。第一局仍缺物理原件。空载受阻记忆与模型选择替代出口实际触发；持球运输、实际重复段拒绝/绑定、第二目标操作后采样均NOT_EXERCISED，不能宣称已实测消除旧运输阻塞。两次历史一球PASS与所有旧FAIL保持，不启动阶段2、十布局或真机。
 
-未做推测性小修、未开第二局；阶段 2、十布局和真机未启动。[第一局一球 PASS](octos-minimal-demo-next/REPORT.md) 与[第二局一球 PASS](one-ball-review-next/REPORT.md) 原样保留，不据此推算成功率。
-
-[本轮一页报告与实际命令/恢复/复算](two-ball-demo-next/REPORT.md) · [指标](two-ball-demo-next/METRICS.json) · [原始日志 Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-baseline-20260927-d6c107f)
-
-证据已于 2026-09-30 发布；七个附件均匿名完整下载并通过 SHA256 校验。[公开下载验证](two-ball-demo-next/PUBLICATION_VERIFICATION.json)。此次交付续办未启动新局、未修改生产代码，原 FAIL 与缺失平台原件事实不变。
+[本轮报告](two-ball-transport-next/REPORT.md) · [指标](two-ball-transport-next/METRICS.json) · [证据Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-transport-20260930-ae35f9c)（七个附件已匿名完整下载并通过SHA256核对；[验证记录](two-ball-transport-next/PUBLICATION_VERIFICATION.json)）。

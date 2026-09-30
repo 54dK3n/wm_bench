@@ -1,0 +1,323 @@
+{
+  "scope": "Two separate live two-ball runs; never aggregated into a success. Truth is evaluation-only.",
+  "production_commits": [
+    "6e09544fa23d5b2546eb64743a4f4a372f3f1520",
+    "ae35f9c8e8f0a6f34cce49d0b6fd91b2f905b4d9"
+  ],
+  "dependency_lock": {
+    "platform_commit": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+    "executor_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+    "executor_max_retries": 0,
+    "wm_actual_tree_sha256": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+    "per_file_hashes": "Each run manifest.json includes actual WM, platform, Executor, driver and evaluator hashes.",
+    "model_endpoint": "https://api.deepseek.com/v1",
+    "model_configuration": {
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "response_format": {
+        "type": "json_object"
+      },
+      "stream": true,
+      "formal_run": true
+    },
+    "budget": {
+      "task": "把两个红球送到绿色存放区",
+      "maxRounds": 200,
+      "maxSimulationSeconds": 1200,
+      "wallTimeoutSeconds": 0
+    }
+  },
+  "runs": [
+    {
+      "run_directory": "artifacts/autonomous-brain/two-ball-transport-next/run-20260930T123109",
+      "frozen_source_commit": "6e09544fa23d5b2546eb64743a4f4a372f3f1520",
+      "driver_version": "wm-autonomous-brain-driver/v11",
+      "driver_exit": 1,
+      "evaluator_exit": 1,
+      "result": "FAIL",
+      "platform_run_id": "UNKNOWN",
+      "executor_run_ids": [
+        "aa458c2a1eff456b957a2e1870c77f4a"
+      ],
+      "model": {
+        "names": {
+          "deepseek-flash": 31
+        },
+        "live_started_requests": 32,
+        "live_finished_events": 31,
+        "started_events": 32,
+        "finished_events": 31,
+        "complete_llm_records": 31,
+        "unique_call_indices": 31,
+        "unmatched_started_call_indices": [
+          32
+        ],
+        "transport_error_records": 0,
+        "validation_error_records": 0,
+        "mode_counts": {
+          "live": 31
+        }
+      },
+      "counts": {
+        "round_records": 32,
+        "executor_dispatch": 31,
+        "executor_judge": 31,
+        "observations": 124,
+        "bridge_requests": 558,
+        "high_level_pick": 0,
+        "physical_grab_requests": 0,
+        "observed_false_to_true_grabs": 0,
+        "physical_release_requests": 0,
+        "wm_delivered": 0,
+        "independent_qualifying_deliveries": "UNKNOWN",
+        "model_done": 0,
+        "nonwhitelist_requests": 0
+      },
+      "simulation_seconds": 110.46,
+      "terminal": {
+        "round": 32,
+        "brain_reason": "SIGTERM: stopped_during_decision",
+        "holding": false,
+        "driver_interrupted": "driver_monitor_error:Error: CDP unavailable",
+        "websocket_events": [
+          {
+            "time": "2026-09-30T02:32:44.146Z",
+            "phase": "map-05-run-1:brain",
+            "type": "cdp_websocket_error"
+          },
+          {
+            "time": "2026-09-30T02:32:44.151Z",
+            "phase": "map-05-run-1:brain",
+            "type": "cdp_websocket_closed",
+            "code": 1006,
+            "reason": "",
+            "intentional": false
+          }
+        ],
+        "underlying_CDP_disconnect_cause": "UNKNOWN"
+      },
+      "export": {
+        "complete": false,
+        "completedDatasets": [],
+        "failures": [
+          {
+            "dataset": "envelope",
+            "error": "CDP unavailable"
+          },
+          {
+            "dataset": "record",
+            "error": "CDP unavailable"
+          },
+          {
+            "dataset": "samples",
+            "error": "CDP unavailable"
+          },
+          {
+            "dataset": "sensorAudit",
+            "error": "CDP unavailable"
+          },
+          {
+            "dataset": "captures",
+            "error": "CDP unavailable"
+          }
+        ],
+        "partial": {}
+      },
+      "server_trace": {
+        "complete": true,
+        "totalEvents": 1674,
+        "retainedEvents": 1674
+      },
+      "evaluator": {
+        "path": "artifacts/autonomous-brain/two-ball-transport-next/run-20260930T123109-evaluation/evaluation.json",
+        "success": false,
+        "failures": [
+          "missing_input:record.json",
+          "missing_input:captures.json",
+          "llm_lifecycle_unfinished_or_missing_call",
+          "source_proof_driver_not_complete",
+          "evaluator_expected_two_red_targets",
+          "incomplete_record",
+          "final_truth_gripper_not_empty_or_unknown",
+          "final_sample_tick_mismatch",
+          "simulation_end_tick_missing",
+          "brain_did_not_finish_with_observed_done",
+          "terminal_done_not_corroborated",
+          "execution_or_controller_error",
+          "task_completion:required_delivery_count_not_met",
+          "done_not_selected_in_recorded_llm_call",
+          "done_post_action_completion_not_corroborated",
+          "strict_model_transcript_replay_failed"
+        ],
+        "source_proof": "mismatch",
+        "strict_transcript_replay_allPass": false
+      },
+      "public_counts": "artifacts/autonomous-brain/two-ball-transport-next/raw/checks/run-20260930T123109-public-counts.json",
+      "transport_index": "artifacts/autonomous-brain/two-ball-transport-next/raw/checks/run-20260930T123109-transport-index.json"
+    },
+    {
+      "run_directory": "artifacts/autonomous-brain/two-ball-transport-next/run-20260930T130225",
+      "frozen_source_commit": "ae35f9c8e8f0a6f34cce49d0b6fd91b2f905b4d9",
+      "driver_version": "wm-autonomous-brain-driver/v12",
+      "driver_exit": 1,
+      "evaluator_exit": 1,
+      "result": "FAIL",
+      "platform_run_id": "run-aff126e3-6c23-492b-8beb-3738fa2b2dbe",
+      "executor_run_ids": [
+        "c8aa7f4cd98149569e72e49d0f18ac9f"
+      ],
+      "model": {
+        "names": {
+          "deepseek-flash": 31
+        },
+        "live_started_requests": 32,
+        "live_finished_events": 31,
+        "started_events": 32,
+        "finished_events": 31,
+        "complete_llm_records": 31,
+        "unique_call_indices": 31,
+        "unmatched_started_call_indices": [
+          32
+        ],
+        "transport_error_records": 0,
+        "validation_error_records": 0,
+        "mode_counts": {
+          "live": 31
+        }
+      },
+      "counts": {
+        "round_records": 32,
+        "executor_dispatch": 31,
+        "executor_judge": 31,
+        "observations": 124,
+        "bridge_requests": 558,
+        "high_level_pick": 0,
+        "physical_grab_requests": 0,
+        "observed_false_to_true_grabs": 0,
+        "physical_release_requests": 0,
+        "wm_delivered": 0,
+        "independent_qualifying_deliveries": 0,
+        "model_done": 0,
+        "nonwhitelist_requests": 0
+      },
+      "simulation_seconds": 110.46,
+      "terminal": {
+        "round": 32,
+        "brain_reason": "SIGTERM: stopped_during_decision",
+        "holding": false,
+        "driver_interrupted": "driver_monitor_error:Error: CDP unavailable",
+        "websocket_events": [
+          {
+            "time": "2026-09-30T03:03:57.625Z",
+            "phase": "map-05-run-1:brain",
+            "type": "cdp_websocket_error",
+            "message": null,
+            "errorName": "TypeError",
+            "errorCode": null,
+            "cause": null
+          },
+          {
+            "time": "2026-09-30T03:03:57.626Z",
+            "phase": "map-05-run-1:brain",
+            "type": "cdp_websocket_closed",
+            "code": 1006,
+            "reason": "",
+            "intentional": false
+          },
+          {
+            "time": "2026-09-30T03:03:58.453Z",
+            "phase": "map-05-run-1:stop",
+            "type": "cdp_export_reconnect_succeeded",
+            "running": true,
+            "healthy": true,
+            "tick": 5523,
+            "errorCount": 0
+          },
+          {
+            "time": "2026-09-30T03:04:01.725Z",
+            "phase": "cleanup",
+            "type": "cdp_websocket_closed",
+            "code": 1000,
+            "reason": "",
+            "intentional": true
+          }
+        ],
+        "underlying_CDP_disconnect_cause": "UNKNOWN"
+      },
+      "export": {
+        "complete": true,
+        "completedDatasets": [
+          "envelope",
+          "record",
+          "samples",
+          "sensorAudit",
+          "captures"
+        ],
+        "failures": [],
+        "partial": {}
+      },
+      "server_trace": {
+        "complete": true,
+        "totalEvents": 1674,
+        "retainedEvents": 1674
+      },
+      "evaluator": {
+        "path": "artifacts/autonomous-brain/two-ball-transport-next/run-20260930T130225-evaluation/evaluation.json",
+        "success": false,
+        "failures": [
+          "llm_lifecycle_unfinished_or_missing_call",
+          "no_active_delivery_event:guangyang-target-1",
+          "final_position_outside_storage:guangyang-target-1",
+          "no_active_delivery_event:guangyang-target-2",
+          "final_position_outside_storage:guangyang-target-2",
+          "brain_did_not_finish_with_observed_done",
+          "terminal_done_not_corroborated",
+          "execution_or_controller_error",
+          "task_completion:required_delivery_count_not_met",
+          "done_not_selected_in_recorded_llm_call",
+          "done_post_action_completion_not_corroborated",
+          "strict_model_transcript_replay_failed"
+        ],
+        "source_proof": "verified",
+        "strict_transcript_replay_allPass": false
+      },
+      "public_counts": "artifacts/autonomous-brain/two-ball-transport-next/raw/checks/run-20260930T130225-public-counts.json",
+      "transport_index": "artifacts/autonomous-brain/two-ball-transport-next/raw/checks/run-20260930T130225-transport-index.json"
+    }
+  ],
+  "tests": {
+    "transport_related": {
+      "passed": 97,
+      "failed": 0,
+      "raw_output": "raw/checks/transport-regressions-final.txt"
+    },
+    "driver_final": {
+      "passed": 27,
+      "failed": 0,
+      "raw_output": "raw/checks/driver-v12-cdp-reconnect-tests-unsandboxed.txt"
+    },
+    "source_proof_final": {
+      "passed": 54,
+      "failed": 0,
+      "raw_output": "raw/checks/driver-v12-source-proof-tests.txt"
+    },
+    "scope": "Function/controlled-sensor and controlled-browser checks, not task success; overlapping earlier test outputs preserved."
+  },
+  "exercised": [
+    "empty-gripper front_clearance failures at r7/r17 saved directional conditions",
+    "LLM independently chose offered observed alternative exits at r8/r18",
+    "in-process bridge diagnostics after unavailable CDP",
+    "one original-page reconnect and complete export after brain abort in second run"
+  ],
+  "not_exercised": [
+    "held first-ball transport",
+    "runtime rejection of repeated directed passage and selected-route binding",
+    "release/DELIVERED/done",
+    "post-first-delivery second-target sampling window"
+  ],
+  "first_direct_terminal_blocker": "Driver CDP monitoring lost its connection at r32 and stopped the brain before a grasp. First run error details absent; second TypeError has no message/code/cause. Root cause UNKNOWN.",
+  "stopped": true,
+  "additional_runs": 0,
+  "historical_results_unchanged": true
+}

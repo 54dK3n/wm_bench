@@ -1,4 +1,12 @@
-# 当前状态：双球开发基线 FAIL，停止开发和运行
+# 当前状态：运输修复与最后一局已结束，双球仍 FAIL
+
+本轮两局真实双球均 **FAIL**，已经停止，无第三局。运输约束修复 `6e09544fa23d5b2546eb64743a4f4a372f3f1520`；第二局冻结 `ae35f9c8e8f0a6f34cce49d0b6fd91b2f905b4d9`，只追加一次原页面导出重连。两局各32次模型 started / 31次完整回复，31次 Executor dispatch、124观测、558桥请求；pick/grab/release/DELIVERED/done均0。r32因驱动CDP连接中断被SIGTERM停止，未耗尽200轮/1200秒；断连底层原因UNKNOWN。
+
+第二局成功重连健康原页面，五类物理数据完整导出，独立双球评测交付0、FAIL，driver/evaluator均exit 1。第一局仍缺物理原件。空载受阻记忆与模型选择替代出口实际触发；持球运输、实际重复段拒绝/绑定、第二目标操作后采样均NOT_EXERCISED，不能宣称已实测消除旧运输阻塞。两次历史一球PASS与所有旧FAIL保持，不启动阶段2、十布局或真机。
+
+下一项直接阻塞是驱动CDP观察通道异常断连（TypeError，无message/code/cause）；原页面在取回时健康。当前不继续修复或运行。源码、模型、平台、WM和Executor锁及诊断见[本轮报告](../artifacts/autonomous-brain/two-ball-transport-next/REPORT.md)。
+
+## 上一轮历史：双球开发基线 FAIL，停止开发和运行
 
 2026-09-27 的一次真实双球基线已结束，`evaluate_autonomous_brain.py` 实际生成 FAIL，driver/evaluator 均 exit 1。冻结主仓 `d6c107f197a1845f8cc1ba66a413512f9a1c5b71`，生产文件同 c4bf08e；Executor、平台、实际 vendored WM、模型及安全门不变。
 
