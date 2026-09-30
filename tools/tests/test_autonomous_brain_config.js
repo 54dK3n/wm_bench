@@ -22,7 +22,7 @@ test("local config accepts literal values, comments and only the allowed LLM key
     LLM_MODEL: "$(do-not-execute) ${NO_EXPANSION}",
     LLM_TEMPERATURE: "0", LLM_THINKING: "disabled",
   });
-  assert.equal(VERSION, "wm-autonomous-brain-driver/v10");
+  assert.equal(VERSION, "wm-autonomous-brain-driver/v11");
 });
 
 test("existing environment wins and missing files are optional", () => {

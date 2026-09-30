@@ -8,7 +8,7 @@ import re
 from .bridge import SimulationLimit
 from .navigation import distance, heading_to, position, wrap
 
-VERSION = "autonomous-brain-actions/v27"
+VERSION = "autonomous-brain-actions/v28"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -260,6 +260,30 @@ class Actions:
     def __init__(self, runtime):
         self.r = runtime
         self.grab_attempts = {}
+        self._selected_route_segment = None
+        self._passage_failures = []
+
+    @staticmethod
+    def passage_summary(row):
+        return {key: copy.deepcopy(row.get(key)) for key in
+                ("passage_id", "direction_heading_deg", "reason", "entry", "stop", "selected_route_segments")}
+
+    def transport_recovery_choices(self):
+        """Current observed exits are options for the model, not assumed routes."""
+        roads = getattr(self.r, "roads", None)
+        if (not roads or not hasattr(roads, "exits") or not self.s["road"].get("onRoad")
+                or not self.s["road"].get("atNode")):
+            return {"reason": "no_current_observed_exit_successor", "choices": []}
+        exits = roads.exits(self.s["odometry"], self.s["road"])
+        choices = [{"action": "explore", "params": {"exit_angle": e["angle_deg"]},
+                    "exit_heading_deg": e["heading_deg"], "exit_id": e.get("id"),
+                    "observation_index": self.s["observation_index"],
+                    "requires_fresh_direction_and_clearance_recheck": True,
+                    "connectivity_to_goal": "UNKNOWN"}
+                   for e in exits if not e["blocked"]]
+        return {"reason": "observed_alternative_exits" if choices else "no_unblocked_observed_exit",
+                "choices": choices, "blocked_passage_ids": sorted({e["blocked_passage_id"]
+                    for e in exits if e.get("blocked_passage_id")})}
 
     @property
     def s(self):
@@ -277,13 +301,26 @@ class Actions:
             raise SimulationLimit("simulation_time_limit")
         before_state = copy.deepcopy(self.s)
         before = self.s["observation_index"]
+        roads = getattr(self.r, "roads", None)
+        if roads is not None and hasattr(roads, "passage_blocked"):
+            blocked = roads.passage_blocked(self.s, roads.motion_heading(self.s, method, params))
+            if blocked is not None:
+                roads.bind_blocked_route(blocked["passage_id"], self._selected_route_segment)
+                summary = self.passage_summary(blocked)
+                summary["rejected_route_segment"] = copy.deepcopy(self._selected_route_segment)
+                self._passage_failures.append(summary)
+                raise ObservedMotionFailure("directed_passage_still_blocked", {
+                    "passage_failure": summary, "motion_not_sent": True,
+                    "transport_recovery": self.transport_recovery_choices()})
         motion = {"round": self.r.round, "method": method, "params": params,
                   "before_observation": before}
+        if self._selected_route_segment is not None:
+            motion["selected_route_segment"] = copy.deepcopy(self._selected_route_segment)
+        sequence = getattr(self.r.bridge, "sequence", None)
+        if type(sequence) is int:
+            motion["bridge_request_id"] = f"brain-{sequence + 1:06d}"
         note_boundary = getattr(self.r.perception, "note_manipulation_boundary", None)
         if method in {"grab", "release"} and note_boundary is not None:
-            sequence = getattr(self.r.bridge, "sequence", None)
-            if type(sequence) is int:
-                motion["bridge_request_id"] = f"brain-{sequence + 1:06d}"
             note_boundary(dict(motion, outcome_unknown=True), None)
         try:
             result = self.r.bridge.call(method, params)
@@ -308,6 +345,12 @@ class Actions:
             raise
         verification = basic_motion_evidence(method, params, before_state, self.s)
         motion["motion_verification"] = verification
+        if roads is not None and hasattr(roads, "remember_passage_failure"):
+            failure = roads.remember_passage_failure(before_state, self.s,
+                dict(motion, after_observation=self.s["observation_index"]))
+            if failure:
+                motion["passage_failure"] = self.passage_summary(failure)
+                self._passage_failures.append(self.passage_summary(failure))
         self.r.motion_log.write(dict(motion, after_observation=self.s["observation_index"]))
         if verification.get("applicable"):
             if not verification.get("motion_verified"):
@@ -842,7 +885,11 @@ class Actions:
         if road.get("atNode") and road["exits"]:
             exits = self.r.roads.exits(odo, road)
             if exit_angle is None:
-                chosen = min(exits, key=lambda e: (e["blocked"], e["completed"], e["visits"], abs(e["angle_deg"])))
+                available = [e for e in exits if not e["blocked"]]
+                if not available:
+                    return finish(self.result(False, "no_unblocked_observed_exit",
+                        transport_recovery=self.transport_recovery_choices()))
+                chosen = min(available, key=lambda e: (e["completed"], e["visits"], abs(e["angle_deg"])))
             else:
                 chosen = min(exits, key=lambda e: abs(wrap(e["angle_deg"] - exit_angle)))
                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
@@ -1031,6 +1078,9 @@ class Actions:
                                 for row in paths]}
 
     def remember_navigation_result(self, object_id, outcome):
+        if self._passage_failures:
+            outcome["evidence"]["passage_failures"] = copy.deepcopy(self._passage_failures)
+            outcome["evidence"]["transport_recovery"] = self.transport_recovery_choices()
         row = self._navigation_record(object_id)
         readiness = self.navigation_readiness(object_id)
         self.r.navigation_progress.remember(row, self._navigation_context(object_id), outcome, readiness)
@@ -1228,6 +1278,7 @@ class Actions:
                 "approach_attempts": row.get("approach_attempts", [])[-3:],
                 "repeat_blocked": blocked is not None, "blocked_failure": blocked["reason"] if blocked else None,
                 "current_subgoal": self.navigation_readiness(current),
+                "transport_recovery": self.transport_recovery_choices(),
                 "last_achieved_subgoal": row["subgoal"],
                 "manipulation_failures": [{"action": key[0], "attempt_count": len(failures),
                     "last_failure": failure_summary(failures[-1])}
@@ -1714,6 +1765,8 @@ class Actions:
                     outcome = self._go_to(object_id)
                 except ObservedMotionFailure as error:
                     outcome = self.result(False, error.reason, **error.evidence)
+                finally:
+                    self._selected_route_segment = None
         return self.remember_navigation_result(object_id, outcome)
 
     def _go_to(self, object_id):
@@ -1726,6 +1779,7 @@ class Actions:
         reacquired_from = set()
         navigation_budget = [45]
         for step in range(45):
+            self._selected_route_segment = None
             if navigation_budget[0] <= 0:
                 break
             navigation_budget[0] -= 1
@@ -1807,7 +1861,11 @@ class Actions:
             waypoint = route[waypoint_index] if waypoint_index < len(route) else None
             near_approach = remaining <= 65 and abs(bearing) <= 40
             if waypoint is None and not near_approach:
-                return self.result(False, "known_route_exhausted_needs_exploration", object_id=object_id)
+                return self.result(False, "known_route_exhausted_needs_exploration", object_id=object_id,
+                                   transport_recovery=self.transport_recovery_choices())
+            segment_ref = getattr(self.r.roads, "route_segment_ref", None)
+            if waypoint is not None and waypoint_index > 0 and segment_ref is not None:
+                self._selected_route_segment = segment_ref(route[waypoint_index-1], waypoint)
             state = (p, odo["headingDeg"], waypoint_index, waypoint)
             if state in visited_states:
                 return self.result(False, "route_no_progress", object_id=object_id, waypoint=waypoint)
@@ -2820,6 +2878,8 @@ class Actions:
 
     def execute(self, action):
         before = self.s["observation_index"]
+        self._passage_failures = []
+        self._selected_route_segment = None
         sampling_id = (action["params"].get("discovery_id") if action["action"] == "explore" else None)
         sampling_before = copy.deepcopy(self.s) if sampling_id is not None else None
         def record_sampling(outcome):
@@ -2893,6 +2953,9 @@ class Actions:
             outcome["evidence"] = {**prior_evidence, **outcome["evidence"]}
         if action["action"] == "go_to" and hasattr(self, "remember_navigation_result"):
             self.remember_navigation_result(action["params"]["object_id"], outcome)
+        if self._passage_failures:
+            outcome["evidence"]["passage_failures"] = copy.deepcopy(self._passage_failures)
+            outcome["evidence"]["transport_recovery"] = self.transport_recovery_choices()
         if hasattr(self, "remember_action_result"):
             self.remember_action_result(action, outcome)
         outcome["evidence"].update(before_observation=before,

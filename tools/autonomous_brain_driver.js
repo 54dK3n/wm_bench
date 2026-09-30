@@ -13,7 +13,8 @@ const {Transform} = require("node:stream");
 const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
-const VERSION = "wm-autonomous-brain-driver/v10";
+const {DriverDiagnostics, observeBridge} = require("./autonomous_brain_diagnostics.js");
+const VERSION = "wm-autonomous-brain-driver/v11";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -141,34 +142,65 @@ function installEvaluationCapture() {
 }
 
 class Cdp {
-  constructor() { this.nextId = 0; this.pending = new Map(); this.pageErrors = []; }
+  constructor(diagnostics) { this.nextId = 0; this.pending = new Map(); this.pageErrors = []; this.diagnostics = diagnostics; this.available = false; }
+  event(type, details) {this.diagnostics?.event(type, details);}
+  unavailable(reason) {
+    this.available = false;
+    for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(Object.assign(new Error(reason), {code: 'CDP_UNAVAILABLE'}));
+    }
+    this.pending.clear();
+  }
   async connect(url) {
     this.socket = new WebSocket(url);
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("CDP connection timeout")), 20000);
-      this.socket.addEventListener("open", () => {clearTimeout(timer); resolve();}, {once: true});
-      this.socket.addEventListener("error", () => {clearTimeout(timer); reject(new Error("CDP connection failed"));}, {once: true});
-    });
     this.socket.addEventListener("message", event => {
-      const message = JSON.parse(String(event.data));
-      if (message.method === "Runtime.exceptionThrown") this.pageErrors.push(message.params.exceptionDetails);
+      let message;
+      try {message = JSON.parse(String(event.data));}
+      catch {this.event('cdp_invalid_message'); return;}
+      if (message.method === "Runtime.exceptionThrown") {
+        const details = message.params?.exceptionDetails || {text: 'page exception without details'};
+        // Bounds and redaction apply before page exceptions reach either file.
+        const text = JSON.stringify(this.diagnostics ? this.diagnostics.safe(details) : details);
+        if (this.pageErrors.length < 1000) this.pageErrors.push(text.length <= 16384 ? JSON.parse(text) : {text: 'overlong page exception omitted'});
+        this.event('page_exception', {details: this.pageErrors.at(-1)});
+      }
+      if (['Inspector.targetCrashed', 'Inspector.detached', 'Target.detachedFromTarget'].includes(message.method)) {
+        this.event('cdp_target_unavailable', {method: message.method, reason: message.params?.reason || null});
+        this.unavailable('CDP target unavailable');
+      }
       if (!this.pending.has(message.id)) return;
       const pending = this.pending.get(message.id); this.pending.delete(message.id); clearTimeout(pending.timer);
-      if (message.error) pending.reject(new Error(message.error.message)); else pending.resolve(message.result);
+      if (message.error) {
+        this.event('cdp_request_error', {method: pending.method, code: message.error.code, message: message.error.message});
+        pending.reject(new Error(message.error.message));
+      } else pending.resolve(message.result);
+    });
+    this.socket.addEventListener('close', event => {
+      this.event('cdp_websocket_closed', {code: event.code, reason: event.reason || '', intentional: this.closing === true});
+      this.unavailable('CDP WebSocket closed');
+    });
+    this.socket.addEventListener('error', () => {this.event('cdp_websocket_error'); this.unavailable('CDP WebSocket error');});
+    await new Promise((resolve, reject) => {
+      const fail = message => {clearTimeout(timer); reject(new Error(message));};
+      const timer = setTimeout(() => {this.socket.close(); fail('CDP connection timeout');}, 20000);
+      this.socket.addEventListener("open", () => {clearTimeout(timer); this.available = true; this.event('cdp_connected'); resolve();}, {once: true});
+      this.socket.addEventListener("error", () => fail('CDP connection failed'), {once: true});
+      this.socket.addEventListener("close", () => fail('CDP connection closed'), {once: true});
     });
   }
   send(method, params = {}, sessionId, timeoutMs = 120000) {
+    if (!this.available) return Promise.reject(Object.assign(new Error('CDP unavailable'), {code: 'CDP_UNAVAILABLE'}));
     const id = ++this.nextId;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {this.pending.delete(id); reject(Object.assign(new Error(`CDP ${method} timeout`), {code: 'CDP_TIMEOUT'}));}, timeoutMs);
-      this.pending.set(id, {resolve, reject, timer});
-      this.socket.send(JSON.stringify({id, method, params, ...(sessionId ? {sessionId} : {})}));
+      const timer = setTimeout(() => {this.pending.delete(id); this.event('cdp_request_timeout', {method, requestId: id, timeoutMs});
+        reject(Object.assign(new Error(`CDP ${method} timeout`), {code: 'CDP_TIMEOUT'}));}, timeoutMs);
+      this.pending.set(id, {resolve, reject, timer, method});
+      try {this.socket.send(JSON.stringify({id, method, params, ...(sessionId ? {sessionId} : {})}));}
+      catch {this.event('cdp_send_failed', {method, requestId: id}); this.unavailable('CDP send failed');}
     });
   }
-  close() {
-    for (const pending of this.pending.values()) {clearTimeout(pending.timer); pending.reject(new Error("CDP closed"));}
-    this.pending.clear(); this.socket?.close();
-  }
+  close() {this.closing = true; this.unavailable('CDP closed by driver'); this.socket?.close();}
 }
 
 function chromePath() {
@@ -284,6 +316,7 @@ function sourceManifest(platformRoot, options = {}) {
   }
   visit(path.join(ROOT, 'autonomous_brain'));
   return {version: VERSION, driver: {file: relative(__filename), sha256: sha(fs.readFileSync(__filename))},
+    driverDependencies: {'tools/autonomous_brain_diagnostics.js': sha(fs.readFileSync(path.join(__dirname, 'autonomous_brain_diagnostics.js')))},
     platform: Object.fromEntries(files.map(file => [file, sha(fs.readFileSync(path.join(platformRoot, file)))])),
     brain: Object.fromEntries(brainFiles.sort().map(file => [relative(file), sha(fs.readFileSync(file))])),
     brainRevision: gitRevision(ROOT), platformRevision: gitRevision(platformRoot),
@@ -501,10 +534,14 @@ async function savePageDataset(evaluate, name, file, options = {}) {
 async function persistPageExport(evaluate, directory, options = {}) {
   const evidence = {}, failures = [], partial = {};
   const deadline = options.deadline ?? Date.now() + 600000;
-  for (const [name, filename] of [['record', 'record.json.gz'], ['samples', 'samples.json.gz'],
-    ['sensorAudit', 'sensor-audit.json.gz'], ['captures', 'captures.json.gz'], ['envelope', 'envelope.json']]) {
+  // Envelope has its own short budget and is saved before any bulky dataset.
+  // Server-side diagnostics have already been saved without using this page.
+  for (const [name, filename] of [['envelope', 'envelope.json'], ['record', 'record.json.gz'],
+    ['samples', 'samples.json.gz'], ['sensorAudit', 'sensor-audit.json.gz'], ['captures', 'captures.json.gz']]) {
+    const datasetDeadline = name === 'envelope' ? Date.now() + (options.diagnosticTimeoutMs ?? 15000) : deadline;
     try {evidence[name] = await savePageDataset(evaluate, name, path.join(directory, filename),
-      {...options, deadline, compressed: name !== 'envelope'});}
+      {...options, deadline: datasetDeadline, requestTimeoutMs: Math.min(options.requestTimeoutMs ?? 30000, name === 'envelope' ? 15000 : 30000),
+        compressed: name !== 'envelope'});}
     catch (error) {
       failures.push({dataset: name, error: String(error.message || error)});
       if (error.partialEvidence) partial[name] = error.partialEvidence;
@@ -656,6 +693,8 @@ async function main(argv = process.argv.slice(2)) {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wm-autonomous-brain-'));
   const profile = path.join(temp, 'browser'); fs.mkdirSync(profile);
   const server = createServer({dataDir: path.join(temp, 'data'), robotBridgeEnabled: true, robotBridge: {pollTimeoutMs: 1000}});
+  const diagnostics = new DriverDiagnostics(options.out, {secrets: [process.env.LLM_API_KEY]});
+  const bridgeDiagnostics = observeBridge(server.robotBridge, diagnostics);
   const originalPool = new Map(server.mapConfigPools.get(TASK));
   let browser, cdp, evaluate, sessionId, preserveTemp = false;
   try {
@@ -666,7 +705,10 @@ async function main(argv = process.argv.slice(2)) {
       '--disable-background-networking', '--disable-component-update', '--disable-default-apps', '--disable-sync',
       '--metrics-recording-only', '--no-proxy-server', '--disable-features=MediaRouter',
       '--enable-unsafe-swiftshader', '--use-angle=swiftshader', 'about:blank'], {stdio: ['ignore', 'ignore', 'pipe']});
-    browser.stderr.on('data', () => {});
+    browser.stderr.on('data', bytes => diagnostics.stderr(bytes));
+    browser.on('error', error => diagnostics.event('browser_process_error', {code: error.code || error.name}));
+    browser.on('exit', (code, signal) => {diagnostics.flushStderr(); diagnostics.event('browser_process_exit', {code, signal});
+      bridgeDiagnostics.snapshot('browser_exit');});
     const debug = await waitFor(() => {
       if (browser.exitCode !== null) throw new Error(`Chrome exited ${browser.exitCode}`);
       const file = path.join(profile, 'DevToolsActivePort');
@@ -674,7 +716,7 @@ async function main(argv = process.argv.slice(2)) {
       const [port, suffix] = fs.readFileSync(file, 'utf8').trim().split(/\r?\n/);
       return port && suffix ? `ws://127.0.0.1:${port}${suffix}` : null;
     }, 'Chrome DevTools', 20000);
-    cdp = new Cdp(); await cdp.connect(debug);
+    cdp = new Cdp(diagnostics); await cdp.connect(debug);
     const target = await cdp.send('Target.createTarget', {url: 'about:blank'});
     sessionId = (await cdp.send('Target.attachToTarget', {targetId: target.targetId, flatten: true})).sessionId;
     await cdp.send('Runtime.enable', {}, sessionId); await cdp.send('Page.enable', {}, sessionId);
@@ -690,6 +732,7 @@ async function main(argv = process.argv.slice(2)) {
     await navigate(`${origin}/login.html`);
     const registration = {username: `brain-${crypto.randomBytes(8).toString('hex')}`,
       password: `Brain-${crypto.randomBytes(16).toString('hex')}`, teamName: 'autonomous brain evaluator', group: 'primary'};
+    diagnostics.addSecret(registration.password);
     const registered = await evaluate(`(async()=>{const response=await fetch('/api/v1/auth/register', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(${JSON.stringify(registration)})});return response.status;})()`);
     assert.equal(registered, 201, 'evaluator account registration failed');
     for (const map of options.maps) {
@@ -711,6 +754,8 @@ async function main(argv = process.argv.slice(2)) {
           acceptanceScope: options.acceptanceScope,
           maxRounds: options.maxRounds, maxSimulationSeconds: options.maxSimulationSeconds,
           wallTimeoutSeconds: options.wallTimeoutSeconds};
+        diagnostics.phase = `${map}-run-${run}:starting`;
+        bridgeDiagnostics.setDirectory(directory);
         const errorCursor = cdp.pageErrors.length;
         let started = false, exported = null;
         try {
@@ -718,9 +763,14 @@ async function main(argv = process.argv.slice(2)) {
           const capability = await evaluate(`RobotBackend.start({provenance:{purpose:'autonomous-brain',driverVersion:${JSON.stringify(VERSION)}},limits:{timeLimitSeconds:${options.maxSimulationSeconds},visionEvidenceLimitBytes:null,visionEvidenceFrameLimit:null}})`);
           started = true;
           trial.backendVersion = capability.version;
+          diagnostics.phase = `${map}-run-${run}:brain`;
+          diagnostics.event('brain_started');
           trial.process = await runBrain(options, directory, capability, origin, evaluate);
         } catch (error) {trial.error = String(error.stack || error);}
         finally {
+          diagnostics.phase = `${map}-run-${run}:stop`;
+          // No browser/JSON export is needed for this controlled in-process API.
+          bridgeDiagnostics.snapshot('brain_ended_before_page_stop');
           if (started) {
             try { exported = await stopForChunkedExport(evaluate, options.timeoutMs); }
             catch (error) {trial.stopError = String(error.stack || error);}
@@ -733,6 +783,7 @@ async function main(argv = process.argv.slice(2)) {
           // Also attempt independent captures after a failed stop. Each completed
           // dataset survives failures in later datasets; prefixes stay .part.
           preserveTemp = true;
+          diagnostics.phase = `${map}-run-${run}:export`;
           let saved;
           try {saved = await persistPageExport(evaluate, directory, {requestTimeoutMs: options.timeoutMs});}
           catch (error) {
@@ -770,6 +821,8 @@ async function main(argv = process.argv.slice(2)) {
             trial.failures = [...(trial.failures || []), 'evidence_export_incomplete'];
           }
         }
+        bridgeDiagnostics.snapshot('after_page_export');
+        trial.serverBridgeTrace = fs.existsSync(path.join(directory, 'server-bridge-trace.json')) ? 'server-bridge-trace.json' : null;
         trial.pageErrors = cdp.pageErrors.slice(errorCursor);
         writeJson(path.join(directory, 'evaluation.json'), trial);
         summary.trials.push(trial);
@@ -798,11 +851,14 @@ async function main(argv = process.argv.slice(2)) {
       && summary.trials.length === options.maps.length * options.runs && summary.trials.every(trial => trial.success);
     if (preserveTemp) summary.preservedTempDirectory = relative(temp);
     writeJson(path.join(options.out, 'summary.json'), summary);
+    diagnostics.phase = 'cleanup';
+    bridgeDiagnostics.snapshot('before_driver_cleanup');
     cdp?.close();
     if (browser && browser.exitCode === null) {
       browser.kill('SIGTERM'); await Promise.race([new Promise(resolve => browser.once('exit', resolve)), delay(3000)]);
       if (browser.exitCode === null) browser.kill('SIGKILL');
     }
+    bridgeDiagnostics.snapshot('before_server_destroy');
     server.closeAllConnections?.();
     await new Promise(resolve => server.close(resolve));
     if (!preserveTemp) fs.rmSync(temp, {recursive: true, force: true});
@@ -813,5 +869,5 @@ async function main(argv = process.argv.slice(2)) {
 }
 module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, orchestratorProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
-  evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
+  Cdp, evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

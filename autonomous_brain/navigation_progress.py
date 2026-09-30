@@ -323,7 +323,10 @@ class NavigationProgress:
         result = {"success": outcome["success"], "reason": outcome["reason"],
                   "context": copy.deepcopy(context),
                   "after_observation": outcome["evidence"].get("after_observation"),
-                  "route": copy.deepcopy(outcome["evidence"].get("road_reposition"))}
+                  "route": copy.deepcopy(outcome["evidence"].get("road_reposition")),
+                  # Directional passage obligations live in RoadMemory and are
+                  # consumed by search/motion checks independently of changed().
+                  "passage_failures": copy.deepcopy(outcome["evidence"].get("passage_failures", []))}
         row["last_result"] = result
         if outcome["reason"] not in {"navigation_repeat_without_new_evidence",
                                      "navigation_subgoal_already_satisfied"}:

@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from autonomous_brain import run
+from autonomous_brain.actions import ObservedMotionFailure
 from autonomous_brain.navigation import RoadMemory
 
 
@@ -134,7 +135,15 @@ def test_blocked_motion_then_arrival_cannot_reuse_departure(monkeypatch, tmp_pat
         ("take_exit", frame(20, 20, 10), {"accepted": True, "stoppedBy": failure}),
         ("follow_road", frame(25, 25, 15, exits=(180, 90)), {"accepted": True})])
     r.actions.take_observed_exit(0)
-    r.actions.move("follow_road", {"distanceCm": 5})
+    with pytest.raises(ObservedMotionFailure, match="directed_passage_still_blocked"):
+        r.actions.move("follow_road", {"distanceCm": 5})
+    assert len(r.bridge.movements) == 1  # no actuator retry
+    # Keep the original ledger regression: even an externally supplied later
+    # arrival cannot turn the failed departure into a completed traversal.
+    before = r.snapshot["observation_index"]
+    result = r.bridge.call("follow_road", {"distanceCm": 5})
+    r.observe(motion={"method": "follow_road", "params": {"distanceCm": 5},
+        "before_observation": before, "actuator_result": result})
     assert r.roads.traversal_records() == []
 
 

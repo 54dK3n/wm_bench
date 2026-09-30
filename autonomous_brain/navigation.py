@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v11"
+VERSION = "autonomous-brain-navigation/v12"
 
 
 def evidence_version(value):
@@ -142,9 +142,12 @@ class RoadMemory:
             matches = [e for e in (node or {}).get("exits", []) if abs(wrap(e["heading_deg"] - heading)) <= 5]
             saved = matches[0] if len(matches) == 1 else {}
             state = saved.get("state", "unresolved")
+            passage = (self.passage_blocked(self._latest_public_observation, heading)
+                       if self._latest_public_observation else None)
             result.append({"angle_deg": raw["angleDeg"], "heading_deg": heading,
                 "id": saved.get("id"), "state": state, "visits": saved.get("visits", 0),
-                "completed": state == "verified", "blocked": state == "blocked"})
+                "completed": state == "verified", "blocked": state == "blocked" or passage is not None,
+                "blocked_passage_id": passage["passage_id"] if passage else None})
         return result
 
     def road_evidence(self):
@@ -180,9 +183,152 @@ class RoadMemory:
             if best is None or key < best[0]:
                 best = (key, path)
             for q, edge in self._approach_edges[p].items():
-                if not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices):
+                if (not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
+                        and self.edge_passage_blocked(edge) is None):
                     heapq.heappush(queue, (cost + edge["travelled_cm"], q, path + [q]))
         return best[1] if best else []
+
+    @staticmethod
+    def motion_heading(frame, method, params):
+        heading = frame["odometry"]["headingDeg"]
+        if method == "take_exit":
+            return wrap(heading + params["angleDeg"])
+        if method == "follow_road":
+            error = frame["road"].get("headingErrorDeg")
+            return wrap(heading + error) if number(error) else None
+        if method in {"forward", "backward"}:
+            return wrap(heading + (180 if method == "backward" else 0))
+        return None
+
+    @staticmethod
+    def _passage_view(frame):
+        odo, road = frame["odometry"], frame["road"]
+        return {"observation_index": frame["observation_index"],
+            "frame_id": frame.get("observation", {}).get("frameId"), "tick": odo.get("tick"),
+            "position_m": list(position(odo)), "body_heading_deg": odo["headingDeg"],
+            "holding": frame.get("holding", {}).get("holding"),
+            "on_road": road.get("onRoad"), "at_node": road.get("atNode"),
+            "exit_headings_deg": sorted(wrap(odo["headingDeg"] + e["angleDeg"]) for e in road.get("exits", [])),
+            "front_clearance_cm": road.get("frontClearanceCm"),
+            "left_clearance_cm": road.get("leftClearanceCm"),
+            "right_clearance_cm": road.get("rightClearanceCm")}
+
+    def remember_passage_failure(self, before, after, motion):
+        """A sensor-local directed constraint, independent of provisional node IDs.
+
+        This does not register a successful edge or merge any junction. Keep
+        both the entry and the actual stop; a failed partial motion is evidence
+        of an obstruction, never proof that its requested endpoint was reached.
+        """
+        result = motion.get("actuator_result", {})
+        heading = self.motion_heading(before, motion["method"], motion.get("params", {}))
+        if (heading is None or result.get("stoppedBy") not in {
+                "front_clearance", "collision", "off_road", "wrong_way"}
+                or motion.get("outcome_unknown") or after["observation_index"] <= before["observation_index"]):
+            return None
+        entry, stop = self._passage_view(before), self._passage_view(after)
+        basis = {"entry_m": entry["position_m"], "heading_deg": heading,
+                 "exits": entry["exit_headings_deg"], "holding": entry["holding"]}
+        row = {"schema": "brain-directed-passage-failure/v1",
+            "passage_id": evidence_version(basis), "direction_heading_deg": heading,
+            "entry": entry, "stop": stop, "reason": result["stoppedBy"],
+            "motion": copy.deepcopy(motion),
+            "entry_anchor": self.observation_anchor(before["observation_index"]),
+            "related_segments": [{"segment_id": e["segment_id"], "segment_version": e["segment_version"],
+                "direction": e["direction"]} for a in self._approach_edges.values() for e in a.values()
+                if e["departure"]["position_m"] in (entry["position_m"], stop["position_m"])
+                or e["arrival"]["position_m"] in (entry["position_m"], stop["position_m"])],
+            "selected_route_segments": ([copy.deepcopy(motion["selected_route_segment"])]
+                                        if motion.get("selected_route_segment") else []),
+            "resolved_by": None}
+        self.blocked.append(row)
+        return copy.deepcopy(row)
+
+    def _refresh_passage_evidence(self, frame):
+        """Only a comparable fresh stop view can establish restored clearance."""
+        view = self._passage_view(frame)
+        if (frame.get("observation", {}).get("tick") != view["tick"]
+                or frame.get("road", {}).get("tick", view["tick"]) != view["tick"]):
+            return
+        for row in self.blocked:
+            if row.get("schema") != "brain-directed-passage-failure/v1" or row["resolved_by"]:
+                continue
+            old = row["stop"]
+            # Rotation, retreating a few cm, graph growth, frame churn and a
+            # different gripper load do not certify this original condition.
+            if (row["reason"] != "front_clearance" or view["holding"] != old["holding"]
+                    or view["on_road"] is not True or view["at_node"] != old["at_node"]
+                    or not all(number(v) for v in (view["tick"], old["tick"]))
+                    or view["tick"] <= old["tick"] or view["frame_id"] == old["frame_id"]
+                    or distance(view["position_m"], old["position_m"]) > .002
+                    or abs(wrap(view["body_heading_deg"]-old["body_heading_deg"])) > .2):
+                continue
+            front, prior = view["front_clearance_cm"], old["front_clearance_cm"]
+            if (number(front) and number(prior) and front >= max(10.1, prior + 1)
+                    and all(number(view[k]) and number(old[k]) and view[k] >= old[k]-.1
+                            for k in ("left_clearance_cm", "right_clearance_cm"))):
+                row["resolved_by"] = {"reason": "fresh_comparable_stop_view_clearance_restored", **view}
+
+    def passage_blocked(self, frame, heading):
+        if heading is None:
+            return None
+        self._refresh_passage_evidence(frame)
+        return self._blocked_passage_at(position(frame["odometry"]), heading,
+                                        frame.get("holding", {}).get("holding"))
+
+    def _blocked_passage_at(self, point, heading, holding):
+        for row in reversed(self.blocked):
+            if (row.get("schema") != "brain-directed-passage-failure/v1" or row["resolved_by"]
+                    or holding != row["entry"]["holding"]):
+                continue
+            for anchor, direction in ((row["entry"], row["direction_heading_deg"]),
+                                      (row["stop"], row["stop"]["body_heading_deg"]
+                                       + (180 if row["motion"]["method"] == "backward" else 0))):
+                if (distance(point, anchor["position_m"]) <= .15
+                        and abs(wrap(heading-direction)) <= 10):
+                    return copy.deepcopy(row)
+        return None
+
+    def edge_passage_blocked(self, edge):
+        current = self._latest_public_observation
+        if current is None:
+            return None
+        # Refresh with real current sensors only, never a projected route pose.
+        self._refresh_passage_evidence(current)
+        holding = current.get("holding", {}).get("holding")
+        for row in reversed(self.blocked):
+            if (row.get("schema") == "brain-directed-passage-failure/v1" and not row["resolved_by"]
+                    and holding == row["entry"]["holding"]
+                    and any(s["segment_version"] == edge["segment_version"] and s["direction"] == edge["direction"]
+                            for s in row.get("selected_route_segments", []))):
+                return copy.deepcopy(row)
+        for side in ("departure", "arrival"):
+            anchor = edge[side]
+            blocked = self._blocked_passage_at(anchor["position_m"], anchor["travel_heading_deg"], holding)
+            if blocked:
+                return blocked
+        return None
+
+    def route_segment_ref(self, start, end):
+        edge = self._approach_edges.get(tuple(start), {}).get(tuple(end))
+        return ({key: copy.deepcopy(edge[key]) for key in
+                 ("segment_id", "segment_version", "direction", "departure", "arrival")}
+                if edge else None)
+
+    def bind_blocked_route(self, passage_id, segment):
+        """Bind the route actually selected at a rejected execution boundary.
+
+        A reverse proposal for a curved trip need not have the blocked exit's
+        tangent at either endpoint. Preserve this observed execution relation;
+        do not widen angular matching or invent a connecting edge.
+        """
+        if segment is None:
+            return
+        for row in self.blocked:
+            if row.get("passage_id") == passage_id and not row["resolved_by"]:
+                saved = row.setdefault("selected_route_segments", [])
+                if segment not in saved:
+                    saved.append(copy.deepcopy(segment))
 
     def _segment_anchor(self, frame, travel_heading):
         odo, road = frame["odometry"], frame["road"]
@@ -362,7 +508,8 @@ class RoadMemory:
             query["reason"] = "current_position_has_no_valid_observed_connection"
             return []
         def available(edge):
-            return not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
+            return (not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
+                    and self.edge_passage_blocked(edge) is None)
         costs, previous, queue = {start: 0}, {}, [(0, start)]
         while queue:
             cost, point = heapq.heappop(queue)
