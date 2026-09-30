@@ -7,3 +7,5 @@
 未做推测性小修、未开第二局；阶段 2、十布局和真机未启动。[第一局一球 PASS](octos-minimal-demo-next/REPORT.md) 与[第二局一球 PASS](one-ball-review-next/REPORT.md) 原样保留，不据此推算成功率。
 
 [本轮一页报告与实际命令/恢复/复算](two-ball-demo-next/REPORT.md) · [指标](two-ball-demo-next/METRICS.json) · [原始日志 Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-baseline-20260927-d6c107f)
+
+证据已于 2026-09-30 发布；七个附件均匿名完整下载并通过 SHA256 校验。[公开下载验证](two-ball-demo-next/PUBLICATION_VERIFICATION.json)。此次交付续办未启动新局、未修改生产代码，原 FAIL 与缺失平台原件事实不变。
