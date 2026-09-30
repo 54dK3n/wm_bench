@@ -1,7 +1,7 @@
-# 当前状态：双球运输修复，两局真实 FAIL，已停止
+# 当前状态：运行中监控恢复已修复，本次双球受模型连接阻断
 
-本轮两局真实双球均 **FAIL**，已经停止，无第三局。运输约束修复 `6e09544fa23d5b2546eb64743a4f4a372f3f1520`；第二局冻结 `ae35f9c8e8f0a6f34cce49d0b6fd91b2f905b4d9`，只追加一次原页面导出重连。两局各32次模型 started / 31次完整回复，31次 Executor dispatch、124观测、558桥请求；pick/grab/release/DELIVERED/done均0。r32因驱动CDP连接中断被SIGTERM停止，未耗尽200轮/1200秒；断连底层原因UNKNOWN。
+冻结 `e54ad6106123770880f407c82d2d3b9b2e75c5cd` 实跑一局，r1 的6次既有模型请求尝试均在连接建立阶段被重置（ConnectionResetError / errno54），有效回复0、分发0、grab/release/交付/done均0。驱动exit1；初次evaluator因空响应异常退出1，单独修复 `4cf908e4afe6134a9619dfa9a119fc0c5caa06f9` 后在新目录复算双球FAIL/exit1。五类原始物理导出完整，未改原件；网络重置根因UNKNOWN，没有无修改重跑。
 
-第二局成功重连健康原页面，五类物理数据完整导出，独立双球评测交付0、FAIL，driver/evaluator均exit 1。第一局仍缺物理原件。空载受阻记忆与模型选择替代出口实际触发；持球运输、实际重复段拒绝/绑定、第二目标操作后采样均NOT_EXERCISED，不能宣称已实测消除旧运输阻塞。两次历史一球PASS与所有旧FAIL保持，不启动阶段2、十布局或真机。
+运行中恢复最多一次/8秒、原运行和控制器身份核验、暂停新桥命令并只核对原在途请求；真实Chrome/子进程受控测试通过。本局未出现CDP故障，恢复和持球运输均NOT_EXERCISED，不能据测试宣称双球已通过。依赖、模型、预算及安全门保持；历史两次一球PASS和旧FAIL保留。已停止，下一阻塞为本机到官方模型服务的HTTPS连接被重置。
 
-[本轮报告](two-ball-transport-next/REPORT.md) · [指标](two-ball-transport-next/METRICS.json) · [证据Release](https://github.com/54dK3n/wm_bench/releases/tag/two-ball-transport-20260930-ae35f9c)（七个附件已匿名完整下载并通过SHA256核对；[验证记录](two-ball-transport-next/PUBLICATION_VERIFICATION.json)）。
+[本轮报告与复算](two-ball-monitor-next/REPORT.md) · [指标](two-ball-monitor-next/METRICS.json)。
