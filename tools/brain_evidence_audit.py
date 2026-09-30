@@ -586,12 +586,15 @@ def audit_done_bytes(last, calls, progress, observations):
     expected = {"action": "done", "params": {}}
     try:
         request = record["request"]
+        response_body = record["response_body"]
+        if not isinstance(response_body, str):
+            raise ValueError("missing or non-text model response")
         if request.get("stream"):
-            raw, model, done, error = LLMClient._decode_stream(record["response_body"], require_stop=True)
+            raw, model, done, error = LLMClient._decode_stream(response_body, require_stop=True)
             if not done:
                 raise ValueError("incomplete stream")
         else:
-            raw, model, error = LLMClient._decode_response(record["response_body"], require_stop=True)
+            raw, model, error = LLMClient._decode_response(response_body, require_stop=True)
         parsed = validate_action(_strict_loads(raw), last.get("state", {}))
         if (error is not None or record.get("transport_error") is not None or record.get("validation_error") is not None
                 or model != "deepseek-flash" or raw != record.get("raw_output") or parsed != expected

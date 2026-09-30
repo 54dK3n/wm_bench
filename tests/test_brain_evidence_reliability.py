@@ -1,5 +1,6 @@
 """Reject forged completion witnesses without running a simulator or a model."""
 import copy
+import hashlib
 import json
 
 import pytest
@@ -159,6 +160,23 @@ def test_rejects_incomplete_or_conflicting_evidence(case, failure):
     elif case == "done_failed":
         rounds[-1]["result"]["success"] = False
     assert failure in evaluation.evaluate_task_scope(*data)["failures"]
+
+
+@pytest.mark.parametrize("body", [None, {}, "missing"])
+def test_missing_stream_response_rejects_claimed_done_without_crashing(body):
+    data = task_fixture()
+    call = data[3][0]
+    call["request"]["stream"] = True
+    call["request_sha256"] = hashlib.sha256(json.dumps(
+        call["request"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    if body == "missing":
+        call.pop("response_body")
+    else:
+        call["response_body"] = body
+    # Both parsed claims remain done; neither can replace original model bytes.
+    assert call["action"] == data[2][-1]["action"] == {"action": "done", "params": {}}
+    result = evaluation.evaluate_task_scope(*data)
+    assert "done_not_selected_in_recorded_llm_call" in result["failures"]
 
 
 def identity_fixture():
