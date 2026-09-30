@@ -128,12 +128,14 @@ def test_incomplete_brain_coverage_is_not_a_valid_new_proof(formal_proof):
     assert verdict(formal_proof)['status'] == 'invalid'
 
 
-@pytest.mark.parametrize("version", [10, 11, 12])
+@pytest.mark.parametrize("version", [10, 11, 12, 13])
 def test_current_orchestrator_source_is_checked_against_the_actual_loaded_executor(formal_proof, version):
     manifest = formal_proof["source_manifest"]
     manifest["version"] = f"wm-autonomous-brain-driver/v{version}"
-    if version in {11, 12}:
+    if version in {11, 12, 13}:
         manifest["driverDependencies"] = {"tools/autonomous_brain_diagnostics.js": "f" * 64}
+        if version == 13:
+            manifest["driverDependencies"]["tools/autonomous_brain_monitor.js"] = "e" * 64
     manifest["brain"].update({"autonomous_brain/road_evidence.py": "a" * 64,
                               "autonomous_brain/orchestration.py": "b" * 64})
     manifest["evaluatorDependencies"] = {"tools/" + name + ".py": "c" * 64 for name in (
@@ -148,7 +150,7 @@ def test_current_orchestrator_source_is_checked_against_the_actual_loaded_execut
             "executor_sha256": "e" * 64, "max_retries": 0})
     formal_proof["driver_summary"].update(schema=manifest["version"], sourceManifestAfterRun=copy.deepcopy(manifest))
     assert verdict(formal_proof)["status"] == "verified"
-    if version in {11, 12}:
+    if version in {11, 12, 13}:
         for missing_or_invalid in (None, {}, {"tools/autonomous_brain_diagnostics.js": "invalid"}):
             bad = copy.deepcopy(formal_proof)
             bad["source_manifest"]["driverDependencies"] = missing_or_invalid

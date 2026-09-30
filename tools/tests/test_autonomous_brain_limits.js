@@ -52,6 +52,9 @@ function fixture(t, {pollAdvanceMs = 1000, samples = [], ignoreTerm = false} = {
     if (name === "./fresh_map05_platform_gate.js") return {
       verifyPreflightGate() {throw new Error("platform must not be started by this test");},
     };
+    if (["./autonomous_brain_diagnostics.js", "./autonomous_brain_monitor.js"].includes(name)) {
+      return require(path.resolve(path.dirname(driverFile), name));
+    }
     if (!name.startsWith("node:")) throw new Error(`unexpected dependency: ${name}`);
     return require(name);
   };

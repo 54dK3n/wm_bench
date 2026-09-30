@@ -14,7 +14,8 @@ const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
 const {DriverDiagnostics, observeBridge} = require("./autonomous_brain_diagnostics.js");
-const VERSION = "wm-autonomous-brain-driver/v12";
+const {MonitorGuard} = require("./autonomous_brain_monitor.js");
+const VERSION = "wm-autonomous-brain-driver/v13";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -146,6 +147,7 @@ class Cdp {
   event(type, details) {this.diagnostics?.event(type, details);}
   unavailable(reason) {
     this.available = false;
+    this.onUnavailable?.(reason);
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timer);
       pending.reject(Object.assign(new Error(reason), {code: 'CDP_UNAVAILABLE'}));
@@ -177,15 +179,18 @@ class Cdp {
       } else pending.resolve(message.result);
     });
     this.socket.addEventListener('close', event => {
-      this.event('cdp_websocket_closed', {code: event.code, reason: event.reason || '', intentional: this.closing === true});
+      this.event('cdp_websocket_closed', {code: event.code, reason: event.reason || '', intentional: this.closing === true,
+        pendingRequests: [...this.pending].map(([requestId, value]) => ({requestId, method: value.method}))});
       this.unavailable('CDP WebSocket closed');
     });
     this.socket.addEventListener('error', event => {
       const error = event.error;
       this.event('cdp_websocket_error', {message: event.message || error?.message || null,
         errorName: error?.name || null, errorCode: error?.code || null,
+        stack: error?.stack || null,
+        pendingRequests: [...this.pending].map(([requestId, value]) => ({requestId, method: value.method})),
         cause: error?.cause ? {name: error.cause.name || null, code: error.cause.code || null,
-          message: error.cause.message || null} : null});
+          message: error.cause.message || null, stack: error.cause.stack || null} : null});
       this.unavailable('CDP WebSocket error');
     });
     await new Promise((resolve, reject) => {
@@ -245,6 +250,133 @@ async function reconnectForExport({endpoint, targetId, previous, diagnostics, ti
     client.close();
     diagnostics.event('cdp_export_reconnect_failed', {message: String(error.message || error), code: error.code || null});
     throw error;
+  }
+}
+
+// These two functions execute only on the trusted driver side of the page.
+// Object identity detects a restarted/replaced run even on the same target.
+// No run/controller identity or evaluator state is supplied to the brain.
+function bindRuntimeMonitor(identity) {
+  const runId = competitionSession?.recorder?.record?.runId;
+  if (typeof runId !== 'string' || !runId || !realtimeRun) throw new Error('monitor run identity unavailable');
+  globalThis.__brainRuntimeMonitorBinding = Object.freeze({identity, runId,
+    session: competitionSession, runtime: realtimeRun, backend: RobotBackend});
+  return {runId, ...identity};
+}
+
+function readRuntimeMonitor() {
+  const bound = globalThis.__brainRuntimeMonitorBinding;
+  const status = RobotBackend.status();
+  return {runId: competitionSession?.recorder?.record?.runId,
+    ...bound?.identity,
+    sameObjects: Boolean(bound && bound.session === competitionSession
+      && bound.runtime === realtimeRun && bound.backend === RobotBackend),
+    status: competitionSession?.status, running: status.running, healthy: status.healthy,
+    tick: status.tick, stepMs: 20, errors: status.errors};
+}
+
+class RunningMonitor {
+  constructor({endpoint, targetId, getConnection, setConnection, browser, guard, diagnostics,
+    maxSimulationSeconds, recoveryTimeoutMs = 8000, readTimeoutMs = 2000}) {
+    Object.assign(this, {endpoint, targetId, getConnection, setConnection, browser, guard, diagnostics,
+      maxSimulationSeconds, recoveryTimeoutMs, readTimeoutMs});
+    this.recovery = {attempted: false, recovered: false, status: 'not_needed'};
+  }
+  arm(client) {
+    client.onUnavailable = reason => {
+      this.guard.pause(reason);
+      this.diagnostics.event('monitor_dispatch_paused', {reason, newBridgeDispatchAllowed: false});
+    };
+  }
+  async evaluateRead(client, sessionId, expression, timeoutMs) {
+    const response = await client.send('Runtime.evaluate', {expression, awaitPromise: false, returnByValue: true}, sessionId, timeoutMs);
+    if (response.exceptionDetails) throw new Error('read-only monitor page evaluation failed');
+    return response.result.value;
+  }
+  async bind(capability) {
+    const controller = this.guard.bind(capability);
+    const {client, sessionId} = this.getConnection();
+    this.identity = await this.evaluateRead(client, sessionId,
+      `(${bindRuntimeMonitor.toString()})(${JSON.stringify({...controller, nonce: crypto.randomBytes(16).toString('hex')})})`, this.readTimeoutMs);
+    this.arm(client);
+    const view = await this.read();
+    this.diagnostics.event('runtime_monitor_bound', {identity: this.identity, tick: view.tick});
+  }
+  validate(view, server) {
+    for (const key of ['runId', 'bridgeRef', 'controllerGeneration', 'nonce']) {
+      if (!this.identity?.[key] || view?.[key] !== this.identity[key]) throw new Error(`monitor_identity_mismatch:${key}`);
+    }
+    if (!view.sameObjects) throw new Error('monitor_original_run_objects_changed');
+    if (server.bridgeRef !== this.identity.bridgeRef || server.controllerGeneration !== this.identity.controllerGeneration) {
+      throw new Error('monitor_controller_identity_changed');
+    }
+    if (!Number.isSafeInteger(view.tick) || view.tick < server.tick) throw new Error('monitor_tick_unverifiable');
+    if (view.tick * 20 >= this.maxSimulationSeconds * 1000) throw new Error('simulation_limit_reached');
+    if (view.status !== 'running' || view.running !== true) throw new Error(`backend_stopped:${view.status}`);
+    if (view.healthy !== true || !Array.isArray(view.errors) || view.errors.length) throw new Error('backend_unhealthy');
+    return view;
+  }
+  async read() {
+    try {
+      if (this.browser.exitCode !== null || this.browser.signalCode) throw new Error('browser_exited');
+      const {client, sessionId} = this.getConnection();
+      const server = this.guard.check({maxTick: this.maxSimulationSeconds * 50});
+      const view = await this.evaluateRead(client, sessionId, `(${readRuntimeMonitor.toString()})()`, this.readTimeoutMs);
+      return this.validate(view, server);
+    } catch (error) {this.guard.pause('monitor_read_failed'); throw error;}
+  }
+  async recover(error, isAlive = () => true) {
+    this.guard.pause('driver_monitor_error');
+    const failure = this.diagnostics.safe({name: error.name, message: error.message, code: error.code || null,
+      stack: error.stack || null, cause: error.cause ? String(error.cause) : null});
+    this.diagnostics.event('driver_monitor_error', {error: failure, terminal: false, phaseAtFailure: 'read_only_monitor'});
+    const old = this.getConnection().client;
+    if (this.recovery.attempted || !['CDP_UNAVAILABLE', 'CDP_TIMEOUT'].includes(error.code)) {
+      this.recovery.status = 'terminal';
+      this.diagnostics.event('runtime_monitor_terminal', {error: failure, reason: 'not_recoverable_or_attempt_exhausted'});
+      throw error;
+    }
+    this.recovery = {attempted: true, recovered: false, status: 'recovering', error: failure,
+      identity: this.identity, originalTargetOnly: true, timeoutMs: this.recoveryTimeoutMs};
+    const deadline = Date.now() + this.recoveryTimeoutMs;
+    const remaining = () => {
+      if (!isAlive()) throw new Error('brain_exited_during_monitor_recovery');
+      if (this.browser.exitCode !== null || this.browser.signalCode) throw new Error('browser_exited');
+      if (Date.now() >= deadline) throw new Error('runtime_monitor_recovery_timeout');
+      return deadline - Date.now();
+    };
+    let client;
+    try {
+      remaining();
+      this.recovery.before = this.guard.check({maxTick: this.maxSimulationSeconds * 50});
+      old.onUnavailable = null; old.close();
+      client = new Cdp(this.diagnostics); client.pageErrors = old.pageErrors.slice();
+      await client.connect(this.endpoint, remaining());
+      const targets = await client.send('Target.getTargets', {}, undefined, remaining());
+      if (!targets.targetInfos.some(target => target.targetId === this.targetId && target.type === 'page')) {
+        throw new Error('original CDP page target unavailable');
+      }
+      const {sessionId} = await client.send('Target.attachToTarget', {targetId: this.targetId, flatten: true}, undefined, remaining());
+      await client.send('Runtime.enable', {}, sessionId, remaining());
+      // Settle the already-dispatched request via server status only. No POST,
+      // restart, navigation or actuator replay is part of monitor recovery.
+      const after = await this.guard.waitSettled(deadline, this.maxSimulationSeconds * 50);
+      const view = await this.evaluateRead(client, sessionId, `(${readRuntimeMonitor.toString()})()`, remaining());
+      this.validate(view, after); remaining();
+      this.recovery.after = this.guard.check({settled: true, maxTick: this.maxSimulationSeconds * 50});
+      this.setConnection({client, sessionId}); this.arm(client);
+      if (!client.available) throw new Error('CDP connection lost before monitor resume');
+      this.guard.resume();
+      this.recovery = {...this.recovery, recovered: true, status: 'degraded_verified_recovered',
+        tick: view.tick, actuatorResubmissions: 0, brainRestarted: false};
+      this.diagnostics.event('runtime_monitor_recovered', this.recovery);
+      return view;
+    } catch (failureError) {
+      client?.close(); this.recovery.status = 'terminal'; this.recovery.recovered = false;
+      this.recovery.failure = this.diagnostics.redact(String(failureError.message || failureError));
+      this.diagnostics.event('runtime_monitor_terminal', this.recovery);
+      throw failureError;
+    }
   }
 }
 
@@ -361,7 +493,8 @@ function sourceManifest(platformRoot, options = {}) {
   }
   visit(path.join(ROOT, 'autonomous_brain'));
   return {version: VERSION, driver: {file: relative(__filename), sha256: sha(fs.readFileSync(__filename))},
-    driverDependencies: {'tools/autonomous_brain_diagnostics.js': sha(fs.readFileSync(path.join(__dirname, 'autonomous_brain_diagnostics.js')))},
+    driverDependencies: Object.fromEntries(['autonomous_brain_diagnostics.js', 'autonomous_brain_monitor.js']
+      .map(file => [`tools/${file}`, sha(fs.readFileSync(path.join(__dirname, file)))])),
     platform: Object.fromEntries(files.map(file => [file, sha(fs.readFileSync(path.join(platformRoot, file)))])),
     brain: Object.fromEntries(brainFiles.sort().map(file => [relative(file), sha(fs.readFileSync(file))])),
     brainRevision: gitRevision(ROOT), platformRevision: gitRevision(platformRoot),
@@ -653,7 +786,7 @@ function validateStageGate(options) {
   assert.ok(options.maps.every(map => map === 'map-05'), 'Stage-2 formal acceptance is required before other layouts');
 }
 
-async function runBrain(options, directory, capability, origin, evaluate) {
+async function runBrain(options, directory, capability, origin, evaluate, monitor = null) {
   const brainDir = path.join(directory, 'brain'); fs.mkdirSync(brainDir);
   const config = {schema: 'autonomous-brain-robot-config/v1', origin, bridge_id: capability.bridgeId,
     client_token: capability.clientToken, task: options.task, simulation_step_ms: 20,
@@ -682,7 +815,13 @@ async function runBrain(options, directory, capability, origin, evaluate) {
     // A wall-clock cutoff is an optional diagnostic control, disabled by default.
     if (options.wallTimeoutSeconds > 0 && Date.now() - started >= options.wallTimeoutSeconds * 1000) interrupted = 'driver_wall_timeout';
     else {
-      const clock = await evaluate('({tick:deterministicSimulator?.tick ?? 0, stepMs:20, status:competitionSession?.status})');
+      let clock;
+      if (monitor) {
+        try {clock = await monitor.read();}
+        catch (error) {clock = await monitor.recover(error, () => !exited);}
+      } else {
+        clock = await evaluate('({tick:deterministicSimulator?.tick ?? 0, stepMs:20, status:competitionSession?.status})');
+      }
       if (clock.tick * clock.stepMs >= options.maxSimulationSeconds * 1000) interrupted = 'simulation_limit_reached';
       else if (clock.status !== 'running') interrupted = `backend_stopped:${clock.status}`;
     }
@@ -696,6 +835,7 @@ async function runBrain(options, directory, capability, origin, evaluate) {
   } catch (error) {
     interrupted = `driver_monitor_error:${String(error)}`;
   } finally {
+    monitor?.guard.pause('brain_ended_or_monitor_terminal');
     if (!exited) {
       child.kill('SIGTERM');
       await Promise.race([completion, delay(3000)]);
@@ -705,6 +845,7 @@ async function runBrain(options, directory, capability, origin, evaluate) {
   const terminal = await completion;
   await Promise.all([new Promise(resolve => stdout.end(resolve)), new Promise(resolve => stderr.end(resolve))]);
   return {...terminal, spawnError, interrupted, wallSeconds: (Date.now() - started) / 1000,
+    ...(monitor ? {monitorRecovery: monitor.recovery} : {}),
     wallTimeoutSeconds: options.wallTimeoutSeconds,
     invocation: {module: 'autonomous_brain.run', output: relative(brainDir), replay: options.replay ? relative(options.replay) : null,
       orchestration: options.orchestratorRoot ? 'octos_robots.Executor' : 'direct'},
@@ -740,6 +881,7 @@ async function main(argv = process.argv.slice(2)) {
   const server = createServer({dataDir: path.join(temp, 'data'), robotBridgeEnabled: true, robotBridge: {pollTimeoutMs: 1000}});
   const diagnostics = new DriverDiagnostics(options.out, {secrets: [process.env.LLM_API_KEY]});
   const bridgeDiagnostics = observeBridge(server.robotBridge, diagnostics);
+  const monitorGuard = new MonitorGuard(server.robotBridge, diagnostics);
   const originalPool = new Map(server.mapConfigPools.get(TASK));
   let browser, cdp, evaluate, sessionId, preserveTemp = false;
   try {
@@ -810,12 +952,18 @@ async function main(argv = process.argv.slice(2)) {
           trial.backendVersion = capability.version;
           diagnostics.phase = `${map}-run-${run}:brain`;
           diagnostics.event('brain_started');
-          trial.process = await runBrain(options, directory, capability, origin, evaluate);
+          const monitor = new RunningMonitor({endpoint: debug, targetId: target.targetId,
+            getConnection: () => ({client: cdp, sessionId}),
+            setConnection: value => {cdp = value.client; sessionId = value.sessionId;},
+            browser, guard: monitorGuard, diagnostics, maxSimulationSeconds: options.maxSimulationSeconds});
+          await monitor.bind(capability);
+          trial.process = await runBrain(options, directory, capability, origin, evaluate, monitor);
         } catch (error) {trial.error = String(error.stack || error);}
         finally {
           diagnostics.phase = `${map}-run-${run}:stop`;
           // No browser/JSON export is needed for this controlled in-process API.
           bridgeDiagnostics.snapshot('brain_ended_before_page_stop');
+          monitorGuard.pause('brain_ended_before_page_stop');
           if (started) {
             if (!cdp.available && browser.exitCode === null) {
               try {
@@ -926,5 +1074,5 @@ async function main(argv = process.argv.slice(2)) {
 }
 module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, orchestratorProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
-  Cdp, reconnectForExport, chromePath, evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
+  Cdp, RunningMonitor, reconnectForExport, chromePath, evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});
