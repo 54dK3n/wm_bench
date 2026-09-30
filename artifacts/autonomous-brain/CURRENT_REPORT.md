@@ -1,7 +1,7 @@
-# 当前状态：同环境连接检查仍 BLOCKED_MODEL_TRANSPORT；未开新局
+# 当前状态：网络与真实模型已恢复，双球两局均 FAIL
 
-本轮使用driver原配置加载器、同一Python及子进程环境，1次无凭据官方GET在套接字创建后、TLS握手过程中被ConnectionResetError(54)重置；无HTTP状态，根因UNKNOWN。证书验证开启，urllib无有效代理。未更换配置或依赖，真实模型smoke和双球比赛均NOT_RUN，没有新增搬运成绩。
+同driver环境的网络检查与真实流式模型smoke已通过。之后两局真实双球均FAIL：基线交付1球；小修75fe359验证局抓到首球但未释放，r55净空停止后路口身份/路线连接未恢复，200轮停止。两局driver/evaluator均exit1，原始物理导出完整。已停止，无第三局；历史两次一球PASS保留。
 
-保留监控恢复、空响应评测修复及历史两次一球PASS/全部旧FAIL。下一条件是同一环境模型连通性恢复；原单局预算、安全门和双球验收不变。
+当前修复源码 `75fe35955269f5a1afc4f4da7cd5d349a9977a41`；验证局203真实请求、200分发、954观测、4371桥请求，pick2/grab4/成功抓持1/release0/交付0/done0，终态持球。未继续开发或启动第三局、阶段2、十布局、真机。
 
-[本轮报告](two-ball-model-ready-next/REPORT.md) · [脱敏网络证据](two-ball-model-ready-next/NETWORK_CHECK.json) · [依赖哈希](two-ball-model-ready-next/FROZEN_INPUTS.json)。
+[一页报告](two-ball-model-ready-next/after-network-restore/REPORT.md) · [指标](two-ball-model-ready-next/after-network-restore/METRICS.json) · [恢复复算](two-ball-model-ready-next/after-network-restore/RESTORE.md)。

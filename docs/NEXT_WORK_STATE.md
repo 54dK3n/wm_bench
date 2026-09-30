@@ -1,4 +1,12 @@
-# 当前状态：运行中监控恢复已修复，本次双球受模型连接阻断
+# 当前状态：模型连接恢复，两局真实双球仍 FAIL，已停止
+
+同driver环境的网络检查与真实流式模型smoke已通过。之后两局真实双球均FAIL：基线交付1球；小修75fe359验证局抓到首球但未释放，r55净空停止后路口身份/路线连接未恢复，200轮停止。两局driver/evaluator均exit1，原始物理导出完整。已停止，无第三局；历史两次一球PASS保留。
+
+新生产冻结 `75fe35955269f5a1afc4f4da7cd5d349a9977a41` 仅补普通探索明确未发送受阻请求后的有证据归路；22项针对性通过，相关137通过/4项旧失败保留。验证局新归路与监控恢复均NOT_EXERCISED，下一实际阻塞是持球净空停止后的节点身份与存放路线连接，不预先开发第二球采样窗口。
+
+[本轮结果与恢复](../artifacts/autonomous-brain/two-ball-model-ready-next/after-network-restore/REPORT.md)。以下历史原文保留。
+
+## 上一轮历史：运行中监控恢复已修复，当时双球受模型连接阻断
 
 > 最新检查：同driver环境的无凭据HTTPS仍在TLS握手阶段重置（errno54），模型smoke与新双球局均NOT_RUN；没有生产/环境修改。[本轮结果](../artifacts/autonomous-brain/two-ball-model-ready-next/REPORT.md)。以下保留上一轮实跑记录。
 

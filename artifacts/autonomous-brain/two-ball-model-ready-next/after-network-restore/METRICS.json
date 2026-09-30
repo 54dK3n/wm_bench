@@ -1,0 +1,812 @@
+{
+  "scope": "Two independent real double-ball runs, never combined into a score",
+  "starting_head": "3aaa2f3509d9c5ebb0725d9ef40324f813886af8",
+  "production_fix": "75fe35955269f5a1afc4f4da7cd5d349a9977a41",
+  "environment_changed_by_agent": false,
+  "network": {
+    "mode": "network",
+    "status": "HTTP_RESPONDED",
+    "platform_started": false,
+    "actions_executed": 0,
+    "method": "GET",
+    "path": "/v1/models",
+    "authentication_sent": false,
+    "request_attempts": 1,
+    "http_status": 401,
+    "response_bytes": 31,
+    "errors": [],
+    "events": [
+      {
+        "stage": "socket_create_connection",
+        "event": "started"
+      },
+      {
+        "stage": "socket_create_connection",
+        "event": "completed"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "started"
+      },
+      {
+        "stage": "tls_wrap_socket",
+        "event": "completed"
+      }
+    ],
+    "elapsed_s": 0.429222625
+  },
+  "network_environment": {
+    "python_executable": "/Library/Developer/CommandLineTools/usr/bin/python3",
+    "python_version": "3.9.6 (default, Apr  7 2026, 02:38:40) \n[Clang 21.0.0 (clang-2100.0.123.102)]",
+    "tls_library": "LibreSSL 2.8.3",
+    "certificate_verification": true,
+    "hostname_verification": true,
+    "target": {
+      "scheme": "https",
+      "host": "api.deepseek.com",
+      "base_path": "/v1"
+    },
+    "urllib_environment_proxies": {},
+    "urllib_effective_proxies": {},
+    "target_proxy_bypass": false,
+    "selected_https_proxy": null,
+    "environment_changed": false,
+    "platform_started": false,
+    "actions_executed": 0
+  },
+  "smoke": {
+    "mode": "smoke",
+    "status": "PASS",
+    "platform_started": false,
+    "actions_executed": 0,
+    "state_source": "artifacts/autonomous-brain/two-ball-monitor-next/run-20260930T180642/map-05-run-1/brain/rounds.jsonl",
+    "state_file_sha256": "9fa7dcf13fda160ab9e9531b509970ed1787fd651115f4ae370143e6bda74ba6",
+    "transport_retry_limit": 0,
+    "max_format_repairs": 1,
+    "error_type": null,
+    "configuration": {
+      "model": "deepseek-flash",
+      "temperature": 0,
+      "thinking": "disabled",
+      "stream": true,
+      "response_format": {
+        "type": "json_object"
+      },
+      "mode": "live",
+      "formal_run": true
+    },
+    "action": {
+      "action": "explore",
+      "params": {
+        "exit_angle": 0
+      }
+    },
+    "request_count": 1,
+    "decision_count": 1,
+    "response_model": "deepseek-flash",
+    "transport_error": null,
+    "transport_diagnostics": {
+      "phase": "read_stream",
+      "received_bytes": 4896
+    },
+    "validation_error": null,
+    "request_sha256": "1f7c5395e0dc3e62d3094f4c0d3998e43a99adf80e1b7bf8604f3091c5d432c7",
+    "calls": [
+      {
+        "call_index": 1,
+        "request_sha256": "1f7c5395e0dc3e62d3094f4c0d3998e43a99adf80e1b7bf8604f3091c5d432c7",
+        "response_sha256": "c0a02158f03a716446b52e4f4e6c7814dc1cc6b05b14b3d5b9f35821998b4d9d",
+        "sse_done": true,
+        "incomplete_sse_lines": 0,
+        "finish_reasons": [
+          "stop"
+        ],
+        "response_model": "deepseek-flash",
+        "validation_error": null
+      }
+    ]
+  },
+  "total_real_model_post_requests": 407,
+  "formal_run_count": 2,
+  "runs": [
+    {
+      "directory": "artifacts/autonomous-brain/two-ball-model-ready-next/run-20260930T214331",
+      "source": "3aaa2f3509d9c5ebb0725d9ef40324f813886af8",
+      "platform_run_id": "run-ca4d9c80-d504-462e-ad31-325fa3ffc44a",
+      "executor_run_ids": [
+        "5e742c5d7c31463c9faa8076c72f8723"
+      ],
+      "driver_exit": 1,
+      "evaluator_exit": 1,
+      "evaluation": "FAIL",
+      "brain_reason": "round_limit",
+      "metrics": {
+        "rounds": 200,
+        "llm_calls": 203,
+        "llm_total_elapsed_s": 283.655141202,
+        "simulation_seconds": 988.54,
+        "observations": 917,
+        "failed_rounds": 122,
+        "failed_actions": 122,
+        "execution_failures": 0,
+        "external_stop_failures": 0,
+        "bridge_calls": 4186,
+        "nonwhitelist_brain_requests": 0
+      },
+      "model": {
+        "names": {
+          "deepseek-flash": 203
+        },
+        "live_started_requests": 203,
+        "live_finished_events": 203,
+        "started_events": 203,
+        "finished_events": 203,
+        "complete_llm_records": 203,
+        "unique_call_indices": 203,
+        "unmatched_started_call_indices": [],
+        "transport_error_records": 0,
+        "validation_error_records": 3,
+        "mode_counts": {
+          "live": 203
+        }
+      },
+      "orchestration": {
+        "run_ids": [
+          "5e742c5d7c31463c9faa8076c72f8723"
+        ],
+        "dispatch_records": 200,
+        "judge_records": 200,
+        "unique_step_ids": 200,
+        "step_ids_match_round": true,
+        "first_step_id": "5e742c5d7c31463c9faa8076c72f8723:1",
+        "last_step_id": "5e742c5d7c31463c9faa8076c72f8723:200",
+        "last_round_has_judge": true,
+        "dispatch_classes": [
+          "orchestrator.executor.Executor"
+        ],
+        "model_sources": {
+          "live_api": 200
+        }
+      },
+      "high_level_pick_count": 2,
+      "actual_grab_requests": 4,
+      "observed_successful_grabs": 1,
+      "actual_release_requests": 1,
+      "grabs": [
+        {
+          "round": 35,
+          "bridge_request_id": "brain-000623",
+          "before_observation": 138,
+          "after_observation": 139,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 35,
+          "bridge_request_id": "brain-000633",
+          "before_observation": 140,
+          "after_observation": 141,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 37,
+          "bridge_request_id": "brain-000669",
+          "before_observation": 148,
+          "after_observation": 149,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 37,
+          "bridge_request_id": "brain-000679",
+          "before_observation": 150,
+          "after_observation": 151,
+          "before_holding": false,
+          "after_holding": true,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        }
+      ],
+      "holding_chains": [
+        {
+          "round": 37,
+          "object_id": "target_038",
+          "schema": "brain-grasp-chain/v1",
+          "grab_request_id": "brain-000679",
+          "authorized_before_observation": 150,
+          "authorization_observation_index": 150,
+          "authorization_object_state": "CONFIRMED",
+          "first_held_observation": 151,
+          "confirmation_observation": 156,
+          "recorded_holding_chain_refs": [
+            151,
+            152,
+            153,
+            154,
+            155,
+            156
+          ],
+          "raw_chain_sensor_true_all": true,
+          "post_pick_observation": 157,
+          "post_pick_object_state": "HELD",
+          "remaining_observations_all_holding_true": false,
+          "remaining_observation_range": [
+            151,
+            917
+          ],
+          "remaining_observation_count": 767,
+          "note": "Public observation/command chain only; not independent truth-based physical validation."
+        }
+      ],
+      "wm_delivered_count": 1,
+      "independent_physical_delivered_count": 1,
+      "independent_verified_delivery_chains": 1,
+      "model_done_count": 0,
+      "final_holding": false,
+      "pending_grasp": null,
+      "last_observation": {
+        "observation_index": 917,
+        "frame_id": 917,
+        "tick": 49427,
+        "round": 200,
+        "simulation_seconds": 988.54,
+        "holding": false,
+        "on_road": true
+      },
+      "monitor_recovery": {
+        "attempted": false,
+        "recovered": false,
+        "status": "not_needed"
+      },
+      "controller_errors": [],
+      "export": {
+        "complete": true,
+        "completedDatasets": [
+          "envelope",
+          "record",
+          "samples",
+          "sensorAudit",
+          "captures"
+        ],
+        "failures": [],
+        "partial": {}
+      },
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_orchestrator_matches": true,
+        "actual_world_model_matches": true,
+        "formal_configuration_matches": true,
+        "run_configuration_matches": true,
+        "recorded_brain_and_driver_files": 14
+      },
+      "strict_transcript_replay": {
+        "allPass": true,
+        "recorded_rounds": 200,
+        "replayed_rounds": 200,
+        "recorded_calls": 203,
+        "replayed_calls": 203,
+        "network_calls": 0,
+        "source_evidence_unchanged": true
+      },
+      "global_judge": {
+        "match": 3,
+        "false_positive": 0,
+        "false_negative": 0,
+        "unverifiable": 0,
+        "not_evaluated": 197,
+        "eligible_actions": 3
+      },
+      "prefix_judge": {
+        "match": 3
+      },
+      "failures": [
+        "no_active_delivery_event:guangyang-target-1",
+        "final_position_outside_storage:guangyang-target-1",
+        "round_limit_reached",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:delivery_identity_or_evidence_unresolved",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "done_post_action_completion_not_corroborated"
+      ],
+      "evaluator_sha256": "c63a070000210b9519c1727b2c85f6df8f17a4039c624103e57b9bdfa4fcfb6d",
+      "evaluator_dependencies": {
+        "tools/brain_evidence_audit.py": "f6f0eefb5c3afceb51fe7a60ff8b02fcb9ce6d806ac332b58208e9c0b021e2c1",
+        "tools/replay_brain_llm.py": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+        "tools/brain_topology_audit.py": "d67bcae8fe71447799de3c9fbb4d79f9ce95a82bc5f8c362c06553bdadb223ea"
+      },
+      "public_count_file": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/counts-run-20260930T214331.json"
+    },
+    {
+      "directory": "artifacts/autonomous-brain/two-ball-model-ready-next/run-20260930T221441",
+      "source": "75fe35955269f5a1afc4f4da7cd5d349a9977a41",
+      "platform_run_id": "run-26dcace2-b7fb-4c47-a93b-30f59ce5f743",
+      "executor_run_ids": [
+        "4f64d4e3afb24aea9d451726d7fa7614"
+      ],
+      "driver_exit": 1,
+      "evaluator_exit": 1,
+      "evaluation": "FAIL",
+      "brain_reason": "round_limit",
+      "metrics": {
+        "rounds": 200,
+        "llm_calls": 203,
+        "llm_total_elapsed_s": 309.0432461689997,
+        "simulation_seconds": 1181.66,
+        "observations": 954,
+        "failed_rounds": 121,
+        "failed_actions": 121,
+        "execution_failures": 0,
+        "external_stop_failures": 0,
+        "bridge_calls": 4371,
+        "nonwhitelist_brain_requests": 0
+      },
+      "model": {
+        "names": {
+          "deepseek-flash": 203
+        },
+        "live_started_requests": 203,
+        "live_finished_events": 203,
+        "started_events": 203,
+        "finished_events": 203,
+        "complete_llm_records": 203,
+        "unique_call_indices": 203,
+        "unmatched_started_call_indices": [],
+        "transport_error_records": 0,
+        "validation_error_records": 3,
+        "mode_counts": {
+          "live": 203
+        }
+      },
+      "orchestration": {
+        "run_ids": [
+          "4f64d4e3afb24aea9d451726d7fa7614"
+        ],
+        "dispatch_records": 200,
+        "judge_records": 200,
+        "unique_step_ids": 200,
+        "step_ids_match_round": true,
+        "first_step_id": "4f64d4e3afb24aea9d451726d7fa7614:1",
+        "last_step_id": "4f64d4e3afb24aea9d451726d7fa7614:200",
+        "last_round_has_judge": true,
+        "dispatch_classes": [
+          "orchestrator.executor.Executor"
+        ],
+        "model_sources": {
+          "live_api": 200
+        }
+      },
+      "high_level_pick_count": 2,
+      "actual_grab_requests": 4,
+      "observed_successful_grabs": 1,
+      "actual_release_requests": 0,
+      "grabs": [
+        {
+          "round": 35,
+          "bridge_request_id": "brain-000623",
+          "before_observation": 138,
+          "after_observation": 139,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 35,
+          "bridge_request_id": "brain-000633",
+          "before_observation": 140,
+          "after_observation": 141,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 37,
+          "bridge_request_id": "brain-000669",
+          "before_observation": 148,
+          "after_observation": 149,
+          "before_holding": false,
+          "after_holding": false,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        },
+        {
+          "round": 37,
+          "bridge_request_id": "brain-000679",
+          "before_observation": 150,
+          "after_observation": 151,
+          "before_holding": false,
+          "after_holding": true,
+          "bridge_submission_status": 202,
+          "bridge_terminal_status": "completed",
+          "outcome_unknown": false
+        }
+      ],
+      "holding_chains": [
+        {
+          "round": 37,
+          "object_id": "target_038",
+          "schema": "brain-grasp-chain/v1",
+          "grab_request_id": "brain-000679",
+          "authorized_before_observation": 150,
+          "authorization_observation_index": 150,
+          "authorization_object_state": "CONFIRMED",
+          "first_held_observation": 151,
+          "confirmation_observation": 156,
+          "recorded_holding_chain_refs": [
+            151,
+            152,
+            153,
+            154,
+            155,
+            156
+          ],
+          "raw_chain_sensor_true_all": true,
+          "post_pick_observation": 157,
+          "post_pick_object_state": "HELD",
+          "remaining_observations_all_holding_true": true,
+          "remaining_observation_range": [
+            151,
+            954
+          ],
+          "remaining_observation_count": 804,
+          "note": "Public observation/command chain only; not independent truth-based physical validation."
+        }
+      ],
+      "wm_delivered_count": 0,
+      "independent_physical_delivered_count": 0,
+      "independent_verified_delivery_chains": 0,
+      "model_done_count": 0,
+      "final_holding": true,
+      "pending_grasp": null,
+      "last_observation": {
+        "observation_index": 954,
+        "frame_id": 954,
+        "tick": 59083,
+        "round": 200,
+        "simulation_seconds": 1181.66,
+        "holding": true,
+        "on_road": true
+      },
+      "monitor_recovery": {
+        "attempted": false,
+        "recovered": false,
+        "status": "not_needed"
+      },
+      "controller_errors": [],
+      "export": {
+        "complete": true,
+        "completedDatasets": [
+          "envelope",
+          "record",
+          "samples",
+          "sensorAudit",
+          "captures"
+        ],
+        "failures": [],
+        "partial": {}
+      },
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_orchestrator_matches": true,
+        "actual_world_model_matches": true,
+        "formal_configuration_matches": true,
+        "run_configuration_matches": true,
+        "recorded_brain_and_driver_files": 14
+      },
+      "strict_transcript_replay": {
+        "allPass": true,
+        "recorded_rounds": 200,
+        "replayed_rounds": 200,
+        "recorded_calls": 203,
+        "replayed_calls": 203,
+        "network_calls": 0,
+        "source_evidence_unchanged": true
+      },
+      "global_judge": {
+        "match": 2,
+        "false_positive": 0,
+        "false_negative": 0,
+        "unverifiable": 0,
+        "not_evaluated": 198,
+        "eligible_actions": 2
+      },
+      "prefix_judge": {
+        "match": 2
+      },
+      "failures": [
+        "final_truth_gripper_not_empty_or_unknown",
+        "no_active_delivery_event:guangyang-target-1",
+        "final_position_outside_storage:guangyang-target-1",
+        "no_active_delivery_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "round_limit_reached",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:gripper_or_grasp_not_resolved",
+        "task_completion:delivery_identity_or_evidence_unresolved",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "done_post_action_completion_not_corroborated"
+      ],
+      "evaluator_sha256": "c63a070000210b9519c1727b2c85f6df8f17a4039c624103e57b9bdfa4fcfb6d",
+      "evaluator_dependencies": {
+        "tools/brain_evidence_audit.py": "f6f0eefb5c3afceb51fe7a60ff8b02fcb9ce6d806ac332b58208e9c0b021e2c1",
+        "tools/replay_brain_llm.py": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+        "tools/brain_topology_audit.py": "d67bcae8fe71447799de3c9fbb4d79f9ce95a82bc5f8c362c06553bdadb223ea"
+      },
+      "public_count_file": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/counts-run-20260930T221441.json"
+    }
+  ],
+  "tests": {
+    "schema": "test-command-summary-local-evidence",
+    "cwd": "/Users/ken/Desktop/wm_bench",
+    "created_by": "run_evidence_check",
+    "scope": "Read-only evidence collation after final candidate freeze; no tests, API calls or platform commands rerun.",
+    "frozen_validation_source": "75fe35955269f5a1afc4f4da7cd5d349a9977a41",
+    "baseline_run": {
+      "path": "artifacts/autonomous-brain/two-ball-model-ready-next/run-20260930T214331/map-05-run-1",
+      "source": "3aaa2f3509d9c5ebb0725d9ef40324f813886af8",
+      "platform_run_id": "run-ca4d9c80-d504-462e-ad31-325fa3ffc44a",
+      "orchestration_run_id": "5e742c5d7c31463c9faa8076c72f8723",
+      "platform_id_source": "envelope.json:management.runId",
+      "orchestration_id_source": "brain/summary.json:orchestration.run_id"
+    },
+    "test_runs": [
+      {
+        "stage": "before_fix_red",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-before.txt",
+        "output_sha256": "9caade54b492270333e06ca1244d96a74c6244e98572d04b2cb1d442ad9ecbda",
+        "passed": 0,
+        "failed": 1,
+        "exit_code": 1,
+        "notes": "Original production behavior failed the new actual-boundary reduced fixture."
+      },
+      {
+        "stage": "first_implementation_spot_check",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py",
+        "output": null,
+        "passed": 1,
+        "failed": 0,
+        "exit_code": 0,
+        "notes": "Only tool output retained; no dedicated raw output file. Superseded by saved expanded runs."
+      },
+      {
+        "stage": "expanded_targeted_initial",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-after-first.txt",
+        "output_sha256": "591bbbea903a8e038e708bea1c71ad90c0cb9c04f066e26fd98b5bc6a98be0ec",
+        "passed": 21,
+        "failed": 0,
+        "exit_code": 0,
+        "notes": ""
+      },
+      {
+        "stage": "related_regression_initial",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py tests/test_brain_transport_passage.py tests/test_brain_explore_semantics.py tests/test_brain_actions.py tests/test_brain_junction_observation.py tests/test_brain_actions_navigation_regression.py tests/test_brain_route_contract.py",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-regressions.txt",
+        "output_sha256": "c17d728e9929f8c18474d3193225c00e9f841d8e9ccb849bab7ed7122aa66c66",
+        "passed": 132,
+        "failed": 9,
+        "exit_code": 1,
+        "notes": "Five introduced compatibility/test-expectation failures corrected; four existing junction blocked-list assertion failures retained."
+      },
+      {
+        "stage": "baseline_existing_failure_comparison",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport subprocess,sys,types,pytest,hashlib\nimport autonomous_brain\nrevision='3aaa2f3509d9c5ebb0725d9ef40324f813886af8'\nfor name in ['navigation','actions']:\n    path='autonomous_brain/'+name+'.py'\n    source=subprocess.check_output(['git','show',revision+':'+path])\n    module=types.ModuleType('autonomous_brain.'+name)\n    module.__file__=path\n    module.__package__='autonomous_brain'\n    sys.modules[module.__name__]=module\n    setattr(autonomous_brain,name,module)\n    exec(compile(source,revision+':'+path,'exec'),module.__dict__)\n    print('BASELINE',revision,path,hashlib.sha256(source).hexdigest(),flush=True)\nrc=pytest.main(['-q','tests/test_brain_junction_observation.py'])\nprint('pytest_exit='+str(rc),flush=True)\nraise SystemExit(rc)\nPY",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-junction-baseline.txt",
+        "output_sha256": "496f8b60dc9f60ac333ea97bd7068c2bff9adb249ee1f5aacf65228a63d7c985",
+        "passed": 34,
+        "failed": 4,
+        "exit_code": 1,
+        "notes": "Original actions/navigation loaded from frozen 3aaa source in an isolated Python process; no worktree rollback. Same four blocked-list assertion failures."
+      },
+      {
+        "stage": "related_regression_final",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py tests/test_brain_transport_passage.py tests/test_brain_explore_semantics.py tests/test_brain_actions.py tests/test_brain_junction_observation.py tests/test_brain_actions_navigation_regression.py tests/test_brain_route_contract.py",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-regressions-final.txt",
+        "output_sha256": "d6fd6706e438d1f59d4c023b5a80e20e9db1d26007698d237285d7abcaf87b08",
+        "passed": 137,
+        "failed": 4,
+        "exit_code": 1,
+        "notes": "Remaining four failures also reproduce on frozen baseline. Existing assertions were not relaxed."
+      },
+      {
+        "stage": "targeted_final",
+        "command": "PYTHONPATH=vendor/wm_kit_opt2:.:tests PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q tests/test_brain_blocked_explore_return.py",
+        "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-targeted-final.txt",
+        "output_sha256": "508fb88ac9a13a2ffab7a3560e77a67eabd8d84d544a23b790e5ded7d1bb84cf",
+        "passed": 22,
+        "failed": 0,
+        "exit_code": 0,
+        "notes": ""
+      },
+      {
+        "stage": "whitespace_check",
+        "command": "git diff --check",
+        "output": null,
+        "exit_code": 0,
+        "notes": "Empty tool output, executed before root source freeze; no later tests were run by this agent."
+      }
+    ],
+    "test_count_warning": "Runs overlap. Do not add counts; final targeted result is 22 passed, related regression is 137 passed / 4 known baseline failures.",
+    "existing_failure_cases": [
+      "test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[collision]",
+      "test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[front_clearance]",
+      "test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[off_road]",
+      "test_blocked_recovery_translation_does_not_become_arrival_even_with_a_node_flag[wrong_way]"
+    ],
+    "real_public_window_diagnostic": {
+      "actor": "recovery_safety_review",
+      "output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/blocked-explore-return-real-window.txt",
+      "meaning": "Original public observations 847-850 and completed motion 847-848 registered in RoadMemory; supported return proof produced without executing commands.",
+      "segment_id": "road-segment-847-848",
+      "source_request_id": "brain-003906",
+      "max_travel_cm": 40.600000000000364,
+      "holding": false,
+      "executed_actuator_commands": 0,
+      "model_calls": 0,
+      "note": "Read-only local component diagnostic, not a platform outcome. Source hashes in that output identify its own execution instant."
+    },
+    "original_evidence_integrity": {
+      "manifest": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/baseline-original-hashes.json",
+      "verification_output": "artifacts/autonomous-brain/two-ball-model-ready-next/raw/checks/original-run-hash-recheck.json",
+      "checked_files": 36,
+      "all_match": true
+    },
+    "first_ball_evidence": {
+      "brain_object_id": "target_038",
+      "high_level_pick_round": 37,
+      "grab_attempts": [
+        {
+          "request_id": "brain-000669",
+          "before_observation": 148,
+          "after_observation": 149,
+          "before_tick": 6236,
+          "after_tick": 6281,
+          "before_holding": false,
+          "after_holding": false,
+          "successful_grasp": false
+        },
+        {
+          "request_id": "brain-000679",
+          "before_observation": 150,
+          "after_observation": 151,
+          "before_tick": 6329,
+          "after_tick": 6367,
+          "before_holding": false,
+          "after_holding": true,
+          "successful_grasp": true,
+          "authorization_hit_frames": [
+            92,
+            101,
+            130
+          ]
+        }
+      ],
+      "holding_confirmation_observations": [
+        151,
+        152,
+        153,
+        154,
+        155,
+        156
+      ],
+      "holding_confirmation_ref": {
+        "observation": 156,
+        "frame": 156,
+        "tick": 6527
+      },
+      "first_serialized_HELD": {
+        "observation": 157,
+        "tick": 6527,
+        "simulation_seconds": 130.54
+      },
+      "place_round": 139,
+      "release_command_ref": {
+        "bridge_request_id": "brain-003335",
+        "bridge_sequence": 3335,
+        "method": "release",
+        "object_id": "target_038",
+        "grasp_request_id": "brain-000679",
+        "round": 139,
+        "before_observation": 722,
+        "after_observation": 723
+      },
+      "release_before": {
+        "observation": 722,
+        "tick": 43356,
+        "simulation_seconds": 867.12,
+        "holding": true
+      },
+      "release_after": {
+        "observation": 723,
+        "tick": 43390,
+        "simulation_seconds": 867.8,
+        "holding": false
+      },
+      "delivery_witness": {
+        "observation": 724,
+        "frame": 724,
+        "tick": 43524,
+        "simulation_seconds": 870.48,
+        "candidate_witnesses": 1,
+        "ball_bbox": {
+          "x": 276,
+          "y": 210,
+          "w": 88,
+          "h": 64
+        },
+        "storage_bbox": {
+          "x": 196,
+          "y": 238,
+          "w": 261,
+          "h": 46
+        },
+        "reason": "ball_observed_in_storage"
+      },
+      "first_serialized_DELIVERED": {
+        "observation": 725,
+        "tick": 43524,
+        "simulation_seconds": 870.48,
+        "holding": false
+      },
+      "important_semantics": "Motion completion alone is not grasp/delivery. Confirmation/delivery transitions occur after their witness observation, so serialized HELD is obs157 and DELIVERED is obs725; earlier observation states were not rewritten.",
+      "second_delivery": false,
+      "model_done": false,
+      "source_files": [
+        "brain/rounds.jsonl",
+        "brain/motions.jsonl",
+        "brain/observations.jsonl",
+        "brain/bridge-calls.jsonl"
+      ]
+    }
+  },
+  "branches": {
+    "running_monitor_recovery": [
+      "NOT_EXERCISED",
+      "NOT_EXERCISED"
+    ],
+    "new_pre_motion_rejection_road_return": [
+      "NOT_IMPLEMENTED_IN_BASELINE",
+      "NOT_EXERCISED"
+    ],
+    "first_ball_transport_and_release": [
+      "EXERCISED_1_VALID_DELIVERY",
+      "TRANSPORT_BLOCKED_RELEASE_NOT_EXERCISED"
+    ],
+    "post_release_second_target_sampling_window": [
+      "NOT_ESTABLISHED_AS_BLOCKER",
+      "NOT_EXERCISED"
+    ]
+  },
+  "stopped": true,
+  "additional_runs": 0
+}
