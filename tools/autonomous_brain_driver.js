@@ -14,7 +14,7 @@ const {pipeline} = require("node:stream/promises");
 const {spawn, spawnSync} = require("node:child_process");
 const {verifyPreflightGate} = require("./fresh_map05_platform_gate.js");
 const {DriverDiagnostics, observeBridge} = require("./autonomous_brain_diagnostics.js");
-const VERSION = "wm-autonomous-brain-driver/v11";
+const VERSION = "wm-autonomous-brain-driver/v12";
 const ROOT = path.resolve(__dirname, "..");
 const LLM_REQUIRED_KEYS = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"];
 const LLM_CONFIG_KEYS = new Set([...LLM_REQUIRED_KEYS, "LLM_TEMPERATURE", "LLM_THINKING"]);
@@ -152,7 +152,7 @@ class Cdp {
     }
     this.pending.clear();
   }
-  async connect(url) {
+  async connect(url, timeoutMs = 20000) {
     this.socket = new WebSocket(url);
     this.socket.addEventListener("message", event => {
       let message;
@@ -180,10 +180,17 @@ class Cdp {
       this.event('cdp_websocket_closed', {code: event.code, reason: event.reason || '', intentional: this.closing === true});
       this.unavailable('CDP WebSocket closed');
     });
-    this.socket.addEventListener('error', () => {this.event('cdp_websocket_error'); this.unavailable('CDP WebSocket error');});
+    this.socket.addEventListener('error', event => {
+      const error = event.error;
+      this.event('cdp_websocket_error', {message: event.message || error?.message || null,
+        errorName: error?.name || null, errorCode: error?.code || null,
+        cause: error?.cause ? {name: error.cause.name || null, code: error.cause.code || null,
+          message: error.cause.message || null} : null});
+      this.unavailable('CDP WebSocket error');
+    });
     await new Promise((resolve, reject) => {
       const fail = message => {clearTimeout(timer); reject(new Error(message));};
-      const timer = setTimeout(() => {this.socket.close(); fail('CDP connection timeout');}, 20000);
+      const timer = setTimeout(() => {this.socket.close(); fail('CDP connection timeout');}, timeoutMs);
       this.socket.addEventListener("open", () => {clearTimeout(timer); this.available = true; this.event('cdp_connected'); resolve();}, {once: true});
       this.socket.addEventListener("error", () => fail('CDP connection failed'), {once: true});
       this.socket.addEventListener("close", () => fail('CDP connection closed'), {once: true});
@@ -201,6 +208,44 @@ class Cdp {
     });
   }
   close() {this.closing = true; this.unavailable('CDP closed by driver'); this.socket?.close();}
+}
+
+async function reconnectForExport({endpoint, targetId, previous, diagnostics, timeoutMs = 15000}) {
+  // The brain has already exited. Attach only to its original page; never
+  // create/navigate a page, start a backend, or retry an actuator command.
+  const deadline = Date.now() + timeoutMs;
+  const remaining = () => {
+    const ms = deadline - Date.now();
+    if (ms <= 0) throw new Error('CDP export reconnect deadline exceeded');
+    return ms;
+  };
+  const client = new Cdp(diagnostics);
+  client.pageErrors = previous.pageErrors.slice();
+  previous.close();
+  diagnostics.event('cdp_export_reconnect_started', {timeoutMs, originalTargetOnly: true});
+  try {
+    await client.connect(endpoint, remaining());
+    const targets = await client.send('Target.getTargets', {}, undefined, remaining());
+    if (!targets.targetInfos.some(target => target.targetId === targetId && target.type === 'page')) {
+      throw new Error('original CDP page target unavailable');
+    }
+    const {sessionId} = await client.send('Target.attachToTarget', {targetId, flatten: true}, undefined, remaining());
+    await client.send('Runtime.enable', {}, sessionId, remaining());
+    const response = await client.send('Runtime.evaluate', {expression: `(()=>{
+      const status=RobotBackend.status(); return {running:status.running,healthy:status.healthy,tick:status.tick,
+        errorCount:status.errors.length,errors:status.errors.slice(-32)};
+    })()`, awaitPromise: true, returnByValue: true}, sessionId, remaining());
+    if (response.exceptionDetails) throw new Error('original backend status unavailable after CDP reconnect');
+    const status = diagnostics.safe(response.result.value);
+    assert.ok(status && typeof status.running === 'boolean', 'invalid original backend status');
+    diagnostics.event('cdp_export_reconnect_succeeded', {running: status.running, healthy: status.healthy,
+      tick: status.tick, errorCount: status.errorCount});
+    return {client, sessionId, status};
+  } catch (error) {
+    client.close();
+    diagnostics.event('cdp_export_reconnect_failed', {message: String(error.message || error), code: error.code || null});
+    throw error;
+  }
 }
 
 function chromePath() {
@@ -772,6 +817,18 @@ async function main(argv = process.argv.slice(2)) {
           // No browser/JSON export is needed for this controlled in-process API.
           bridgeDiagnostics.snapshot('brain_ended_before_page_stop');
           if (started) {
+            if (!cdp.available && browser.exitCode === null) {
+              try {
+                const recovered = await reconnectForExport({endpoint: debug, targetId: target.targetId,
+                  previous: cdp, diagnostics});
+                cdp = recovered.client; sessionId = recovered.sessionId;
+                trial.cdpExportRecovery = {attempted: true, recovered: true, originalTargetOnly: true};
+                writeJson(path.join(directory, 'backend-status-before-export.json'), recovered.status);
+              } catch (error) {
+                trial.cdpExportRecovery = {attempted: true, recovered: false, originalTargetOnly: true,
+                  error: diagnostics.redact(String(error.message || error))};
+              }
+            }
             try { exported = await stopForChunkedExport(evaluate, options.timeoutMs); }
             catch (error) {trial.stopError = String(error.stack || error);}
           }
@@ -869,5 +926,5 @@ async function main(argv = process.argv.slice(2)) {
 }
 module.exports = {VERSION, parseLocalLLMConfig, loadLocalLLMConfig, validateFormalLLMConfig, validateStageGate, worldModelProvenance, orchestratorProvenance, parseArgs, installEvaluationCapture,
   installChunkedEvaluationExport, stopForChunkedExport, savePageDataset, persistPageExport,
-  Cdp, evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
+  Cdp, reconnectForExport, chromePath, evaluateTruth, previousMap05Success, sourceManifest, evaluatorDependencies, runBrain, main};
 if (require.main === module) main().catch(error => {console.error(error.stack || error); process.exitCode = 1;});

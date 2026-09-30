@@ -503,7 +503,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
 
     def valid(value):
         if not isinstance(value, dict) or value.get("version") not in {
-                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 12)}:
+                f"wm-autonomous-brain-driver/v{number}" for number in range(1, 13)}:
             return False
         driver, brain, platform = (value.get(key) for key in ("driver", "brain", "platform"))
         base_valid = (isinstance(driver, dict) and driver.get("file") == "tools/autonomous_brain_driver.js"
@@ -514,14 +514,14 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
                 and len({Path(key).name for key in brain}) == len(brain)
                 and isinstance(platform, dict) and bool(platform) and all(sha(value) for value in platform.values())
                 and sha(value.get("evaluatorCaptureSha256")))
-        modern = value["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"}
+        modern = value["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"}
         dependencies = value.get("evaluatorDependencies")
         dependency_valid = (isinstance(dependencies, dict)
             and set(dependencies) == {"tools/brain_evidence_audit.py", "tools/replay_brain_llm.py", "tools/brain_topology_audit.py"}
             and all(sha(digest) for digest in dependencies.values())
             and isinstance(brain, dict) and sha(brain.get("autonomous_brain/road_evidence.py")))
         orchestration_valid = True
-        if value["version"] in {"wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"}:
+        if value["version"] in {"wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"}:
             orchestration = value.get("orchestrator", {})
             orchestration_valid = (isinstance(orchestration, dict)
                 and orchestration.get("kind") == "octos_robots.Executor"
@@ -534,12 +534,12 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
                 and sha(orchestration["sources"].get("orchestrator/executor.py"))
                 and isinstance(brain, dict) and sha(brain.get("autonomous_brain/orchestration.py")))
         driver_dependencies = value.get("driverDependencies")
-        diagnostics_valid = (value["version"] != "wm-autonomous-brain-driver/v11" or (
+        diagnostics_valid = (value["version"] not in {"wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"} or (
             isinstance(driver_dependencies, dict)
             and set(driver_dependencies) == {"tools/autonomous_brain_diagnostics.js"}
             and all(sha(digest) for digest in driver_dependencies.values())))
         return base_valid and orchestration_valid and diagnostics_valid and (not modern or valid_v7(value)) and (
-            value["version"] not in {"wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"} or dependency_valid)
+            value["version"] not in {"wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"} or dependency_valid)
 
     if (not isinstance(manifest, dict) or not isinstance(driver_summary, dict)
             or not isinstance(brain_summary, dict)):
@@ -554,7 +554,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
     result["recorded_before_after_equal"] = manifest == after
     expected = {Path(path).name: value for path, value in manifest["brain"].items()}
     result["brain_summary_hashes_match"] = brain_summary.get("source_sha256") == expected
-    if manifest["version"] in {"wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"}:
+    if manifest["version"] in {"wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"}:
         recorded = manifest["orchestrator"]
         loaded = brain_summary.get("orchestration")
         result["actual_orchestrator_matches"] = (isinstance(loaded, dict)
@@ -565,7 +565,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
             and type(loaded.get("max_retries")) is int and loaded["max_retries"] == 0)
         if not result["actual_orchestrator_matches"]:
             result["failures"].append("source_proof_actual_orchestrator_mismatch")
-    if manifest["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"}:
+    if manifest["version"] in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"}:
         expected_wm = dict(manifest["worldModel"])
         expected_wm.pop("selection")
         result["actual_world_model_matches"] = expected_wm == brain_summary.get("world_model")
@@ -965,9 +965,9 @@ def _evaluate_run(directory: Path, *, one_ball_smoke: bool) -> dict:
     manifest = load("../manifest.json", {})
     driver_summary = load("../summary.json", {})
     lifecycle = load("brain/llm.lifecycle.jsonl", [],
-        required=manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"}, lines=True)
+        required=manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"}, lines=True)
     lifecycle_audit = (evaluate_call_lifecycle(calls, lifecycle)
-        if lifecycle or manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"} else None)
+        if lifecycle or manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"} else None)
     if lifecycle_audit:
         failures.extend(lifecycle_audit["failures"])
     stop = load("../evaluator-stop.json", {}, required=False)
@@ -994,7 +994,7 @@ def _evaluate_run(directory: Path, *, one_ball_smoke: bool) -> dict:
         failures.append("one_ball_smoke_missing_instruction_scope")
     topology=task_scope.get("topology")
     failures.extend(task_scope["failures"])
-    if manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11"} and task_scope["stage"] == "legacy-unscoped":
+    if manifest.get("version") in {"wm-autonomous-brain-driver/v7", "wm-autonomous-brain-driver/v8", "wm-autonomous-brain-driver/v9", "wm-autonomous-brain-driver/v10", "wm-autonomous-brain-driver/v11", "wm-autonomous-brain-driver/v12"} and task_scope["stage"] == "legacy-unscoped":
         failures.append("new_run_missing_instruction_task_spec")
     if not rounds:
         failures.append("no_completed_round_logs")
