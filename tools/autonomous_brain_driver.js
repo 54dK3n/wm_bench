@@ -401,6 +401,13 @@ async function waitFor(check, label, timeoutMs = 180000) {
 }
 
 function validateFormalLLMConfig(env = process.env) {
+  if (env.LLM_TRANSPORT === 'codex-app-server') {
+    if (env.LLM_MODEL !== 'gpt-6.1-sol') throw new Error('Explicit ChatGPT model required');
+    assert.ok(env.LLM_CODEX_BINARY && path.isAbsolute(env.LLM_CODEX_BINARY), 'Official Codex binary required');
+    return {model: env.LLM_MODEL, temperature: null, thinking:'low',
+      response_format:{type:'json_object'}, stream:true, formal_run:true,
+      transport:'codex-app-server', client:{binary:fs.realpathSync(env.LLM_CODEX_BINARY),sha256:sha(fs.readFileSync(env.LLM_CODEX_BINARY))}};
+  }
   for (const name of LLM_REQUIRED_KEYS) assert.ok(env[name], `${name} must be configured before a formal run`);
   let endpointValid = false;
   const endpoint = env.LLM_BASE_URL;

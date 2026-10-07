@@ -492,10 +492,14 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
             row = value.get(key)
             if not isinstance(row, dict) or row.get("file") != filename or not sha(row.get("sha256")):
                 return False
-        if (not formal_model_parameters(model.get("model"), model.get("temperature"), model.get("thinking"))
+        if (not formal_model_parameters(model.get("model"), model.get("temperature"), model.get("thinking"), model.get("transport"))
                 or model.get("stream") is not True or model.get("formal_run") is not True
                 or model.get("response_format") != {"type": "json_object"}):
             return False
+        if model.get("transport") == "codex-app-server":
+            client=model.get("client")
+            if not isinstance(client,dict) or not absolute(client.get("binary")) or not sha(client.get("sha256")):
+                return False
         return (isinstance(config.get("task"), str) and bool(config["task"].strip())
                 and type(config.get("maxRounds")) is int and 1 <= config["maxRounds"] <= 200
                 and finite(config.get("maxSimulationSeconds")) and 0 < config["maxSimulationSeconds"] <= 1200
@@ -662,8 +666,9 @@ def _evaluate_task_scope(summary, observations, rounds, calls, bridge=None, moti
         if (call.get("mode") != "live"
                 or request.get("model") != formal.get("model")
                 or request.get("temperature") != formal.get("temperature")
+                or request.get("transport") != formal.get("transport")
                 or not formal_model_parameters(request.get("model"), request.get("temperature"),
-                    (request.get("thinking") or {}).get("type"))):
+                    (request.get("thinking") or {}).get("type"), request.get("transport"))):
             failures.append("formal_model_configuration_mismatch")
             break
     observed_evidence = audit_observed_ledger(summary, observations, rounds, bridge, motions)

@@ -15,6 +15,7 @@ import json
 import math
 import os
 from pathlib import Path
+from autonomous_brain import chatgpt_transport
 import time
 from typing import Any
 import urllib.error
@@ -23,25 +24,30 @@ import urllib.request
 
 
 VERSION = "autonomous-brain-llm/v19"
+CHATGPT_VERSION = "autonomous-brain-llm/v20"
 FORMAL_MODEL = "deepseek-flash"
 FORMAL_TEMPERATURES = {FORMAL_MODEL: 0, "kimi-k2.6": 0.6}
 
 
-def formal_model_parameters(model, temperature, thinking):
+def formal_model_parameters(model, temperature, thinking, transport=None):
     """Explicit provider profiles; never negotiate settings after an error."""
+    if transport not in (None, chatgpt_transport.TRANSPORT):
+        return False
+    if transport == chatgpt_transport.TRANSPORT:
+        return model == chatgpt_transport.MODEL and temperature is None and thinking == chatgpt_transport.EFFORT
     return (isinstance(model, str) and model in FORMAL_TEMPERATURES and type(temperature) in (int, float)
             and temperature == FORMAL_TEMPERATURES[model] and thinking == "disabled")
 
 
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 20)}
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 21)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 20)}
+EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 21)}
 RETRY_METADATA_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
 DIAGNOSTICS_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
-NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 20)}
-DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19"}
-EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19"}
+NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 21)}
+DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20"}
+EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19", "autonomous-brain-llm/v20"}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -142,7 +148,7 @@ def _validate_transport_diagnostics(value: Any, version: str | None = None) -> N
     if (not isinstance(value, dict) or not required <= set(value)
             or not set(value) <= required | optional
             or value["phase"] not in (("construct_request", "open", "read_stream", "read_body")
-                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19"} else ("open", "read_stream", "read_body"))
+                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20"} else ("open", "read_stream", "read_body"))
             or type(value["received_bytes"]) is not int or value["received_bytes"] < 0):
         raise ReplayError("Replay has invalid transport diagnostics")
     if "reason_type" in value:
@@ -309,6 +315,7 @@ class LLMClient:
         self._replay_cursor = 0
         self._closed = False
         self._terminal = False
+        self.transport = None
         self._base_url = ""
         self._api_key = ""
         self.system_prompt = SYSTEM_PROMPT
@@ -345,6 +352,7 @@ class LLMClient:
             self.system_prompt = messages[0]["content"]
             # Preserve the recorded int/float representation for exact hashes,
             # including the integer zero emitted by v1/v2 clients.
+            self.transport = first_request.get("transport")
             self.temperature = first_request.get("temperature")
             self.thinking = None
             if "thinking" in first_request:
@@ -352,10 +360,17 @@ class LLMClient:
                 if not isinstance(thinking, dict) or set(thinking) != {"type"}:
                     raise ReplayError("Replay has invalid thinking settings")
                 self.thinking = thinking["type"]
-                if self.thinking not in ("enabled", "disabled"):
+                if self.thinking not in (("low",) if self.transport == chatgpt_transport.TRANSPORT else ("enabled", "disabled")):
                     raise ReplayError("Replay has invalid thinking settings")
-            if not _finite_number(self.temperature) or not 0 <= self.temperature <= 2:
+            if self.transport != chatgpt_transport.TRANSPORT and (not _finite_number(self.temperature) or not 0 <= self.temperature <= 2):
                 raise ReplayError("Replay has invalid temperature")
+        elif os.environ.get("LLM_TRANSPORT") == chatgpt_transport.TRANSPORT:
+            self.transport = chatgpt_transport.TRANSPORT
+            self.model = model or os.environ.get("LLM_MODEL")
+            self.temperature = None
+            self.thinking = chatgpt_transport.EFFORT
+            self.stream = True
+            self.transport_retries = 0
         else:
             if type(transport_retries) is not int or not 0 <= transport_retries <= 5:
                 raise ValueError("transport_retries must be an integer from 0 through 5")
@@ -404,7 +419,10 @@ class LLMClient:
                   "mode": "replay" if self._replay is not None else "live"}
         if self._replay is not None:
             return {**config, "formal_run": False, "recorded_parameters_preserved": True}
-        if not formal_model_parameters(self.model, self.temperature, self.thinking):
+        if self.transport:
+            config["transport"] = self.transport
+            config["client"] = chatgpt_transport.client_provenance()
+        if not formal_model_parameters(self.model, self.temperature, self.thinking, self.transport):
             raise ValueError("Formal run requires an explicit supported model/temperature and thinking=disabled")
         if self.model == "kimi-k2.6" and self._base_url not in {
                 "https://api.moonshot.cn/v1", "https://api.moonshot.ai/v1"}:
@@ -519,7 +537,7 @@ class LLMClient:
                           "transport_retry_index": transport_retry_index,
                           "transport_retry_delay_s": 0 if transport_retry_index == 0 else 2 ** (transport_retry_index - 1)}
         request_hash = hashlib.sha256(_canonical(request).encode("utf-8")).hexdigest()
-        record = {"version": VERSION, "call_index": self.call_count + 1,
+        record = {"version": CHATGPT_VERSION if self.transport else VERSION, "call_index": self.call_count + 1,
                   "decision_index": self.decision_count, "attempt": attempt,
                   "mode": "replay" if self._replay is not None else "live",
                   "request": request, "request_sha256": request_hash,
@@ -559,6 +577,21 @@ class LLMClient:
                 _validate_transport_diagnostics(diagnostics, record["version"])
                 record["transport_diagnostics"] = dict(diagnostics)
             self._replay_cursor += 1
+        elif self.transport == chatgpt_transport.TRANSPORT:
+            record.update(retry_metadata)
+            record['transport_timeout_s'] = self.timeout_s
+            record['transport_diagnostics'] = {'phase':'read_body','received_bytes':0}
+            self._write_lifecycle('started',record)
+            started=time.perf_counter()
+            try:
+                record['response_body']=chatgpt_transport.invoke(request,self.timeout_s)
+                record['transport_diagnostics']['received_bytes']=len(record['response_body'].encode('utf-8'))
+            except Exception as exc:
+                record['response_body']=getattr(exc,'body',None)
+                record['transport_error']={'type':getattr(exc,'kind',type(exc).__name__)}
+                record['transport_diagnostics']['received_bytes']=len((record['response_body'] or '').encode('utf-8'))
+            finally:
+                record['elapsed_s']=time.perf_counter()-started
         else:
             record.update(retry_metadata)
             record["transport_timeout_s"] = self.timeout_s
@@ -632,7 +665,11 @@ class LLMClient:
                 record["elapsed_s"] = time.perf_counter() - start
 
         require_stop = record["version"] in NORMAL_FINISH_REQUIRED_VERSIONS
-        if request.get("stream") and isinstance(record["response_body"], str):
+        if request.get("transport") == chatgpt_transport.TRANSPORT and isinstance(record["response_body"], str):
+            raw, response_model, error = chatgpt_transport.decode(record["response_body"],request)
+            record["raw_output"],record["response_model"] = raw,response_model
+            record["validation_error"] = error
+        elif request.get("stream") and isinstance(record["response_body"], str):
             raw, response_model, done, error = self._decode_stream(
                 record["response_body"], require_stop=require_stop)
             record["raw_output"], record["response_model"] = raw, response_model
@@ -697,6 +734,8 @@ class LLMClient:
                 request = {"model": self.model, "temperature": self.temperature,
                            "response_format": {"type": "json_object"},
                            "messages": list(messages)}
+                if self.transport:
+                    request["transport"] = self.transport
                 if self.thinking is not None:
                     request["thinking"] = {"type": self.thinking}
                 if self.stream is not None:

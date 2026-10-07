@@ -171,3 +171,14 @@ test('explicit Kimi profile uses official endpoint and fixed nonthinking tempera
   }
   assert.ok(!JSON.stringify(validateFormalLLMConfig(config)).includes(config.LLM_API_KEY));
 });
+
+test('ChatGPT account transport freezes the official client and explicit profile', () => {
+  const env={LLM_TRANSPORT:'codex-app-server', LLM_MODEL:'gpt-6.1-sol', LLM_CODEX_BINARY:process.execPath};
+  const value=validateFormalLLMConfig(env);
+  assert.equal(value.transport,'codex-app-server');
+  assert.equal(value.temperature,null);
+  assert.equal(value.thinking,'low');
+  assert.equal(value.client.sha256.length,64);
+  assert.throws(()=>validateFormalLLMConfig({...env,LLM_MODEL:'other'}));
+  assert.throws(()=>validateFormalLLMConfig({...env,LLM_CODEX_BINARY:'relative'}));
+});

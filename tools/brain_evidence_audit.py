@@ -589,7 +589,10 @@ def audit_done_bytes(last, calls, progress, observations):
         response_body = record["response_body"]
         if not isinstance(response_body, str):
             raise ValueError("missing or non-text model response")
-        if request.get("stream"):
+        if request.get("transport") == "codex-app-server":
+            from autonomous_brain.chatgpt_transport import decode
+            raw, model, error = decode(response_body, request)
+        elif request.get("stream"):
             raw, model, done, error = LLMClient._decode_stream(response_body, require_stop=True)
             if not done:
                 raise ValueError("incomplete stream")
@@ -599,7 +602,7 @@ def audit_done_bytes(last, calls, progress, observations):
         if (error is not None or record.get("transport_error") is not None or record.get("validation_error") is not None
                 or model != request.get("model")
                 or not formal_model_parameters(request.get("model"), request.get("temperature"),
-                    (request.get("thinking") or {}).get("type"))
+                    (request.get("thinking") or {}).get("type"), request.get("transport"))
                 or raw != record.get("raw_output") or parsed != expected
                 or record.get("action") != expected or last.get("action") != expected
                 or sum(call == record for call in calls) != 1
