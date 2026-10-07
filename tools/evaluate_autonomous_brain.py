@@ -25,6 +25,7 @@ VERSION = "autonomous-brain-offline-evaluation/v9"
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from autonomous_brain.task import parse_task, completion_progress
+from autonomous_brain.llm import formal_model_parameters
 from tools.brain_evidence_audit import audit_observed_ledger, audit_done_bytes, strict_transcript_replay, audit_unknown_discoveries
 from tools.brain_topology_audit import audit_topology
 METHODS = {"observe", "camera_parameters", "odometry", "local_road", "holding",
@@ -491,8 +492,7 @@ def evaluate_source_proof(manifest: dict, driver_summary: dict, brain_summary: d
             row = value.get(key)
             if not isinstance(row, dict) or row.get("file") != filename or not sha(row.get("sha256")):
                 return False
-        if (model.get("model") != "deepseek-flash" or not finite(model.get("temperature"))
-                or model["temperature"] != 0 or model.get("thinking") != "disabled"
+        if (not formal_model_parameters(model.get("model"), model.get("temperature"), model.get("thinking"))
                 or model.get("stream") is not True or model.get("formal_run") is not True
                 or model.get("response_format") != {"type": "json_object"}):
             return False
@@ -658,9 +658,12 @@ def _evaluate_task_scope(summary, observations, rounds, calls, bridge=None, moti
         failures.append("done_not_selected_in_recorded_llm_call")
     for call in calls:
         request = call.get("request") or {}
-        if (call.get("mode") != "live" or request.get("model") != "deepseek-flash"
-                or type(request.get("temperature")) not in (int, float)
-                or request.get("temperature") != 0 or request.get("thinking") != {"type": "disabled"}):
+        formal = summary.get("formal_configuration") or {"model": "deepseek-flash", "temperature": 0}
+        if (call.get("mode") != "live"
+                or request.get("model") != formal.get("model")
+                or request.get("temperature") != formal.get("temperature")
+                or not formal_model_parameters(request.get("model"), request.get("temperature"),
+                    (request.get("thinking") or {}).get("type"))):
             failures.append("formal_model_configuration_mismatch")
             break
     observed_evidence = audit_observed_ledger(summary, observations, rounds, bridge, motions)

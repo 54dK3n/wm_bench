@@ -420,8 +420,12 @@ function validateFormalLLMConfig(env = process.env) {
   let temperature;
   try { temperature = JSON.parse(env.LLM_TEMPERATURE ?? '0'); }
   catch { throw new Error('Formal run requires temperature=0'); }
-  if (env.LLM_MODEL !== FORMAL_MODEL) throw new Error('Formal run requires deepseek-flash');
-  if (temperature !== 0) throw new Error('Formal run requires temperature=0');
+  const profiles = {[FORMAL_MODEL]: 0, 'kimi-k2.6': 0.6};
+  if (!Object.hasOwn(profiles, env.LLM_MODEL)) throw new Error('Formal run requires an explicit supported model');
+  if (temperature !== profiles[env.LLM_MODEL]) throw new Error('Formal run requires the selected model temperature');
+  if (env.LLM_MODEL === 'kimi-k2.6' && !['https://api.moonshot.cn/v1', 'https://api.moonshot.ai/v1'].includes(endpoint.replace(/\/$/, ''))) {
+    throw new Error('Formal run requires an official Kimi endpoint');
+  }
   if (env.LLM_THINKING !== 'disabled') throw new Error('Formal run requires thinking=disabled');
   return {model: env.LLM_MODEL, temperature, thinking: env.LLM_THINKING,
     response_format: {type: 'json_object'}, stream: true, formal_run: true};

@@ -160,3 +160,14 @@ test("driver provenance follows WORLD_MODEL_ROOT and detects changed dependency 
     assert.notEqual(before.files['world_model/providers/guangyang.py'], after.files['world_model/providers/guangyang.py']);
   } finally { fs.rmSync(directory, {recursive: true, force: true}); }
 });
+
+test('explicit Kimi profile uses official endpoint and fixed nonthinking temperature', () => {
+  const config={LLM_BASE_URL:'https://api.moonshot.cn/v1',LLM_API_KEY:'unit-test-secret',
+    LLM_MODEL:'kimi-k2.6',LLM_TEMPERATURE:'0.6',LLM_THINKING:'disabled'};
+  assert.equal(validateFormalLLMConfig(config).model,'kimi-k2.6');
+  for (const overrides of [{LLM_TEMPERATURE:'0'}, {LLM_THINKING:'enabled'},
+    {LLM_MODEL:'kimi-k3'}, {LLM_BASE_URL:'https://example.invalid/v1'}]) {
+    assert.throws(()=>validateFormalLLMConfig({...config,...overrides}));
+  }
+  assert.ok(!JSON.stringify(validateFormalLLMConfig(config)).includes(config.LLM_API_KEY));
+});

@@ -24,6 +24,15 @@ import urllib.request
 
 VERSION = "autonomous-brain-llm/v19"
 FORMAL_MODEL = "deepseek-flash"
+FORMAL_TEMPERATURES = {FORMAL_MODEL: 0, "kimi-k2.6": 0.6}
+
+
+def formal_model_parameters(model, temperature, thinking):
+    """Explicit provider profiles; never negotiate settings after an error."""
+    return (isinstance(model, str) and model in FORMAL_TEMPERATURES and type(temperature) in (int, float)
+            and temperature == FORMAL_TEMPERATURES[model] and thinking == "disabled")
+
+
 SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 20)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
@@ -395,8 +404,11 @@ class LLMClient:
                   "mode": "replay" if self._replay is not None else "live"}
         if self._replay is not None:
             return {**config, "formal_run": False, "recorded_parameters_preserved": True}
-        if self.model != FORMAL_MODEL or self.temperature != 0 or self.thinking != "disabled":
-            raise ValueError("Formal run requires deepseek-flash, temperature=0, thinking=disabled")
+        if not formal_model_parameters(self.model, self.temperature, self.thinking):
+            raise ValueError("Formal run requires an explicit supported model/temperature and thinking=disabled")
+        if self.model == "kimi-k2.6" and self._base_url not in {
+                "https://api.moonshot.cn/v1", "https://api.moonshot.ai/v1"}:
+            raise ValueError("Formal run requires an official Kimi endpoint")
         return {**config, "formal_run": True}
 
     def _write_lifecycle(self, event: str, record: dict[str, Any]) -> None:

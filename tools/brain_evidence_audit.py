@@ -17,7 +17,7 @@ import tempfile
 from types import MappingProxyType
 
 from autonomous_brain.actions import ball_inside_region, reacquisition_chains
-from autonomous_brain.llm import LLMClient, _strict_loads, validate_action
+from autonomous_brain.llm import LLMClient, _strict_loads, validate_action, formal_model_parameters
 from world_model.calibration import CameraCalibration
 from world_model.providers.guangyang import odometry_to_pose, guangyang_static_association_config
 
@@ -597,7 +597,10 @@ def audit_done_bytes(last, calls, progress, observations):
             raw, model, error = LLMClient._decode_response(response_body, require_stop=True)
         parsed = validate_action(_strict_loads(raw), last.get("state", {}))
         if (error is not None or record.get("transport_error") is not None or record.get("validation_error") is not None
-                or model != "deepseek-flash" or raw != record.get("raw_output") or parsed != expected
+                or model != request.get("model")
+                or not formal_model_parameters(request.get("model"), request.get("temperature"),
+                    (request.get("thinking") or {}).get("type"))
+                or raw != record.get("raw_output") or parsed != expected
                 or record.get("action") != expected or last.get("action") != expected
                 or sum(call == record for call in calls) != 1
                 or record.get("request_sha256") != hashlib.sha256(canonical(request).encode()).hexdigest()):
