@@ -375,13 +375,38 @@ class RoadMemory:
         if not incoming:
             return None
         segment = max(incoming, key=lambda s: s["after_observation"])
-        if (segment["method"] not in {"take_exit", "follow_road"}
-                or segment["execution"]["kind"] != "road_following"
-                or segment["departure"]["at_node"] is not True
-                or segment["motion"].get("outcome_unknown")
-                or not segment["motion"].get("bridge_request_id")):
-            return None
-        start, end = segment["before_observation"], segment["after_observation"]
+        # A take_exit followed by follow_road has two measured windows. Keep
+        # their exact shared frame and endpoints; never bridge a gap or infer a
+        # chord through a bend. The original road-following recovery still
+        # reobserves safety and stops at the first actually observed node.
+        chain = [segment]
+        while chain[0]["departure"]["at_node"] is not True:
+            if len(chain) >= 4:
+                return None
+            first = chain[0]
+            predecessors = [s for s in self._road_segments.values()
+                if s["after_observation"] == first["before_observation"]
+                and s["arrival"]["position_m"] == first["departure"]["position_m"]]
+            if len(predecessors) != 1:
+                return None
+            chain.insert(0, predecessors[0])
+        for part in chain:
+            motion = part["motion"]
+            receipt = motion.get("actuator_result", {})
+            reverse = self._approach_edges.get(tuple(part["arrival"]["position_m"]), {}).get(
+                tuple(part["departure"]["position_m"]))
+            if (part["method"] not in {"take_exit", "follow_road"}
+                    or part["execution"]["kind"] != "road_following"
+                    or motion.get("outcome_unknown") or motion.get("motion_not_sent")
+                    or receipt.get("accepted") is not True or receipt.get("error")
+                    or receipt.get("stoppedBy") in {"collision", "off_road", "wrong_way"}
+                    or not motion.get("bridge_request_id")
+                    or reverse is None or reverse.get("execution", {}).get("kind") != "road_following"
+                    or reverse.get("segment_id") != part["segment_id"]
+                    or reverse.get("segment_version") != part["segment_version"]
+                    or self.edge_passage_blocked(reverse) is not None):
+                return None
+        start, end = chain[0]["before_observation"], segment["after_observation"]
         window = self.observation_records(start, frame["observation_index"])
         rows = {row["observation_index"]: row for row in window["observations"]}
         if (window["invalid_observation_indices"] or any(i not in rows for i in range(start, frame["observation_index"]+1))
@@ -394,6 +419,20 @@ class RoadMemory:
                     or any(row["odometry"][k] != odo[k] for k in ("headingDeg", "distanceCm"))
                     or row["road"].get("atNode") is not False):
                 return None
+        if len(chain) > 1:
+            for part in chain:
+                before, after = rows[part["before_observation"]], rows[part["after_observation"]]
+                result = part["motion"].get("actuator_result", {})
+                travelled = after["odometry"]["distanceCm"] - before["odometry"]["distanceCm"]
+                elapsed = after["odometry"]["tick"] - before["odometry"]["tick"]
+                if (not number(result.get("distanceCm")) or travelled <= 0
+                        or abs(result["distanceCm"] - travelled) > .2
+                        or type(result.get("elapsedTicks")) is not int
+                        or result["elapsedTicks"] != elapsed or elapsed <= 0
+                        or str(before["observation"]["frameId"]) == str(after["observation"]["frameId"])
+                        or result.get("stoppedBy") == "front_clearance"
+                           and not RoadEvidence.clearance_stop_localized(before, after, part["motion"])):
+                    return None
         if (snapshot(rows[frame["observation_index"]]) != snapshot(frame)
                 or any(rows[frame["observation_index"]].get("observation", {}).get(k)
                        != frame.get("observation", {}).get(k) for k in ("frameId", "tick"))):
@@ -403,15 +442,21 @@ class RoadMemory:
                 or abs(wrap(reverse["departure"]["travel_heading_deg"]-odo["headingDeg"]-180)) > 10
                 or self.edge_passage_blocked(reverse) is not None):
             return None
+        total = sum(min(part["travelled_cm"], self._approach_edges[
+            tuple(part["arrival"]["position_m"])][tuple(part["departure"]["position_m"])]["travelled_cm"])
+            for part in chain)
         return {"segment_id": segment["segment_id"], "segment_version": segment["segment_version"],
             "direction": "reverse_attempt", "execution_kind": "road_following",
             "before_observation": start, "after_observation": end,
             "current_observation": frame["observation_index"],
             "motion_request_id": segment["motion"]["bridge_request_id"],
-            "current_position_m": list(point), "target_anchor": copy.deepcopy(segment["departure"]),
+            "current_position_m": list(point), "target_anchor": copy.deepcopy(chain[0]["departure"]),
             "return_heading_deg": wrap(odo["headingDeg"]+180),
-            "max_travel_cm": min(segment["travelled_cm"], reverse["travelled_cm"]),
-            "holding": frame["holding"]["holding"]}
+            "max_travel_cm": total,
+            "holding": frame["holding"]["holding"],
+            "observed_segments": [{key: copy.deepcopy(part[key]) for key in (
+                "segment_id", "segment_version", "before_observation", "after_observation", "travelled_cm", "measured_cm")}
+                for part in chain]}
 
     def observation_records(self, first, last):
         """Copy registered public sensor/motion records for a closed window.
