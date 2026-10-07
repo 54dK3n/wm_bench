@@ -1,5 +1,34 @@
 # wm_bench
 
+## 当前结果：2026-10-08，ChatGPT 真实双球两局 FAIL
+
+本轮仍在 map-05 做“把两个红球送到绿色存放区”，沿用公共传感、同一 Runtime / vendored WorldModel、既有 `octos_robots.Executor` 和原 Actions。使用 ChatGPT 登录态 `codex-app-server`，实际模型 `gpt-6.1-sol` / reasoning low；这些计数是原生推理调用，底层 HTTP 次数没有独立观测。原 200 轮 / 1200 仿真秒上限保留。
+
+代码保留 `fcda1eafc4928f9b76bc1a6ac547c56f1ef396a3` 的净空停车定位前缀。`552a2259b7a4879427c24d65d4477b2b5ff335ae` 补齐本地 native 配置字段、总超时检查和同 thread/turn 的模型改路拒绝；loader 的环境优先和字面值解析保持。改路事件按[官方 app-server 协议](https://learn.chatgpt.com/docs/app-server)绑定身份，原事件留存。真实 smoke 取得一个合法 `look_around`，调用 1 次，机器人动作 0。
+
+| 独立运行 | 冻结源码 | 原生调用 / 合法决策 | 物理运动命令 | grab / release / 交付 | 主动 done | 仿真秒 | driver / evaluator | 双球结果 |
+|---|---|---:|---:|---|---|---:|---|---|
+| run-20261007T224158 | `552a2259b7a4879427c24d65d4477b2b5ff335ae` | 200 / 200 | 851 | 0 / 0 / 0 | 否 | 628.4 | 1 / 1 | FAIL，200 轮 |
+| run-20261007T234008 | `3bed25dd11859f798ac83c614b855265fad5d264` | 201 / 200 | 477 | 0 / 0 / 0 | 否 | 713.8 | 1 / 1 | FAIL，200 轮 |
+
+首局的合格净空停车保持了定位链，仍未计成成功遍历。r67 实际执行 `take_exit` 40.6cm 和 `follow_road` 20cm 后，下一次正向运动被预发送拒绝；末段从路中出发，原返回查询无法使用连续的两段来路。整轮已经行驶 60.6cm，只有被拒绝的下一动作没有发送。
+
+据此做了本轮唯一一次针对性小修 `3bed25dd11859f798ac83c614b855265fad5d264`：返回查询可核验最多四段连续道路前缀，要求共享观测端点、已知回执、实测里程/tick、新帧、夹持不变、反向边与版本相符且未受阻；返回预算取实际里程。原正向障碍和执行前安全复查保持，不重发预拒绝动作，不把停止点直接并入旧路口。真实 r67 公共输入的组件回归从“无支持”变为 60.6cm 返回预算；这条组件结果没有执行机器人。
+
+复测 r116 实际触发两段返回：obs480→481→482 的实测来路为 31.4cm + 20cm，正向预拒绝仍保留。`brain-002181` 转向（obs482→483），`brain-002186` 前行 20cm（obs483→484），`brain-002191` 前行 9.4cm（obs484→485）后遇到观测路口并停止。空夹爪、仍在路上；原锚点 `junction-242` 与返回端 `junction-246` 的语义关系仍为 `junction_identity_unresolved`，没有新增完成遍历。实际返回 29.4cm，不能据此宣称回到原锚点。公共来路几何支持已被使用，语义重连仍未解决；持球归路、首球交付和第二球均未进入验证。
+
+复测最早的反复采样限制出现在 r7；首次搬运接近阻塞为 r43 / obs172，`target_040` 的一个检测同时匹配 `target_010/013/032/040`，`approach_started=false`。r46、r52 再次拒绝；本局共 18 次身份竞争拒绝、28 次无安全独立视角。另有 26 次路口身份未决；r186 到存放区的几何路线耗尽独立保留，不能统一归因于节点标签。r43 当时提供了需新观测复查的沿路采样候选，r116 返回后提供了三个实际观测出口；它们到目标的连通性仍未知。下一步应先用这些公共检测、采样轨迹和节点证据定位身份关联的最小缺口，再决定是否需要修复。当前没有可证明的安全抓取或回到原语义锚点方案。
+
+复测第 61 次原生调用收到 `turn/completed: failed` / `serverOverloaded`，被回执校验拒绝；既有客户端随后发起一次真实推理修复调用并成功，仅分发合法新决策。两局 transport error 均 0；复测 validation rejection 为 1。没有切换模型、固定动作或未知运动重发。
+
+直接相关 Python 回归 **139 passed**，配置 loader 测试 **12 passed**；持续通知总超时和迟到成功采用受控时钟/队列，子进程协议测试采用合成 peer，均不充当真实模型证据。原四项既有安全回归失败仍独立保留，未放宽断言。两局 15 个运行源码文件前后相符，实际加载依赖核验通过，五类物理导出完整；严格记录回放一致不代表搬运成功。
+
+实际平台版本 `54b36f82109836226cf654e9a676ddf0c3b07cd0`；Executor `33af31baefc9b3beaa855f33849d52254aaa8c4b`；WorldModel 源码树 SHA256 `10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c`。两局各自冻结 manifest，没有运行中替换依赖。一次小修和一次复测额度已用完，200 轮后停止，无第三局；历史单球 PASS 和旧双球 FAIL 原件保留。
+
+[独立指标与 r116 公共命令证据](artifacts/autonomous-brain/clearance-prefix-live/METRICS.json) · [首局原评测](artifacts/autonomous-brain/clearance-prefix-live/run-20261007T224158-evaluation/REPORT.md) · [复测原评测](artifacts/autonomous-brain/clearance-prefix-live/run-20261007T234008-evaluation/REPORT.md)。原始日志及物理数据保存在本机 `artifacts/autonomous-brain/clearance-prefix-live/run-20261007T224158/`、`run-20261007T234008/`；本次提交包含简明指标和原评测报告，完整原始数据未上传。
+
+## 2026-09-30 历史结果（原文保留）
+
 > 最新结果：同driver环境的网络检查与真实流式模型smoke已通过。之后两局真实双球均FAIL：基线交付1球；小修75fe359验证局抓到首球但未释放，r55净空停止后路口身份/路线连接未恢复，200轮停止。两局driver/evaluator均exit1，原始物理导出完整。已停止，无第三局；历史两次一球PASS保留。 [本轮报告、指标与证据](artifacts/autonomous-brain/two-ball-model-ready-next/after-network-restore/REPORT.md)。
 
 ## 上一轮历史：运行中监控恢复已修复，当时双球受模型连接阻断
