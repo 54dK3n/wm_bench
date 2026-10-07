@@ -182,3 +182,20 @@ test('ChatGPT account transport freezes the official client and explicit profile
   assert.throws(()=>validateFormalLLMConfig({...env,LLM_MODEL:'other'}));
   assert.throws(()=>validateFormalLLMConfig({...env,LLM_CODEX_BINARY:'relative'}));
 });
+
+test('literal native local file loads through the production validator with environment precedence', () => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'brain-native-loader-'));
+  try {
+    const file=path.join(dir,'.env.local');
+    fs.writeFileSync(file,`LLM_TRANSPORT=codex-app-server\nLLM_MODEL=gpt-6.1-sol\nLLM_CODEX_BINARY='${process.execPath}'\n`);
+    const env={};loadLocalLLMConfig(file,env);
+    assert.equal(validateFormalLLMConfig(env).transport,'codex-app-server');
+    const overridden={LLM_MODEL:'other'};loadLocalLLMConfig(file,overridden);
+    assert.throws(()=>validateFormalLLMConfig(overridden));
+    fs.writeFileSync(file,'LLM_TRANSPORT="$(do-not-execute)"\nLLM_CODEX_BINARY="${LITERAL}"\n');
+    const literals={};loadLocalLLMConfig(file,literals);
+    assert.equal(literals.LLM_TRANSPORT,'$(do-not-execute)');assert.equal(literals.LLM_CODEX_BINARY,'${LITERAL}');
+    fs.writeFileSync(file,'LLM_BASE_URL=https://api.moonshot.cn/v1\nLLM_API_KEY=synthetic\nLLM_MODEL=kimi-k2.6\nLLM_TEMPERATURE=0.6\nLLM_THINKING=disabled\n');
+    const api={};loadLocalLLMConfig(file,api);assert.equal(validateFormalLLMConfig(api).model,'kimi-k2.6');
+  } finally {fs.rmSync(dir,{recursive:true,force:true});}
+});

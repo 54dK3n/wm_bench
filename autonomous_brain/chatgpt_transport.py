@@ -36,10 +36,27 @@ def start_params(request, cwd):
                   'mcp_servers.node_repl.enabled':False, 'mcp_servers.computer-use.enabled':False,
                   'web_search':'disabled'}}
 
+def check_reroute(row, thread_id, turn_id, model):
+    """Fixed-model policy, scoped to the requested thread and turn."""
+    if row.get('method') != 'model/rerouted':
+        return
+    p = row.get('params') or {}
+    if not p.get('threadId') or not p.get('turnId'):
+        raise ValueError('Unidentified model reroute')
+    if p['threadId'] != thread_id:
+        if p['turnId'] == turn_id:
+            raise ValueError('Contradictory reroute identity')
+        return
+    if p['turnId'] != turn_id:
+        return
+    if p.get('fromModel') != model or p.get('toModel') != model:
+        raise ValueError('Fixed inference model rerouted')
+
 def invoke(request, timeout_s):
     binary=os.environ.get('LLM_CODEX_BINARY') or shutil.which('codex')
     if not binary:raise OSError('Codex binary unavailable')
     rows=[]; deadline=time.monotonic()+timeout_s; inbox=queue.Queue()
+    tid=turnid=None
     # No inherited provider credentials or repository access for the model.
     env={k:v for k,v in os.environ.items() if not k.startswith(('LLM_','OPENAI_','MOONSHOT_','DEEPSEEK_'))}
     with tempfile.TemporaryDirectory(prefix='wm-chatgpt-inference-') as cwd:
@@ -49,16 +66,26 @@ def invoke(request, timeout_s):
             for line in proc.stdout:inbox.put(line)
             inbox.put(None)
         threading.Thread(target=read,daemon=True).start()
+        def remaining():
+            budget=deadline-time.monotonic()
+            if budget <= 0:raise TimeoutError('Codex inference timeout')
+            return budget
         def send(method,params=None,id=None):
+            remaining()
             r={'method':method}
             if id is not None:r['id']=id
             if params is not None:r['params']=params
             proc.stdin.write(json.dumps(r,ensure_ascii=False)+'\n');proc.stdin.flush()
         def receive():
-            try:line=inbox.get(timeout=max(0.001,deadline-time.monotonic()))
+            budget=remaining()
+            try:line=inbox.get(timeout=budget)
             except queue.Empty:raise TimeoutError('Codex inference timeout')
+            if line is not None:rows.append(line)
+            remaining()
             if line is None:raise OSError('Codex app-server ended')
-            r=json.loads(line);rows.append(line)
+            r=json.loads(line)
+            if tid is not None and turnid is not None:
+                check_reroute(r,tid,turnid,request['model'])
             if 'method' in r and 'id' in r:raise ValueError('Unexpected tool or approval request')
             item=(r.get('params') or {}).get('item') or {}
             if item and item.get('type') not in ('userMessage','agentMessage','reasoning'):
@@ -82,18 +109,21 @@ def invoke(request, timeout_s):
                 raise ValueError('Selected model/provider mismatch')
             tid=started['thread']['id']
             prompt=json.dumps(request['messages'][1:],ensure_ascii=False,separators=(',',':'))
-            rpc('turn/start',{'threadId':tid,'model':request['model'],'effort':EFFORT,
+            turn=rpc('turn/start',{'threadId':tid,'model':request['model'],'effort':EFFORT,
                 'input':[{'type':'text','text':prompt}], 'environments':[]},4)
+            turnid=turn['turn']['id']
+            for line in rows:check_reroute(json.loads(line),tid,turnid,request['model'])
             while True:
                 r=receive()
                 if r.get('method')=='turn/completed':break
+            remaining()
             return ''.join(rows)
         except Exception as exc:
             raise TransportFailure(''.join(rows),type(exc).__name__) from None
         finally:
             proc.terminate()
             try:proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:proc.kill();proc.wait()
+            except subprocess.TimeoutExpired:proc.kill();proc.wait(timeout=5)
 
 
 def decode(body, request):
@@ -109,6 +139,7 @@ def decode(body, request):
         if account.get('type')!='chatgpt' or start.get('model')!=request['model'] or start.get('modelProvider')!='openai' or start['thread'].get('model')!=request['model']:
             raise ValueError('account/model mismatch')
         for r in rows:
+            check_reroute(r,tid,turnid,request['model'])
             if 'error' in r or ('method' in r and 'id' in r):raise ValueError('RPC/tool error')
             p=r.get('params') or {};item=p.get('item') or {}
             if item and item.get('type') not in ('userMessage','agentMessage','reasoning'):raise ValueError('tool used')

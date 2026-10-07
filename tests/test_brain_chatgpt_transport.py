@@ -80,3 +80,80 @@ def test_chatgpt_done_native_bytes_keep_independent_delivery_requirement():
 
 from test_brain_stage1_source_proof import formal_proof
 from test_brain_evaluation import fixture_data
+
+@pytest.mark.parametrize('change,accepted',[
+    ({},False),({'fromModel':'other'},False),({'toModel':t.MODEL},True),
+    ({'threadId':'unrelated','turnId':'unrelated'},True),
+    ({'turnId':'another-turn'},True),({'threadId':'conflicting-thread'},False),
+    ({'turnId':None},False),({'threadId':None},False),({'toModel':None},False)])
+def test_reroute_is_bound_to_model_thread_and_turn(change,accepted):
+    rs=rows();tid=next(r['result']['thread']['id'] for r in rs if r.get('id')==3)
+    turnid=next(r['result']['turn']['id'] for r in rs if r.get('id')==4)
+    event={'method':'model/rerouted','params':{'threadId':tid,'turnId':turnid,
+        'fromModel':t.MODEL,'toModel':'other','reason':'test'}}
+    event['params'].update(change);rs.insert(-1,event)
+    assert (t.decode('\n'.join(json.dumps(r) for r in rs),fixture()['request'])[2] is None)==accepted
+
+@pytest.mark.parametrize('mode',['buffered','late_success','expired_before_send'])
+def test_total_deadline_rejects_buffered_notifications_and_late_success(monkeypatch,mode):
+    import io
+    clock=[0.0];sent=io.StringIO();rs=rows()
+    class Proc:
+        stdin=sent;stdout=[]
+        def terminate(self):pass
+        def wait(self,timeout):return 0
+    class Inbox:
+        def __init__(self):self.index=0
+        def put(self,line):pass
+        def get(self,timeout):
+            assert timeout>0
+            if mode=='late_success':
+                row=rs[self.index];self.index+=1
+                if row.get('method')=='turn/completed':clock[0]=2.0
+            else:
+                row={'method':'warning','params':{'message':'queued'}};clock[0]+=0.2
+            return json.dumps(row)+'\n'
+    monkeypatch.setenv('LLM_CODEX_BINARY','synthetic-test-binary')
+    monkeypatch.setattr(t.subprocess,'Popen',lambda *a,**k:Proc())
+    monkeypatch.setattr(t.queue,'Queue',Inbox)
+    def now():
+        value=clock[0]
+        if mode=='expired_before_send':clock[0]=2.0
+        return value
+    monkeypatch.setattr(t.time,'monotonic',now)
+    with pytest.raises(t.TransportFailure) as caught:t.invoke(fixture()['request'],1.0)
+    assert caught.value.kind=='TimeoutError'
+    if mode=='expired_before_send':assert sent.getvalue()==''
+    elif mode=='buffered':
+        assert caught.value.body.count('queued')==5
+        assert [json.loads(l)['method'] for l in sent.getvalue().splitlines()]==['initialize']
+    else:assert 'turn/completed' in caught.value.body
+
+@pytest.mark.parametrize('mode',['success','reroute','early_reroute','wrong_model'])
+def test_invoke_real_subprocess_protocol_entry(tmp_path,monkeypatch,mode):
+    # Synthetic protocol peer tests process I/O only; never a platform decision.
+    import sys
+    script=tmp_path/'protocol_peer';payload=rows()
+    script.write_text('#!'+sys.executable+'\n'+
+        'import json,sys\nrows='+repr(payload)+'\nmode='+repr(mode)+'\n'+'''
+for line in sys.stdin:
+ r=json.loads(line)
+ if 'id' not in r:continue
+ reply=next(x for x in rows if x.get('id')==r['id'])
+ if r['id']==3 and mode=='wrong_model':reply['result']['model']='other'
+ if r['id']==4 and mode=='early_reroute':
+  print(json.dumps({'method':'model/rerouted','params':{'threadId':next(x['result']['thread']['id'] for x in rows if x.get('id')==3),'turnId':reply['result']['turn']['id'],'fromModel':'gpt-6.1-sol','toModel':'other'}}),flush=True)
+ print(json.dumps(reply),flush=True)
+ if r['id']==4:
+  for x in rows:
+   if 'id' not in x and x.get('method') not in ('thread/started','turn/started'):
+    if x.get('method')=='turn/completed' and mode=='reroute':
+     print(json.dumps({'method':'model/rerouted','params':{'threadId':x['params']['threadId'],'turnId':x['params']['turn']['id'],'fromModel':'gpt-6.1-sol','toModel':'other'}}),flush=True)
+    print(json.dumps(x),flush=True)
+''')
+    script.chmod(0o700);monkeypatch.setenv('LLM_CODEX_BINARY',str(script))
+    if mode=='success':assert t.decode(t.invoke(fixture()['request'],5),fixture()['request'])[2] is None
+    else:
+        with pytest.raises(t.TransportFailure) as caught:t.invoke(fixture()['request'],5)
+        assert caught.value.kind=='ValueError'
+        if 'reroute' in mode:assert 'model/rerouted' in caught.value.body
