@@ -455,6 +455,7 @@ class RoadMemory:
             return
         old = previous["odometry"]
         result, method = motion.get("actuator_result", {}), motion.get("method")
+        localized_stop = RoadEvidence.clearance_stop_localized(previous, current, motion)
         if (previous["road"].get("onRoad") is not True
                 or not all(number(old.get(k)) for k in (
                     "rightCm", "forwardCm", "headingDeg", "distanceCm", "tick"))
@@ -464,9 +465,10 @@ class RoadMemory:
                 or method not in {"take_exit", "follow_road", "forward", "backward"}
                 or not isinstance(result, dict) or result.get("error")
                 or result.get("accepted") is False
-                or result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}
-                or (result.get("completed") is not True if method in {"forward", "backward"}
-                    else result.get("accepted") is not True)):
+                or result.get("stoppedBy") in {"collision", "off_road", "wrong_way"}
+                or result.get("stoppedBy") == "front_clearance" and not localized_stop
+                or (not localized_stop and (result.get("completed") is not True if method in {"forward", "backward"}
+                    else result.get("accepted") is not True))):
             return
         a = position(old)
         measured, travelled = distance(a, p) * 100, odo["distanceCm"] - old["distanceCm"]
@@ -474,7 +476,7 @@ class RoadMemory:
                 or travelled < .1 or measured > travelled + .2 or odo["tick"] <= old["tick"]):
             return
         if method in {"forward", "backward"}:
-            requested = motion.get("params", {}).get("distanceCm")
+            requested = travelled if localized_stop else motion.get("params", {}).get("distanceCm")
             theta = math.radians(old["headingDeg"])
             dx, dz = odo["rightCm"] - old["rightCm"], odo["forwardCm"] - old["forwardCm"]
             along = (-math.sin(theta) * dx + math.cos(theta) * dz) * (1 if method == "forward" else -1)
@@ -516,6 +518,8 @@ class RoadMemory:
             "segment_id": f"road-segment-{previous['observation_index']}-{current['observation_index']}",
             "departure": departure, "arrival": arrival,
             "motion": copy.deepcopy(motion), "direction": "forward", "direction_status": "observed_forward"}
+        if localized_stop:
+            edge["localization_prefix_only"] = True
         # Travel direction and body heading are different for a backward
         # primitive. Its reverse is the opposite primitive at the same body
         # heading, never a road-tangent approximation to the observed chord.

@@ -46,6 +46,7 @@ class RoadEvidence:
         self.reconnection_history = []
         self.identity_resolutions = []
         self.exit_aliases = []
+        self.localized_stops = []
 
     def reconnection_state(self):
         """Physical road reacquisition and proved map reconnection are distinct."""
@@ -135,6 +136,55 @@ class RoadEvidence:
     def canonical(self, ident):
         return self.nodes[ident]["canonical_id"]
 
+    @classmethod
+    def clearance_stop_localized(cls, a, b, motion):
+        """Known measured prefix, never a completed or passable road exit.
+
+        Road-following receipts account for the measured arc and elapsed ticks;
+        they do not turn a curved prefix into a straight return primitive.
+        """
+        if (not isinstance(motion, dict) or motion.get("outcome_unknown")
+                or motion.get("motion_not_sent") or not motion.get("bridge_request_id")
+                or motion.get("before_observation") != a["observation_index"]
+                or motion.get("after_observation") != b["observation_index"]
+                or b["observation_index"] != a["observation_index"] + 1
+                or not cls.sensor_valid(a) or not cls.sensor_valid(b)
+                or str(a["observation"]["frameId"]) == str(b["observation"]["frameId"])):
+            return False
+        method, result = motion.get("method"), motion.get("actuator_result")
+        if (method not in {"take_exit", "follow_road", "forward", "backward"}
+                or not isinstance(result, dict) or result.get("error")
+                or result.get("accepted") is not True or result.get("stoppedBy") != "front_clearance"
+                or not finite(result.get("distanceCm")) or type(result.get("elapsedTicks")) is not int):
+            return False
+        x, y = a["odometry"], b["odometry"]
+        travel = y["distanceCm"] - x["distanceCm"]
+        holdings = [f.get("holding", {}).get("holding") for f in (a, b)]
+        if (any(type(h) is not bool for h in holdings) or holdings[0] != holdings[1]
+                or travel < .1 or y["tick"] <= x["tick"]
+                or result["elapsedTicks"] != y["tick"] - x["tick"]
+                or abs(result["distanceCm"] - travel) > .2
+                or math.dist(point(a), point(b)) * 100 > travel + .2
+                or not finite(b["road"].get("frontClearanceCm"))
+                or not 0 <= b["road"]["frontClearanceCm"] <= 1):
+            return False
+        params = motion.get("params", {})
+        if method == "take_exit":
+            angle = params.get("angleDeg")
+            return (a["road"].get("atNode") is True and finite(angle)
+                and sum(finite(e.get("angleDeg")) and abs(wrap(e["angleDeg"] - angle)) <= 5
+                        for e in a["road"].get("exits", [])) == 1)
+        if method == "follow_road":
+            return (finite(params.get("distanceCm")) and params["distanceCm"] >= travel - .2
+                    and finite(a["road"].get("headingErrorDeg")))
+        request = params.get("distanceCm")
+        theta = math.radians(x["headingDeg"])
+        dx, dz = y["rightCm"] - x["rightCm"], y["forwardCm"] - x["forwardCm"]
+        along = (-math.sin(theta) * dx + math.cos(theta) * dz) * (1 if method == "forward" else -1)
+        return (finite(request) and request >= travel - .2
+            and abs(along - travel) <= .2 and abs(math.cos(theta) * dx + math.sin(theta) * dz) <= .2
+            and abs(wrap(y["headingDeg"] - x["headingDeg"])) <= .2)
+
     def _bind_exits(self, anchor):
         node = anchor["node_id"]
         anchor["exit_bindings"] = []
@@ -200,7 +250,13 @@ class RoadEvidence:
         self.register(frame)
         previous = self.frames.get(self.latest)
         valid = self.sensor_valid(frame)
-        contiguous = previous is not None and self.step_valid(previous, frame, motion)
+        completed_step = previous is not None and self.step_valid(previous, frame, motion)
+        localized_stop = previous is not None and self.clearance_stop_localized(previous, frame, motion)
+        contiguous = completed_step or localized_stop
+        if localized_stop:
+            self.localized_stops.append({"before_observation": self.latest, "after_observation": i,
+                "bridge_request_id": motion["bridge_request_id"], "chain": self.chain,
+                "kind": "measured_clearance_stop_prefix", "completed_traversal": False})
         stationary_fresh = (previous is not None and valid and self.sensor_valid(previous)
             and i == previous["observation_index"] + 1
             and str(previous["observation"]["frameId"]) != str(frame["observation"]["frameId"])
@@ -299,7 +355,7 @@ class RoadEvidence:
                     window = [m for (a, b), m in self.motions.items() if first <= a < b <= i]
                     if window and all(m["method"] in {"forward", "backward", "turn"} for m in window):
                         kind = "observed_anchor_return"
-            if candidate is None and anchor["valid"] and contiguous and self.active_departure_index is not None:
+            if candidate is None and anchor["valid"] and completed_step and self.active_departure_index is not None:
                 start = self.anchors.get(self.active_departure_index)
                 supported = []
                 for trip in self.trips.values():
@@ -547,7 +603,7 @@ class RoadEvidence:
             "anchors": list(self.anchors.values()), "exits": list(self.exits.values()),
             "traversals": list(self.trips.values()), "unresolved": self.unresolved,
             "road_reconnections": self.reconnection_history, "identity_resolutions": self.identity_resolutions,
-            "exit_aliases": self.exit_aliases})
+            "exit_aliases": self.exit_aliases, "localized_stops": self.localized_stops})
 
     def status(self):
         counts = {state: sum(e["state"] == state for e in self.exits.values()) for state in self.STATES}
