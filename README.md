@@ -1,6 +1,44 @@
 # wm_bench
 
-## 当前结果：2026-10-08，ChatGPT 真实双球两局 FAIL
+## 当前结果：2026-10-08，身份窗口复现与一次真实双球验证完成，FAIL
+
+本轮目标仍是 map-05 原平台同一局交付两颗不同红球并主动 done。使用既有 Runtime / vendored WorldModel / `octos_robots.Executor` / Actions，由真实 `codex-app-server / gpt-6.1-sol / low` 每轮选择动作；原 200 轮 / 1200 仿真秒和评测规则保持。审查起点 `840945f573eb21b880df9d9c825f04cea953330e` 与远端相符，用户未提交文件和旧运行原件保持。
+
+### 原 r43 的实际身份竞争
+
+只读重建原 `run-20261007T234008` 至 obs172，与记录中的对象状态一致。`target_010/013/032` 已归档、从未确认，命中数分别 1/1/2；首次见于 frame19/34/105，最后原检测见于 frame23/43/137。`target_040` 活跃且已确认，frame161 首见，obs172 时已有 3 个独立命中。四个标签未在同一帧表现为不同检测，但 frame43/117 另有红球检测，不能从时间分开推断它们是一颗球。
+
+抓取矩阵按原几何关联门得到 `[target_010, target_013, target_032, target_040]`；canonical 均仍指向自身。完整 `_resolve_discoveries` 矩阵显示，18 条旧来源没有任何 `target_040` 原像素支持，也没有可用的后续独立视角对，因此尚未走到针对该目标的 `rivals` 排他拒绝。以 frame170 的候选位置重投影到三个旧来源的首次像素，中心偏差分别约 33.48/31.44/24.87 像素，允许偏差约 1.54 像素；两条来源的距离也不符。`_bind_reacquisitions` 的邻接关系为四个标签各有其余三个邻居，而旧标签从未确认，不能成为确认重获来源。本窗口没有抓放或未知执行边界可解释这些不一致。
+
+所以，本局证据**不支持“历史假设相互阻止解释”作为 r43 的归因**。受控组件中的那项结构限制仍独立保留；本轮没有删除 LOST、取消 rivals 判断、放宽像素阈值或按近邻合并。
+
+### 最小采样修复与验证范围
+
+原 r7 / obs21 的 `_translation_choices` 有 5 项真实侧向净空拒绝、1 项位姿间隔拒绝、6 项取景距离窗口拒绝。它只尝试至少 10cm 的位移；当前道路限制允许较短前移，却不允许这类独立命中尺寸的位移。r44 后的失败则不同：实走 15.5cm 并增加 1 hit 后，6 个前移候选越出窗口，6 个后移候选与已有 hit poses 间隔不足；r53 的转向还会使目标离开视野。
+
+生产修复 `672f95fb95294c0a3bf5cd281b56677374f6bef2` 为这一条真实 r7 限制增加 4cm 前向探步：仅限未确认目标、观测路口、正常候选确实被局部净空挡住、空夹爪、唯一对齐出口，继续经过原距离/方向/净空约束；每一步重新观测，每个采样动作最多 3 次探步，并计入原 12 步 / 120cm 上限。探步不期待独立命中，不确认身份，也不授权抓取；未知执行不重发，持续受限就明确停止。
+
+直接相关 Python 回归 **154 passed in 10.90s**。原公共窗口证实下一步 4cm 命令可通过原约束和平台规范化；受控新传感反馈验证可继续取得独立命中，持续狭窄则三步后停止、无确认。测试保留确认竞争者、夹持、净空、未知执行等拒绝。原 native 通道、净空停车前缀、多段来路返回代码保持。**本轮真实局没有触发新探步分支，其平台效果仍未验证。**
+
+### 本轮真实成绩
+
+| 独立比赛 | 冻结源码 | 原生调用 / 合法决策 | 物理运动命令 | grab / release / HELD / DELIVERED | 主动 done | 仿真秒 | driver / evaluator | 原双球结果 |
+|---|---|---:|---:|---|---|---:|---|---|
+| run-20261008T043107Z | `672f95fb95294c0a3bf5cd281b56677374f6bef2` | 200 / 200 | 479 | 0 / 0 / 0 / 0 | 否 | 721.16 | 1 / 1 | FAIL，200 轮 |
+
+观测 879 次、桥调用 3996 次；64 个动作轮失败，模型 transport/validation error 均 0，未知运动记录 0，白名单外请求 0。原生调用不称作直接 HTTP POST；底层 HTTP 次数不可见。HELD / DELIVERED 也由全局公共观测逐帧核对，空夹爪全程保持，独立物理交付为 0。
+
+新局首次采样限制为 r14：前后位移均越出取景距离窗口；r25 又出现视野/距离限制。首次搬运接近阻塞为 **r37 / obs155**：`target_042` 的检测匹配 `target_018/023/042`，抓取未获授权。其恢复提示明确 `executable=false`、无当前安全取景选项。只读重建该窗口与原记录一致，旧两标签同样没有当前目标的原像素支持，不能合并。r35 已实走 15.5cm 并增加 1 hit；r130 又实际取景三段并增加 2 hit，仍未解决身份证明。r42 的 `final_approach_requires_road_reposition`（侧向净空 0.1cm）与 r140 等几何路线耗尽分别保留，不能全归为节点标签问题。
+
+当前首个持续抓取阻塞仍为缺少排他身份证明和可执行的安全取景后继。观测道路出口可用于继续探索，其到目标的连通性及安全抓取结果未知。下一步应核对导致旧像素与新位置无法重投影的公共观测/转换链，取得可验证的排他视角；不能用平台真值、近邻位置或增加命中数代替。没有证据充分的下一处小修，因此本轮完成这一局后停止，未无变化开第二局。
+
+启动另有单独失败记录 `run-20261008T043036Z`：沙箱禁止本地监听 `listen EPERM`，比赛未开始、0 推理、0 动作，driver/evaluator 为 1/2。原目录保留；取得本地平台运行权限后，用同源码/同模型在新目录开始上述比赛，没有把两次记录拼成成绩。
+
+实际平台 `54b36f82109836226cf654e9a676ddf0c3b07cd0`；Executor `33af31baefc9b3beaa855f33849d52254aaa8c4b`；WM 源码树 SHA256 `10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c`。本局 15 个运行源码文件前后相符、实际加载依赖核验通过，五类物理导出完整；严格记录回放一致，搬运结果仍 FAIL。历史一球 PASS 与旧双球 FAIL 原样保留。
+
+[本轮独立指标与公共命令引用](artifacts/autonomous-brain/identity-recovery-next/METRICS.json) · [原窗口结果](artifacts/autonomous-brain/identity-recovery-next/window-result.json) · [完整关联关系与同帧竞争来源](artifacts/autonomous-brain/identity-recovery-next/window-relations.json) · [本局首次阻塞](artifacts/autonomous-brain/identity-recovery-next/live-first-blocker.json) · [精简公共夹具](tests/fixtures/run_20261007T234008_identity_window.json) · [原双球评测](artifacts/autonomous-brain/identity-recovery-next/run-20261008T043107Z-evaluation/REPORT.md)。完整原始数据保存在本机 `artifacts/autonomous-brain/identity-recovery-next/run-20261008T043107Z/`，本次只提交上述复现与结果，不上传全部旧日志。
+
+## 上一轮历史：2026-10-08，ChatGPT 真实双球两局 FAIL
 
 本轮仍在 map-05 做“把两个红球送到绿色存放区”，沿用公共传感、同一 Runtime / vendored WorldModel、既有 `octos_robots.Executor` 和原 Actions。使用 ChatGPT 登录态 `codex-app-server`，实际模型 `gpt-6.1-sol` / reasoning low；这些计数是原生推理调用，底层 HTTP 次数没有独立观测。原 200 轮 / 1200 仿真秒上限保留。
 

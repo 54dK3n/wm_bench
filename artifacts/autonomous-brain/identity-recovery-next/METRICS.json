@@ -1,0 +1,321 @@
+{
+  "run": "artifacts/autonomous-brain/identity-recovery-next/run-20261008T043107Z",
+  "source_commit": "672f95fb95294c0a3bf5cd281b56677374f6bef2",
+  "model": {
+    "model": "gpt-6.1-sol",
+    "temperature": null,
+    "thinking": "low",
+    "response_format": {
+      "type": "json_object"
+    },
+    "stream": true,
+    "formal_run": true,
+    "transport": "codex-app-server",
+    "client": {
+      "binary": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+      "sha256": "cc0a05e34876414280a79726153d0fe8d55c93f704ef6c292ec409bfe36d5b06"
+    }
+  },
+  "platform_commit": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+  "executor_commit": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+  "world_model_source_tree_sha256": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+  "status": "failed",
+  "reason": "round_limit",
+  "native_inference_attempts": 200,
+  "legal_decisions": 200,
+  "transport_errors": 0,
+  "validation_errors": 0,
+  "underlying_http_attempts": "not independently observed",
+  "high_level_actions": 200,
+  "motion_commands": 479,
+  "motion_methods": {
+    "take_exit": 88,
+    "turn": 222,
+    "follow_road": 160,
+    "forward": 8,
+    "backward": 1
+  },
+  "unsent_motion_records": 0,
+  "unknown_motion_records": 0,
+  "bridge_calls": 3996,
+  "observations": 879,
+  "simulation_seconds": 721.16,
+  "wall_elapsed_seconds": 2979.361250042,
+  "done_selected": false,
+  "qualifying_deliveries": 0,
+  "driver_exit": 1,
+  "evaluator_exit": 1,
+  "evaluator_pass": false,
+  "evaluation_metrics": {
+    "rounds": 200,
+    "llm_calls": 200,
+    "llm_total_elapsed_s": 1094.517577715999,
+    "simulation_seconds": 721.16,
+    "observations": 879,
+    "failed_rounds": 64,
+    "failed_actions": 64,
+    "execution_failures": 0,
+    "external_stop_failures": 0,
+    "bridge_calls": 3996,
+    "nonwhitelist_brain_requests": 0
+  },
+  "source_proof": {
+    "status": "verified",
+    "failures": [],
+    "recorded_before_after_equal": true,
+    "driver_sources_unchanged": true,
+    "brain_summary_hashes_match": true,
+    "actual_orchestrator_matches": true,
+    "actual_world_model_matches": true,
+    "formal_configuration_matches": true,
+    "run_configuration_matches": true,
+    "recorded_brain_and_driver_files": 15
+  },
+  "strict_replay": {
+    "allPass": true,
+    "recorded_rounds": 200,
+    "recorded_calls": 200,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true,
+    "failures": []
+  },
+  "localized_stops": [
+    {
+      "before_observation": 80,
+      "after_observation": 81,
+      "bridge_request_id": "brain-000371",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 177,
+      "after_observation": 178,
+      "bridge_request_id": "brain-000802",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 314,
+      "after_observation": 315,
+      "bridge_request_id": "brain-001429",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 393,
+      "after_observation": 394,
+      "bridge_request_id": "brain-001782",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 440,
+      "after_observation": 441,
+      "bridge_request_id": "brain-001997",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 471,
+      "after_observation": 472,
+      "bridge_request_id": "brain-002138",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    },
+    {
+      "before_observation": 649,
+      "after_observation": 650,
+      "bridge_request_id": "brain-002950",
+      "chain": 0,
+      "kind": "measured_clearance_stop_prefix",
+      "completed_traversal": false
+    }
+  ],
+  "failed_reason_counts": {
+    "confirmation_no_safe_independent_viewpoint": 20,
+    "road_blocked_returned_to_observed_node": 14,
+    "confirmation_source_pixels_not_compatible": 5,
+    "road_node_observed_without_completed_traversal": 6,
+    "grab_identity_competition": 13,
+    "final_approach_requires_road_reposition": 1,
+    "confirmation_needs_fresh_observation": 3,
+    "known_route_exhausted_needs_exploration": 2
+  },
+  "raw_evaluation": "artifacts/autonomous-brain/identity-recovery-next/run-20261008T043107Z-evaluation/evaluation.json",
+  "raw_brain": "artifacts/autonomous-brain/identity-recovery-next/run-20261008T043107Z/map-05-run-1/brain",
+  "export_status": {
+    "complete": true,
+    "completedDatasets": [
+      "envelope",
+      "record",
+      "samples",
+      "sensorAudit",
+      "captures"
+    ],
+    "failures": [],
+    "partial": {}
+  },
+  "held_object_ids": [],
+  "delivered_object_ids": [],
+  "holding_true_observations": [],
+  "short_probe_executions": [],
+  "selected_public_motion_refs": [
+    {
+      "round": 30,
+      "bridge_request_id": "brain-000608",
+      "method": "turn",
+      "params": {
+        "angleDeg": 12.3,
+        "speed": 50
+      },
+      "before_observation": 133,
+      "after_observation": 134,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 30,
+      "bridge_request_id": "brain-000613",
+      "method": "forward",
+      "params": {
+        "distanceCm": 15.5,
+        "speed": 30
+      },
+      "before_observation": 134,
+      "after_observation": 135,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 35,
+      "bridge_request_id": "brain-000673",
+      "method": "follow_road",
+      "params": {
+        "distanceCm": 15.5,
+        "speed": 50
+      },
+      "before_observation": 148,
+      "after_observation": 149,
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "max_distance",
+        "distanceCm": 15.5,
+        "elapsedTicks": 54
+      }
+    },
+    {
+      "round": 42,
+      "bridge_request_id": "brain-000759",
+      "method": "turn",
+      "params": {
+        "angleDeg": -69.45013010668707,
+        "speed": 50
+      },
+      "before_observation": 168,
+      "after_observation": 169,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 42,
+      "bridge_request_id": "brain-000764",
+      "method": "backward",
+      "params": {
+        "distanceCm": 9.101686987314736,
+        "speed": 30
+      },
+      "before_observation": 169,
+      "after_observation": 170,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 42,
+      "bridge_request_id": "brain-000769",
+      "method": "forward",
+      "params": {
+        "distanceCm": 9.100000000000023,
+        "speed": 30
+      },
+      "before_observation": 170,
+      "after_observation": 171,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 42,
+      "bridge_request_id": "brain-000774",
+      "method": "turn",
+      "params": {
+        "angleDeg": -111,
+        "speed": 50
+      },
+      "before_observation": 171,
+      "after_observation": 172,
+      "actuator_result": {
+        "completed": true
+      }
+    },
+    {
+      "round": 42,
+      "bridge_request_id": "brain-000779",
+      "method": "follow_road",
+      "params": {
+        "distanceCm": 20,
+        "speed": 50
+      },
+      "before_observation": 172,
+      "after_observation": 173,
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "junction",
+        "distanceCm": 9.4,
+        "elapsedTicks": 32
+      }
+    }
+  ],
+  "current_first_grasp_blocker": {
+    "round": 37,
+    "observation": 155,
+    "object_id": "target_042",
+    "reason": "grab_identity_competition",
+    "candidate_ids": [
+      "target_018",
+      "target_023",
+      "target_042"
+    ],
+    "current_safe_sampling_option": false,
+    "original_pixel_support_from_retired_sources": false,
+    "physical_equivalence": "UNKNOWN",
+    "next_safe_grasp": "not proven"
+  },
+  "startup_attempt": {
+    "directory": "artifacts/autonomous-brain/identity-recovery-next/run-20261008T043036Z",
+    "competition_started": false,
+    "rounds": 0,
+    "native_calls": 0,
+    "robot_commands": 0,
+    "reason": "Sandbox denied local loopback listener (listen EPERM); rerun with required permissions used unchanged source/model in a new directory.",
+    "driver_exit": 1,
+    "evaluator_exit": 2,
+    "exit_codes_file": "artifacts/autonomous-brain/identity-recovery-next/run-20261008T043036Z-exit-codes.json"
+  },
+  "tests": {
+    "direct_python_result": "154 passed in 10.90s",
+    "output": "artifacts/autonomous-brain/identity-recovery-next/component-tests.txt",
+    "limits": "Original public r7 planner regression and synthetic sensor feedback; no claim of live probe success. Retained native, clearance-prefix, road-chain code unchanged."
+  },
+  "stop_decision": "200-round limit. No grab or delivery. No evidence-sufficient alias/safe sampling fix for the actual first blocker; no unconditional rerun or further robot-code change."
+}
