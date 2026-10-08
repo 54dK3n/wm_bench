@@ -25,7 +25,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v18"
+RUNTIME_VERSION = "autonomous-brain-runtime/v19"
 
 
 def dump(path, value):
@@ -328,6 +328,14 @@ class Runtime:
             for key in ("completion_classification", "ever_confirmed"):
                 if key in row:
                     objects[-1][key] = row[key]
+            if "position_evidence" in row:
+                proof = row["position_evidence"]
+                objects[-1]["position_evidence"] = {
+                    key: proof[key] for key in ("position_semantics", "pixel_consistency",
+                        "source_records_complete", "position_is_identity_proof", "manipulation_requires")}
+                objects[-1]["position_evidence"].update(
+                    mean_reprojection_failure_count=len(proof["mean_reprojection_failed_frames"]),
+                    mutual_reprojection_failure_count=len(proof["mutual_reprojection_failed_pairs"]))
             ambiguity = compact_identity_ambiguity(row.get("identity_ambiguity"))
             if ambiguity is not None:
                 objects[-1]["identity_status"] = "ambiguous"

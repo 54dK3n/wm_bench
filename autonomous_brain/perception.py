@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v16"
+VERSION = "autonomous-brain-perception/v17"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -228,6 +228,7 @@ class Perception:
         evidence.update(method=method, raw_distance_cm=raw_distance_cm,
                         raw_bearing_deg=raw_bearing_deg, distance_cm=distance_cm,
                         bearing_deg=bearing_deg, position_m={"x": det.x, "z": det.z},
+                        position_semantics="approximate_width_range_estimate",
                         fed_to_world_model=eligible,
                         reason=None if eligible else "outside_demo_memory_window")
         return det, evidence
@@ -742,6 +743,7 @@ class Perception:
                 "round": frame["round"], "simulation_time_s": frame["simulation_time_s"],
                 "detection_index": index, "bbox": copy.deepcopy(frame["raw_observation"]["detections"][index]["bbox"]),
                 "odometry": copy.deepcopy(frame["odometry"]), "position_m": copy.deepcopy(item["position_m"]),
+                "position_semantics": item["position_semantics"],
                 "raw_distance_cm": item.get("raw_distance_cm"),
                 "raw_bearing_deg": item.get("raw_bearing_deg"),
                 "position_is_range_clipped": item.get("raw_distance_cm") == 100,
@@ -1086,6 +1088,38 @@ class Perception:
         """Return detached evidence; neither query nor binding changes WM IDs."""
         return copy.deepcopy(list(self._reacquisitions.values()))
 
+    def _position_evidence(self, track):
+        """Distinguish WM hit admission from original-pixel agreement.
+
+        This checks the frozen estimate, without refitting it, changing a gate,
+        merging identities or discarding inconsistent source obligations.
+        A consistent estimate alone still does not authorize a grasp.
+        """
+        hits = self._accepted_poses.get(track.obj_id, [])
+        frames = {p["frame_id"] for p in hits}
+        sources = [r for r in getattr(self, "_discovery_records", [])
+                   if r.get("initial_object_id") == track.obj_id
+                   and r["frame_id"] in frames]
+        complete = (len(sources) == len(hits)
+                    and len({r["frame_id"] for r in sources}) == len(hits))
+        point = {"x": track.x, "z": track.z}
+        failed_frames = [r["frame_id"] for r in sources
+                         if not discovery_pixel_match(self.camera, r, point)]
+        failed_pairs = [[a["frame_id"], b["frame_id"]]
+                        for i, a in enumerate(sources) for b in sources[i + 1:]
+                        if not (discovery_pixel_match(self.camera, a, b["position_m"])
+                                and discovery_pixel_match(self.camera, b, a["position_m"]))]
+        status = ("incompatible_original_pixels" if failed_frames or failed_pairs else
+                  "pixel_consistent_estimate" if complete and len(sources) >= 2 else
+                  "insufficient_original_views")
+        return {"position_semantics": "approximate_width_range_estimate",
+                "pixel_consistency": status, "accepted_frame_ids": [p["frame_id"] for p in hits],
+                "source_records_complete": complete,
+                "mean_reprojection_failed_frames": failed_frames,
+                "mutual_reprojection_failed_pairs": failed_pairs,
+                "position_is_identity_proof": False,
+                "manipulation_requires": "fresh_current_identity_and_grasp_checks"}
+
     def _row(self, track: Any) -> dict[str, Any]:
         local_x, local_z = self.pose.to_local(track.x, track.z)
         row = {"id": track.obj_id, "category": WM_TO_PUBLIC.get(track.name, track.name),
@@ -1103,6 +1137,8 @@ class Perception:
         if track.obj_id in self._identity_ambiguities:
             row["identity_ambiguity"] = copy.deepcopy(self._identity_ambiguities[track.obj_id])
         if row["category"] == "red-ball":
+            if track.obj_id not in self._lifecycle:
+                row["position_evidence"] = self._position_evidence(track)
             times = self._times.get(track.obj_id, {})
             known_confirmation_history = "confirmed_s" in times
             row["ever_confirmed"] = (times["confirmed_s"] is not None
