@@ -1,6 +1,14 @@
 # wm_bench
 
-## 当前结果：2026-10-08，身份窗口复现与一次真实双球验证完成，FAIL
+## 当前结果：2026-10-08，位置证据语义修补与真实双球验证，FAIL
+
+生产提交 `4d813db4c0adcca9adb2cd8f9fbe437c02189143` 明确标注近似宽度/M5 位置的原像素冲突，向模型提供一致性信息；坐标转换和身份/抓放门限未改，几何身份恢复仍未解决。完整源码复现原 target_040 的三组及上一局 target_042 的十组跨视角失败，真实后路也不支持所提中转；没有扩大像素容差或合并历史 ID。
+
+新局 `run-20261008T063502Z` 使用原 map-05、Runtime / vendored WM / Executor / Actions 和固定 `codex-app-server / gpt-6.1-sol / low`。200 次完整原生推理、200 个合法决策，底层 HTTP 次数未知；运动 482 次，grab/release/HELD/DELIVERED/done 均为 0。200 轮、752.46 仿真秒结束，driver/evaluator=1/1，双球 **FAIL**。r33 首次接近被三身份竞争拒绝，缺少已验证的安全取景后继。4cm 分支本局真实触发三次；上一局未触发的事实保留。70 项直接相关回归通过，五类原始导出完整、源码核验及严格记录复算通过，未开第二局。
+
+[一页结果与限制](artifacts/autonomous-brain/identity-view-consistency-next/REPORT.md) · [独立指标](artifacts/autonomous-brain/identity-view-consistency-next/METRICS.json) · [关键公共输入](tests/fixtures/identity_view_consistency_public.json)。完整新旧原件留在本机，历史一球 PASS 及旧 FAIL/ERROR 不改写。
+
+## 上一轮记录：2026-10-08，身份窗口复现与一次真实双球验证完成，FAIL
 
 本轮目标仍是 map-05 原平台同一局交付两颗不同红球并主动 done。使用既有 Runtime / vendored WorldModel / `octos_robots.Executor` / Actions，由真实 `codex-app-server / gpt-6.1-sol / low` 每轮选择动作；原 200 轮 / 1200 仿真秒和评测规则保持。审查起点 `840945f573eb21b880df9d9c825f04cea953330e` 与远端相符，用户未提交文件和旧运行原件保持。
 
