@@ -165,7 +165,7 @@ def _reverse_support(actions, length, snapshot=None):
     return _recorded_translation_support(actions, length, 'backward', snapshot)
 
 
-def _translation_choices(actions, target, snapshot, remaining, rejections):
+def _translation_choices(actions, target, snapshot, remaining, rejections, *, short_probe=False):
     """Evaluate only bounded translations; hypothetical poses never earn hits."""
     from .actions import road_translation_limit
     road,odo=snapshot['road'],snapshot['odometry']
@@ -177,8 +177,8 @@ def _translation_choices(actions, target, snapshot, remaining, rejections):
         rejections[reason]=rejections.get(reason,0)+1
 
     choices=[]
-    for method in ('forward','backward'):
-        for length in (15.5,16.,17.,18.,20.,10.):
+    for method in (('forward',) if short_probe else ('forward','backward')):
+        for length in ((4.,) if short_probe else (15.5,16.,17.,18.,20.,10.)):
             if length>remaining:
                 reject('remaining_action_travel_budget');continue
             sign=1 if method=='forward' else -1
@@ -195,7 +195,7 @@ def _translation_choices(actions, target, snapshot, remaining, rejections):
             if not (42<=predicted[0]<=87 or approaching_far):
                 reject('target_would_leave_confirmation_window');continue
             independent=all(distance(end,(p['x_m'],p['z_m']))>=gap+.002 for p in poses)
-            if not independent and not approaching_far:
+            if not independent and not approaching_far and not short_probe:
                 reject('insufficient_separation_from_accepted_hit_poses');continue
             support=None
             if method=='backward':
@@ -220,12 +220,14 @@ def _translation_choices(actions, target, snapshot, remaining, rejections):
                  'planned_position_m':list(end),'predicted_raw_distance_cm':predicted[0],
                  'predicted_raw_bearing_deg':predicted[1],'range_is_lower_bound':clipped,
                  'independent_pose_predicted':independent,'road_clearance':clearance,
+                 **({'short_sampling_probe':True,'confirmation_hit_expected':False} if short_probe else {}),
                  'reverse_path_support':support,
                  'basis':'public_target_estimate_local_road_and_accepted_hit_poses'}))
     return choices
 
 
-def _plan(actions, target, remaining, rejections, failed_viewpoints=(), comparison_out=None):
+def _plan(actions, target, remaining, rejections, failed_viewpoints=(), comparison_out=None,
+          *, allow_short_probe=True):
     """Compare present translations with observed turns plus a next viewpoint.
 
     A turn is useful only if its camera projection preserves the range and
@@ -294,6 +296,26 @@ def _plan(actions, target, remaining, rejections, failed_viewpoints=(), comparis
         if repeated:
             rejections['same_action_viewpoint_already_lost']=rejections.get('same_action_viewpoint_already_lost',0)+1
         else:usable.append((score,plan))
+    # A junction's side clearance can rule out every independent-sized step
+    # while still permitting a small forward sensor probe. Use the unchanged
+    # road bound and reobserve after each probe; a short move never earns a hit
+    # or claims that the next independent pose is reachable. This fallback is
+    # only for an unconfirmed target and a real local-clearance rejection.
+    obj=target.get('associated_object') or {}
+    if (not usable and allow_short_probe and road.get('atNode') is True
+            and current_rejections.get('insufficient_local_road_clearance',0)>0
+            and obj.get('state')=='TENTATIVE' and obj.get('ever_confirmed') is False
+            and not target.get('identity_resolution_required')
+            and actions.s.get('holding',{}).get('holding') is False):
+        probes=_translation_choices(actions,target,actions.s,remaining,rejections,short_probe=True)
+        for score in probes:
+            plan=score[-1]
+            if not any(distance(position(odo),f['position_m'])<=.002
+                       and abs(wrap(odo['headingDeg']-f['heading_deg']))<=.2
+                       and f['method']==plan['method'] and f['params']==plan['params']
+                       for f in failed_viewpoints):
+                usable.append(((2,*score[:4]),plan))
+        comparison['short_probe_count']=len(probes)
     if comparison_out is not None:comparison_out.update(copy.deepcopy(comparison))
     if not usable:return None
     chosen=min(usable,key=lambda c:c[0])[1]
@@ -465,7 +487,8 @@ def sample_discovery(actions, discovery_id):
             return finish(False,'confirmation_sampling_budget_exhausted',target)
         rejections={}
         comparison={}
-        plan=_plan(actions,target,MAX_TRAVEL_CM-travelled,rejections,failed_viewpoints,comparison)
+        plan=_plan(actions,target,MAX_TRAVEL_CM-travelled,rejections,failed_viewpoints,comparison,
+                   allow_short_probe=sum(bool(s.get('short_sampling_probe')) for s in trace['steps'])<3)
         trace['last_viewpoint_comparison']=comparison
         if plan is None:
             trace['viewpoint_rejections']=rejections
