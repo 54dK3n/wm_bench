@@ -23,7 +23,7 @@ from world_model.types import Detection, FrameQuality, ObjectState
 from .actions import ball_inside_region
 
 
-VERSION = "autonomous-brain-perception/v17"
+VERSION = "autonomous-brain-perception/v18"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -262,7 +262,8 @@ class Perception:
                                 self.wm.assoc_cfg, now=timestamp)
         # A current near-field detection is positive visibility evidence even
         # though its extrapolated range cannot add a confirmation sample. Only
-        # an already CONFIRMED identity with an unambiguous match is refreshed.
+        # an active TENTATIVE/STALE/CONFIRMED track with an unambiguous match
+        # is refreshed. This is visibility evidence, not confirmation evidence.
         # Compare against every active identity, including tentative neighbours.
         near = [(det, item) for det, item in converted
                 if det is not None and not item["fed_to_world_model"]
@@ -274,7 +275,9 @@ class Perception:
                                       self.wm.assoc_cfg, now=timestamp)
             eligible_matches = {track_index for track_index, _ in assignments.matches}
             for track_index, track in enumerate(old_tracks):
-                if track.state != ObjectState.CONFIRMED or track_index in eligible_matches:
+                if (track.state not in {ObjectState.TENTATIVE, ObjectState.STALE,
+                                        ObjectState.CONFIRMED}
+                        or track_index in eligible_matches):
                     continue
                 candidates = [index for index, cost in enumerate(costs[track_index])
                               if math.isfinite(cost)]
@@ -296,7 +299,7 @@ class Perception:
                 track.last_frame_quality = det.frame_quality
                 track.source = det.source
                 item.update(track_id=track.obj_id, visibility_refresh_only=True,
-                            reason="near_field_visibility_for_existing_confirmation")
+                            reason="near_field_visibility_for_active_track")
         self.wm.update(detections, self.pose, now=timestamp)
         for track_idx, det_idx in assignments.matches:
             evidence_items[det_idx]["track_id"] = old_tracks[track_idx].obj_id

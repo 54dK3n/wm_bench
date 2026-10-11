@@ -296,8 +296,11 @@ class RunningMonitor {
   async bind(capability) {
     const controller = this.guard.bind(capability);
     const {client, sessionId} = this.getConnection();
+    // The initial renderer frame can exceed the short running-read deadline.
+    // No brain or robot command exists yet; allow the existing recovery budget
+    // for this one handshake without retrying start or relaxing identity checks.
     this.identity = await this.evaluateRead(client, sessionId,
-      `(${bindRuntimeMonitor.toString()})(${JSON.stringify({...controller, nonce: crypto.randomBytes(16).toString('hex')})})`, this.readTimeoutMs);
+      `(${bindRuntimeMonitor.toString()})(${JSON.stringify({...controller, nonce: crypto.randomBytes(16).toString('hex')})})`, this.recoveryTimeoutMs);
     this.arm(client);
     const view = await this.read();
     this.diagnostics.event('runtime_monitor_bound', {identity: this.identity, tick: view.tick});

@@ -66,11 +66,28 @@ async function fixture(t, options = {}) {
   monitor = new RunningMonitor({endpoint, targetId, getConnection: () => connection,
     setConnection: value => {connection = value;}, browser, guard, diagnostics,
     maxSimulationSeconds: 1200, recoveryTimeoutMs: 2500, readTimeoutMs: 1000, ...options});
-  await monitor.bind(capability);
+  if (options.startupDelayMs) {
+    // Hold the real renderer across the short read deadline, as an initial
+    // render does. Queue binding behind it; no robot/start command is retried.
+    const busy = evaluate(`{const end=performance.now()+${options.startupDelayMs};
+      while(performance.now()<end){}; true}`, 5000);
+    await monitor.bind(capability);
+    await busy;
+  } else {
+    await monitor.bind(capability);
+  }
   return {dir, browser, endpoint, targetId, capability, bridge, guard, monitor, diagnostics, bridgeDiagnostics,
     evaluate, get connection() {return connection;},
     async disconnect() {connection.client.socket.close(); await until(() => !connection.client.available, 'CDP stayed open');}};
 }
+
+test('initial renderer delay uses bounded handshake budget without restarting', {timeout: 30000}, async t => {
+  const f = await fixture(t, {startupDelayMs: 1500});
+  assert.equal((await f.monitor.read()).runId, 'controlled-original-run');
+  assert.deepEqual(await f.evaluate('[startCount,stopCount]'), [0, 0]);
+  assert.equal(f.monitor.recovery.attempted, false);
+  assert.equal(f.monitor.readTimeoutMs, 1000);
+});
 
 // A real separate process with one explicitly synthetic decision lifecycle.
 // It submits one real frozen-bridge command, then only reads that request ID.
