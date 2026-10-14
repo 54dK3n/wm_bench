@@ -3,6 +3,7 @@
 // Evaluation only. No platform implementation is imported and none of these
 // truth-bearing structures may be passed to the robot client or planner.
 const {isDeepStrictEqual} = require("node:util");
+const {createHash} = require("node:crypto");
 
 const VERSION = "wm-v4-stage1-content-audit/v1";
 const CATEGORIES = Object.freeze(["red-ball", "blue-ball", "obstacle", "storage-zone"]);
@@ -74,12 +75,87 @@ function validateParams(params) {
   if (params.confidence !== undefined) confidence(params.confidence, "params.confidence");
 }
 
+// Independent source-RGBA oracle. The platform detector/core is deliberately not
+// imported. This freezes only the documented public-pixel sampling contract,
+// with alpha over black, contrast 1.12, offset-one step-two and 4-connectivity.
+function redPixelComponents(pixels) {
+  demand(pixels?.width === 640 && pixels?.height === 480 && pixels.rgba?.length === 640 * 480 * 4,
+    "pixelQuality: original 640x480 RGBA required");
+  const width = 320, height = 240, mask = new Uint8Array(width * height), sector = new Uint8Array(mask.length);
+  const contrast = value => Math.round(Math.max(0, Math.min(255, (value - 128) * 1.12 + 128)));
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const offset = ((2 * y + 1) * 640 + 2 * x + 1) * 4, alpha = pixels.rgba[offset + 3] / 255;
+    const r = contrast(Math.round(pixels.rgba[offset] * alpha));
+    const g = contrast(Math.round(pixels.rgba[offset + 1] * alpha));
+    const b = contrast(Math.round(pixels.rgba[offset + 2] * alpha));
+    const index = y * width + x;
+    if (r >= 52 && g <= 86 && b <= 92 && r - g >= 30 && r - b >= 26 && r >= g * 1.5 && r >= b * 1.38) {
+      mask[index] = 1; sector[index] = Math.abs(60 * (g - b) / (r - Math.min(g, b))) <= 15 ? 1 : 0;
+    }
+  }
+  const components = [], queue = new Int32Array(mask.length);
+  for (let start = 0; start < mask.length; start++) {
+    if (!mask[start]) continue;
+    let head = 0, tail = 1, count = 0, red = 0, minX = width, maxX = 0, minY = height, maxY = 0;
+    queue[0] = start; mask[start] = 0;
+    while (head < tail) {
+      const index = queue[head++], x = index % width, y = Math.floor(index / width);
+      count++; red += sector[index]; minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+      const neighbors = [x > 0 ? index - 1 : -1, x < width - 1 ? index + 1 : -1,
+        y > 0 ? index - width : -1, y < height - 1 ? index + width : -1];
+      for (const next of neighbors) if (next >= 0 && mask[next]) { mask[next] = 0; queue[tail++] = next; }
+    }
+    components.push({x: minX * 2, y: minY * 2 + 80, width: (maxX - minX + 1) * 2,
+      height: (maxY - minY + 1) * 2, componentPixels: count, redSectorPixels: red});
+  }
+  return components;
+}
+
+function pixelQuality(item, frameId, components) {
+  const quality = {schema: "red-component-quality/v1", frameId, componentPixels: null,
+    redSectorPixels: null, status: "unknown", reason: "detection_frame_mismatch"};
+  if (item.frameId !== frameId) return quality;
+  const matches = components.filter(component => ["x", "y", "width", "height"].every(key => component[key] === item.box[key]));
+  if (matches.length !== 1) return {...quality, reason: "component_not_uniquely_matched"};
+  quality.componentPixels = matches[0].componentPixels; quality.redSectorPixels = matches[0].redSectorPixels;
+  if (item.box.x <= 0 || item.box.y <= 80 || item.box.x + item.box.width >= 640 || item.box.y + item.box.height >= 560) {
+    return {...quality, reason: "source_bbox_touches_boundary"};
+  }
+  if (quality.redSectorPixels * 2 <= quality.componentPixels) return {...quality, reason: "red_sector_not_majority"};
+  return {...quality, status: "supported", reason: "red_sector_majority"};
+}
+
+function hasPixelQuality(...lists) { return lists.some(items => items?.some(item => Object.hasOwn(item, "pixelQuality"))); }
+
+// The PNG decoder is a codec supplied by the caller, never the expected-quality
+// implementation. Reject missing/ambiguous bindings before trusting any pixels.
+function bindPixelFrame(frames, capture, decodePng) {
+  demand(Array.isArray(frames), "pixelQuality: native visionFrames missing");
+  const matches = frames.filter(frame => frame.frameId === capture.frameId && frame.tick === capture.tick);
+  demand(matches.length === 1, "pixelQuality: unique original frame binding required");
+  const frame = matches[0];
+  demand(frame.stateRevision === capture.stateRevision && Number.isSafeInteger(frame.stateRevision), "pixelQuality: stateRevision mismatch");
+  demand(frame.width === 640 && frame.height === 480 && frame.mimeType === "image/png", "pixelQuality: original PNG dimensions/type mismatch");
+  demand(typeof frame.pngBase64 === "string" && /^[A-Za-z0-9+/]*={0,2}$/.test(frame.pngBase64), "pixelQuality: canonical PNG base64 missing");
+  const bytes = Buffer.from(frame.pngBase64, "base64");
+  demand(bytes.toString("base64") === frame.pngBase64 && bytes.length === frame.byteLength, "pixelQuality: PNG byte length/base64 mismatch");
+  demand(createHash("sha256").update(bytes).digest("hex") === frame.sha256, "pixelQuality: PNG SHA256 mismatch");
+  demand(typeof decodePng === "function", "pixelQuality: independent PNG codec missing");
+  const pixels = decodePng(bytes);
+  if (capture.rgbaSha256 !== undefined) demand(createHash("sha256").update(pixels.rgba).digest("hex") === capture.rgbaSha256,
+    "pixelQuality: capture RGBA SHA256 mismatch");
+  return {...pixels, frameId: frame.frameId, pngSha256: frame.sha256};
+}
+
 // Independent oracle: never use robotDetections or the bridge projection helper
 // as the expected answer. Raw source identity is carried without relabeling.
-function projectRawDetections(rawDetections, storageDetections, params = {}) {
+function projectRawDetections(rawDetections, storageDetections, params = {}, pixelFrame = null) {
   demand(Array.isArray(rawDetections), "rawDetections: array required");
   demand(Array.isArray(storageDetections), "storageDetections: array required");
   validateParams(params);
+  const components = pixelFrame ? redPixelComponents(pixelFrame) : null;
+  if (pixelFrame) integer(pixelFrame.frameId, "pixelQuality.frameId");
   const canonical = [], exclusions = [], mappings = [];
   rawDetections.forEach((item, rawIndex) => {
     object(item, `rawDetections[${rawIndex}]`);
@@ -99,6 +175,9 @@ function projectRawDetections(rawDetections, storageDetections, params = {}) {
     const bbox = letterboxProjection(item.box);
     if (!bbox) { exclusions.push({rawIndex, source: item.source, category: item.category, excluded_with_reason: "bbox_outside_source_frame"}); return; }
     const projected = {category, confidence: item.confidence, bbox, source: item.source};
+    if (pixelFrame && category === "red-ball" && item.source === "virtual-cv") {
+      projected.pixelQuality = pixelQuality(item, pixelFrame.frameId, components);
+    }
     mappings.push({origin: "rawDetections", rawIndex, rawCategory: item.category, rawSource: item.source,
       rawBox: {...item.box}, rawConfidence: item.confidence, projectedIndex: canonical.length, projected});
     canonical.push(projected);
@@ -125,7 +204,13 @@ function validateObservation(observation, frameId, tick) {
   demand(observation.width === 640 && observation.height === 480, "bridge frame dimensions changed");
   demand(Array.isArray(observation.detections), "bridge detections missing");
   observation.detections.forEach((item, index) => {
-    exactKeys(item, ["category", "confidence", "bbox", "source"], `bridge detection ${index}`);
+    const extra = Object.hasOwn(item, "pixelQuality") ? ["pixelQuality"] : [];
+    exactKeys(item, ["category", "confidence", "bbox", "source", ...extra], `bridge detection ${index}`);
+    if (extra.length) {
+      demand(item.category === "red-ball" && item.source === "virtual-cv", "pixelQuality: unsupported detection class/source");
+      exactKeys(item.pixelQuality, ["schema", "frameId", "componentPixels", "redSectorPixels", "status", "reason"], "pixelQuality");
+      demand(item.pixelQuality.frameId === frameId && item.pixelQuality.schema === "red-component-quality/v1", "pixelQuality: frame/schema mismatch");
+    }
     demand(CATEGORIES.includes(item.category), "bridge category outside whitelist");
     confidence(item.confidence, `bridge detection ${index}.confidence`);
     sourceBox(item.bbox, `bridge detection ${index}.bbox`);
@@ -201,7 +286,7 @@ function auditCheckpoint(capture) {
     timeSeconds: time, rows, allPass: rows.every(row => row.exactMatch)};
 }
 
-function auditCapture(capture) {
+function auditCapture(capture, pixelFrame = null) {
   const failures = [], result = {frameId: capture?.frameId ?? null, tick: capture?.tick ?? null,
     requestId: capture?.requestId ?? null, outputCounts: emptyCounts(), failures};
   const attempt = (code, operation) => { try { return operation(); } catch (error) { failures.push({code, message: error.message}); return null; } };
@@ -211,7 +296,11 @@ function auditCapture(capture) {
     demand(typeof capture.rgbaSha256 === "string" && /^[a-f0-9]{64}$/.test(capture.rgbaSha256), "RGBA SHA256 missing or invalid");
     validateObservation(capture.bridgeObservation, capture.frameId, capture.tick); return true;
   });
-  result.projection = attempt("RAW_PROJECTION", () => projectRawDetections(capture.rawDetections, capture.storageDetections, capture.params));
+  result.projection = attempt("RAW_PROJECTION", () => {
+    const quality = hasPixelQuality(capture.robotDetections, capture.bridgeObservation?.detections);
+    demand(!quality || pixelFrame?.frameId === capture.frameId, "pixelQuality: original same-frame pixels unavailable");
+    return projectRawDetections(capture.rawDetections, capture.storageDetections, capture.params, quality ? pixelFrame : null);
+  });
   if (valid) {
     increment(result.outputCounts, capture.bridgeObservation.detections);
     if (result.projection) {
@@ -232,13 +321,20 @@ function auditCapture(capture) {
   return result;
 }
 
-function auditRun(run) {
+function auditRun(run, options = {}) {
   const failures = [], captures = Array.isArray(run?.captures) ? run.captures : [];
   const check = (condition, code, details = {}) => { if (!condition) failures.push({code, ...details}); };
   check(captures.length > 0, "NO_OBSERVATIONS");
   check(typeof run?.directory === "string" && run.directory.length > 0 && !/^(?:\/|[A-Za-z]:)/.test(run.directory)
     && !run.directory.split(/[\\/]/).includes(".."), "REPORT_DIRECTORY_NOT_RELATIVE");
-  const rows = captures.map(auditCapture), outputCounts = emptyCounts(), counts = truthCounts();
+  const rows = captures.map(capture => {
+    let pixelFrame = null;
+    if (hasPixelQuality(capture.robotDetections, capture.bridgeObservation?.detections)) {
+      try { pixelFrame = bindPixelFrame(run.record?.native?.visionFrames ?? run.record?.visionFrames, capture, options.decodePng); }
+      catch (error) { failures.push({code: "PIXEL_QUALITY_FRAME_BINDING", frameId: capture.frameId, message: error.message}); }
+    }
+    return auditCapture(capture, pixelFrame);
+  }), outputCounts = emptyCounts(), counts = truthCounts();
   for (const row of rows) {
     for (const category of CATEGORIES) outputCounts[category] += row.outputCounts[category];
     for (const category of TRUTH_CATEGORIES) for (const key of ["expected", "detected", "misses"]) {
@@ -301,9 +397,9 @@ function compareRuns(left, right) {
     observations: rows.length, rows, failures, allPass: failures.length === 0};
 }
 
-function auditSuite({runs}) {
+function auditSuite({runs}, options = {}) {
   demand(Array.isArray(runs), "runs: array required");
-  const reports = runs.map(auditRun), failures = [], outputCounts = emptyCounts(), counts = truthCounts();
+  const reports = runs.map(run => auditRun(run, options)), failures = [], outputCounts = emptyCounts(), counts = truthCounts();
   for (const report of reports) {
     for (const category of CATEGORIES) outputCounts[category] += report.outputCounts[category];
     for (const category of TRUTH_CATEGORIES) for (const key of ["expected", "detected", "misses"]) counts[category][key] += report.truthCounts[category][key];
@@ -327,5 +423,6 @@ function auditSuite({runs}) {
 }
 
 module.exports = {VERSION, CATEGORIES, TRUTH_CATEGORIES, RULES, difference, letterboxProjection,
+  redPixelComponents, pixelQuality, hasPixelQuality, bindPixelFrame,
   projectRawDetections, cameraGeometry, auditTruth, expectedCheckpoint, auditCheckpoint,
   auditCapture, auditRun, compareRuns, auditSuite};

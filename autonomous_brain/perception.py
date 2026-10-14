@@ -19,11 +19,13 @@ from world_model.providers.guangyang import (
     odometry_to_pose,
 )
 from world_model.types import Detection, FrameQuality, ObjectState
+from world_model.decay import resolve_visibility
 
 from .actions import ball_inside_region
+from .observation_quality import pixel_quality, positive_pixel_support
 
 
-VERSION = "autonomous-brain-perception/v18"
+VERSION = "autonomous-brain-perception/v23"
 RANGE_CAL = {"L_cm": 5.1557, "a_cm": 1.6239, "k": 1.0187, "p": 1.0,
              "fit": "M5-calib-range-20260923"}
 PUBLIC_TO_WM = {"red-ball": "target", "blue-ball": "distractor",
@@ -90,6 +92,25 @@ def discovery_pixel_match(camera, source, position):
             and abs(predicted_range - reading) <= range_tolerance)
 
 
+class _ObservationVisibility:
+    """Do not infer a missed sighting from an inconsistent range proxy.
+
+    The WM's boolean visibility interface selects fast missed-sighting decay
+    or ordinary time decay. False here means no supported expectation of a
+    sighting, not proof that an object lies outside the camera. This adapter
+    never supplies positive visibility, an association, or a position.
+    """
+
+    def __init__(self, fallback):
+        self.fallback = resolve_visibility(fallback)
+        self.unknown_positions = set()
+
+    def is_visible(self, x_world, z_world, pose):
+        if (x_world, z_world) in self.unknown_positions:
+            return False
+        return self.fallback.is_visible(x_world, z_world, pose)
+
+
 class Perception:
     """One update per observed frame, with auditable independent-view hits.
 
@@ -116,6 +137,8 @@ class Perception:
         )
         # Required explicit range. Do not change the upstream profile or gates.
         self.wm = guangyang_static_world_model(max_range_m=0.9)
+        self._visibility = _ObservationVisibility(self.wm.visibility)
+        self.wm.visibility = self._visibility
         self.pose = self.wm.pose
         self.last_evidence: dict[str, Any] | None = None
         self._history: dict[str, dict[str, Any]] = {}
@@ -165,6 +188,9 @@ class Perception:
             "bbox": {"x": x, "y": y, "w": w, "h": h}, "frame_id": frame_id,
             "fed_to_world_model": False, "track_id": None,
         }
+        quality = pixel_quality(item, frame_id)
+        if quality is not None:
+            evidence["pixel_quality"] = quality
         if category == "storage-zone":
             if source != "storage-ground-pixels":
                 raise ValueError("storage-zone must come from ground-region pixels")
@@ -231,7 +257,27 @@ class Perception:
                         position_semantics="approximate_width_range_estimate",
                         fed_to_world_model=eligible,
                         reason=None if eligible else "outside_demo_memory_window")
+        if not positive_pixel_support(evidence):
+            # Keep the original rectangle and its coarse navigation estimate.
+            # A mixed/truncated component does not support the width model or
+            # a positive identity observation in any admission window.
+            evidence.update(fed_to_world_model=False,
+                            reason="pixel_geometry_support_unknown")
         return det, evidence
+
+    def _unknown_pixel_candidates(self, tracks, converted, timestamp):
+        """Current coarse candidates for indeterminate absence, not assignment."""
+        pixels = [(index, det) for index, (det, item) in enumerate(converted)
+                  if det is not None and item["category"] == "red-ball"
+                  and item.get("pixel_quality", {}).get("status") == "unknown"
+                  and not item["fed_to_world_model"]
+                  and not item.get("known_delivered_object_id")]
+        if not pixels:
+            return {}
+        costs = build_cost_matrix(tracks, [det for _, det in pixels],
+            self.wm.aliases, self.wm.assoc_cfg, now=timestamp)
+        return {index: [pixels[column][0] for column, cost in enumerate(row) if math.isfinite(cost)]
+                for index, row in enumerate(costs)}
 
     def update(self, observation: Mapping[str, Any], odometry: Mapping[str, Any], *,
                simulation_time_s: float, round_index: int | None = None,
@@ -253,6 +299,13 @@ class Perception:
         self.pose = odometry_to_pose(odometry)
         converted = [self._convert(item, frame_id, timestamp)
                      for item in observation["detections"]]
+        unknown_red_peer = any(item["category"] == "red-ball"
+                               and not positive_pixel_support(item) for _, item in converted)
+        if unknown_red_peer:
+            for _, item in converted:
+                if item["category"] == "red-ball" and positive_pixel_support(item):
+                    item.update(fed_to_world_model=False,
+                                reason="current_red_competitor_geometry_unknown")
         self._classify_delivered_candidates(converted, frame_id)
         detections = [det for det, item in converted if det is not None and item["fed_to_world_model"]]
         evidence_items = [item for det, item in converted if det is not None and item["fed_to_world_model"]]
@@ -260,6 +313,58 @@ class Perception:
         old_hits = {track.obj_id: track.hit_count for track in old_tracks}
         assignments = associate(old_tracks, detections, self.wm.aliases,
                                 self.wm.assoc_cfg, now=timestamp)
+        # A new-quality width proxy has no independently calibrated geometry,
+        # even before a second view can demonstrate its inconsistency. It is
+        # useful for coarse navigation but cannot establish an absent sighting.
+        # Historical sources retain the prior demonstrated-conflict rule.
+        # A current unknown component can also make a missed sighting
+        # indeterminate for an active track. Its coarse association gate is
+        # only a reason not to infer absence, never a positive identity match.
+        # Keep the sources, coordinates and all identity competitors. Only the
+        # WM's negative-evidence decay branch changes; time decay still runs.
+        visibility_unknown = []
+        unknown_ids = set()
+        unknown_candidates = self._unknown_pixel_candidates(old_tracks, converted, timestamp)
+        for track_index, track in enumerate(old_tracks):
+            history = self._times.get(track.obj_id, {})
+            if (track.name != "target" or track.obj_id in self._lifecycle
+                    or track.state not in {ObjectState.TENTATIVE, ObjectState.STALE,
+                                           ObjectState.CONFIRMED}):
+                continue
+            candidates = unknown_candidates.get(track_index, [])
+            if candidates:
+                unknown_ids.add(track.obj_id)
+                visibility_unknown.append({"object_id": track.obj_id,
+                    "reason": "current_unknown_pixels_do_not_support_missed_sighting",
+                    "frame_id": frame_id, "detection_indices": candidates,
+                    "basis": "existing_coarse_association_gate_only_not_identity",
+                    "decay": "existing_time_only_decay", "positive_visibility": False})
+                continue
+            if "confirmed_s" not in history or history["confirmed_s"] is not None:
+                continue
+            quality = self._position_evidence(track)
+            proxy_sources = self._new_quality_width_proxy_sources(track)
+            if (proxy_sources or (quality["source_records_complete"]
+                    and quality["mutual_reprojection_failed_pairs"])):
+                unknown_ids.add(track.obj_id)
+                visibility_unknown.append({"object_id": track.obj_id,
+                    "reason": ("uncalibrated_width_proxy_does_not_support_expected_visibility"
+                               if proxy_sources else
+                               "conflicting_original_views_do_not_support_expected_visibility"),
+                    "source_frame_ids": quality["accepted_frame_ids"],
+                    "conflicting_frame_pairs": quality["mutual_reprojection_failed_pairs"],
+                    "decay": "existing_time_only_decay", "positive_visibility": False})
+        # The upstream interface takes coordinates rather than object IDs.
+        # A coincident track with no demonstrated conflict must retain its
+        # normal decay; do not silently extend the mask to another category.
+        at_position = {}
+        for track in old_tracks:
+            at_position.setdefault((track.x, track.z), set()).add(track.obj_id)
+        self._visibility.unknown_positions = {
+            point for point, ids in at_position.items() if ids <= unknown_ids}
+        applied_ids = {oid for point, ids in at_position.items()
+                       if point in self._visibility.unknown_positions for oid in ids}
+        visibility_unknown = [r for r in visibility_unknown if r["object_id"] in applied_ids]
         # A current near-field detection is positive visibility evidence even
         # though its extrapolated range cannot add a confirmation sample. Only
         # an active TENTATIVE/STALE/CONFIRMED track with an unambiguous match
@@ -267,6 +372,8 @@ class Perception:
         # Compare against every active identity, including tentative neighbours.
         near = [(det, item) for det, item in converted
                 if det is not None and not item["fed_to_world_model"]
+                and positive_pixel_support(item)
+                and not (unknown_red_peer and item["category"] == "red-ball")
                 and not item.get("known_delivered_object_id")
                 and item.get("raw_distance_cm", math.inf) < 40
                 and abs(item.get("raw_bearing_deg", math.inf)) <= 35]
@@ -314,6 +421,8 @@ class Perception:
                      if track.obj_id not in already_assigned]
         unfed = [(det, item) for det, item in converted
                  if det is not None and not item["fed_to_world_model"]
+                 and positive_pixel_support(item)
+                 and not (unknown_red_peer and item["category"] == "red-ball")
                  and not item.get("known_delivered_object_id")
                  and not item.get("visibility_refresh_only")]
         if available and unfed:
@@ -364,6 +473,7 @@ class Perception:
             "odometry": copy.deepcopy(dict(odometry)),
             "detections": [item for _, item in converted],
             "newly_confirmed": newly_confirmed,
+            "visibility_expectation_unknown": visibility_unknown,
         }
         self._record_discoveries(observation_index)
         return copy.deepcopy(self.last_evidence)
@@ -452,6 +562,8 @@ class Perception:
             reason = "associated_identity_not_unique"
         elif current is not None and current.get("identity_ambiguity"):
             reason = "current_identity_ambiguous"
+        elif current is not None and not positive_pixel_support(current):
+            reason = "pixel_geometry_support_unknown"
         elif obj is not None and obj["state"] == "CONFIRMED":
             reason = "target_confirmed"
         elif current is not None:
@@ -484,6 +596,36 @@ class Perception:
         current_unique = (current is not None and current_record is not None
             and current_matrix.get(current_record["id"]) == [current.get("discovery_id")]
             and sum(current.get("discovery_id") in values for values in current_matrix.values()) == 1)
+        navigation_cue = None
+        if (reason == "source_pixels_not_compatible" and not boundaries
+                and obj is not None and obj["state"] in {"TENTATIVE", "STALE"}
+                and obj.get("ever_confirmed") is False and not obj.get("identity_ambiguity")
+                and len(ids) == 1 and len(current_items) == len(source_peers) == 1
+                and current_unique and current.get("fed_to_world_model") is True
+                and current.get("track_id") == source.get("initial_object_id") == oid
+                and current_record.get("initial_object_id") == oid
+                and not current.get("identity_ambiguity")
+                and "pixel_quality" in current and positive_pixel_support(current)):
+            # A current, normally admitted observation may guide acquisition of
+            # another view without proving that its older M5 pixels agree.
+            # Require a unique active WM candidate, not just greedy assignment.
+            # Archived rivals remain in the unchanged identity/resolver gates.
+            point = current["position_m"]
+            cue_detection = Detection(class_name="target", x=point["x"], z=point["z"],
+                confidence=current["confidence"], timestamp=frame["simulation_time_s"],
+                frame_id=frame["frame_id"], source=current["source"])
+            tracks = self.wm.get_scene()
+            costs = build_cost_matrix(tracks, [cue_detection], self.wm.aliases,
+                                      self.wm.assoc_cfg, now=frame["simulation_time_s"])
+            candidates = [track.obj_id for track, row in zip(tracks, costs) if math.isfinite(row[0])]
+            if candidates == [oid]:
+                allowed, reason = True, "current_navigation_cue"
+                navigation_cue = {"schema": "current-observation-sampling-cue/v1",
+                    "source_observation": source["observation_index"],
+                    "current_observation": now["observation_index"],
+                    "source_ref": source["id"], "current_ref": current_record["id"],
+                    "source_pixels_supported": False, "identity_authorized": False,
+                    "requires_complete_motion_window": True}
         corroborated = bool(obj is not None and obj["state"] == "CONFIRMED"
             and len(ids) == 1 and not obj.get("identity_ambiguity") and not boundaries
             and current_unique and not current.get("identity_ambiguity")
@@ -539,6 +681,7 @@ class Perception:
         progress = max(view_progress + hit_records, key=lambda r: r["perception_observation_index"], default=source)
         new_evidence = progress["frame_id"] == frame.get("frame_id")
         effective = [r for r in view_progress + hit_records if not r.get("identity_ambiguity")
+            and positive_pixel_support(r)
             and sum(other["frame_id"] == r["frame_id"] and other["bbox"] == r["bbox"]
                     for other in ledger["records"]) == 1]
         effective = max(effective, key=lambda r: r["perception_observation_index"], default=None)
@@ -573,6 +716,8 @@ class Perception:
                 "last_accepted_hit_observation_index": hit_records[-1]["observation_index"] if hit_records else None,
                 "new_independent_evidence": new_evidence},
             "motion_boundaries": boundaries}
+        if navigation_cue is not None:
+            result["navigation_sampling_cue"] = navigation_cue
         return copy.deepcopy(result)
 
     def discovery_target(self, discovery_id):
@@ -679,6 +824,8 @@ class Perception:
                 "odometry", "position_m", "position_is_range_clipped", "raw_distance_cm", "raw_bearing_deg")}
             row.update({key: target[key] for key in ("id", "hypothesis_id", "source_discovery_id",
                 "latest_discovery_id", "sampling_allowed", "reason", "progress", "identity_resolution_required")})
+            if "navigation_sampling_cue" in target:
+                row["navigation_sampling_cue"] = copy.deepcopy(target["navigation_sampling_cue"])
             row.update(associated_object_id=obj.get("id"), associated_object_state=obj.get("state"),
                 candidate_ids=sorted(set(target["associated_object_ids"] + latest.get("candidate_ids", [])))[:12],
                 hit_count=target["confirmation"]["accepted_hit_count"],
@@ -756,12 +903,16 @@ class Perception:
                 "reason": ambiguity.get("reason") or ("associated_observed_identity" if item.get("track_id")
                                                         else "unassociated_target_detection"),
                 "admission_reason": item.get("reason")}
+            if "pixel_quality" in item:
+                row["pixel_quality"] = copy.deepcopy(item["pixel_quality"])
+                row["observation_method"] = item.get("method")
             item["discovery_id"] = ident
             current.append(row)
         # Link observations only by a bidirectionally unique pixel-consistent
         # edge. Same-frame detections always remain separate source obligations.
         edges = {r["id"]: [key for key, old in previous.items()
-            if discovery_pixel_match(self.camera, old, r["position_m"])
+            if positive_pixel_support(r) and positive_pixel_support(old)
+            and discovery_pixel_match(self.camera, old, r["position_m"])
             and discovery_pixel_match(self.camera, r, old["position_m"])
             and not self._discovery_motion_boundaries(old, r)] for r in current}
         for row in current:
@@ -865,9 +1016,15 @@ class Perception:
             for source in records:
                 matrix[source["id"]] = []
                 for oid, views in by_identity.items():
+                    if not positive_pixel_support(source):
+                        # An unknown same-frame rectangle remains a possible
+                        # competitor, but supplies no positive support pair.
+                        matrix[source["id"]].append(oid)
+                        continue
                     # Identity membership alone is not evidence that an old
                     # pixel belongs to it. Require new, separated raw views.
                     later = [r for r in views if r["perception_observation_index"] > source["perception_observation_index"]
+                        and positive_pixel_support(r)
                         and r["simulation_time_s"] >= source["simulation_time_s"]
                         and discovery_pixel_match(self.camera, source, r["position_m"])
                         and not self._discovery_motion_boundaries(source, r)]
@@ -882,6 +1039,8 @@ class Perception:
                     if pair:
                         supports[(source["id"], oid)] = pair
             for source in pending:
+                if not positive_pixel_support(source):
+                    continue
                 candidates = matrix[source["id"]]
                 if len(candidates) != 1 or sum(candidates[0] in v for v in matrix.values()) != 1:
                     continue
@@ -981,7 +1140,8 @@ class Perception:
                 if known["category"] != item["category"]:
                     continue
                 point = known.get("position_m")
-                gap = math.hypot(det.x - point["x"], det.z - point["z"]) if point else None
+                gap = (math.hypot(det.x - point["x"], det.z - point["z"])
+                       if point and positive_pixel_support(item) else None)
                 if gap is None or gap <= known["gate_m"]:
                     matches[oid] = gap
                     reverse.setdefault(oid, []).append(index)
@@ -991,7 +1151,8 @@ class Perception:
             if not delivered:
                 continue
             item = converted[index][1]
-            if len(matches) == 1 and len(reverse[delivered[0]]) == 1:
+            if (len(matches) == 1 and len(reverse[delivered[0]]) == 1
+                    and positive_pixel_support(item)):
                 oid = delivered[0]
                 item.update(known_delivered_object_id=oid,
                     delivered_match_distance_m=matches[oid], fed_to_world_model=False,
@@ -1090,6 +1251,32 @@ class Perception:
     def reacquisition_bindings(self) -> list[dict[str, Any]]:
         """Return detached evidence; neither query nor binding changes WM IDs."""
         return copy.deepcopy(list(self._reacquisitions.values()))
+
+    def _new_quality_width_proxy_sources(self, track):
+        """Complete new-contract sources for conservative negative evidence.
+
+        Color support is not a range calibration or physical identity proof.
+        This scope changes only the decay choice while a track is unconfirmed;
+        it does not change the positive association or confirmation gates.
+        """
+        history = self._times.get(track.obj_id, {})
+        if (track.name != "target" or track.obj_id in self._lifecycle
+                or track.state not in {ObjectState.TENTATIVE, ObjectState.STALE}
+                or "confirmed_s" not in history or history["confirmed_s"] is not None):
+            return []
+        hits = self._accepted_poses.get(track.obj_id, [])
+        frames = {p["frame_id"] for p in hits}
+        sources = [r for r in self._discovery_records
+                   if r.get("initial_object_id") == track.obj_id and r["frame_id"] in frames]
+        if (not hits or len(sources) != len(hits)
+                or len({r["frame_id"] for r in sources}) != len(hits)):
+            return []
+        for source in sources:
+            if ("pixel_quality" not in source or not positive_pixel_support(source)
+                    or source.get("observation_method") != "virtual-cv-published-width-formula+M5"
+                    or source.get("position_semantics") != "approximate_width_range_estimate"):
+                return []
+        return sources
 
     def _position_evidence(self, track):
         """Distinguish WM hit admission from original-pixel agreement.
@@ -1243,6 +1430,11 @@ class Perception:
 
     def _grasp_identity_candidates(self, items):
         """Original complete competition set, including retained LOST tracks."""
+        if any(d["category"] in {"red-ball", "blue-ball"}
+               and not positive_pixel_support(d) for d in items):
+            # Its approximate M5 point cannot exclude this current competitor.
+            # Preserve the box and require a fresh supported observation.
+            return None
         tracks = [track for oid in self._history if oid not in self._delivery_aliases
                   if (track := self.wm.get_object(oid, include_lost=True)) is not None]
         positioned = [i for i, d in enumerate(items) if isinstance(d.get("position_m"), Mapping)
@@ -1479,7 +1671,7 @@ class Perception:
             # later look/place recovery enforces. This also covers same-action
             # post-release retreat, whose initial sensor boundary is saved.
             seen_delivered = {d["known_delivered_object_id"] for d in self.last_evidence["detections"]
-                              if d.get("known_delivered_object_id")}
+                              if d.get("known_delivered_object_id") and positive_pixel_support(d)}
             candidates = [d for d in self.last_evidence["detections"]
                 if d["category"] == category and "position_m" in d
                 and not d.get("known_delivered_object_id") and d.get("track_id") not in preexisting]
@@ -1498,6 +1690,8 @@ class Perception:
                      and placement.get("ball_bbox") == d.get("bbox")]
         if len(witnesses) != 1 or placement.get("ball_category") != category:
             return False
+        if not positive_pixel_support(witnesses[0]):
+            return False
         zones = [d for d in self.last_evidence["detections"]
                  if d.get("category") == "storage-zone" and str(d.get("frame_id")) == frame_id
                  and d.get("bbox") == placement.get("storage_bbox")]
@@ -1510,7 +1704,7 @@ class Perception:
                  if ball["category"] == category and "position_m" in ball
                  and zone["category"] == "storage-zone"
                  and not ball.get("known_delivered_object_id")
-                 and not ball.get("identity_ambiguity")
+                 and (not ball.get("identity_ambiguity") or not positive_pixel_support(ball))
                  and ball.get("track_id") not in preexisting
                  and ball_inside_region(ball["bbox"], zone["bbox"])]
         if len(pairs) != 1 or pairs[0][0] != witnesses[0] or pairs[0][1] != zones[0]:
@@ -1576,7 +1770,7 @@ class Perception:
                 and "position_m" in d and not d.get("known_delivered_object_id")
                 and not d.get("identity_ambiguity")
                 and d.get("track_id") not in release.get("preexisting_ball_ids", [])]
-            anchor = (candidates[0]["position_m"] if len(candidates) == 1
+            anchor = (candidates[0]["position_m"] if len(candidates) == 1 and positive_pixel_support(candidates[0])
                       else self._unverified_releases[object_id].get("release_aim_position_m"))
             self._unverified_releases[object_id]["identity_anchor_m"] = copy.deepcopy(anchor)
         self._release_intents.pop(object_id, None)
@@ -1609,7 +1803,7 @@ class Perception:
                 or self._observed_frames[self._last_frame]["index"] <= boundary["index"]):
             return unresolved("release_recovery_requires_fresh_boundary")
         observed = {d["known_delivered_object_id"] for d in self.last_evidence["detections"]
-                    if d.get("known_delivered_object_id")}
+                    if d.get("known_delivered_object_id") and positive_pixel_support(d)}
         if not set(saved.get("required_delivered_ids", [])) <= observed:
             return unresolved("previously_delivered_objects_not_reobserved")
         preexisting = release["preexisting_ball_ids"]
@@ -1619,6 +1813,8 @@ class Perception:
         if len(candidates) != 1:
             return unresolved("release_identity_candidate_not_unique")
         candidate = candidates[0]
+        if not positive_pixel_support(candidate):
+            return unresolved("release_pixel_geometry_support_unknown")
         if candidate.get("identity_ambiguity"):
             return unresolved("release_identity_candidate_ambiguous")
         anchor = saved.get("identity_anchor_m")

@@ -13,6 +13,7 @@ const oracle = require('./v4_stage1_content_audit.js');
 const ROOT = path.resolve(__dirname, '..');
 const VERSION = 'fresh-map05-platform-gate/v2';
 const PREFLIGHT = path.join(ROOT,'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json');
+const QUALITY_ADAPTER_FILES = Object.freeze(['robot-camera-detector.js','robot-backend-runtime.js','robot-bridge-contract.js']);
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const rel = file => path.relative(ROOT, file);
@@ -21,7 +22,7 @@ const counts = () => Object.fromEntries(oracle.CATEGORIES.map(c => [c,0]));
 const truthCounts = () => Object.fromEntries(oracle.TRUTH_CATEGORIES.map(c => [c,{expected:0,detected:0,misses:0}]));
 const write = (file, value) => fs.writeFileSync(file, JSON.stringify(value,null,2)+'\n');
 
-function inspectRun(directory, {platformRoot = path.join(ROOT,'workspaces/guangyang-platform/projects/car-python')} = {}) {
+function inspectRun(directory, {platformRoot = path.join(ROOT,'workspaces/guangyang-platform/projects/car-python'), allowedSourceChanges = []} = {}) {
   const fixture = read(path.join(directory, 'diagnostic-fixture.json'));
   assert.equal(fixture.diagnostic, true, 'missing diagnostic fixture label');
   assert.equal(fixture.real_model_used, false, 'input is not a diagnostic run');
@@ -78,7 +79,10 @@ function inspectRun(directory, {platformRoot = path.join(ROOT,'workspaces/guangy
     try {
       // The oracle is independent of robot-camera-detector.js. Category mapping,
       // letterbox transform and exclusions are explicit and auditable here.
-      projection = oracle.projectRawDetections(sensor.visionDetections,sensor.storageDetections,sensor.params);
+      const quality = oracle.hasPixelQuality(sensor.robotDetections, observation.detections);
+      const pixels = quality ? oracle.bindPixelFrame(nativeFrames, camera,
+        requirePngCodec(platformRoot)) : null;
+      projection = oracle.projectRawDetections(sensor.visionDetections,sensor.storageDetections,sensor.params,pixels);
       require(equal(projection.canonical,sensor.robotDetections),'INTERNAL_CANONICAL_MISMATCH');
       require(equal(projection.expected,observation.detections),'BRIDGE_CONTENT_MISMATCH',
         {difference:oracle.difference(projection.expected,observation.detections)});
@@ -105,7 +109,7 @@ function inspectRun(directory, {platformRoot = path.join(ROOT,'workspaces/guangy
     const currentSha256=sha(fs.readFileSync(sourceFile));
     return {file,expectedSha256,currentSha256,match:expectedSha256===currentSha256};
   });
-  check(sourceChecks.every(row=>row.match),'PLATFORM_CHANGED_SINCE_RUN');
+  check(sourceChecks.every(row=>row.match || allowedSourceChanges.includes(row.file)),'PLATFORM_CHANGED_SINCE_RUN');
   const allContentExact=failures.length===0 && rows.every(row=>row.exactContent);
   const fourClassesSeen=oracle.CATEGORIES.every(c=>outputCounts[c]>0);
   return {map:'map-05',directory:rel(directory),diagnostic:true,realModelUsed:false,actions,
@@ -127,11 +131,109 @@ function createPreflight({platformRoot} = {}) {
     run,allPass:run.allPass};
 }
 
-function verifyPreflightGate({platformRoot} = {}) {
-  const saved = read(PREFLIGHT), fresh = createPreflight({platformRoot});
+function verifyPreflightGate({platformRoot, gateFile} = {}) {
+  const saved = read(gateFile || PREFLIGHT);
+  const fresh = saved.schema === 'pixel-quality-platform-preflight/v1'
+    ? createPixelQualityPreflight({platformRoot}) : createPreflight({platformRoot});
   assert.deepEqual(fresh,saved,'platform preflight evidence or independent reviewer changed');
   assert.equal(fresh.allPass,true,'platform preflight failed');
   return fresh;
+}
+
+function requirePngCodec(platformRoot) {
+  // Generic strict PNG decoding only. Pixel classification is independently
+  // implemented in the oracle and never imported from the platform adapter.
+  return require(path.join(platformRoot,'backend/strict-png.js')).decodeStrictVisionPng;
+}
+
+function createPixelQualityPreflight({platformRoot = path.join(ROOT,'workspaces/guangyang-platform/projects/car-python')} = {}) {
+  const parent = read(PREFLIGHT), run = inspectRun(path.join(ROOT,'artifacts/autonomous-brain/transport-smoke-02'),
+    {platformRoot,allowedSourceChanges:QUALITY_ADAPTER_FILES});
+  assert.equal(run.allPass,true,'legacy survey content or non-adapter source changed');
+  const legacy = structuredClone(run);
+  legacy.sourceChecks = legacy.sourceChecks.map(row => ({...row,currentSha256:row.expectedSha256,match:true}));
+  assert.deepEqual(legacy,parent.run,'original survey fields no longer independently reproduce');
+  const decoder = requirePngCodec(platformRoot), adapter = require(path.join(platformRoot,'robot-camera-detector.js'));
+  const trial = path.join(ROOT,'artifacts/autonomous-brain/transport-smoke-02/map-05-run-1');
+  const evidence = read(path.join(trial,'evidence.json'));
+  const unpack = name => JSON.parse(gunzipSync(fs.readFileSync(path.join(trial,evidence[name].file))));
+  const record = unpack('record'), sensors = unpack('sensorAudit'), cameras = unpack('captures');
+  const comparisons = sensors.map(sensor => {
+    const camera = cameras.find(row => row.frameId === sensor.frameId && row.tick === sensor.tick);
+    const pixels = oracle.bindPixelFrame(record.native.visionFrames,camera,decoder);
+    const expected = oracle.projectRawDetections(sensor.visionDetections,sensor.storageDetections,{},pixels).canonical;
+    const actual = adapter.detect(sensor.visionDetections,sensor.storageDetections,
+      {frameId:pixels.frameId,pixels:{width:pixels.width,height:pixels.height,data:pixels.rgba}});
+    assert.deepEqual(actual,expected,'current adapter differs from independent old-survey PNG replay');
+    const original = actual.map(({pixelQuality,...item}) => item);
+    assert.deepEqual(original,sensor.robotDetections,'quality extension changed original survey detections');
+    return {frameId:sensor.frameId,tick:sensor.tick,pngSha256:pixels.pngSha256,
+      detections:expected,originalFieldsExact:true,qualityExact:true};
+  });
+  const fixtureDirectory = path.join(platformRoot,'tests/fixtures/red-component-quality');
+  const manifestFile = path.join(fixtureDirectory,'manifest.json'), fixtures = read(manifestFile);
+  const heldOut = fixtures.frames.map(frame => {
+    const bytes = fs.readFileSync(path.join(fixtureDirectory,frame.file));
+    assert.equal(sha(bytes),frame.pngSha256,'public PNG fixture changed');
+    const decoded = decoder(bytes), pixels = {...decoded,frameId:frame.frameId};
+    const raw = frame.redDetections.map(item => ({category:'target',source:item.source,confidence:item.confidence,
+      frameId:frame.frameId,box:{x:item.bbox.x,y:item.bbox.y+80,width:item.bbox.w,height:item.bbox.h}}));
+    const expected = oracle.projectRawDetections(raw,[],{},pixels).canonical;
+    const actual = adapter.detect(raw,[],{frameId:frame.frameId,pixels:{width:640,height:480,data:decoded.rgba}});
+    assert.deepEqual(actual,expected,'adapter differs from independent public PNG fixture replay');
+    assert.deepEqual(actual.map(({pixelQuality,...item}) => item),frame.redDetections,'fixture original fields changed');
+    return {name:frame.name,sourceFrame:frame.source_frame,frameId:frame.frameId,pngSha256:sha(bytes),
+      detections:expected,originalFieldsExact:true,qualityExact:true};
+  });
+  return {schema:'pixel-quality-platform-preflight/v1',evaluationOnly:true,diagnosticInput:true,
+    autonomousTaskAcceptance:false,newCompetitionRun:false,
+    scope:'Original public PNG replay verifies an optional input extension; not a new survey or model run',
+    parent:{file:rel(PREFLIGHT),sha256:sha(fs.readFileSync(PREFLIGHT))},
+    reviewer:{file:rel(__filename),sha256:sha(fs.readFileSync(__filename)),oracleFile:'tools/v4_stage1_content_audit.js',
+      oracleSha256:sha(fs.readFileSync(path.join(__dirname,'v4_stage1_content_audit.js')))},
+    changedPlatformFiles:QUALITY_ADAPTER_FILES.map(file => ({file,previousSha256:parent.run.platform[file],sha256:sha(fs.readFileSync(path.join(platformRoot,file)))})),
+    pngCodec:{file:'backend/strict-png.js',sha256:sha(fs.readFileSync(path.join(platformRoot,'backend/strict-png.js')))},
+    fixtureManifest:{file:rel(manifestFile),sha256:sha(fs.readFileSync(manifestFile))},
+    currentPlatform:Object.fromEntries(run.sourceChecks.map(row=>[row.file,row.currentSha256])),
+    run,publicPixelReplay:{survey:comparisons,fixtures:heldOut},allPass:true};
+}
+
+function auditPixelQualityRun(directory, {platformRoot = path.join(ROOT,'workspaces/guangyang-platform/projects/car-python')} = {}) {
+  const declared = read(path.join(directory,'evidence.json')), values = {}, artifacts = {};
+  for (const name of ['record','sensorAudit','captures']) {
+    const file = path.join(directory,declared[name].file), packed = fs.readFileSync(file), unpacked = gunzipSync(packed);
+    assert.equal(sha(packed),declared[name].sha256,`${name} packed SHA mismatch`);
+    assert.equal(sha(unpacked),declared[name].expandedSha256,`${name} expanded SHA mismatch`);
+    values[name] = JSON.parse(unpacked); artifacts[name] = {file:rel(file),sha256:sha(packed),expandedSha256:sha(unpacked)};
+  }
+  const bridgeFile = path.join(directory,'brain/bridge-calls.jsonl');
+  const entries = lines(bridgeFile).filter(row => row.request?.method === 'observe' && row.terminal?.status === 'completed');
+  artifacts.bridge = {file:rel(bridgeFile),sha256:sha(fs.readFileSync(bridgeFile))};
+  const calls = values.record.calls.filter(row => row.method === 'observe'), failures = [];
+  if (entries.length !== calls.length || entries.length !== values.sensorAudit.length || entries.length !== values.captures.length
+      || entries.length !== values.record.native.visionFrames.length) failures.push({code:'OBSERVATION_COVERAGE_MISMATCH'});
+  const decoder = requirePngCodec(platformRoot);
+  const rows = entries.map((entry,index) => {
+    const observation = entry.terminal.result;
+    const result = {index,frameId:observation.frameId,tick:observation.tick,requestId:entry.request.requestId,failures:[]};
+    try {
+      const sensors = values.sensorAudit.filter(row => row.requestId === entry.request.requestId);
+      const cameras = values.captures.filter(row => row.frameId === observation.frameId && row.tick === observation.tick);
+      assert.equal(sensors.length,1); assert.equal(cameras.length,1);
+      const sensor = sensors[0], camera = cameras[0], call = calls[index];
+      assert.equal(sensor.frameId,observation.frameId); assert.equal(sensor.tick,observation.tick);
+      assert.deepEqual(sensor.params,entry.request.params); assert.deepEqual(call.args,entry.request.params);
+      assert.deepEqual(call.outcome.result,observation); assert.equal(call.started.tick,observation.tick);
+      assert.equal(call.finished.tick,observation.tick); assert.equal(observation.width,640); assert.equal(observation.height,480);
+      const pixels = oracle.bindPixelFrame(values.record.native.visionFrames,camera,decoder);
+      const projection = oracle.projectRawDetections(sensor.visionDetections,sensor.storageDetections,sensor.params,pixels);
+      assert.deepEqual(sensor.robotDetections,projection.canonical); assert.deepEqual(observation.detections,projection.expected);
+      result.pngSha256 = pixels.pngSha256; result.qualities = projection.expected.filter(row => row.pixelQuality).map(row => row.pixelQuality);
+    } catch(error) { result.failures.push({code:'PIXEL_QUALITY_CONTENT_OR_BINDING',message:error.message}); }
+    result.allPass = result.failures.length === 0; return result;
+  });
+  return {schema:'same-frame-pixel-quality-audit/v1',evaluationOnly:true,autonomousTaskAcceptance:false,
+    directory:rel(directory),artifacts,observations:rows.length,rows,failures,allPass:failures.length===0&&rows.length>0&&rows.every(row=>row.allPass)};
 }
 
 function report(result) {
@@ -200,5 +302,5 @@ function main(argv=process.argv.slice(2)) {
   process.exitCode=result.allPass?0:1;
   return result;
 }
-module.exports={VERSION,inspectRun,createPreflight,verifyPreflightGate,report,main};
+module.exports={VERSION,inspectRun,createPreflight,verifyPreflightGate,createPixelQualityPreflight,auditPixelQualityRun,report,main};
 if(require.main===module) main();

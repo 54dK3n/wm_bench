@@ -1,0 +1,114 @@
+{
+  "publication_date": "2026-10-14",
+  "baseline": "7513828df066c90c25e01f123d820ade08a64fdb",
+  "frozen_manifest": "p23-a40-native25-source-manifest.json",
+  "source_versions": {
+    "perception": 23,
+    "actions": 40,
+    "confirmation_sampling": 5,
+    "navigation": 14,
+    "runtime": 21,
+    "codex_app_server_transcript": 25
+  },
+  "source_files_unchanged_since_freeze": true,
+  "full_patch_sha256": "e03de48a5443023af8cb638fce2ed11295cdd451b5343032782a4458502a9a6d",
+  "incremental_patch_sha256": "c824896e340e349326293d10087d0b28f5b8ab890bea99bd211dca5fa2a8316b",
+  "model": {
+    "transport": "codex-app-server",
+    "model": "gpt-6.1-sol",
+    "thinking": "low"
+  },
+  "world_model_tree_sha256": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+  "executor": {
+    "revision": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+    "sha256": "329e218bc07586030e7d442f94fbabe1defa9b597ff2f46aa67bc5cfb03f0e4e",
+    "max_retries": 0
+  },
+  "latest_actual_run": {
+    "directory": "run-20261013T115310Z",
+    "original_dual_verdict": "FAIL",
+    "native_invocations_started": 3,
+    "verified_native_turns": 3,
+    "completed_action_rounds": 3,
+    "underlying_http_count": null,
+    "observations": 10,
+    "grab_commands": 0,
+    "release_commands": 0,
+    "HELD": [],
+    "DELIVERED": [],
+    "physical_distinct_deliveries": 0,
+    "required_deliveries": 2,
+    "model_done": 0,
+    "final_holding": false,
+    "driver_exit": 1,
+    "evaluator_exit": 1,
+    "stop": "CDP WebSocket error/closed; controller explicit close with 48/48 requests terminal and no in-flight command; next observe brain-000049 got HTTP409 BRIDGE_CLOSED. Export recovered.",
+    "historical_revisit_live_selected": false,
+    "source_proof": "verified"
+  },
+  "previous_complete_actual_run": {
+    "directory": "run-20261013T105016Z",
+    "versions": {
+      "actions": 39,
+      "runtime": 20,
+      "native": 24
+    },
+    "original_dual_verdict": "FAIL",
+    "native_invocations_started": 164,
+    "verified_native_turns": 163,
+    "completed_action_rounds": 163,
+    "underlying_http_count": null,
+    "grab_commands": 30,
+    "empty_grabs": 29,
+    "holding_grabs": 1,
+    "release_commands": 1,
+    "first_holding_observation": 222,
+    "HELD": [
+      {
+        "object_id": "target_010",
+        "observation": 228
+      }
+    ],
+    "DELIVERED": [
+      {
+        "object_id": "target_010",
+        "observation": 304
+      }
+    ],
+    "physical_distinct_deliveries": 1,
+    "required_deliveries": 2,
+    "model_done": 0,
+    "final_holding": false,
+    "driver_exit": 1,
+    "evaluator_exit": 1,
+    "stop": "Controlled interrupt of pure inference164 after163 completed actions and repeated observed route failures; second target remained LOST. Not natural budget completion."
+  },
+  "tests": {
+    "native_contract_related": "486 PASS",
+    "recorded_native24_replay": "Exact record except mode,0 model calls;offline replay only",
+    "actions_navigation_task_related": "189 PASS/1 FAIL:unchanged Runtime19 literal at test_brain_state_evidence.py292;previous Runtime20 also not19",
+    "native25_runtime21_new": "29PASS: includes strict original command-chain and future22 rejection",
+    "runtime_evidence_related": "197PASS/7FAIL: original test data still classifies now-supported Runtime21 as unknown; assertions unmodified",
+    "new_revisit_initial": "13PASS/2FAIL in v1; synthetic fixture omitted finalized_motion.after_observation and original RoadMemory correctly rejected missing edge; fixture corrected without changing assertions,14syntheticPASS v2",
+    "revisit_final": "17PASS: original public840/859 exact routes and first Actions dispatch with unknown ACK single send; explicitly synthetic full20cm arrival, no LOST revival/probe reset, final turn unknown not arrival"
+  },
+  "interpretation": [
+    "Current short live run did not reach the new historical-view revisit action; component17PASS is not a physical competition PASS.",
+    "Original pixel/identity/clearance/load/unknown-motion/independent-delivery checks remain. Fixed-width/M5 cross-view geometry is not calibrated or restored by these changes.",
+    "Previous one-ball PASS remains valid; two-object FAIL results are separate games and are never stitched.",
+    "Old 200 decisions/482 motions/0grabs README result belongs to4d813db, not7513828 or the current frozen sources.",
+    "Unchanged old version-literal test failures are preserved in raw outputs; no blanket all-tests-pass claim."
+  ],
+  "local_original_sha256": {
+    "run-20261013T115310Z/map-05-run-1/brain/summary.json": "c009cececd832a93f9d7144978078eadc6697fdc172cec174522df839405be00",
+    "run-20261013T115310Z/map-05-run-1/brain/observations.jsonl": "9567812a534973540ea27a1939f57398bad049f4a5917a6ab4eb3ff5a2802ed0",
+    "run-20261013T115310Z/map-05-run-1/brain/rounds.jsonl": "e35dfdb7b36e3d7956848b8dbcf5d4eea7537efc19ef44975edf2b17adf4087f",
+    "run-20261013T115310Z/map-05-run-1/brain/motions.jsonl": "0ea4d4dc5e8b77b733204f1865bfa7b6b13f8aa70c5f40a36427ae43e67e8bd9",
+    "run-20261013T115310Z/map-05-run-1/brain/bridge-calls.jsonl": "e2ce94800dda0811cd975dd56d6928cba6477d9ffa7bdcc1e30dfdc30540e18a",
+    "run-20261013T115310Z/map-05-run-1/brain/llm.jsonl": "3818b9aa1f3399163c5646506c6d37b855c52122fd3e79781ad8d0e5d9097a8c",
+    "run-20261013T115310Z/map-05-run-1/brain/llm.lifecycle.jsonl": "a0a26c4d084f0374958c166c44ac66007b7fdc69f5288b35ec4355049669b705",
+    "run-20261013T115310Z/driver-diagnostics.jsonl": "6d866983bb9d631687f9277cec4fdc1324e36e306935bac68f1cf43f1703b263",
+    "run-20261013T115310Z-evaluation/evaluation.json": "879a2b799cae0486afe225e566637551e22fc92a4836f76740bc9cbe7c37af51",
+    "run-20261013T115310Z-exit-codes.json": "daaedb04c41c8fcd62ea32d40a2a3776518f24ce9c2d6b290f721f1c3117c3c2"
+  }
+}

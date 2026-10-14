@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import re
 
 
@@ -27,6 +28,89 @@ def parse_task(instruction):
             "quantity_mode": "known" if count is not None else "unknown",
             "required_count": count, "target_category": "red-ball",
             "destination_category": "storage-zone"}
+
+
+def _separate_grab_witness(pick, extra_id):
+    """An extra target must be positively distinct in the actual grab view.
+
+    Absence from a candidate matrix is not an exclusion proof. This consumes
+    the Perception-owned authorization already attached to a validated pick;
+    it does not authorize another action or infer identity from coordinates.
+    """
+    from .observation_quality import pixel_quality, positive_pixel_support
+
+    try:
+        oid = pick["object_id"]
+        chain = pick["evidence"]["grasp_chain"]
+        grab, proof = chain["grab"], chain["grab"]["authorization"]
+        command = proof["command_ref"]
+        if (chain["schema"] != "brain-grasp-chain/v1" or chain["object_id"] != oid
+                or grab["object_id"] != oid or grab.get("outcome_unknown") is not False
+                or grab["before_holding"] is not False
+                or proof["schema"] != "brain-grab-authorization/v1"
+                or proof["canonical_object_id"] != oid or proof["holding"] is not False
+                or proof["object"]["id"] != oid or proof["object"]["state"] != "CONFIRMED"
+                or proof["object"]["category"] != "red-ball"
+                or proof["object"].get("identity_ambiguity")
+                or type(proof["observation_index"]) is not int
+                or proof["observation_index"] != grab["before_observation"]
+                or type(grab.get("after_observation")) is not int
+                or grab["after_observation"] <= grab["before_observation"]
+                or type(command["bridge_sequence"]) is not int
+                or command["bridge_request_id"] != f"brain-{command['bridge_sequence']:06d}"
+                or any(command[key] != grab[key] for key in
+                       ("round", "before_observation", "bridge_sequence", "bridge_request_id"))):
+            return False
+        frame, items, matrix = proof["frame_id"], proof["detections"], proof["candidate_ids_by_detection"]
+        if (not isinstance(frame, str) or not frame or not isinstance(items, list)
+                or not isinstance(matrix, list) or len(items) != len(matrix)
+                or any(not isinstance(ids, list)
+                       or any(not isinstance(value, str) for value in ids) for ids in matrix)):
+            return False
+        identities = [oid for item, ids in zip(items, matrix)
+                      if item.get("category") in {"red-ball", "blue-ball"} for oid in ids]
+        if len(set(identities)) != len(identities):
+            return False
+        selected, extra = [], []
+        boxes = []
+        for index, (item, ids) in enumerate(zip(items, matrix)):
+            if item["category"] not in {"red-ball", "blue-ball"}:
+                if oid in ids or extra_id in ids:
+                    return False
+                continue
+            if (len(ids) != 1 or ids != [item.get("track_id")]
+                    or item.get("frame_id") != frame or item.get("identity_ambiguity")
+                    or not positive_pixel_support(item)):
+                return False
+            quality = item.get("pixel_quality", item.get("pixelQuality"))
+            if quality is not None and str(quality.get("frameId")) != frame:
+                return False
+            box = item["bbox"]
+            if (not all(type(box.get(k)) in (int, float) and math.isfinite(box[k])
+                        for k in ("x", "y", "w", "h")) or box["w"] <= 0 or box["h"] <= 0):
+                return False
+            if ids[0] in {oid, extra_id}:
+                # This new exclusion needs explicit complete pixel support;
+                # legacy missing-quality semantics cannot justify it.
+                if quality is None or pixel_quality({**item, "pixelQuality": quality}, frame)["status"] != "supported":
+                    return False
+            # Duplicate or overlapping components cannot prove two objects.
+            if any(box["x"] < old["x"] + old["w"] and old["x"] < box["x"] + box["w"]
+                   and box["y"] < old["y"] + old["h"] and old["y"] < box["y"] + box["h"]
+                   for old in boxes):
+                return False
+            boxes.append(box)
+            if ids == [oid]:
+                if item["category"] != "red-ball":
+                    return False
+                selected.append(index)
+            if ids == [extra_id] and item["category"] == "red-ball":
+                extra.append(index)
+        return (len(selected) == len(extra) == 1 and selected != extra
+                and proof["detection_index"] == selected[0]
+                and proof["target_detection_indices"] == selected)
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False
 
 
 def completion_progress(objects, action_evidence, task_spec, *, holding,
@@ -56,6 +140,39 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
 
     chains = reacquisition_chains(objects)
     ambiguous = set()
+    unrelated_forbidden = set()
+    ambiguity_relations = set()
+    for item in [*objects, *(observed_detections if isinstance(observed_detections, list) else [])]:
+        if not isinstance(item, dict):
+            continue
+        ambiguity = item.get("identity_ambiguity")
+        if not isinstance(ambiguity, dict):
+            continue
+        ambiguity_relations.update(value for key in ("id", "track_id")
+                                   if isinstance(value := item.get(key), str))
+        ids = ambiguity.get("candidate_ids", [])
+        if isinstance(ids, list):
+            ambiguity_relations.update(oid for oid in ids if isinstance(oid, str))
+        for key in ("candidate_kinds", "candidate_distances_m", "candidate_detection_indices"):
+            if isinstance(ambiguity.get(key), dict):
+                ambiguity_relations.update(oid for oid in ambiguity[key] if isinstance(oid, str))
+    unrelated_forbidden.update(ambiguity_relations)
+    for row in objects:
+        if row.get("alias_of") or row.get("reacquisition_binding") or row.get("identity_ambiguity"):
+            unrelated_forbidden.add(row["id"])
+        if isinstance(row.get("alias_of"), str):
+            unrelated_forbidden.add(row["alias_of"])
+        binding = row.get("reacquisition_binding")
+        if isinstance(binding, dict):
+            unrelated_forbidden.update(value for key in ("historical_object_id", "current_object_id")
+                                       if isinstance(value := binding.get(key), str))
+    for event in action_evidence:
+        unrelated_forbidden.update(value for key in ("object_id", "recovered_object_id")
+                                   if isinstance(value := event.get(key), str))
+        alias = event.get("delivery_alias")
+        if isinstance(alias, dict) and isinstance(alias.get("witness_id"), str):
+            unrelated_forbidden.add(alias["witness_id"])
+    lost_obligations = []
     for row in objects:
         if row.get("alias_of"):
             bind(row["id"], row["alias_of"])
@@ -70,7 +187,7 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
         if event.get("action") == "release_recovery" and event.get("outside_storage") is True:
             bind(event.get("object_id"), event.get("recovered_object_id"))
 
-    picks, delivered, witnesses = {}, {}, {}
+    picks, delivered, witnesses, delivery_picks = {}, {}, {}, {}
     invalid = set()
     for event in action_evidence:
         oid = event.get("object_id")
@@ -107,6 +224,7 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
         delivered[canonical] = {"object_id": oid, "frame_id": placement["frame_id"],
                                 "release_frame_id": release["frame_id"],
                                 "simulation_time_s": event.get("simulation_time_s")}
+        delivery_picks[canonical] = picks[canonical]
     for row in objects:
         if row.get("category") == task_spec["target_category"]:
             if row.get("state") == "DELIVERED" and root(row["id"]) not in delivered:
@@ -115,7 +233,24 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
                 ambiguous.add(row["id"])
             if (row.get("state") == "LOST" and row.get("ever_confirmed") is True
                     and row["id"] not in chains and root(row["id"]) not in delivered):
-                ambiguous.add(row["id"])
+                lost_obligations.append(row["id"])
+    # A fixed count does not acquire another delivery obligation merely when
+    # an independently distinct, untouched extra target becomes LOST. Keep its
+    # row/pending history, and require positive exclusion against every counted
+    # delivery. Missing evidence and quantity-free tasks retain the old gate.
+    can_exclude = (task_spec["quantity_mode"] == "known"
+        and len(delivered) >= task_spec["required_count"] and not ambiguous and not invalid
+        and holding is False and held_object_id is None and pending_grasp is None
+        and not set(delivered).intersection(root(oid) for oid in ambiguity_relations)
+        and all(not rows[d["object_id"]].get("identity_ambiguity")
+                and not rows[d["object_id"]].get("alias_of") for d in delivered.values()))
+    excluded_history = []
+    for oid in lost_obligations:
+        if (can_exclude and oid not in unrelated_forbidden
+                and all(_separate_grab_witness(delivery_picks[canonical], oid) for canonical in delivered)):
+            excluded_history.append(oid)
+        else:
+            ambiguous.add(oid)
     recovered_deliveries = [oid for oid in result["pending_objects"]
                            if rows[oid].get("state") == "LOST" and root(oid) in delivered]
     result["pending_objects"] = [oid for oid in result["pending_objects"] if oid not in recovered_deliveries]
@@ -199,6 +334,7 @@ def completion_progress(objects, action_evidence, task_spec, *, holding,
                   delivered_object_ids=sorted(d["object_id"] for d in delivered.values()),
                   delivery_evidence=list(delivered.values()),
                   unresolved_identity_ids=sorted(ambiguous | invalid),
+                  known_quantity_excluded_history_ids=sorted(excluded_history),
                   unresolved_discovery_ids=discovery_unresolved,
                   untracked_discovery_ids=untracked_ids,
                   current_target_ambiguities=visible_ambiguities,

@@ -25,7 +25,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v19"
+RUNTIME_VERSION = "autonomous-brain-runtime/v21"
 
 
 def dump(path, value):
@@ -130,6 +130,10 @@ def compact_action_result(number, action, result, after_observation):
     if isinstance(raw.get("authorization_recovery"), dict):
         evidence["authorization_recovery"] = fields(raw["authorization_recovery"],
             ("success", "reason", "after_observation", "restored_observation"))
+    if isinstance(raw.get("historical_view_revisit"), dict):
+        evidence["historical_view_revisit"] = fields(raw["historical_view_revisit"],
+            ("schema", "navigation_only", "requires_fresh_identity", "source_observation",
+             "frame_id", "goal_semantics", "arrived", "reason", "after_observation"))
     if isinstance(raw.get("confirmation_sampling"), dict):
         evidence["confirmation_sampling"] = fields(raw["confirmation_sampling"], (
             "schema", "discovery_id", "initial_object_id", "confirmed_object_id",
@@ -257,6 +261,17 @@ def compact_action_result(number, action, result, after_observation):
     summary = fields({"round": number, "success": result["success"], "reason": result["reason"],
                       "after_observation": after_observation},
                      ("round", "success", "reason", "after_observation"))
+    retry = raw.get("pick_retry")
+    if (action.get("action") == "pick" and result.get("success") is False
+            and isinstance(retry, dict) and retry.get("schema") == "fresh-pick-probe-retry/v1"
+            and retry.get("classification") in {"completed_empty_grab_probe_refined", "supported_approach_probe_refined"}
+            and retry.get("requires_fresh_authorization") is True
+            and retry.get("object_id") == action.get("params", {}).get("object_id")
+            and retry.get("observation_index") == after_observation):
+        evidence["pick_retry"] = fields(retry, ("schema", "classification", "object_id",
+            "observation_index", "frame_id", "tick", "previous_limit_cm", "next_probe_limit_cm",
+            "requires_fresh_authorization"))
+        summary.update(original_reason=result["reason"], reason=retry["classification"])
     return {**summary, "action": compact_action, "evidence": evidence}
 
 
@@ -302,6 +317,7 @@ class Runtime:
         traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
         if traversal_events:
             self.snapshot["road_traversal_events"] = traversal_events
+        self.actions.note_historical_view(self.snapshot, finalized_motion)
         if hasattr(self.roads, "observation_records"):
             from .confirmation_sampling import _reverse_support
             # A finite semantic summary of freshly verified reverse options.
@@ -342,6 +358,10 @@ class Runtime:
                 objects[-1]["identity_ambiguity"] = ambiguity
             if row["id"] in chains:
                 objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
+            if row.get("state") == "LOST" and hasattr(self.actions, "historical_view_revisit"):
+                capability = self.actions.historical_view_revisit(row["id"])
+                if capability.get("available"):
+                    objects[-1]["historical_view_revisit"] = capability
         odo, road = self.snapshot["odometry"], self.snapshot["road"]
         task_spec = getattr(self, "task_spec", None) or parse_task(self.config["task"])
         exploration = (self.roads.exploration_status()
@@ -483,7 +503,8 @@ def main(argv=None):
     for sig in previous_handlers:
         signal.signal(sig, request_stop)
     try:
-        llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay, transport_retries=5)
+        llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay,
+            transport_retries=1 if os.environ.get("LLM_TRANSPORT") == "codex-app-server" else 5)
         formal_configuration = llm.validate_formal_configuration()
         decide = llm.decide
 

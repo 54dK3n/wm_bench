@@ -11,7 +11,7 @@ import math
 from .navigation import distance, position, wrap
 from .perception import RANGE_CAL
 
-VERSION = "brain-confirmation-sampling/v3"
+VERSION = "brain-confirmation-sampling/v5"
 MAX_STEPS = 12
 MAX_TRAVEL_CM = 120
 
@@ -413,7 +413,12 @@ def sample_discovery(actions, discovery_id):
                'before_detection':copy.deepcopy((target or {}).get('current_detection')),
                'accepted_hit_poses_before':copy.deepcopy((target or {}).get('confirmation',{}).get('accepted_hit_poses',[]))}
         trace['steps'].append(entry)
-        try:result=actions.move(plan['method'],plan['params'])
+        try:
+            if (plan['method']=='backward' and plan.get('phase')!='restore_previous_view'
+                    and plan.get('reverse_path_support') is not None):
+                result=actions.move(plan['method'],plan['params'],sampling_reverse_prefix=True)
+            else:
+                result=actions.move(plan['method'],plan['params'])
         except ObservedMotionFailure as error:
             entry['motion_failure']=error.evidence
             return before,entry,r.perception.discovery_target(discovery_id),'confirmation_'+error.reason
@@ -462,6 +467,11 @@ def sample_discovery(actions, discovery_id):
         if locked is not None and obj.get('id')!=locked:
             return finish(False,'confirmation_identity_changed',target)
         if locked is None and obj.get('id') is not None:locked=obj['id']
+        cue=target.get('navigation_sampling_cue')
+        if cue is not None:
+            window=_observed_motion_window(actions,cue['source_observation'],actions.s)
+            if window is None:
+                return finish(False,'confirmation_navigation_cue_motion_window_unverified',target)
         if target['reason']=='target_confirmed' and obj.get('state')=='CONFIRMED':
             if not target.get('current_confirmation_corroborated'):
                 return finish(False,'confirmation_current_evidence_not_corroborated',target)

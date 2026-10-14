@@ -1,0 +1,162 @@
+...................................................................F.... [ 35%]
+...F..................F......F......F................................... [ 70%]
+.............FF.............................................             [100%]
+=================================== FAILURES ===================================
+_ test_modern_runtime_rejects_conflicting_or_reused_commands[release-reference-v21] _
+
+real_action_trace = ({'action_evidence': [{'action': 'pick', 'evidence': {'attempts': [{...}], 'grasp_chain': {'confirmation': {...}, 'gra... {'completed': True}, 'after_observation': 9, 'before_observation': 8, 'bridge_request_id': 'brain-000039', ...}, ...])
+version = 'v21', fault = 'release-reference'
+
+    @pytest.mark.parametrize("version", MODERN + ("v21", MISSING))
+    @pytest.mark.parametrize("fault", ["grab-reference", "release-reference", "duplicate-grab-event", "duplicate-request-id", "grab-motion-deleted"])
+    def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace, version, fault):
+        data = trace_with_version(real_action_trace, version)
+        summary, _, rounds, bridge, _ = data
+        place = next(event for event in summary["action_evidence"] if event["action"] == "place")
+        if fault == "grab-reference":
+            proof = summary["action_evidence"][0]["evidence"]["grasp_chain"]
+            proof["grab"]["bridge_request_id"] = place["evidence"]["release_observation"]["command_ref"]["bridge_request_id"]
+            rounds[0]["result"]["evidence"]["grasp_confirmation"] = copy.deepcopy(proof)
+        elif fault == "release-reference":
+            reference = place["evidence"]["release_observation"]["command_ref"]
+            reference["bridge_request_id"] = reference["grasp_request_id"]
+            rounds[1]["result"]["evidence"]["release_observation"]["command_ref"] = copy.deepcopy(reference)
+        elif fault == "duplicate-grab-event":
+            summary["action_evidence"].insert(1, copy.deepcopy(summary["action_evidence"][0]))
+        elif fault == "duplicate-request-id":
+            bridge.append(copy.deepcopy(next(call for call in bridge if call["request"]["method"] == "grab")))
+        else:
+            data[-1][:] = [motion for motion in data[-1] if motion["method"] != "grab"]
+        result = audit_observed_ledger(*data)
+        assert result["failures"]
+        if version not in MODERN:
+>           assert not any(row["verified"] for row in result["picks"] + result["deliveries"])
+E           assert not True
+E            +  where True = any(<generator object test_modern_runtime_rejects_conflicting_or_reused_commands.<locals>.<genexpr> at 0x10908b120>)
+
+tests/test_brain_evidence_capabilities.py:93: AssertionError
+_ test_modern_runtime_rejects_conflicting_or_reused_commands[duplicate-grab-event-v21] _
+
+real_action_trace = ({'action_evidence': [{'action': 'pick', 'evidence': {'attempts': [{...}], 'grasp_chain': {'confirmation': {...}, 'gra... {'completed': True}, 'after_observation': 9, 'before_observation': 8, 'bridge_request_id': 'brain-000039', ...}, ...])
+version = 'v21', fault = 'duplicate-grab-event'
+
+    @pytest.mark.parametrize("version", MODERN + ("v21", MISSING))
+    @pytest.mark.parametrize("fault", ["grab-reference", "release-reference", "duplicate-grab-event", "duplicate-request-id", "grab-motion-deleted"])
+    def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace, version, fault):
+        data = trace_with_version(real_action_trace, version)
+        summary, _, rounds, bridge, _ = data
+        place = next(event for event in summary["action_evidence"] if event["action"] == "place")
+        if fault == "grab-reference":
+            proof = summary["action_evidence"][0]["evidence"]["grasp_chain"]
+            proof["grab"]["bridge_request_id"] = place["evidence"]["release_observation"]["command_ref"]["bridge_request_id"]
+            rounds[0]["result"]["evidence"]["grasp_confirmation"] = copy.deepcopy(proof)
+        elif fault == "release-reference":
+            reference = place["evidence"]["release_observation"]["command_ref"]
+            reference["bridge_request_id"] = reference["grasp_request_id"]
+            rounds[1]["result"]["evidence"]["release_observation"]["command_ref"] = copy.deepcopy(reference)
+        elif fault == "duplicate-grab-event":
+            summary["action_evidence"].insert(1, copy.deepcopy(summary["action_evidence"][0]))
+        elif fault == "duplicate-request-id":
+            bridge.append(copy.deepcopy(next(call for call in bridge if call["request"]["method"] == "grab")))
+        else:
+            data[-1][:] = [motion for motion in data[-1] if motion["method"] != "grab"]
+        result = audit_observed_ledger(*data)
+        assert result["failures"]
+        if version not in MODERN:
+>           assert not any(row["verified"] for row in result["picks"] + result["deliveries"])
+E           assert not True
+E            +  where True = any(<generator object test_modern_runtime_rejects_conflicting_or_reused_commands.<locals>.<genexpr> at 0x109155c80>)
+
+tests/test_brain_evidence_capabilities.py:93: AssertionError
+___ test_missing_or_unknown_runtime_never_infers_a_legacy_contract[None-v21] ___
+
+real_action_trace = ({'action_evidence': [{'action': 'pick', 'evidence': {'attempts': [{...}], 'grasp_chain': {'confirmation': {...}, 'gra... {'completed': True}, 'after_observation': 9, 'before_observation': 8, 'bridge_request_id': 'brain-000039', ...}, ...])
+version = 'v21', field = None
+
+    @pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
+    @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
+    def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
+        data = trace_with_version(real_action_trace, version)
+        if field:
+            remove_contract(data, field)
+        result = audit_observed_ledger(*data)
+        expected = "runtime_evidence_version_missing" if version is MISSING else "runtime_evidence_version_unsupported"
+>       assert expected in result["failures"]
+E       AssertionError: assert 'runtime_evidence_version_unsupported' in []
+
+tests/test_brain_evidence_capabilities.py:110: AssertionError
+_ test_missing_or_unknown_runtime_never_infers_a_legacy_contract[grasp_chain-v21] _
+
+real_action_trace = ({'action_evidence': [{'action': 'pick', 'evidence': {'attempts': [{...}], 'grasp_chain': {'confirmation': {...}, 'gra... {'completed': True}, 'after_observation': 9, 'before_observation': 8, 'bridge_request_id': 'brain-000039', ...}, ...])
+version = 'v21', field = 'grasp_chain'
+
+    @pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
+    @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
+    def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
+        data = trace_with_version(real_action_trace, version)
+        if field:
+            remove_contract(data, field)
+        result = audit_observed_ledger(*data)
+        expected = "runtime_evidence_version_missing" if version is MISSING else "runtime_evidence_version_unsupported"
+>       assert expected in result["failures"]
+E       AssertionError: assert 'runtime_evidence_version_unsupported' in ['pick_command_identity_confirmation_chain_missing', 'delivery_release_command_reference_invalid', 'delivery_missing_prior_verified_pick']
+
+tests/test_brain_evidence_capabilities.py:110: AssertionError
+_ test_missing_or_unknown_runtime_never_infers_a_legacy_contract[command_ref-v21] _
+
+real_action_trace = ({'action_evidence': [{'action': 'pick', 'evidence': {'attempts': [{...}], 'grasp_chain': {'confirmation': {...}, 'gra... {'completed': True}, 'after_observation': 9, 'before_observation': 8, 'bridge_request_id': 'brain-000039', ...}, ...])
+version = 'v21', field = 'command_ref'
+
+    @pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
+    @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
+    def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
+        data = trace_with_version(real_action_trace, version)
+        if field:
+            remove_contract(data, field)
+        result = audit_observed_ledger(*data)
+        expected = "runtime_evidence_version_missing" if version is MISSING else "runtime_evidence_version_unsupported"
+>       assert expected in result["failures"]
+E       AssertionError: assert 'runtime_evidence_version_unsupported' in ['delivery_release_command_reference_invalid']
+
+tests/test_brain_evidence_capabilities.py:110: AssertionError
+_ test_unknown_discovery_runtime_does_not_infer_capabilities[v21-brain-discovery-evidence/v1] _
+
+schema = 'brain-discovery-evidence/v1', version = 'v21'
+
+    @pytest.mark.parametrize("schema", ["brain-discovery-evidence/v1", "brain-discovery-evidence/v2"])
+    @pytest.mark.parametrize("version", [MISSING, "v21"])
+    def test_unknown_discovery_runtime_does_not_infer_capabilities(schema, version):
+        summary = {"discovery_evidence": {"schema": schema, "unresolved": [], "records": [], "resolutions": []}}
+        if version is not MISSING:
+            summary["runtime_version"] = "autonomous-brain-runtime/" + version
+        result = audit_unknown_discoveries(summary, [])
+        expected = "runtime_evidence_version_missing" if version is MISSING else "runtime_evidence_version_unsupported"
+>       assert expected in result["failures"]
+E       AssertionError: assert 'runtime_evidence_version_unsupported' in ['discovery_v2_ledger_missing']
+
+tests/test_brain_evidence_capabilities.py:163: AssertionError
+_ test_unknown_discovery_runtime_does_not_infer_capabilities[v21-brain-discovery-evidence/v2] _
+
+schema = 'brain-discovery-evidence/v2', version = 'v21'
+
+    @pytest.mark.parametrize("schema", ["brain-discovery-evidence/v1", "brain-discovery-evidence/v2"])
+    @pytest.mark.parametrize("version", [MISSING, "v21"])
+    def test_unknown_discovery_runtime_does_not_infer_capabilities(schema, version):
+        summary = {"discovery_evidence": {"schema": schema, "unresolved": [], "records": [], "resolutions": []}}
+        if version is not MISSING:
+            summary["runtime_version"] = "autonomous-brain-runtime/" + version
+        result = audit_unknown_discoveries(summary, [])
+        expected = "runtime_evidence_version_missing" if version is MISSING else "runtime_evidence_version_unsupported"
+>       assert expected in result["failures"]
+E       AssertionError: assert 'runtime_evidence_version_unsupported' in ['discovery_original_camera_parameters_missing_or_conflicting']
+
+tests/test_brain_evidence_capabilities.py:163: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_evidence_capabilities.py::test_modern_runtime_rejects_conflicting_or_reused_commands[release-reference-v21]
+FAILED tests/test_brain_evidence_capabilities.py::test_modern_runtime_rejects_conflicting_or_reused_commands[duplicate-grab-event-v21]
+FAILED tests/test_brain_evidence_capabilities.py::test_missing_or_unknown_runtime_never_infers_a_legacy_contract[None-v21]
+FAILED tests/test_brain_evidence_capabilities.py::test_missing_or_unknown_runtime_never_infers_a_legacy_contract[grasp_chain-v21]
+FAILED tests/test_brain_evidence_capabilities.py::test_missing_or_unknown_runtime_never_infers_a_legacy_contract[command_ref-v21]
+FAILED tests/test_brain_evidence_capabilities.py::test_unknown_discovery_runtime_does_not_infer_capabilities[v21-brain-discovery-evidence/v1]
+FAILED tests/test_brain_evidence_capabilities.py::test_unknown_discovery_runtime_does_not_infer_capabilities[v21-brain-discovery-evidence/v2]
+7 failed, 197 passed in 1.23s

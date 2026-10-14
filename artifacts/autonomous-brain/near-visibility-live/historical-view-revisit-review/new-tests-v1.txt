@@ -1,0 +1,39 @@
+.F............F                                                          [100%]
+=================================== FAILURES ===================================
+_ test_actual_revisit_executes_known_route_without_restoring_old_identity_or_probe _
+
+    def test_actual_revisit_executes_known_route_without_restoring_old_identity_or_probe():
+        r, source = synthetic_runtime()
+        bound = {'limit_cm': .1, 'requires_new_view': True,
+                 'anchor_odometry': copy.deepcopy(source['odometry'])}
+        r.actions._pick_probe_limits[r.object_id] = copy.deepcopy(bound)
+        before = copy.deepcopy(r.perception.objects())
+        result = r.actions.execute({'action': 'go_to', 'params': {'object_id': r.object_id}})
+>       assert result['success'] is False and result['reason'] == 'historical_view_revisited_identity_unresolved', result
+E       AssertionError: {'evidence': {'after_observation': 7, 'before_observation': 7, 'canonical_object_id': 'target_001', 'final_observation': 8, ...}, 'reason': 'historical_view_revisit_unavailable', 'success': False}
+E       assert (False is False and 'historical_v...t_unavailable' == 'historical_v...ty_unresolved'
+E         
+E         - historical_view_revisited_identity_unresolved
+E         + historical_view_revisit_unavailable)
+
+tests/test_brain_historical_view_revisit.py:151: AssertionError
+________ test_unknown_revisit_motion_dispatches_once_and_never_retries _________
+
+    def test_unknown_revisit_motion_dispatches_once_and_never_retries():
+        r, _ = synthetic_runtime()
+        original = r.bridge.call
+        sent = []
+        def unknown(method, params):
+            sent.append((method, copy.deepcopy(params)))
+            original(method, params)
+            raise ConnectionError('synthetic_revisit_ack_unknown')
+        r.bridge.call = unknown
+        with pytest.raises(ConnectionError, match='synthetic_revisit_ack_unknown') as caught:
+>           r.actions.execute({'action': 'go_to', 'params': {'object_id': r.object_id}})
+E           Failed: DID NOT RAISE <class 'ConnectionError'>
+
+tests/test_brain_historical_view_revisit.py:218: Failed
+=========================== short test summary info ============================
+FAILED tests/test_brain_historical_view_revisit.py::test_actual_revisit_executes_known_route_without_restoring_old_identity_or_probe
+FAILED tests/test_brain_historical_view_revisit.py::test_unknown_revisit_motion_dispatches_once_and_never_retries
+2 failed, 13 passed in 53.24s

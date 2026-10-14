@@ -58,6 +58,9 @@ RUNTIME_EVIDENCE_CAPABILITIES = MappingProxyType({
     "autonomous-brain-runtime/v16": _COMMAND_CHAIN_EVIDENCE,
     "autonomous-brain-runtime/v17": _COMMAND_CHAIN_EVIDENCE,
     "autonomous-brain-runtime/v18": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v19": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v20": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v21": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
 })
 
 
@@ -102,6 +105,88 @@ def unique_index(rows, key, failures, label):
 def frame(row):
     value = row.get("observation", {}).get("frameId")
     return str(value) if value is not None else None
+
+
+def original_pixel_support(raw, frame_id):
+    """Check the public quality contract independently of Perception's parser.
+
+    Original component membership/counts are audited from the retained image by
+    the platform audit. Here their schema, frame and arithmetic must agree.
+    Missing extensions keep the historical observation contract unchanged.
+    """
+    if "pixelQuality" not in raw:
+        return True
+    q = raw["pixelQuality"]
+    if (raw.get("category") != "red-ball" or raw.get("source") != "virtual-cv"
+            or not isinstance(q, dict)
+            or set(q) != {"schema", "frameId", "componentPixels", "redSectorPixels", "status", "reason"}
+            or q.get("schema") != "red-component-quality/v1" or type(q.get("frameId")) is not int
+            or q["frameId"] < 0 or str(q["frameId"]) != str(frame_id) or box_key(raw) is None):
+        raise ValueError("invalid original pixel quality binding")
+    total, red = q["componentPixels"], q["redSectorPixels"]
+    measured = type(total) is int and type(red) is int and 0 <= red <= total <= 76800 and total > 0
+    absent = total is None and red is None
+    box = raw["bbox"]
+    clipped = box["x"] <= 0 or box["y"] <= 0 or box["x"] + box["w"] >= 640 or box["y"] + box["h"] >= 480
+    if not (measured or absent):
+        raise ValueError("invalid original pixel quality counts")
+    if q["status"] == "supported":
+        valid = measured and red * 2 > total and q["reason"] == "red_sector_majority" and not clipped
+    elif q["status"] == "unknown":
+        if q["reason"] == "red_sector_not_majority":
+            valid = measured and red * 2 <= total
+        elif q["reason"] == "source_bbox_touches_boundary":
+            valid = measured and clipped
+        else:
+            valid = absent and q["reason"] in {"component_not_uniquely_matched", "pixel_frame_unavailable",
+                                               "detection_frame_mismatch"}
+    else:
+        valid = False
+    if not valid:
+        raise ValueError("original pixel quality conflicts with its counts or bounds")
+    return q["status"] == "supported"
+
+
+def converted_pixel_support(item):
+    # Only consume after binding to the original source below. Unknown records
+    # still take part in competition; this is a positive-evidence check only.
+    return "pixel_quality" not in item or (isinstance(item["pixel_quality"], dict)
+        and item["pixel_quality"].get("status") == "supported")
+
+
+def pixel_quality_join(raw, item, frame_id):
+    supported = original_pixel_support(raw, frame_id)
+    if (("pixelQuality" in raw) != ("pixel_quality" in item)
+            or raw.get("pixelQuality") != item.get("pixel_quality")):
+        raise ValueError("converted pixel quality differs from original")
+    return supported
+
+
+def audit_pixel_quality_observation(row):
+    failures = []
+    raw = row.get("observation", {}).get("detections", [])
+    converted = row.get("perception", {}).get("detections", [])
+    if not any("pixelQuality" in r for r in raw) and not any("pixel_quality" in r for r in converted):
+        return failures
+    if len(raw) != len(converted):
+        failures.append("pixel_quality_conversion_not_preserved")
+    for index, detection in enumerate(raw):
+        try:
+            supported = original_pixel_support(detection, frame(row))
+        except (KeyError, TypeError, ValueError):
+            failures.append("pixel_quality_original_evidence_invalid")
+            continue
+        item = converted[index] if index < len(converted) else {}
+        try:
+            if box_key(detection) != box_key(item):
+                raise ValueError("original box not preserved")
+            pixel_quality_join(detection, item, frame(row))
+        except (KeyError, TypeError, ValueError):
+            failures.append("pixel_quality_conversion_not_preserved")
+        if not supported and (item.get("track_id") is not None or item.get("fed_to_world_model") is not False
+                              or item.get("known_delivered_object_id") is not None):
+            failures.append("pixel_quality_unknown_positive_identity")
+    return list(dict.fromkeys(failures))
 
 
 def original_absence_verified(basis, grab, observed, bridge):
@@ -184,6 +269,9 @@ def grab_authorization_verified(grab, source, bridge, aliases):
         camera = cameras[0]
         raw = source["observation"]["detections"]
         converted = source["perception"]["detections"]
+        if (audit_pixel_quality_observation(source) or any(d.get("category") == "red-ball"
+                and not original_pixel_support(d, frame(source)) for d in raw)):
+            return False
         selected = proof["detection_index"]
         matrix = proof["candidate_ids_by_detection"]
         if (proof.get("detections") != converted or len(raw) != len(converted) or len(matrix) != len(raw)
@@ -268,6 +356,7 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
     for row in observations:
         if row.get("odometry", {}).get("tick") != row.get("observation", {}).get("tick"):
             failures.append("observation_odometry_tick_mismatch")
+        failures.extend(audit_pixel_quality_observation(row))
     unique_index(summary.get("final_objects", []), lambda r: r.get("id"), failures, "final_object_identity")
     bridge = bridge or []
     unique_index(bridge, lambda r: r.get("request", {}).get("requestId"), failures, "bridge_request_id")
@@ -324,9 +413,13 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
 
     def raw_detection_ok(row, item):
         key = box_key(item)
-        return (key is not None and str(item.get("frame_id")) == frame(row)
-            and sum(box_key(raw) == key for raw in row.get("observation", {}).get("detections", [])) == 1
-            and sum(box_key(det) == key for det in row.get("perception", {}).get("detections", [])) == 1)
+        raw = [d for d in row.get("observation", {}).get("detections", []) if box_key(d) == key]
+        try:
+            return (key is not None and str(item.get("frame_id")) == frame(row) and len(raw) == 1
+                and sum(box_key(det) == key for det in row.get("perception", {}).get("detections", [])) == 1
+                and pixel_quality_join(raw[0], item, frame(row)))
+        except (KeyError, TypeError, ValueError):
+            return False
 
     def continuous_holding(first,last):
         return (type(first) is int and type(last) is int and first<=last
@@ -375,6 +468,10 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
             original=[o for o in by_index[before].get("objects",[]) if o.get("id")==oid]
             if (len(original)!=1 or original[0].get("state")!="CONFIRMED" or original[0].get("identity_ambiguity")
                     or original[0].get("category")!=grab.get("category") or original[0].get("position_m")!=grab.get("original_position_m")):
+                return False
+            if (audit_pixel_quality_observation(by_index[before]) or any(d.get("category") == "red-ball"
+                    and not original_pixel_support(d, frame(by_index[before]))
+                    for d in by_index[before].get("observation", {}).get("detections", []))):
                 return False
             if capability.requires_grab_authorization and not grab_authorization_verified(
                     grab, by_index[before], bridge, authorization_aliases(by_index[before])):
@@ -467,6 +564,7 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
         observed, boundary = by_frame.get(str(placement.get("frame_id")), {}), by_frame.get(str(release.get("frame_id")), {})
         index, boundary_index = observed.get("observation_index"), boundary.get("observation_index")
         detections = observed.get("perception", {}).get("detections", [])
+        row_failures.extend(audit_pixel_quality_observation(observed))
         # Every relevant original box participates. A second ball cannot be
         # hidden by deleting only its converted entry or inventing an old label.
         for raw in observed.get("observation", {}).get("detections", []):
@@ -502,7 +600,8 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
         pair_candidates = []
         for ball in detections:
             if (ball.get("category") != "red-ball" or "position_m" not in ball
-                    or ball.get("known_delivered_object_id") or ball.get("track_id") in preexisting):
+                    or converted_pixel_support(ball) and (ball.get("known_delivered_object_id")
+                                                        or ball.get("track_id") in preexisting)):
                 continue
             for zone in detections:
                 if (zone.get("category") == "storage-zone" and box_key(ball) is not None and box_key(zone) is not None
@@ -517,7 +616,8 @@ def audit_observed_ledger(summary, observations, rounds, bridge, motions):
             row_failures.append("delivery_converted_witness_mismatch")
         if any(d.get("identity_ambiguity") for d in balls):
             row_failures.append("delivery_witness_identity_ambiguous")
-        visible_old = {d.get("known_delivered_object_id") for d in detections if d.get("category") == "red-ball"}
+        visible_old = {d.get("known_delivered_object_id") for d in detections
+                       if d.get("category") == "red-ball" and converted_pixel_support(d)}
         if not seen_ids <= visible_old:
             row_failures.append("delivery_prior_deliveries_not_distinguished")
         for old in seen_ids:
@@ -731,7 +831,8 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             failures.append("discovery_v2_original_records_missing");return records
         indexed={}
         for raw,claimed_row in zip(records,claimed):
-            if not isinstance(claimed_row,dict) or any(claimed_row.get(k)!=v for k,v in raw.items()):
+            if (not isinstance(claimed_row,dict) or any(claimed_row.get(k)!=v for k,v in raw.items())
+                    or ("pixel_quality" in claimed_row) != ("pixel_quality" in raw)):
                 failures.append("discovery_v2_original_record_mismatch");continue
             indexed[claimed_row["id"]]=claimed_row
         objects=observed.get("objects",[]) if not final else summary.get("final_objects",[])
@@ -746,6 +847,7 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             a=indexed.get(association.get("from_discovery_id"));b=indexed.get(association.get("to_discovery_id"))
             matrix=association.get("candidate_matrix",{})
             if (not a or not b or a["frame_id"]==b["frame_id"] or association.get("rule")!="mutually_unique_original_pixel_views/v1"
+                    or not converted_pixel_support(a) or not converted_pixel_support(b)
                     or b.get("hypothesis_id")!=association.get("hypothesis_id")
                     or matrix.get(b["id"])!=[association.get("hypothesis_id")]
                     or sum(association.get("hypothesis_id") in values for values in matrix.values())!=1
@@ -782,7 +884,7 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             source=indexed.get(resolution.get("discovery_id"))
             key=canonical(resolution)
             proof_history[key]=resolution
-            valid=bool(source) and resolution.get("rule")=="independent_views_original_pixels_unique_identity/v1"
+            valid=bool(source) and converted_pixel_support(source) and resolution.get("rule")=="independent_views_original_pixels_unique_identity/v1"
             oid=resolution.get("canonical_object_id")
             resolved_observation=by_frame.get(str(resolution.get("resolved_frame_id")),{})
             resolved_index=resolved_observation.get("observation_index",-1)
@@ -793,7 +895,11 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             identities={root(r.get("initial_object_id")) for r in prefix if r.get("initial_object_id") is not None}
             for r in same_frame:
                 for candidate in sorted(identities):
+                    if not converted_pixel_support(r):
+                        matrix[r["id"]].append(candidate)
+                        continue
                     later=[v for v in prefix if root(v.get("initial_object_id"))==candidate
+                        and converted_pixel_support(v)
                         and v["observation_index"]>r["observation_index"] and v["simulation_time_s"]>=r["simulation_time_s"]
                         and discovery_pixel_compatible(camera,r,v["position_m"]) and not moved(candidate,r,v,root)]
                     if later: matrix[r["id"]].append(candidate)
@@ -802,7 +908,8 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             valid=valid and (resolution.get("source_ref")==source["id"] and resolution.get("previous_object_id")==source.get("initial_object_id")
                 and matrix==resolution.get("candidate_matrix") and matrix.get(source["id"])==[oid]
                 and sum(oid in values for values in matrix.values())==1
-                and len(supports)==2 and all(supports) and supports[0]["frame_id"]!=supports[1]["frame_id"]
+                and len(supports)==2 and all(supports) and all(converted_pixel_support(v) for v in supports)
+                and supports[0]["frame_id"]!=supports[1]["frame_id"]
                 and target is not None and target.get("state") in {"CONFIRMED","HELD","DELIVERED"} and not target.get("identity_ambiguity")
                 and resolution.get("resolved_simulation_time_s")==resolved_observation.get("simulation_seconds")
                 and resolved_index<=observed.get("observation_index",-1))
@@ -823,7 +930,8 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
             for j,hit in enumerate(hits):
                 o=by_frame.get(str(hit.get("frame_id")),{})
                 matched=[d for d in o.get("perception",{}).get("detections",[]) if d.get("category")=="red-ball"
-                    and root(d.get("track_id"))==oid and d.get("fed_to_world_model") is True and not d.get("identity_ambiguity")]
+                    and root(d.get("track_id"))==oid and d.get("fed_to_world_model") is True and not d.get("identity_ambiguity")
+                    and converted_pixel_support(d)]
                 pose=o.get("odometry",{})
                 valid=valid and (len(matched)==1 and hit.get("x_m")==pose.get("rightCm",math.nan)/100
                     and hit.get("z_m")==pose.get("forwardCm",math.nan)/100 and hit.get("heading_deg")==pose.get("headingDeg")
@@ -834,6 +942,7 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
                 for rival in {root(x) for x in source["candidate_ids"]}-{oid}:
                     for support in supports:
                         found=[r for r in prefix if r["frame_id"]==support["frame_id"] and root(r.get("initial_object_id"))==rival
+                            and converted_pixel_support(r)
                             and not discovery_pixel_compatible(camera,source,r["position_m"])]
                         if len(found)!=1:valid=False
                         else:opposing.append(found[0]["id"])
@@ -853,6 +962,7 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
 
     unresolved=[]
     for observation in observations:
+        failures.extend(audit_pixel_quality_observation(observation))
         raw=observation.get("observation",{})
         converted=observation.get("perception",{}).get("detections",[])
         for index,detection in enumerate(raw.get("detections",[])):
@@ -875,6 +985,8 @@ def audit_discovery_lifecycle(summary, observations, bridge, motions):
                 "identity_ambiguity":ambiguity,"candidate_ids":ambiguity.get("candidate_ids",[]),
                 "reason":ambiguity.get("reason") or ("associated_observed_identity" if item.get("track_id") else "unassociated_target_detection"),
                 "admission_reason":item.get("reason")})
+            if "pixelQuality" in detection:
+                records[-1]["pixel_quality"] = detection["pixelQuality"]
         unresolved=validate_ledger(observation.get("discovery_evidence"),observation)
     final=observations[-1] if observations else {}
     unresolved=validate_ledger(summary.get("discovery_evidence"),final,True)

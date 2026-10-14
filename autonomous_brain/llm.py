@@ -24,7 +24,7 @@ import urllib.request
 
 
 VERSION = "autonomous-brain-llm/v19"
-CHATGPT_VERSION = "autonomous-brain-llm/v20"
+CHATGPT_VERSION = "autonomous-brain-llm/v25"
 FORMAL_MODEL = "deepseek-flash"
 FORMAL_TEMPERATURES = {FORMAL_MODEL: 0, "kimi-k2.6": 0.6}
 
@@ -39,15 +39,16 @@ def formal_model_parameters(model, temperature, thinking, transport=None):
             and temperature == FORMAL_TEMPERATURES[model] and thinking == "disabled")
 
 
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 21)}
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 26)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 21)}
+EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 26)}
 RETRY_METADATA_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
 DIAGNOSTICS_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
-NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 21)}
-DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20"}
-EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19", "autonomous-brain-llm/v20"}
+NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 26)}
+DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25"}
+EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25"}
+HISTORICAL_VIEW_REVISIT_VERSIONS = {"autonomous-brain-llm/v25"}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -66,6 +67,11 @@ exploration 和 junction_history 中的出口 state 区分 unexplored（未探�
 completion.unresolved_discovery_ids 是未知数量任务中从未确认且仍未解释的历史红球发现；归档或暂时看不见不证明它不存在或已交付。completion.untracked_discovery_ids 保留尚未解释的普通或歧义红球发现，未达到 WorldModel 确认门槛和空视野都不能消除这些义务。discovery.pending 至多显示六个待验证发现及当前 TENTATIVE/STALE 候选，包括观测位置、已有有效 hit 和采样缺口；discovery.pending_count 是全部未解决假设数，candidate_count 包含待确认的跟踪对象，pending 列表的行数不等于 pending_count。当还需确认任务目标时，可自主选择 explore(discovery_id) 请求沿已有道路取得不同位置的新鲜视角：discovery_id 必须原样取当前 executable_candidates 某一行的 hypothesis_id、id 或 source_discovery_id，长度 1–128；latest_discovery_id 是逐帧证据，不作稳定选择 ID。executable_candidates 是当前唯一可见、感知许可且失败上下文已有实质新证据的可执行采样入口；pending 只保留未完成义务，不可仅因 ID 仍在 pending 就重选。sampling_progress 保留有界尝试计数、最后有效视角、最后失败和新证据解锁原因；新帧号、同 tick 抖动或同位重复不是新进展。完全不可见时不盲目前进；可依据实际道路和观测选择普通 explore 或 look_around 重获证据。采样内部有界恢复不代表命中或身份已确认，仍查看实际后置证据。该意图只取得确认，不抓取、不自动交付、不替代模型下一轮选择。原地转头和同位重复检测不能补足独立位姿；应查看动作的实际采样进展、停止原因和后继状态再决定。无参 explore、当前出口 explore 和 look_around 仍可自主选择；发现 ID 不是可操作物体 ID，不能传给 go_to 或 pick，TENTATIVE/STALE 也不能绕过 CONFIRMED 门。只有独立新视角、唯一身份与像素证据足够时，程序才会记录关联和消解；关联本身仍不等于交付。当前红球 identity_ambiguity 也必须解决；歧义对象不能作为可抓取或交付见证。已知数量任务仍只按经过验证的不同对象数量完成，不需全图探索。
 状态中的位置来自 WorldModel，出口角度相对小车当前朝向；最近动作至多五轮。不要访问平台真值或要求任何额外接口。"""
 
+PICK_PROBE_FEEDBACK_PROMPT = """recent_actions 的 completed_empty_grab_probe_refined 仍是抓取失败，不表示已持物或交付。original_reason 和 grab_authorization 保留失见/截断时旧帧的拒绝；pick_retry 表示本次已知空抓后的探步经过验证逆回，最终新鲜观测重新满足完整像素与唯一身份，且 next_probe_limit_cm 比 previous_limit_cm 更小。这个新探步条件允许你考虑下一轮对该 object_id 再选 pick；它不强制重试，也不是旧命令重发。仍检查当前物体、夹爪和观测，每次 pick/grab 全量重新授权；如当前条件已改变或需新视角，应据实际状态选择动作。"""
+PICK_PROBE_FEEDBACK_PROMPT += "supported_approach_probe_refined 表示本次只有接近探步、没有抓取命令，可能尚无任何历史抓取；若有历史已完成空抓，它仅帮助选择新视点。当前身份和每次运动仍重新核验。已验证逆回恢复完整视野并缩小下一步长，允许你考虑下一轮 pick 继续接近；它不表示已经进入抓取范围。pick 仍会检查范围、净空与新鲜完整像素并重新授权，不能将逆回或缩步算作持物或交付；你也可依据当前状态选择换视角。"
+
+
+HISTORICAL_VIEW_REVISIT_PROMPT = """若任务尚未完成、当前没有可处理的 CONFIRMED 任务目标，且夹爪已知为空，可考虑回看历史已确认目标：仅当该 LOST 对象的 historical_view_revisit.available=true、navigation_only=true、requires_fresh_identity=true 时，允许选择 go_to(object_id)。这只沿已测道路回到历史完整支持帧的机器人观测位姿，并重新观察；历史机器人位姿不是物体坐标，不保证物体仍在那里。执行层会逐步检查当前道路、载荷、已知阻塞和未知动作；不能照抄历史路线。回看到达不等于身份恢复、抓取就绪、持物或交付，LOST、竞争者及旧记录保留，探步限制不因此重置。只能依照后续新鲜完整像素、正常确认及原身份排他结果选择下一动作；旧 LOST ID 仍不能 pick。若能力未提供或重复回看没有新证据，则根据现有可执行发现、道路出口和新观测选择其他动作，不反复重选同一历史视角。已知数量任务已满足且 completion.ready_for_done=true 时仍应主动 done，不为额外历史目标继续回看。"""
 
 class ActionValidationError(ValueError):
     """A model output does not satisfy the one-action contract."""
@@ -148,7 +154,7 @@ def _validate_transport_diagnostics(value: Any, version: str | None = None) -> N
     if (not isinstance(value, dict) or not required <= set(value)
             or not set(value) <= required | optional
             or value["phase"] not in (("construct_request", "open", "read_stream", "read_body")
-                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20"} else ("open", "read_stream", "read_body"))
+                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25"} else ("open", "read_stream", "read_body"))
             or type(value["received_bytes"]) is not int or value["received_bytes"] < 0):
         raise ReplayError("Replay has invalid transport diagnostics")
     if "reason_type" in value:
@@ -245,7 +251,27 @@ def validate_action(action: Any, state: dict[str, Any], *, transcript_version: s
         if len(matches) != 1:
             raise ActionValidationError("object_id must identify one current WorldModel object")
         if str(matches[0].get("status", "")).upper() != "CONFIRMED":
-            raise ActionValidationError(f"{name} requires a CONFIRMED object")
+            # This capability permits observation-only navigation to a recorded
+            # robot viewpoint. It never authorizes manipulation or restores ID.
+            obj, robot = matches[0], state.get("robot", {})
+            revisit = obj.get("historical_view_revisit")
+            historical_navigation = (name == "go_to"
+                and transcript_version in HISTORICAL_VIEW_REVISIT_VERSIONS
+                and str(obj.get("status", "")).upper() == "LOST"
+                and obj.get("ever_confirmed") is True
+                and isinstance(revisit, dict)
+                and revisit.get("schema") == "historical-view-revisit/v1"
+                and revisit.get("available") is True
+                and revisit.get("navigation_only") is True
+                and revisit.get("requires_fresh_identity") is True
+                and type(revisit.get("source_observation")) is int
+                and revisit["source_observation"] > 0
+                and isinstance(revisit.get("frame_id"), str) and bool(revisit["frame_id"])
+                and robot.get("holding") is False and robot.get("on_road") is True
+                and robot.get("held_object_id") is None
+                and robot.get("pending_grasp_object_id") is None)
+            if not historical_navigation:
+                raise ActionValidationError(f"{name} requires a CONFIRMED object")
     elif params:
         raise ActionValidationError(f"{name} accepts no parameters")
     return {"action": name, "params": dict(params)}
@@ -365,12 +391,21 @@ class LLMClient:
             if self.transport != chatgpt_transport.TRANSPORT and (not _finite_number(self.temperature) or not 0 <= self.temperature <= 2):
                 raise ReplayError("Replay has invalid temperature")
         elif os.environ.get("LLM_TRANSPORT") == chatgpt_transport.TRANSPORT:
+            if type(transport_retries) is not int or not 0 <= transport_retries <= 5:
+                raise ValueError("transport_retries must be an integer from 0 through 5")
             self.transport = chatgpt_transport.TRANSPORT
+            self.system_prompt = self.system_prompt.replace(
+                "go_to 和 pick 只能选择当前状态为 CONFIRMED 的物体。",
+                "pick 只能选择当前 CONFIRMED 物体；go_to 通常也需要 CONFIRMED，历史视角回看是下述仅导航例外。")
+            self.system_prompt = self.system_prompt.replace(
+                "go_to/pick 只操作当前状态为 CONFIRMED 的身份，不操作历史 LOST ID。",
+                "pick 只操作当前 CONFIRMED 身份；对历史 LOST ID，go_to 仅能使用当前明确提供的历史视角回看能力，不能据此操作或恢复身份。")
+            self.system_prompt += "\n" + PICK_PROBE_FEEDBACK_PROMPT + "\n" + HISTORICAL_VIEW_REVISIT_PROMPT
             self.model = model or os.environ.get("LLM_MODEL")
             self.temperature = None
             self.thinking = chatgpt_transport.EFFORT
             self.stream = True
-            self.transport_retries = 0
+            self.transport_retries = transport_retries
         else:
             if type(transport_retries) is not int or not 0 <= transport_retries <= 5:
                 raise ValueError("transport_retries must be an integer from 0 through 5")
@@ -584,6 +619,8 @@ class LLMClient:
             self._write_lifecycle('started',record)
             started=time.perf_counter()
             try:
+                if retry_metadata['transport_retry_delay_s']:
+                    time.sleep(retry_metadata['transport_retry_delay_s'])
                 record['response_body']=chatgpt_transport.invoke(request,self.timeout_s)
                 record['transport_diagnostics']['received_bytes']=len(record['response_body'].encode('utf-8'))
             except Exception as exc:
@@ -666,7 +703,10 @@ class LLMClient:
 
         require_stop = record["version"] in NORMAL_FINISH_REQUIRED_VERSIONS
         if request.get("transport") == chatgpt_transport.TRANSPORT and isinstance(record["response_body"], str):
-            raw, response_model, error = chatgpt_transport.decode(record["response_body"],request)
+            try:
+                raw, response_model, error = chatgpt_transport.decode(record["response_body"],request)
+            except (AttributeError, TypeError):
+                raw, response_model, error = None, None, 'Native ChatGPT receipt must prove one completed tool-free model reply'
             record["raw_output"],record["response_model"] = raw,response_model
             record["validation_error"] = error
         elif request.get("stream") and isinstance(record["response_body"], str):
@@ -716,9 +756,54 @@ class LLMClient:
                 error = self.last_record["transport_error"]
                 retryable = (error["type"] in RETRYABLE_TRANSPORT_ERRORS
                              or (error["type"] == "HTTPError" and error.get("status") in RETRYABLE_HTTP_STATUSES))
+                if retryable and self.transport == chatgpt_transport.TRANSPORT:
+                    retryable = self._native_retry_is_inference_only(self.last_record)
                 if not retryable or retry_index == self.transport_retries:
                     raise
         raise AssertionError("Transport retry loop exhausted unexpectedly")
+
+    @staticmethod
+    def _native_retry_is_inference_only(record):
+        # invoke has already terminated and waited for its child before the
+        # failure reaches here. No reply has been returned to the Executor.
+        # A deadline can expire just after a row is recorded but before invoke
+        # checks that row; do not retry across any unvalidated tool boundary.
+        body = record.get("response_body")
+        if not isinstance(body, str):
+            return False
+        try:
+            for line in body.splitlines():
+                if not line.strip():
+                    continue
+                row = _strict_loads(line)
+                if (not isinstance(row, dict) or "error" in row
+                        or ("method" in row and "id" in row)
+                        or row.get("method") == "model/rerouted"):
+                    return False
+                params = row.get("params") or {}
+                result = row.get("result") or {}
+                if row.get("id") == 2 and (result.get("account") or {}).get("type") != "chatgpt":
+                    return False
+                if row.get("id") == 3 and (result.get("model") != record["request"]["model"]
+                        or result.get("modelProvider") != "openai"
+                        or result.get("reasoningEffort") != chatgpt_transport.EFFORT
+                        or (result.get("thread") or {}).get("model") != record["request"]["model"]
+                        or (result.get("thread") or {}).get("environments") != []):
+                    return False
+                if ((params.get("turn") or {}).get("error") or (result.get("turn") or {}).get("error")
+                        or row.get("method") == "turn/completed"
+                        and (params.get("turn") or {}).get("status") != "completed"):
+                    return False
+                item = params.get("item")
+                items = ([item] if item is not None else []) + ((params.get("turn") or {}).get("items") or [])
+                items += (result.get("turn") or {}).get("items") or []
+                if any(not isinstance(item, dict)
+                       or item.get("type") not in {"userMessage", "agentMessage", "reasoning"}
+                       for item in items):
+                    return False
+            return True
+        except (ValueError, TypeError, AttributeError, KeyError):
+            return False
 
     def decide(self, state: dict[str, Any]) -> dict[str, Any]:
         if self._closed:

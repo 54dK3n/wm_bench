@@ -1,0 +1,460 @@
+{
+  "version": "autonomous-brain-offline-evaluation/v9",
+  "evaluation_only": true,
+  "run_directory": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1",
+  "stage": "stage-1",
+  "task_spec": {
+    "version": "instruction-task/v1",
+    "source_instruction": "把两个红球送到绿色存放区",
+    "quantity_mode": "known",
+    "required_count": 2,
+    "target_category": "red-ball",
+    "destination_category": "storage-zone"
+  },
+  "task_scope": {
+    "stage": "stage-1",
+    "task_spec": {
+      "version": "instruction-task/v1",
+      "source_instruction": "把两个红球送到绿色存放区",
+      "quantity_mode": "known",
+      "required_count": 2,
+      "target_category": "red-ball",
+      "destination_category": "storage-zone"
+    },
+    "completion": {
+      "pending_objects": [],
+      "retired_unconfirmed_hypotheses": [],
+      "resolved_reacquired_identities": [],
+      "resolved_release_recovery_identities": [],
+      "task_spec": {
+        "version": "instruction-task/v1",
+        "source_instruction": "把两个红球送到绿色存放区",
+        "quantity_mode": "known",
+        "required_count": 2,
+        "target_category": "red-ball",
+        "destination_category": "storage-zone"
+      },
+      "required_count": 2,
+      "delivered_count": 0,
+      "delivered_object_ids": [],
+      "delivery_evidence": [],
+      "unresolved_identity_ids": [],
+      "known_quantity_excluded_history_ids": [],
+      "unresolved_discovery_ids": [],
+      "untracked_discovery_ids": [],
+      "current_target_ambiguities": [],
+      "current_unexplained_discoveries": [],
+      "resolved_discovery_hypotheses": {},
+      "exploration": null,
+      "ready_for_done": false,
+      "unmet_conditions": [
+        "required_delivery_count_not_met"
+      ],
+      "unexplored_exits": 4
+    },
+    "topology": null,
+    "discovery_audit": null,
+    "observed_evidence": {
+      "scope": "bridge_observation_action_and_delivery_evidence",
+      "picks": [],
+      "deliveries": [],
+      "runtime_evidence_capability": {
+        "runtime_version": "autonomous-brain-runtime/v21",
+        "contract": "authorized_command_chain"
+      },
+      "failures": []
+    },
+    "done_evidence": {
+      "raw_model_output_verified": false,
+      "post_action_completion_verified": false,
+      "failures": [
+        "done_not_selected_in_recorded_llm_call",
+        "done_post_action_completion_not_corroborated"
+      ]
+    },
+    "failures": [
+      "task_completion:required_delivery_count_not_met",
+      "done_not_selected_in_recorded_llm_call",
+      "done_post_action_completion_not_corroborated"
+    ]
+  },
+  "llm_lifecycle": {
+    "started": 3,
+    "finished": 3,
+    "failures": []
+  },
+  "map": "map-05",
+  "success": false,
+  "failures": [
+    "no_active_delivery_event:guangyang-target-1",
+    "final_position_outside_storage:guangyang-target-1",
+    "no_active_delivery_event:guangyang-target-2",
+    "final_position_outside_storage:guangyang-target-2",
+    "brain_did_not_finish_with_observed_done",
+    "terminal_done_not_corroborated",
+    "execution_or_controller_error",
+    "task_completion:required_delivery_count_not_met",
+    "done_not_selected_in_recorded_llm_call",
+    "done_post_action_completion_not_corroborated"
+  ],
+  "delivery": {
+    "failures": [
+      "no_active_delivery_event:guangyang-target-1",
+      "final_position_outside_storage:guangyang-target-1",
+      "no_active_delivery_event:guangyang-target-2",
+      "final_position_outside_storage:guangyang-target-2",
+      "brain_did_not_finish_with_observed_done",
+      "terminal_done_not_corroborated",
+      "execution_or_controller_error"
+    ],
+    "expected_target_ids": [
+      "guangyang-target-1",
+      "guangyang-target-2"
+    ],
+    "required_delivery_count": 2,
+    "qualifying_delivered_target_ids": [],
+    "delivered_target_ids": [],
+    "final_positions": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 336,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 22.812830983681092,
+        "position_world": [
+          10.0849,
+          1.251
+        ],
+        "events": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": false,
+        "sample_tick": 336,
+        "destination_world": [
+          -10.7336,
+          -8.0772
+        ],
+        "radius_world": 0.95,
+        "distance_world": 16.819687483719786,
+        "position_world": [
+          0.5097,
+          4.4324
+        ],
+        "events": []
+      }
+    ],
+    "rounds": 3,
+    "round_records": 3,
+    "max_rounds": 200,
+    "simulation_seconds": 6.72,
+    "max_simulation_seconds": 1200,
+    "step_ms": 20,
+    "final_sample_tick": 336,
+    "simulation_end_tick": 336,
+    "terminal_done": {
+      "verified": false,
+      "round": 3,
+      "observation_index": 10,
+      "observation_tick": 336
+    },
+    "rejected_calls": 0,
+    "nonwhitelist_accepted_calls": 0
+  },
+  "metrics": {
+    "rounds": 3,
+    "llm_calls": 3,
+    "llm_total_elapsed_s": 18.476962417,
+    "simulation_seconds": 6.72,
+    "observations": 10,
+    "failed_rounds": 0,
+    "failed_actions": 0,
+    "execution_failures": 0,
+    "external_stop_failures": 0,
+    "bridge_calls": 49,
+    "nonwhitelist_brain_requests": 0
+  },
+  "brain_status": "failed",
+  "brain_reason": "BridgeError: observe: BRIDGE_CLOSED",
+  "failed_actions": [],
+  "perception": {
+    "matching_method": "same-frame class + projected truth centre inside exact bbox, unique both ways; WM identities require consistent bbox-to-track associations",
+    "matching_limitation": "geometric correspondence does not independently prove occlusion visibility; partial boxes excluding the centre remain unmatched; no nearest-distance fallback",
+    "coordinate_convention": "initial robot right/forward metres; right=[cos(h0),-sin(h0)], forward=[-sin(h0),-cos(h0)]",
+    "error_sample_definition": "one sample per logged CONFIRMED red track per observation with unique identity and active exact-frame truth; repeated estimates count as repeated samples",
+    "position_error": {
+      "count": 0,
+      "mean_cm": null,
+      "rmse_cm": null,
+      "max_cm": null
+    },
+    "position_samples": [],
+    "unmatched_confirmed_samples": [],
+    "unmatched_confirmed_count": 0,
+    "ambiguous_track_ids": {},
+    "track_truth_bindings": {},
+    "binding_evidence": [],
+    "raw_red_match_counts": {
+      "unique": 1
+    },
+    "matching_issues": [],
+    "timeline": [
+      {
+        "truth_id": "guangyang-target-1",
+        "wm_track_ids": [],
+        "first_raw_seen": {
+          "observation_index": 5,
+          "round": 2,
+          "frame_id": "5",
+          "tick": 138,
+          "simulation_seconds": 2.76,
+          "detection_index": 0,
+          "category": "red-ball",
+          "bbox": {
+            "x": 548,
+            "y": 188,
+            "w": 20,
+            "h": 12
+          },
+          "candidates": [
+            {
+              "truth_id": "guangyang-target-1",
+              "projection": {
+                "u": 558.4765479149339,
+                "v": 194.26820679191553,
+                "depth_world": 12.074038911532847
+              }
+            }
+          ],
+          "status": "unique",
+          "truth_id": "guangyang-target-1"
+        },
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "wm_track_ids": [],
+        "first_raw_seen": null,
+        "first_confirmed": null,
+        "first_logged_wm_presence": null,
+        "first_grabbed_truth_event": null,
+        "first_delivered_truth_event": null,
+        "final_active_delivery_truth_event": null,
+        "delivery_revocations": [],
+        "brain_memory_timeline": []
+      }
+    ]
+  },
+  "source_proof": {
+    "status": "verified",
+    "failures": [],
+    "recorded_before_after_equal": true,
+    "driver_sources_unchanged": true,
+    "brain_summary_hashes_match": true,
+    "actual_orchestrator_matches": true,
+    "actual_world_model_matches": true,
+    "formal_configuration_matches": true,
+    "run_configuration_matches": true,
+    "recorded_brain_and_driver_files": 16
+  },
+  "judge": {
+    "scope": "Bound red-ball pick/place only; no truth verdict for explore/look_around/go_to/done.",
+    "report_only": true,
+    "counts": {
+      "match": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 0,
+      "not_evaluated": 3,
+      "eligible_actions": 0
+    },
+    "rows": [
+      {
+        "round": 1,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 2,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      },
+      {
+        "round": 3,
+        "action": "explore",
+        "claimed_success": true,
+        "independent_success": null,
+        "status": "not_evaluated",
+        "reason": "outside_pick_place_scope"
+      }
+    ]
+  },
+  "action_identity_audit": {
+    "scope": "all_pick_place_prefix_judge_and_completion_witness_identity",
+    "prefix_judge": {
+      "eligible_actions": 0,
+      "counts": {},
+      "rows": []
+    },
+    "completion_witnesses": [],
+    "global_judge_replaced": false,
+    "unverifiable_policy": "report each historical gap; gate only completion evidence affected by the gap",
+    "failures": []
+  },
+  "strict_transcript_replay": {
+    "allPass": true,
+    "recorded_rounds": 3,
+    "replayed_rounds": 3,
+    "recorded_calls": 3,
+    "replayed_calls": 3,
+    "all_records_consumed": true,
+    "full_records_equal_except_mode": true,
+    "mismatched_record_indexes": [],
+    "replay_error": null,
+    "network_calls": 0,
+    "environment_access_attempts": 0,
+    "source_evidence_unchanged": true,
+    "source_sha256": {
+      "rounds": "e35dfdb7b36e3d7956848b8dbcf5d4eea7537efc19ef44975edf2b17adf4087f",
+      "original_llm": "3818b9aa1f3399163c5646506c6d37b855c52122fd3e79781ad8d0e5d9097a8c",
+      "original_summary": "c009cececd832a93f9d7144978078eadc6697fdc172cec174522df839405be00",
+      "tool": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+      "llm_client": "97791801f4be0044484a2f1f100421dbd65835a020af191be1b7d4dc1321ffe3"
+    },
+    "failures": []
+  },
+  "topology_audit": null,
+  "external_stop": {
+    "recorded": false,
+    "version": null,
+    "reason": null,
+    "classified_failures": 0
+  },
+  "inputs": {
+    "record.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/record.json.gz",
+      "sha256": "237fe9ca1a72386d93358abf377b955c2f495eec7d51f8be5f3384864ced216f",
+      "bytes": 2550528,
+      "expanded_sha256": "34e897da1792ec297e96db7e29dcc4ec197019fbfcb9567df6eb61a44b8e4006",
+      "expanded_bytes": 3737323
+    },
+    "captures.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/captures.json.gz",
+      "sha256": "2718db9cad33c6d10b8b406ee2616c030e9aa5b8ae519aa1527ee90f94c85610",
+      "bytes": 1021,
+      "expanded_sha256": "e1fcdda4264e2fc7ce938064fa37984d271fbfd4833e30f0dd0f16cc1a30ad3f",
+      "expanded_bytes": 21017
+    },
+    "brain/summary.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/summary.json",
+      "sha256": "c009cececd832a93f9d7144978078eadc6697fdc172cec174522df839405be00",
+      "bytes": 31500,
+      "expanded_sha256": "c009cececd832a93f9d7144978078eadc6697fdc172cec174522df839405be00",
+      "expanded_bytes": 31500
+    },
+    "brain/rounds.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "e35dfdb7b36e3d7956848b8dbcf5d4eea7537efc19ef44975edf2b17adf4087f",
+      "bytes": 178517,
+      "expanded_sha256": "e35dfdb7b36e3d7956848b8dbcf5d4eea7537efc19ef44975edf2b17adf4087f",
+      "expanded_bytes": 178517
+    },
+    "brain/observations.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/observations.jsonl",
+      "sha256": "9567812a534973540ea27a1939f57398bad049f4a5917a6ab4eb3ff5a2802ed0",
+      "bytes": 73779,
+      "expanded_sha256": "9567812a534973540ea27a1939f57398bad049f4a5917a6ab4eb3ff5a2802ed0",
+      "expanded_bytes": 73779
+    },
+    "brain/llm.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/llm.jsonl",
+      "sha256": "3818b9aa1f3399163c5646506c6d37b855c52122fd3e79781ad8d0e5d9097a8c",
+      "bytes": 154583,
+      "expanded_sha256": "3818b9aa1f3399163c5646506c6d37b855c52122fd3e79781ad8d0e5d9097a8c",
+      "expanded_bytes": 154583
+    },
+    "brain/bridge-calls.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "e2ce94800dda0811cd975dd56d6928cba6477d9ffa7bdcc1e30dfdc30540e18a",
+      "bytes": 21396,
+      "expanded_sha256": "e2ce94800dda0811cd975dd56d6928cba6477d9ffa7bdcc1e30dfdc30540e18a",
+      "expanded_bytes": 21396
+    },
+    "brain/motions.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/motions.jsonl",
+      "sha256": "0ea4d4dc5e8b77b733204f1865bfa7b6b13f8aa70c5f40a36427ae43e67e8bd9",
+      "bytes": 2217,
+      "expanded_sha256": "0ea4d4dc5e8b77b733204f1865bfa7b6b13f8aa70c5f40a36427ae43e67e8bd9",
+      "expanded_bytes": 2217
+    },
+    "evaluation.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/evaluation.json",
+      "sha256": "bd65bc1205720e382aec14b1a826c6ae0a544dcb632a89afa4e89870c5843725",
+      "bytes": 37131,
+      "expanded_sha256": "bd65bc1205720e382aec14b1a826c6ae0a544dcb632a89afa4e89870c5843725",
+      "expanded_bytes": 37131
+    },
+    "evidence.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/evidence.json",
+      "sha256": "3819e98e8b4f917a4cb561249dbfadd84b4941532ba47dfc70ea9e32228ce3d7",
+      "bytes": 1493,
+      "expanded_sha256": "3819e98e8b4f917a4cb561249dbfadd84b4941532ba47dfc70ea9e32228ce3d7",
+      "expanded_bytes": 1493
+    },
+    "../manifest.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/manifest.json",
+      "sha256": "284dd2dc63dfe897764afe2abc05f690ea5fe6bdd65fae2a7f0a5632108847ac",
+      "bytes": 17685,
+      "expanded_sha256": "284dd2dc63dfe897764afe2abc05f690ea5fe6bdd65fae2a7f0a5632108847ac",
+      "expanded_bytes": 17685
+    },
+    "../summary.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/summary.json",
+      "sha256": "19df1c1dad59dbcfa6b693594faea32c847c1224091fc8a82bd351313548748e",
+      "bytes": 60817,
+      "expanded_sha256": "19df1c1dad59dbcfa6b693594faea32c847c1224091fc8a82bd351313548748e",
+      "expanded_bytes": 60817
+    },
+    "brain/llm.lifecycle.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/llm.lifecycle.jsonl",
+      "sha256": "a0a26c4d084f0374958c166c44ac66007b7fdc69f5288b35ec4355049669b705",
+      "bytes": 213416,
+      "expanded_sha256": "a0a26c4d084f0374958c166c44ac66007b7fdc69f5288b35ec4355049669b705",
+      "expanded_bytes": 213416
+    }
+  },
+  "evaluator_sha256": "a7bfd08cceae971432c40d5188ece959182f929f1796e7c570f6dd7e8ac3cc04",
+  "evaluator_dependencies": {
+    "tools/brain_evidence_audit.py": "7ee1f821cc0562850ad2fe968a0f04d8d75a132f583ec4f73a1e8ab0fdb9fd1b",
+    "tools/replay_brain_llm.py": "7d80df6e4ecb0d8b9ee4f95e59c1e1d0affb52b1e63ae50d24e42dc10119dc02",
+    "tools/brain_topology_audit.py": "d67bcae8fe71447799de3c9fbb4d79f9ce95a82bc5f8c362c06553bdadb223ea"
+  },
+  "rules": {
+    "truth_only_in_evaluator": true,
+    "success_recomputed_from_record": true,
+    "determinism_is_not_a_gate": true,
+    "position_error_is_report_only": true,
+    "judge_disagreements_are_report_only": true,
+    "limits": "successful observed done may use the final allowed round; otherwise caps stop at 200 rounds or 1200 seconds"
+  }
+}

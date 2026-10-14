@@ -67,6 +67,7 @@ function loadLocalLLMConfig(file = path.join(ROOT, ".env.local"), env = process.
 function parseArgs(argv) {
   const options = {maps: ["map-05"], runs: 1,
     platformRoot: process.env.GUANGYANG_PLATFORM_ROOT || path.join(ROOT, "workspaces/guangyang-platform/projects/car-python"),
+    platformGate: process.env.BRAIN_PLATFORM_GATE ? path.resolve(process.env.BRAIN_PLATFORM_GATE) : null,
     orchestratorRoot: path.resolve(process.env.OCTOS_ROBOTS_ROOT || path.join(ROOT, "workspaces/octos_robots")),
     python: process.env.BRAIN_PYTHON || "python3", timeoutMs: 120000, wallTimeoutSeconds: 0,
     maxRounds: 200, maxSimulationSeconds: 1200, task: "把两个红球送到绿色存放区"};
@@ -77,6 +78,7 @@ function parseArgs(argv) {
     else if (key === "--maps") options.maps = value.split(",");
     else if (key === "--runs") options.runs = Number(value);
     else if (key === "--platform-root") options.platformRoot = path.resolve(value);
+    else if (key === "--platform-gate") options.platformGate = path.resolve(value);
     else if (key === "--orchestrator-root") {options.orchestratorRoot = path.resolve(value); options.orchestratorExplicit = true;}
     else if (key === "--python") options.python = value;
     else if (key === "--task") options.task = value;
@@ -494,7 +496,8 @@ function evaluatorDependencies(root = ROOT) {
 }
 
 function sourceManifest(platformRoot, options = {}) {
-  const preflight = readJson(path.join(ROOT, 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json'));
+  const gateFile = options.platformGate || path.join(ROOT, 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json');
+  const preflight = readJson(gateFile);
   const files = Object.keys(preflight.run.platform);
   const brainFiles = [];
   function visit(directory) {
@@ -526,7 +529,8 @@ function sourceManifest(platformRoot, options = {}) {
     evaluator: {file: 'tools/evaluate_autonomous_brain.py', sha256: sha(fs.readFileSync(path.join(ROOT, 'tools/evaluate_autonomous_brain.py')))},
     evaluatorDependencies: evaluatorDependencies(),
     evaluatorCaptureSha256: sha(installEvaluationCapture.toString()),
-    platformGate: 'artifacts/autonomous-brain/fresh-map05-gate-20260925/preflight-gate.json',
+    platformGate: relative(gateFile),
+    platformGateSha256: sha(fs.readFileSync(gateFile)),
     platformGateReviewer: {file: 'tools/fresh_map05_platform_gate.js', sha256: sha(fs.readFileSync(path.join(__dirname, 'fresh_map05_platform_gate.js')))},
     publicMethods: PUBLIC_METHODS};
 }
@@ -869,7 +873,7 @@ async function runBrain(options, directory, capability, origin, evaluate, monito
 async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   if (!options.replay) {loadLocalLLMConfig(); validateFormalLLMConfig();}
-  const gate = verifyPreflightGate({platformRoot: options.platformRoot});
+  const gate = verifyPreflightGate({platformRoot: options.platformRoot, gateFile: options.platformGate});
   assert.equal(gate.allPass, true, 'platform two-gate check failed; brain must not start');
   assert.ok(!fs.existsSync(options.out), 'refusing to reuse an output directory');
   assert.ok(fs.existsSync(path.join(ROOT, 'autonomous_brain/run.py')), 'brain module is not ready');
@@ -879,7 +883,7 @@ async function main(argv = process.argv.slice(2)) {
   let map05Passed = false;
   fs.mkdirSync(options.out, {recursive: true});
   const manifest = sourceManifest(options.platformRoot, options);
-  const frozenPlatform = gate.run.platform;
+  const frozenPlatform = gate.currentPlatform || gate.run.platform;
   assert.deepEqual(manifest.platform, frozenPlatform, 'selected platform source differs from the rechecked gate evidence');
   writeJson(path.join(options.out, 'manifest.json'), manifest);
   const summary = {schema: VERSION, status: 'running', maps: options.maps, runsPerMap: options.runs,

@@ -1,6 +1,18 @@
 # wm_bench
 
-## 当前结果：2026-10-08，位置证据语义修补与真实双球验证，FAIL
+## 当前交付：2026-10-14，功能修复已提交，双球尚未通过
+
+从 `7513828df066c90c25e01f123d820ade08a64fdb` 继续，保留近场唯一可见性刷新。当前冻结 Perception23 / Actions40 / Runtime21 / native25：同帧像素质量进入观测和身份消费链；已知空抓后的有限接近、净空恢复与重新取景进入原 Actions；固定数量完成语义仅排除已有独立证据证明与交付无关的历史目标。新增历史视角回看沿本局已测道路返回机器人观测位姿，只授权导航，不复活 LOST、不取消竞争者、不重置探步限制，也不授权旧身份抓取。固定宽度/M5 的跨视角几何尚未完成校准。
+
+最新真实局 `run-20261013T115310Z` 使用原 map-05、`codex-app-server / gpt-6.1-sol / low`、vendored WM 与既有 Executor：3 次原生启动、3 个已验证模型 turn、3 个完整动作、10 帧观测；grab/release/HELD/DELIVERED/done 均为 0，夹爪空，原双球 **0/2 FAIL**，driver/evaluator=1/1。第4轮前 CDP 连接关闭，下一次 observe 返回 `BRIDGE_CLOSED`；原导出完整。历史视角回看在这次短局未被选用，不能据此宣称真实恢复成功或几何验证失败。原生次数不等于不可见的底层 HTTP 次数。
+
+此前完整局 `run-20261013T105016Z`（Actions39 / Runtime20 / native24）为独立的一局：164 次原生启动、163 个已验证 turn/完成动作，30 次实际 grab（29 空、1 持物）、1 次 release。观测222持物，228首次 HELD，304首次 DELIVERED；原独立物理评测 **1/2 FAIL**，done=0，终态空夹爪，driver/evaluator=1/1。第二目标失去可操作身份后道路回访无进展，完成163轮后中断下一次纯推理。此成绩不与其他局拼接，历史一球 PASS 保留。
+
+新增历史回看组件17项与 native25/Runtime21合同29项通过；相关原导航/任务/抓取检查189项通过，1项旧 Runtime19 字面断言失败。原审计回归197项通过、7项仍将现已支持的 Runtime21 当未知版本；原断言及失败输出保留，不宣称全套回归通过。组件公共重放、合成未来传感器与真实比赛分别记录。
+
+[源码冻结与SHA](artifacts/autonomous-brain/near-visibility-live/p23-a40-native25-source-manifest.json) · [实际结果与原件SHA](artifacts/autonomous-brain/near-visibility-live/PUSH_RESULT_20261014.json) · [新增回归原输出](artifacts/autonomous-brain/near-visibility-live/historical-view-revisit-review/new-tests-v4.txt) · [最新原双球评测](artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z-evaluation/evaluation.json)。完整原始日志、模型回执和物理导出保留本机；私密配置未提交。
+
+## 历史结果：2026-10-08，4d813db 位置证据语义修补与真实双球验证，FAIL
 
 生产提交 `4d813db4c0adcca9adb2cd8f9fbe437c02189143` 明确标注近似宽度/M5 位置的原像素冲突，向模型提供一致性信息；坐标转换和身份/抓放门限未改，几何身份恢复仍未解决。完整源码复现原 target_040 的三组及上一局 target_042 的十组跨视角失败，真实后路也不支持所提中转；没有扩大像素容差或合并历史 ID。
 

@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v12"
+VERSION = "autonomous-brain-navigation/v14"
 
 
 def evidence_version(value):
@@ -270,13 +270,23 @@ class RoadMemory:
                 row["resolved_by"] = {"reason": "fresh_comparable_stop_view_clearance_restored", **view}
 
     def passage_blocked(self, frame, heading):
+        rows = self.passage_blockers(frame, heading)
+        return rows[0] if rows else None
+
+    def passage_blockers(self, frame, heading):
+        """All applicable retained constraints, newest first."""
         if heading is None:
-            return None
+            return []
         self._refresh_passage_evidence(frame)
-        return self._blocked_passage_at(position(frame["odometry"]), heading,
-                                        frame.get("holding", {}).get("holding"))
+        return self._blocked_passages_at(position(frame["odometry"]), heading,
+                                         frame.get("holding", {}).get("holding"))
 
     def _blocked_passage_at(self, point, heading, holding):
+        rows = self._blocked_passages_at(point, heading, holding)
+        return rows[0] if rows else None
+
+    def _blocked_passages_at(self, point, heading, holding):
+        matches = []
         for row in reversed(self.blocked):
             if (row.get("schema") != "brain-directed-passage-failure/v1" or row["resolved_by"]
                     or holding != row["entry"]["holding"]):
@@ -286,8 +296,9 @@ class RoadMemory:
                                        + (180 if row["motion"]["method"] == "backward" else 0))):
                 if (distance(point, anchor["position_m"]) <= .15
                         and abs(wrap(heading-direction)) <= 10):
-                    return copy.deepcopy(row)
-        return None
+                    matches.append(copy.deepcopy(row))
+                    break
+        return matches
 
     def edge_passage_blocked(self, edge):
         current = self._latest_public_observation
@@ -599,7 +610,8 @@ class RoadMemory:
         if existing is None or existing.get("direction_status") != "observed_forward":
             self._approach_edges[p][a] = reverse
 
-    def approach_candidates(self, odo, target, excluded=(), limit=3, alternative_routes=(), candidate_filter=None):
+    def approach_candidates(self, odo, target, excluded=(), limit=3, alternative_routes=(), candidate_filter=None,
+                            purpose="operation_view"):
         """Reachable viewpoints with directional, executable segment evidence.
 
         Legacy excluded positions are intentionally no longer exclusions: a
@@ -608,10 +620,14 @@ class RoadMemory:
         optional predicate leaves all historical positional arguments valid.
         """
         start = position(odo)
+        if purpose not in {"operation_view", "observed_junction_return"}:
+            raise ValueError("unsupported approach candidate purpose")
         query = {"schema": "brain-approach-candidate-query/v1", "observation_index": self._latest_index,
             "generated_count": 0, "eligible_count": 0, "returned_count": 0,
             "candidate_limit": max(0, min(limit, 3)), "filtered_candidates": []}
         self._last_approach_query = query
+        if purpose != "operation_view":
+            query["purpose"] = purpose
         if start not in self._approach_edges or self._latest_index in self._invalid_indices:
             query["reason"] = "current_position_has_no_valid_observed_connection"
             return []
@@ -634,13 +650,27 @@ class RoadMemory:
         def candidate(path, cost):
             point = path[-1]
             segments = [copy.deepcopy(self._approach_edges[a][b]) for a, b in zip(path, path[1:])]
-            return {"position_m": list(point), "path": [list(p) for p in path], "segments": segments,
+            row = {"position_m": list(point), "path": [list(p) for p in path], "segments": segments,
                 "route_version": evidence_version([[s["segment_version"], s["direction"]] for s in segments]),
                 "source": "observed_on_road_motion_endpoints", "travelled_cm": cost,
                 "observation_index": self._approach_points[point]["observation_index"]}
+            if purpose != "operation_view":
+                row["purpose"] = purpose
+            return row
         for point, cost in costs.items():
-            if distance(start, point) < .15 or not .25 <= distance(point, target) <= .65:
-                continue
+            if purpose == "operation_view":
+                if distance(start, point) < .15 or not .25 <= distance(point, target) <= .65:
+                    continue
+            else:
+                # Returning to an observed road junction is not an independent
+                # target view. Keep exact measured graph connections and all
+                # passage/execution checks, without the final-view range model.
+                road = self._approach_points[point]["road"]
+                exits = road.get("exits")
+                if (point == start or road.get("onRoad") is not True or road.get("atNode") is not True
+                        or not isinstance(exits, list) or not exits
+                        or any(not isinstance(e, dict) or not number(e.get("angleDeg")) for e in exits)):
+                    continue
             path, endpoint = [point], point
             while endpoint != start:
                 endpoint = previous[endpoint]
@@ -685,9 +715,11 @@ class RoadMemory:
             else:
                 query["filtered_candidates"].append({"route_version": row["route_version"],
                     "position_m": row["position_m"], "reason": reason})
-        result = sorted(eligible, key=lambda row: (
-            abs(distance(tuple(row["position_m"]), target) - .32), row["travelled_cm"],
-            row["position_m"]))[:max(0, min(limit, 3))]
+        ordering = ((lambda row: (row["travelled_cm"], row["position_m"]))
+            if purpose == "observed_junction_return" else
+            (lambda row: (abs(distance(tuple(row["position_m"]), target) - .32),
+                          row["travelled_cm"], row["position_m"])))
+        result = sorted(eligible, key=ordering)[:max(0, min(limit, 3))]
         query.update(eligible_count=len(eligible), returned_count=len(result))
         return result
 
