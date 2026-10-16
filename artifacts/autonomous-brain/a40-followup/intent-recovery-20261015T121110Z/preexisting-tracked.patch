@@ -1,0 +1,355 @@
+diff --git a/autonomous_brain/actions.py b/autonomous_brain/actions.py
+index e25c744..d76e940 100644
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,9 +7,9 @@ import re
+ 
+ from .bridge import SimulationLimit
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+-from .observation_quality import positive_pixel_support
++from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v40"
++VERSION = "autonomous-brain-actions/v43"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -358,6 +358,7 @@ class Actions:
+             view = {"schema": "historical-view-revisit/v1", "available": True,
+                 "navigation_only": True, "requires_fresh_identity": True,
+                 "source_observation": snapshot["observation_index"], "frame_id": str(sensor["frameId"]),
++                "source_fed_to_world_model": item.get("fed_to_world_model") is True,
+                 "position_m": list(position(snapshot["odometry"])),
+                 "heading_deg": snapshot["odometry"]["headingDeg"],
+                 "goal_semantics": "historical_robot_camera_viewpoint"}
+@@ -381,7 +382,13 @@ class Actions:
+         record, context = self._navigation_record(object_id), self._navigation_context(object_id)
+         if self.r.navigation_progress.blocked(record, context):
+             return None
+-        for view in reversed(self._historical_views.get(object_id, [])):
++        # Prefer a view that could contribute to normal tracking at its source.
++        # A recent near-only view cannot seed a successor after LOST. This is
++        # navigation priority only: retain near fallbacks and every route gate;
++        # arrival still requires fresh Perception and identity evidence.
++        views = sorted(reversed(self._historical_views.get(object_id, [])),
++                       key=lambda view: view.get("source_fed_to_world_model") is not True)
++        for view in views:
+             source = roads.observation_records(view["source_observation"], view["source_observation"])
+             frames = source.get("observations", [])
+             if (source.get("invalid_observation_indices") or len(frames) != 1
+@@ -1937,23 +1944,41 @@ class Actions:
+                     or w <= 0 or h <= 0 or x < 0 or y < 0 or x + w > width or y + h > height):
+                 return False
+             balls.append((source, item, (x, y, x + w, y + h)))
+-        selected = [row for row in balls if row[1]["category"] == category]
++        def bottom_clipped(row):
++            source, item, (left, top, right, bottom) = row
++            quality = item.get("pixel_quality") or {}
++            return (quality == source.get("pixelQuality")
++                    and str(quality.get("frameId")) == str(raw.get("frameId"))
++                    and quality.get("status") == "unknown"
++                    and quality.get("reason") == "source_bbox_touches_boundary"
++                    and 0 < left < right < width and 0 < top < bottom == height)
++
++        selected = [row for row in balls
++                    if row[1]["category"] == category and bottom_clipped(row)]
+         if len(selected) != 1:
+             return False
+         source, item, (left, top, right, bottom) = selected[0]
+-        quality = item.get("pixel_quality") or {}
+-        if (quality != source.get("pixelQuality")
+-                or str(quality.get("frameId")) != str(raw.get("frameId"))
+-                or quality.get("status") != "unknown"
+-                or quality.get("reason") != "source_bbox_touches_boundary"
+-                or not 0 < left < right < width or not 0 < top < bottom == height):
+-            return False
+-        # Different-category side pixels remain evidence/competitors. Their
+-        # separation only permits undoing our motion; fresh restored identity
+-        # and complete positive pixels are still required before learning.
+-        return all(peer["category"] != category
+-                   and (r < left or right < l or b < top or bottom < t)
+-                   for _, peer, (l, t, r, b) in balls if peer is not item)
++        for peer_source, peer, (l, t, r, b) in balls:
++            if peer is item:
++                continue
++            if not (r < left or right < l or b < top or bottom < t):
++                return False
++            if peer["category"] == category:
++                # A full, explicitly supported peer may remain a competitor
++                # while we undo our own verified forward step. Separation
++                # identifies neither box; fresh restored identity still gates
++                # learning and every subsequent grab. Old missing quality is
++                # not sufficient for this additional navigation case.
++                if not (0 < l < r < width and 0 < t < b < height):
++                    return False
++                try:
++                    support = pixel_quality(peer_source, raw.get("frameId"))
++                except (KeyError, TypeError, ValueError):
++                    return False
++                if (support is None or support.get("status") != "supported"
++                        or support != peer.get("pixel_quality")):
++                    return False
++        return True
+ 
+     def remember_empty_grab_navigation(self, object_id, grab_ref, motion, receipt):
+         """Remember a failed operation pose, without caching identity authority."""
+@@ -2180,6 +2205,7 @@ class Actions:
+             before_holding = self.s["holding"].get("holding")
+             selected = None
+             plan = None
++            short_departure = False
+             basic = segment.get("execution", {}).get("kind") == "basic_translation"
+             remaining_segment = segment["travelled_cm"] - leg_travel
+             unexpected_node = (road.get("atNode") and (departure.get("at_node") is False
+@@ -2235,7 +2261,52 @@ class Actions:
+                     return False, "reposition_junction_context_changed", steps
+                 selected = {"recorded_exit_heading_deg": wanted, "fresh_angle_deg": fresh[0]["angleDeg"],
+                             "source_observation": departure.get("observation_index")}
+-                result = self.take_observed_exit(fresh[0]["angleDeg"])
++                if remaining_segment < 10:
++                    # take_exit has no distance bound. For a leg shorter than
++                    # follow_road's minimum, use the existing straight-motion
++                    # proof and the recorded arc length, or leave it pending.
++                    source_motion = segment.get("motion") or {}
++                    receipt = source_motion.get("actuator_result") or {}
++                    chord = distance(tuple(departure["position_m"]), tuple(arrival["position_m"])) * 100
++                    if (started or not .2 <= remaining_segment < 10
++                            or type(before_holding) is not bool
++                            or source_motion.get("outcome_unknown") or receipt.get("error")
++                            or receipt.get("accepted") is not True
++                            or receipt.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}
++                            or not old_exits or departure.get("at_node") is not True
++                            or distance(p, tuple(departure["position_m"])) * 100 > .2
++                            or abs(chord - segment["travelled_cm"]) > .2
++                            or abs(wrap(departure["travel_heading_deg"] - arrival["travel_heading_deg"])) > .2
++                            or abs(wrap(wanted - departure["travel_heading_deg"])) > .2):
++                        return False, "reposition_short_node_departure_not_proved", steps
++                    if not self._align_approach_body(wanted, budget, steps):
++                        return False, ("reposition_motion_budget_exhausted" if budget[0] <= 0
++                                       else "reposition_short_node_departure_not_aligned"), steps
++                    road, odo = self.s["road"], self.s["odometry"]
++                    current_exits = [wrap(odo["headingDeg"] + e["angleDeg"]) for e in road.get("exits", [])]
++                    fresh = [e for e in road.get("exits", [])
++                             if abs(wrap(odo["headingDeg"] + e["angleDeg"] - wanted)) <= 5]
++                    if (road.get("onRoad") is not True or road.get("atNode") is not True
++                            or self.s["holding"].get("holding") is not before_holding
++                            or len(fresh) != 1 or len(old_exits) != len(current_exits)
++                            or any(sum(abs(wrap(x - y)) <= 5 for y in current_exits) != 1 for x in old_exits)):
++                        return False, "reposition_short_node_departure_context_changed", steps
++                    local = copy.deepcopy(segment)
++                    local["execution"] = {"kind": "basic_translation", "method": "forward",
++                        "departure_body_heading_deg": wanted}
++                    plan = self._approach_basic_plan(local, remaining_segment, False)
++                    if plan is None:
++                        return False, "reposition_short_node_departure_not_safe", steps
++                    plan["basis"] = "recorded_short_straight_leg_and_fresh_node_exit"
++                    selected["fresh_angle_deg"] = fresh[0]["angleDeg"]
++                    self.r.roads.chosen(odo, fresh[0]["angleDeg"], observation_index=self.s["observation_index"])
++                    before, before_odo = self.s["observation_index"], copy.deepcopy(odo)
++                    before_sensor = copy.deepcopy(self.s.get("observation", {}))
++                    p = position(before_odo)
++                    short_departure = True
++                    result = self.move(plan["method"], plan["params"])
++                else:
++                    result = self.take_observed_exit(fresh[0]["angleDeg"])
+             else:
+                 error = road.get("headingErrorDeg")
+                 if type(error) not in (int, float) or not math.isfinite(error):
+@@ -2353,7 +2424,8 @@ class Actions:
+             for other in range(index, len(segments)):
+                 current = segments[other]
+                 expected_distance += current["travelled_cm"]
+-                exact = current.get("execution", {}).get("kind") == "basic_translation" or connection is not None
++                exact = (current.get("execution", {}).get("kind") == "basic_translation"
++                         or connection is not None or short_departure)
+                 end_heading = (current["execution"]["arrival_body_heading_deg"]
+                     if current.get("execution", {}).get("kind") == "basic_translation"
+                     else current["arrival"]["travel_heading_deg"])
+@@ -2374,7 +2446,7 @@ class Actions:
+                     matched = other
+                 if current["arrival"].get("at_node"):
+                     break
+-                if basic or (other + 1 < len(segments)
++                if basic or short_departure or (other + 1 < len(segments)
+                         and segments[other + 1].get("execution", {}).get("kind") == "basic_translation"):
+                     break
+                 if (other + 1 < len(segments) and abs(wrap(current["arrival"]["travel_heading_deg"]
+diff --git a/tests/test_brain_empty_grab_navigation.py b/tests/test_brain_empty_grab_navigation.py
+index 272f24b..ea5edf1 100644
+--- a/tests/test_brain_empty_grab_navigation.py
++++ b/tests/test_brain_empty_grab_navigation.py
+@@ -254,4 +254,4 @@ def test_no_grab_refinement_reaches_native_model_without_forcing_pick(tmp_path,
+     assert sent[0]["thinking"] == {"type": "low"}
+     assert "没有抓取命令" in sent[0]["messages"][0]["content"]
+     assert json.loads(sent[0]["messages"][1]["content"])["recent_actions"][0] == summary
+-    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v22"
++    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25"
+diff --git a/tests/test_brain_evidence_capabilities.py b/tests/test_brain_evidence_capabilities.py
+index ab238d8..728831c 100644
+--- a/tests/test_brain_evidence_capabilities.py
++++ b/tests/test_brain_evidence_capabilities.py
+@@ -11,7 +11,7 @@ from test_brain_pending_grasp_audit import chain
+ from tools.brain_evidence_audit import audit_observed_ledger, audit_unknown_discoveries
+ 
+ 
+-MODERN = ("v15", "v16", "v17", "v18", "v19", "v20")
++MODERN = ("v15", "v16", "v17", "v18", "v19", "v20", "v21")
+ LEGACY = tuple(f"v{i}" for i in range(1, 15))
+ MISSING = object()
+ 
+@@ -67,7 +67,7 @@ def test_modern_runtime_cannot_fall_back_when_command_contract_is_deleted(real_a
+     assert not any(row["verified"] for row in result["deliveries"])
+ 
+ 
+-@pytest.mark.parametrize("version", MODERN + ("v21", MISSING))
++@pytest.mark.parametrize("version", MODERN + ("v22", MISSING))
+ @pytest.mark.parametrize("fault", ["grab-reference", "release-reference", "duplicate-grab-event", "duplicate-request-id", "grab-motion-deleted"])
+ def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace, version, fault):
+     data = trace_with_version(real_action_trace, version)
+@@ -99,7 +99,7 @@ def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace
+         assert result["picks"][0]["verified"] is False
+ 
+ 
+-@pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
++@pytest.mark.parametrize("version", [MISSING, "v22", "v100", "v015", "v17-extra", "V17", ""])
+ @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
+ def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
+     data = trace_with_version(real_action_trace, version)
+@@ -153,7 +153,7 @@ def test_explicit_legacy_discovery_preserves_v1_ledger(version):
+ 
+ 
+ @pytest.mark.parametrize("schema", ["brain-discovery-evidence/v1", "brain-discovery-evidence/v2"])
+-@pytest.mark.parametrize("version", [MISSING, "v21"])
++@pytest.mark.parametrize("version", [MISSING, "v22"])
+ def test_unknown_discovery_runtime_does_not_infer_capabilities(schema, version):
+     summary = {"discovery_evidence": {"schema": schema, "unresolved": [], "records": [], "resolutions": []}}
+     if version is not MISSING:
+@@ -208,7 +208,7 @@ def test_modern_runtime_accepts_independently_verified_v2_discovery(version):
+ 
+ @pytest.mark.parametrize("fault", ["missing-authorization", "boolean-only", "old-frame", "false-geometry",
+     "raw-deletion", "duplicate-detection", "competing-object", "wrong-command"])
+-@pytest.mark.parametrize("version", ["v18", "v19", "v20"])
++@pytest.mark.parametrize("version", ["v18", "v19", "v20", "v21"])
+ def test_authorized_runtime_grab_is_recomputed_from_original_public_evidence(real_action_trace, fault, version):
+     data = trace_with_version(real_action_trace, version)
+     summary, observations, rounds, bridge, _ = data
+diff --git a/tests/test_brain_historical_view_revisit.py b/tests/test_brain_historical_view_revisit.py
+index ce48fda..991b703 100644
+--- a/tests/test_brain_historical_view_revisit.py
++++ b/tests/test_brain_historical_view_revisit.py
+@@ -277,3 +277,76 @@ def test_final_heading_unknown_cannot_mark_candidate_arrived():
+     assert not any(a.get('candidate_reached') or a.get('status') == 'historical_view_revisited'
+                    for a in record['approach_attempts'])
+     assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def mixed_revisit_runtime():
++    r = ClippedRetryRuntime(clip_gap=100)
++    r.roads = RoadMemory()
++    original = r.observe
++
++    def observe(*, motion=None):
++        original(motion=motion)
++        r.roads.update(r.snapshot['odometry'], r.snapshot['road'], r.snapshot['observation_index'])
++        finalized = dict(motion, after_observation=r.snapshot['observation_index']) if motion else None
++        r.roads.observe_traversal(r.snapshot, finalized)
++        r.actions.note_historical_view(r.snapshot, finalized)
++        return r.snapshot
++
++    r.observe = observe
++    r.observe()
++    # Real conversion changes feed classification as the public bbox becomes
++    # smaller at a more distant measured robot pose. Both sources stay confirmed.
++    fed = []
++    for distance in (35, 5):
++        r.actions.move('backward', {'distanceCm': distance, 'speed': 30})
++        source = copy.deepcopy(r.snapshot)
++        assert source['perception']['detections'][0]['fed_to_world_model'] is True
++        assert r.perception.confirmed(r.object_id)
++        assert r.perception.check_grasp_identity(r.object_id, source)['authorized']
++        fed.append(source)
++    r.actions.move('forward', {'distanceCm': 40, 'speed': 30})
++    near = copy.deepcopy(r.snapshot)
++    assert near['perception']['detections'][0]['fed_to_world_model'] is False
++    assert r.perception.confirmed(r.object_id)
++    assert r.perception.check_grasp_identity(r.object_id, near)['authorized']
++    # Loss is produced by normal WM expiry, not an internal state assignment.
++    r.override_items = []
++    r.actions.move('backward', {'distanceCm': 5, 'speed': 30})
++    r.bridge.seconds += 60
++    r.observe()
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    return r, fed, near
++
++
++def test_historical_view_prefers_latest_fed_source_over_newer_visibility_only_source():
++    r, fed, near = mixed_revisit_runtime()
++    before = copy.deepcopy(r.perception.objects())
++    commands_before = len(r.bridge_records)
++    assert fed[0]['observation_index'] < fed[1]['observation_index'] < near['observation_index']
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == fed[1]['observation_index']
++    assert view['position_m'] == list(position(fed[1]['odometry']))
++    assert r.perception.objects() == before
++    assert len(r.bridge_records) == commands_before and not actual_grabs(r)
++
++
++def test_historical_view_keeps_near_fallback_when_fed_sources_have_no_exact_route():
++    r, fed, near = mixed_revisit_runtime()
++    # Remove only the recorded graph connections to the two fed viewpoints.
++    # Keep all cached observations; source eligibility must not bypass route checks.
++    points = {position(source['odometry']) for source in fed}
++    for point in points:
++        r.roads._approach_edges.pop(point, None)
++    for edges in r.roads._approach_edges.values():
++        for point in points:
++            edges.pop(point, None)
++    for point in points:
++        route = r.roads.route_to(r.snapshot['odometry'], point)
++        assert not route or route[-1] != point
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == near['observation_index']
++    assert view['position_m'] == list(position(near['odometry']))
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
+diff --git a/tests/test_brain_native_retry.py b/tests/test_brain_native_retry.py
+index d0a791a..cf758a4 100644
+--- a/tests/test_brain_native_retry.py
++++ b/tests/test_brain_native_retry.py
+@@ -99,7 +99,7 @@ def test_same_decision_retry_waits_without_dispatch_then_executor_runs_at_most_o
+     assert [row["transport_retry_index"] for row in saved] == [0, 1]
+     assert [row["transport_retry_delay_s"] for row in saved] == [0, 1]
+     assert len({row["request_sha256"] for row in saved}) == 1
+-    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v23" for row in saved)
++    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25" for row in saved)
+     assert all(row["request"]["model"] == "gpt-6.1-sol" and row["request"]["thinking"] == {"type":"low"}
+                for row in saved)
+     assert [row["event"] for row in records(tmp_path/"native.lifecycle.jsonl")] == ["started","finished","started","finished"]
+diff --git a/tests/test_brain_pick_probe_feedback.py b/tests/test_brain_pick_probe_feedback.py
+index 5186c97..73708e2 100644
+--- a/tests/test_brain_pick_probe_feedback.py
++++ b/tests/test_brain_pick_probe_feedback.py
+@@ -151,7 +151,7 @@ def test_actual_native_request_receives_new_bound_and_keeps_model_choice(tmp_pat
+     assert received["evidence"]["pick_retry"]["next_probe_limit_cm"] == 3
+     assert received["reason"] == "completed_empty_grab_probe_refined"
+     assert received["success"] is False and received["evidence"]["grab_authorization"]["authorized"] is False
+-    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v21"
++    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25"
+     with patch.object(chatgpt_transport, "invoke", side_effect=AssertionError("no replay inference")):
+         with LLMClient(tmp_path/"replay.jsonl", replay_path=tmp_path/"calls.jsonl") as client:
+             assert client.decide(state) == {"action": "explore", "params": {}}
+diff --git a/tests/test_brain_state_evidence.py b/tests/test_brain_state_evidence.py
+index 03237c4..334e490 100644
+--- a/tests/test_brain_state_evidence.py
++++ b/tests/test_brain_state_evidence.py
+@@ -289,7 +289,7 @@ class NextModelStateTests(unittest.TestCase):
+         self.assertEqual(recent["after_observation"], 2)
+         self.assertEqual(recent["evidence"]["final_observation"], 2)
+         self.assertEqual(logged_rounds[0]["result"], results[0])
+-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v19")
++        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v21")
+ 
+     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
+         states, runtime, _, _, _ = self.run_offline(8)

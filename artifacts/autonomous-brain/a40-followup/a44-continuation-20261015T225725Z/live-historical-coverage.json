@@ -1,0 +1,295 @@
+{
+  "schema": "live-historical-coverage/v1",
+  "run": "run-20261015T225820Z",
+  "as_of_completed_round": 147,
+  "window_rounds": [
+    115,
+    147
+  ],
+  "final_result": false,
+  "read_scope": [
+    "rounds.jsonl",
+    "observations.jsonl",
+    "motions.jsonl"
+  ],
+  "production_modified": false,
+  "run_intervened": false,
+  "finding": "A was recorded arrived but identity remained LOST. B stayed exposed to the model, with no target-level repeat block; the model did not select B in the observed window. This is exposure coverage, not an executed independent multi-view recovery.",
+  "A": {
+    "round_reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl:115",
+    "action": {
+      "action": "go_to",
+      "params": {
+        "object_id": "target_013"
+      }
+    },
+    "result_reason": "historical_view_revisited_identity_unresolved",
+    "capability": {
+      "schema": "historical-view-revisit/v1",
+      "available": true,
+      "navigation_only": true,
+      "requires_fresh_identity": true,
+      "source_observation": 339,
+      "frame_id": "339",
+      "source_fed_to_world_model": false,
+      "position_m": [
+        -1.819,
+        1.1159999999999999
+      ],
+      "heading_deg": -89.3,
+      "goal_semantics": "historical_robot_camera_viewpoint"
+    },
+    "revisit": {
+      "schema": "historical-view-revisit/v1",
+      "available": true,
+      "navigation_only": true,
+      "requires_fresh_identity": true,
+      "source_observation": 339,
+      "frame_id": "339",
+      "source_fed_to_world_model": false,
+      "position_m": [
+        -1.819,
+        1.1159999999999999
+      ],
+      "heading_deg": -89.3,
+      "goal_semantics": "historical_robot_camera_viewpoint",
+      "arrived": true,
+      "reason": "historical_view_revisited_identity_unresolved",
+      "after_observation": 638
+    },
+    "historical_view_steps": [],
+    "motion_rows_in_round": 0,
+    "arrival_interpretation": "already at saved pose and heading; fresh observation only, no physical route executed",
+    "source": {
+      "reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl:339",
+      "observation_index": 339,
+      "round": 74,
+      "odometry": {
+        "forwardCm": 111.6,
+        "rightCm": -181.9,
+        "headingDeg": -89.3,
+        "distanceCm": 807,
+        "tick": 7813
+      },
+      "on_road": true,
+      "holding": false,
+      "target_state": "CONFIRMED",
+      "red_detection": {
+        "track_id": "target_013",
+        "frame_id": "339",
+        "bbox": {
+          "x": 268.0,
+          "y": 234.0,
+          "w": 116.0,
+          "h": 108.0
+        },
+        "fed_to_world_model": false,
+        "pixel_quality": {
+          "schema": "red-component-quality/v1",
+          "frameId": 339,
+          "componentPixels": 3052,
+          "redSectorPixels": 3051,
+          "status": "supported",
+          "reason": "red_sector_majority"
+        }
+      }
+    },
+    "arrival": {
+      "reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl:638",
+      "observation_index": 638,
+      "round": 115,
+      "odometry": {
+        "forwardCm": 111.6,
+        "rightCm": -181.9,
+        "headingDeg": -89.3,
+        "distanceCm": 807,
+        "tick": 14077
+      },
+      "on_road": true,
+      "holding": false,
+      "target_state": "LOST",
+      "red_detection": {
+        "track_id": null,
+        "frame_id": "638",
+        "bbox": {
+          "x": 268.0,
+          "y": 234.0,
+          "w": 116.0,
+          "h": 108.0
+        },
+        "fed_to_world_model": false,
+        "pixel_quality": {
+          "schema": "red-component-quality/v1",
+          "frameId": 638,
+          "componentPixels": 3052,
+          "redSectorPixels": 3051,
+          "status": "supported",
+          "reason": "red_sector_majority"
+        }
+      }
+    },
+    "final_observation": {
+      "reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl:639",
+      "observation_index": 639,
+      "round": 115,
+      "odometry": {
+        "forwardCm": 111.6,
+        "rightCm": -181.9,
+        "headingDeg": -89.3,
+        "distanceCm": 807,
+        "tick": 14077
+      },
+      "on_road": true,
+      "holding": false,
+      "target_state": "LOST",
+      "red_detection": {
+        "track_id": null,
+        "frame_id": "639",
+        "bbox": {
+          "x": 268.0,
+          "y": 234.0,
+          "w": 116.0,
+          "h": 108.0
+        },
+        "fed_to_world_model": false,
+        "pixel_quality": {
+          "schema": "red-component-quality/v1",
+          "frameId": 639,
+          "componentPixels": 3052,
+          "redSectorPixels": 3051,
+          "status": "supported",
+          "reason": "red_sector_majority"
+        }
+      }
+    }
+  },
+  "B": {
+    "first_exposed_round": 116,
+    "last_exposed_round": 147,
+    "all_rounds_exposed": true,
+    "capability": {
+      "schema": "historical-view-revisit/v1",
+      "available": true,
+      "navigation_only": true,
+      "requires_fresh_identity": true,
+      "source_observation": 164,
+      "frame_id": "164",
+      "source_fed_to_world_model": false,
+      "position_m": [
+        -1.82,
+        1.1159999999999999
+      ],
+      "heading_deg": -89.3,
+      "goal_semantics": "historical_robot_camera_viewpoint"
+    },
+    "source": {
+      "reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl:164",
+      "observation_index": 164,
+      "round": 35,
+      "odometry": {
+        "forwardCm": 111.6,
+        "rightCm": -182,
+        "headingDeg": -89.3,
+        "distanceCm": 806.9,
+        "tick": 5028
+      },
+      "on_road": true,
+      "holding": false,
+      "target_state": "CONFIRMED",
+      "red_detection": {
+        "track_id": "target_013",
+        "frame_id": "164",
+        "bbox": {
+          "x": 268.0,
+          "y": 234.0,
+          "w": 116.0,
+          "h": 106.0
+        },
+        "fed_to_world_model": false,
+        "pixel_quality": {
+          "schema": "red-component-quality/v1",
+          "frameId": 164,
+          "componentPixels": 3023,
+          "redSectorPixels": 3023,
+          "status": "supported",
+          "reason": "red_sector_majority"
+        }
+      }
+    },
+    "selected_go_to_rounds": [],
+    "translation_from_A_m": 0.001,
+    "heading_difference_from_A_deg": 0.0,
+    "limitation": "B is a different saved coordinate, only 1 mm from A with the same heading; no physically independent view or successful identity recovery is established."
+  },
+  "preserved_attempts": {
+    "as_of_reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl:147",
+    "historical_approach_count": 1,
+    "historical_attempts": [
+      {
+        "reason": "historical_view_revisited_identity_unresolved",
+        "before_observation": 637,
+        "after_observation": 638,
+        "candidate_reached": true,
+        "historical_view_intent": {
+          "schema": "historical-view-intent/v1",
+          "position_m": [
+            -1.819,
+            1.1159999999999999
+          ],
+          "heading_deg": -89.3
+        }
+      }
+    ],
+    "A_reselected_after_115": false,
+    "A_actual_reexecution_after_115": false
+  },
+  "gates_and_exhaustion": {
+    "target_repeat_blocked_rounds": [],
+    "candidate_exhaustion_rounds": [],
+    "candidate_exhaustion_reason": null,
+    "target_state_lost_all_rounds": true,
+    "pick_or_place_rounds": [],
+    "explore_failure_counts": {
+      "directed_passage_still_blocked": 11
+    },
+    "all_explore_rejections_before_motion": true,
+    "explore_return_support_reasons": [
+      "no_verified_return_support"
+    ],
+    "explore_transport_recovery_reasons": [
+      "no_current_observed_exit_successor"
+    ],
+    "passage_failure": {
+      "passage_id": "e7b3135ece6a6a169cbc8e197246869349b5206e33cd97b5187326aa38087c49",
+      "direction_heading_deg": -86.6,
+      "reason": "front_clearance"
+    }
+  },
+  "motion_window": {
+    "reference": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/motions.jsonl",
+    "line_range": [
+      409,
+      576
+    ],
+    "count": 168,
+    "methods": {
+      "turn": 168
+    },
+    "unknown_outcomes": 0,
+    "unverified_motion_count": 0
+  },
+  "subsequent_action_counts": {
+    "explore": 11,
+    "look_around": 21
+  },
+  "round_references": [
+    "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl:115",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl:116",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl:147"
+  ],
+  "limitations": [
+    "As-of snapshot of a still-active run, not its final result.",
+    "No subsequent go_to selected B, so B execution, safety outcome and eventual candidate exhaustion remain unobserved.",
+    "No truth/record/samples/captures were read; no source, provider, planner or run controls were changed."
+  ]
+}

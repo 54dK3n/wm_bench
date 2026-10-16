@@ -1,0 +1,189 @@
+{
+  "schema": "existing-a43-run-recomputed-summary/v1",
+  "scope": {
+    "run": "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z",
+    "independent_preexisting_run": true,
+    "a44_acceptance_run": false,
+    "method": "Read original logs and validate saved native receipts offline; no robot command, model call, network, resume, or production edit."
+  },
+  "versions": {
+    "actions": "autonomous-brain-actions/v43",
+    "runtime": "autonomous-brain-runtime/v21",
+    "native_llm": "autonomous-brain-llm/v25",
+    "native_cli": {
+      "0.162.0-alpha.17.2": 79
+    },
+    "robot_native_record": "chenlong.run-record/v4",
+    "backend": "robot-backend-v4-stage1-r2",
+    "brain_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+    "platform_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0",
+    "orchestrator_revision": "33af31baefc9b3beaa855f33849d52254aaa8c4b",
+    "sources_unchanged": true,
+    "manifest_matches_after": true,
+    "brain_summary_hashes_match": true,
+    "snapshot_hashes_match": {
+      "actions.py": true,
+      "run.py": true,
+      "navigation_progress.py": true
+    },
+    "sha256": {
+      "actions.py": "13191177e2a504b1741f6b2d7c1003a300693f064e9bf7735f3883cc0a0a3fad",
+      "run.py": "e077a141b175039bc8e373307a25baa4ba367eee339b83059a65224156d25f21",
+      "llm.py": "97791801f4be0044484a2f1f100421dbd65835a020af191be1b7d4dc1321ffe3",
+      "chatgpt_transport.py": "f37f6e687fea7e0b970017d1818d808b49a83784ac1e351e825be285a5a9f68a",
+      "navigation_progress.py": "c75dec1e0d817438c650724afbd1143d937dae84af73a1e55710627bffa4bb01",
+      "world_model_source_tree": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+      "orchestrator_executor": "329e218bc07586030e7d442f94fbabe1defa9b597ff2f46aa67bc5cfb03f0e4e",
+      "native_client": "0d5ac7aae20c4eda6242428d5e218c55ba96d8763fda2a271088ff37104b9d28",
+      "driver": "33902b7d4ebc062642d0da349c9cde0efd293335556fc583b6909dc272ddb999",
+      "evaluator": "a7bfd08cceae971432c40d5188ece959182f929f1796e7c570f6dd7e8ac3cc04"
+    }
+  },
+  "model": {
+    "model": "gpt-6.1-sol",
+    "thinking": "low",
+    "temperature": null,
+    "stream": true,
+    "formal_run": true,
+    "transport": "codex-app-server"
+  },
+  "counts": {
+    "model_calls_started": 80,
+    "model_calls_finished": 79,
+    "native_completed_turns_verified": 79,
+    "legal_model_actions": 79,
+    "round_records": 80,
+    "completed_action_rounds": 79,
+    "successful_action_results": 49,
+    "failed_action_results": 30,
+    "action_types": {
+      "explore": 37,
+      "look_around": 21,
+      "go_to": 9,
+      "pick": 12
+    },
+    "bridge_calls": 1837,
+    "grab_calls": 0,
+    "release_calls": 0,
+    "grab_holding_true": 0,
+    "grab_holding_false": 0,
+    "grab_holding_unknown": 0,
+    "public_holding_readbacks": 399,
+    "public_holding_true": 0,
+    "public_holding_false": 399,
+    "held_object_state_occurrences": 0,
+    "delivered_object_state_occurrences": 0,
+    "done_actions": 0,
+    "observations": 399
+  },
+  "termination": {
+    "status": "interrupted",
+    "signal": "SIGINT",
+    "phase": "decision",
+    "active_round": 80,
+    "completed_rounds": 79,
+    "final_round_action": null,
+    "final_round_reason": "interrupted_during_decision",
+    "action_outcome_unknown": false,
+    "natural_round_limit": false,
+    "simulation_seconds": 184.1,
+    "brain_exit": 1,
+    "driver_exit": 1,
+    "evaluator_exit": 1
+  },
+  "independent_truth_delivery": {
+    "success": false,
+    "required_count": 2,
+    "qualifying_delivered_count": 0,
+    "active_delivery_event_count": 0,
+    "targets_inside_storage": 0,
+    "targets_held": 0,
+    "native_package_delivered_events": 0,
+    "terminal_done_verified": false,
+    "delivery_failures_count": 7,
+    "evaluator_failures_count": 12
+  },
+  "earliest_sustained_block": {
+    "round": 33,
+    "reason": "pick_approach_view_budget_exhausted",
+    "antecedent_round": 31,
+    "antecedent_probe_limit_cm": 0.1,
+    "antecedent_requires_new_view": false,
+    "round33_verified_motion_count": 10,
+    "round33_requested_step_cm": 0.1,
+    "round33_public_odometer_delta_cm": 1,
+    "round33_all_motion_completed": true,
+    "round33_all_motion_verified": true,
+    "round33_all_frames_fresh": true,
+    "round33_grab_attempts": 0,
+    "round33_return_success": true,
+    "round33_return_reason": "already_on_observed_road",
+    "repeat_guard_rounds": [
+      36,
+      38,
+      43,
+      48,
+      54,
+      59,
+      64
+    ],
+    "later_standoff_go_to_rounds": [
+      37,
+      42,
+      47,
+      53,
+      58,
+      63
+    ],
+    "later_standoff_all_operation_ready": true,
+    "later_standoff_all_current_pick_not_ready": true,
+    "later_standoff_all_requires_new_view_false": true,
+    "explanation": "The r31 restored approach bound retained requires_new_view=false. r33 consumed ten verified 0.1 cm steps without a grab, exhausted the approach-view budget, and returned successfully. Subsequent pick attempts were refused without new evidence while navigation still accepted the old standoff. The failure did not establish a navigation requirement to obtain an independent view. Earlier failures at r7/r14/r23/r24/r28-r31 did not yet produce this sustained loop."
+  },
+  "evidence_sources": {
+    "versions": [
+      "manifest.json; summary.json sourceManifestAfterRun/trials[0].brainSummary.source_sha256",
+      "../intent-recovery-20261015T121110Z/actions.py.before:12",
+      "../intent-recovery-20261015T121110Z/run.py.before:28"
+    ],
+    "model_calls": [
+      "map-05-run-1/brain/llm.lifecycle.jsonl:1-159 (80 starts, 79 finishes; line 159 starts call 80)",
+      "map-05-run-1/brain/llm.jsonl:1-79 (decode native receipts and validate_action offline)"
+    ],
+    "actions_and_interruption": [
+      "map-05-run-1/brain/rounds.jsonl:1-80",
+      "summary.json trials[0].brainSummary.interruption",
+      "../run-20261015T120610Z-controlled-stop.json"
+    ],
+    "manipulation": [
+      "map-05-run-1/brain/bridge-calls.jsonl:1-1837",
+      "map-05-run-1/brain/observations.jsonl:1-399",
+      "map-05-run-1/record.json.gz calls/native.events"
+    ],
+    "truth_delivery": [
+      "../run-20261015T120610Z-evaluation/evaluation.json delivery",
+      "map-05-run-1/record.json.gz native.events"
+    ],
+    "exit_codes": [
+      "../run-20261015T120610Z-exit-codes.json",
+      "summary.json trials[0].process.code"
+    ],
+    "sustained_block": [
+      "map-05-run-1/brain/rounds.jsonl:31-33,36-38,42-43,47-48,53-54,58-59,63-64",
+      "map-05-run-1/brain/motions.jsonl:71-80",
+      "map-05-run-1/brain/observations.jsonl:135-145"
+    ]
+  },
+  "source_file_sha256": {
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/manifest.json": "db6e381e900dff0a037c720fb751bb67f5e94de8d9c1d0d1424bf4908021f9a6",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/summary.json": "7c13f4f047fb4c3fdb9378a59f6e5a6746ac4f6151bcfad5670274aa929fc685",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/llm.lifecycle.jsonl": "977973cd23b1081483e9e27868cb3a7c74fb73063cb12581619b9255fba63f2e",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/llm.jsonl": "1d4b1633fd50159a3dc16d8cc5ca4b07dc2799537c0b03ee47c8fbce3ba5c6f4",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/rounds.jsonl": "470955c0679260882226b8ada8a853a1d50bda7d5d0f769d8ebfc2e19bac8bff",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/bridge-calls.jsonl": "e1f7c6e04fd8ab0e6b767ce9b9bdf025b1e14621149ab41d5444f8dc264c4e03",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/observations.jsonl": "1491ffedfe65d645d137d27c04ed787370a3eb7da5683f785592dc3f1edc163e",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/brain/motions.jsonl": "9304a960b6175aa88e5e319aa7bd4f886cb0ddfc6d673adc8ad0a20d809c1975",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z/map-05-run-1/record.json.gz": "bf456b5115504cfd5e1b6cce6463993d5303249c0e5a79490555cc9ad31e20e9",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z-evaluation/evaluation.json": "754837cb6d9b09c2c73ee8ed6f7aa26046994ea2f7ce5a6ef39978eef8faafdb"
+  }
+}

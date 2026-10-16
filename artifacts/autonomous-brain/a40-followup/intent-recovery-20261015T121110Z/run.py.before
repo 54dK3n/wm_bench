@@ -1,0 +1,650 @@
+"""Run an external brain with one restricted capability received on stdin."""
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+WM_ROOT = Path(os.environ.get("WORLD_MODEL_ROOT", ROOT / "vendor/wm_kit_opt2")).resolve()
+sys.path.insert(0, str(WM_ROOT))
+
+from . import VERSION
+from .actions import Actions, RETIREMENT_EVIDENCE_FIELDS, completion_evidence, reacquisition_chains
+from .bridge import JsonLog, RobotBridge, SimulationLimit
+from .llm import LLMClient
+from .navigation import RoadMemory
+from .perception import Perception
+from .task import parse_task, completion_progress
+from .provenance import capture_world_model_provenance
+
+RUNTIME_VERSION = "autonomous-brain-runtime/v21"
+
+
+def dump(path, value):
+    Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+
+
+def compact_identity_ambiguity(value):
+    """Carry brain identity alternatives without exporting arbitrary payloads."""
+    if not isinstance(value, dict) or not value:
+        return None
+    result = {}
+    for key in ("frame_id", "reason"):
+        item = value.get(key)
+        if type(item) in (str, int):
+            result[key] = item[:256] if isinstance(item, str) else item
+    candidates = value.get("candidate_ids", [])
+    candidates = candidates if isinstance(candidates, list) else []
+    ids = sorted({item for item in candidates if isinstance(item, str)})
+    result["candidate_count"] = len(ids)
+    result["candidate_ids"] = [item[:256] for item in ids[:12]]
+    kinds = value.get("candidate_kinds", {})
+    allowed = {"active", "delivered", "released_unverified", "release_in_progress"}
+    result["candidate_kinds"] = {item[:256]: kinds[item] for item in ids[:12]
+        if isinstance(kinds, dict) and kinds.get(item) in allowed}
+    return result
+
+
+def compact_junction_history(rows):
+    """Keep all semantic nodes and obligations without repeating raw anchors."""
+    result = []
+    for row in rows:
+        node = {key: copy.deepcopy(row[key]) for key in ("id", "status", "position_m") if key in row}
+        node["exits"] = []
+        for raw in row.get("exits", []):
+            exit = {key: copy.deepcopy(raw[key]) for key in (
+                "id", "heading_deg", "state", "visits", "completed", "blocked", "last_failure") if key in raw}
+            exit["observation_count"] = len(raw.get("observation_refs", []))
+            exit["verified_traversal_count"] = len(raw.get("completion_traversal_ids", []))
+            node["exits"].append(exit)
+        result.append(node)
+    return result
+
+
+def compact_action_result(number, action, result, after_observation):
+    """Carry bounded observed evidence forward, separately from WM geometry."""
+    def fields(source, names):
+        compact = {}
+        if isinstance(source, dict):
+            for name in names:
+                if name not in source:
+                    continue
+                value = source[name]
+                if value is None or type(value) in (bool, int, str) or (
+                        type(value) is float and math.isfinite(value)):
+                    compact[name] = value[:256] if isinstance(value, str) else value
+        return compact
+
+    detection_fields = ("track_id", "category", "source", "frame_id",
+                        "distance_cm", "bearing_deg", "raw_distance_cm")
+
+    def detection(source, target):
+        if "detection" in source and source["detection"] is None:
+            target["detection"] = None
+        elif isinstance(source.get("detection"), dict):
+            target["detection"] = fields(source["detection"], detection_fields)
+
+    raw = result.get("evidence")
+    raw = raw if isinstance(raw, dict) else {}
+    evidence = fields(raw, ("object_id", "holding", "frame_id", "tick", "before_observation",
+                            "after_observation", "final_observation", "post_observation",
+                            "distance_cm", "remembered_distance_cm", "bearing_deg",
+                            "front_clearance_cm", "requested_cm", "method", "measured_cm",
+                            "heading_change_deg", "motion_observation",
+                            "motion_verified", "frame_fresh", "holding_changed", "road_changed",
+                            "candidate_witnesses", "recovery_steps", "unexplored_exits",
+                            "previous_failure", "canonical_object_id", "ready_for_done",
+                            "delivered_count", "required_count"))
+    detection(raw, evidence)
+    authorization = raw.get("grab_authorization")
+    choices = raw.get("identity_recovery_choices")
+    if isinstance(choices, dict):
+        evidence["identity_recovery_choices"] = copy.deepcopy(choices)
+    if isinstance(authorization, dict) and authorization.get("authorized") is False:
+        compact = fields(authorization, ("authorized", "reason", "object_id",
+            "canonical_object_id", "observation_index", "frame_id", "holding"))
+        matrix = authorization.get("candidate_ids_by_detection")
+        indices = authorization.get("target_detection_indices")
+        if isinstance(matrix, list) and isinstance(indices, list):
+            target_indices = [i for i in indices if type(i) is int and 0 <= i < len(matrix)]
+            compact["target_detection_count"] = len(target_indices)
+            compact["target_candidates"] = []
+            for index in target_indices[:3]:
+                ids = sorted({value for value in matrix[index] if isinstance(value, str)}) \
+                    if isinstance(matrix[index], list) else []
+                compact["target_candidates"].append({"detection_index": index,
+                    "candidate_count": len(ids), "candidate_ids": [value[:128] for value in ids[:12]]})
+        if authorization.get("reason") == "grab_identity_competition":
+            compact["recovery_guidance"] = (
+                "go_to成功、原地转向或新frame本身不能解除身份竞争；"
+                "沿已观测合法道路explore取得独立视角并由感知消解，或选择其他已确认且身份唯一的任务目标。")
+        evidence["grab_authorization"] = compact
+    if isinstance(raw.get("authorization_recovery"), dict):
+        evidence["authorization_recovery"] = fields(raw["authorization_recovery"],
+            ("success", "reason", "after_observation", "restored_observation"))
+    if isinstance(raw.get("historical_view_revisit"), dict):
+        evidence["historical_view_revisit"] = fields(raw["historical_view_revisit"],
+            ("schema", "navigation_only", "requires_fresh_identity", "source_observation",
+             "frame_id", "goal_semantics", "arrived", "reason", "after_observation"))
+    if isinstance(raw.get("confirmation_sampling"), dict):
+        evidence["confirmation_sampling"] = fields(raw["confirmation_sampling"], (
+            "schema", "discovery_id", "initial_object_id", "confirmed_object_id",
+            "initial_hit_count", "final_hit_count", "reason", "travelled_cm",
+            "independent_hits_added", "max_steps"))
+        if isinstance(raw["confirmation_sampling"].get("viewpoint_constraints"), list):
+            evidence["confirmation_sampling"]["viewpoint_constraints"] = [
+                value[:128] for value in raw["confirmation_sampling"]["viewpoint_constraints"][:6]
+                if isinstance(value, str)]
+        if isinstance(raw["confirmation_sampling"].get("recovery_attempt"), dict):
+            evidence["confirmation_sampling"]["recovery_attempt"] = fields(
+                raw["confirmation_sampling"]["recovery_attempt"],
+                ("reason", "success", "restored_observation"))
+    for name, scalar_fields, id_lists in (
+            ("road_progress", ("schema", "status", "before_observation", "after_observation",
+                "start_node_id", "end_node_id", "start_anchor_observation", "end_anchor_observation",
+                "different_node_verified", "on_road", "at_node", "net_displacement_cm", "odometer_travel_cm"),
+                ("new_traversal_ids", "arrival_traversal_ids")),
+            ("target_progress", ("schema", "target_category"),
+                ("new_target_object_ids", "newly_confirmed_target_ids", "new_other_object_ids", "newly_confirmed_other_object_ids"))):
+        if isinstance(raw.get(name), dict):
+            evidence[name] = fields(raw[name], scalar_fields)
+            for key in id_lists:
+                if isinstance(raw[name].get(key), list):
+                    evidence[name][key] = [value[:128] for value in raw[name][key][:12] if isinstance(value, str)]
+    if isinstance(raw.get("view_coverage"), dict):
+        coverage = raw["view_coverage"]
+        evidence["view_coverage"] = fields(coverage, (
+            "basis", "covered_degrees", "uncovered_degrees"))
+        if isinstance(coverage.get("views"), list):
+            evidence["view_coverage"]["valid_view_count"] = len(coverage["views"])
+    if isinstance(raw.get("reasons"), list):
+        evidence["motion_failure_reasons"] = [item[:256] for item in raw["reasons"][:8]
+                                               if isinstance(item, str)]
+    for name in ("recovery_options", "unmet_conditions", "delivered_object_ids", "unresolved_identity_ids",
+                 "unresolved_discovery_ids", "untracked_discovery_ids"):
+        if isinstance(raw.get(name), list):
+            evidence[name] = [value for value in raw[name] if isinstance(value, str)]
+    if isinstance(raw.get("navigation_subgoal"), dict):
+        subgoal = raw["navigation_subgoal"]
+        evidence["navigation_subgoal"] = fields(subgoal, (
+            "object_id", "standoff_ready", "operation", "operation_ready", "visual_fresh",
+            "operation_readiness_scope", "memory_source", "after_observation", "identity_ready", "identity_reason"))
+        if isinstance(subgoal.get("current_visual"), dict):
+            evidence["navigation_subgoal"]["current_visual"] = fields(
+                subgoal["current_visual"], ("distance_cm", "bearing_deg", "frame_id"))
+    if isinstance(raw.get("pending_objects"), list):
+        evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
+    if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):
+        evidence["retired_unconfirmed_hypotheses"] = [
+            fields(item, ("object_id", *RETIREMENT_EVIDENCE_FIELDS))
+            for item in raw["retired_unconfirmed_hypotheses"] if isinstance(item, dict)]
+    if isinstance(raw.get("resolved_reacquired_identities"), list):
+        evidence["resolved_reacquired_identities"] = []
+        for item in raw["resolved_reacquired_identities"]:
+            if not isinstance(item, dict):
+                continue
+            resolved = fields(item, ("object_id", "delivered_object_id"))
+            resolved["binding_chain"] = []
+            links = item.get("binding_chain")
+            for binding in links if isinstance(links, list) else []:
+                if not isinstance(binding, dict):
+                    continue
+                link = fields(binding, ("version", "historical_object_id", "current_object_id"))
+                basis = binding.get("evidence")
+                if isinstance(basis, dict):
+                    link["evidence"] = fields(basis, ("association", "frame_id", "simulation_time_s",
+                        "distance_m", "gate_distance_m", "historical_confirmed_s", "current_confirmed_s"))
+                    for name in ("historical_candidates", "current_candidates"):
+                        if isinstance(basis.get(name), list):
+                            link["evidence"][name] = [oid for oid in basis[name] if isinstance(oid, str)]
+                    if isinstance(basis.get("current_hit_poses"), list):
+                        link["evidence"]["current_hit_pose_count"] = len(basis["current_hit_poses"])
+                resolved["binding_chain"].append(link)
+            evidence["resolved_reacquired_identities"].append(resolved)
+    for name in ("actuator_result", "recovery_result"):
+        if isinstance(raw.get(name), dict):
+            names = (("stoppedBy", "return_error_cm", "reversed_cm")
+                     if name == "recovery_result" else ("stoppedBy",))
+            evidence[name] = fields(raw[name], names)
+    if isinstance(raw.get("road_return"), dict):
+        evidence["road_return"] = fields(raw["road_return"], (
+            "success", "reason", "on_road", "anchor_observation", "after_observation"))
+    if isinstance(raw.get("reobservation"), dict):
+        reobservation = raw["reobservation"]
+        evidence["reobservation"] = fields(reobservation, ("reason", "after_observation", "old_objects_reobserved"))
+        for name in ("required_delivered_ids", "observed_delivered_ids"):
+            if isinstance(reobservation.get(name), list):
+                evidence["reobservation"][name] = [oid for oid in reobservation[name] if isinstance(oid, str)]
+        if isinstance(reobservation.get("road_return"), dict):
+            evidence["reobservation"]["road_return"] = fields(reobservation["road_return"], (
+                "success", "reason", "on_road", "anchor_observation", "after_observation"))
+        if isinstance(reobservation.get("viewpoints"), list):
+            evidence["reobservation"]["viewpoint_count"] = len(reobservation["viewpoints"])
+    if isinstance(raw.get("road_clearance"), dict):
+        evidence["road_clearance"] = fields(raw["road_clearance"], (
+            "requested_cm", "permitted_cm", "heading_error_deg", "side",
+            "side_clearance_cm", "front_clearance_cm", "predicted_lateral_cm", "reason"))
+    if isinstance(raw.get("attempts"), list):
+        evidence["attempts"] = []
+        for attempt in raw["attempts"][-3:]:
+            if not isinstance(attempt, dict):
+                continue
+            compact = fields(attempt, ("attempt", "holding", "before_observation", "after_observation"))
+            if isinstance(attempt.get("alignment"), dict):
+                alignment = fields(attempt["alignment"], ("mode", "remembered_distance_cm", "bearing_deg"))
+                detection(attempt["alignment"], alignment)
+                compact["alignment"] = alignment
+            evidence["attempts"].append(compact)
+    for name in ("old_position_matches", "old_position_detections"):
+        matches = raw.get(name)
+        if isinstance(matches, list) or (type(matches) is int and matches >= 0):
+            evidence["old_position_matches"] = len(matches) if isinstance(matches, list) else matches
+            break
+    if "placement" in raw and raw["placement"] is None:
+        evidence["placement"] = None
+    elif isinstance(raw.get("placement"), dict):
+        placement = fields(raw["placement"], ("frame_id",))
+        for name in ("ball_bbox", "storage_bbox"):
+            if isinstance(raw["placement"].get(name), dict):
+                placement[name] = fields(raw["placement"][name], ("x", "y", "w", "h"))
+        evidence["placement"] = placement
+    compact_action = fields(action, ("action",))
+    compact_action["params"] = fields(action.get("params"), ("object_id", "exit_angle", "discovery_id"))
+    summary = fields({"round": number, "success": result["success"], "reason": result["reason"],
+                      "after_observation": after_observation},
+                     ("round", "success", "reason", "after_observation"))
+    retry = raw.get("pick_retry")
+    if (action.get("action") == "pick" and result.get("success") is False
+            and isinstance(retry, dict) and retry.get("schema") == "fresh-pick-probe-retry/v1"
+            and retry.get("classification") in {"completed_empty_grab_probe_refined", "supported_approach_probe_refined"}
+            and retry.get("requires_fresh_authorization") is True
+            and retry.get("object_id") == action.get("params", {}).get("object_id")
+            and retry.get("observation_index") == after_observation):
+        evidence["pick_retry"] = fields(retry, ("schema", "classification", "object_id",
+            "observation_index", "frame_id", "tick", "previous_limit_cm", "next_probe_limit_cm",
+            "requires_fresh_authorization"))
+        summary.update(original_reason=result["reason"], reason=retry["classification"])
+    return {**summary, "action": compact_action, "evidence": evidence}
+
+
+class Runtime:
+    def __init__(self, config, out):
+        self.config, self.out = config, Path(out)
+        self.task_spec = parse_task(config["task"])
+        self.round = 0
+        self.observation_count = 0
+        self.bridge = RobotBridge(config, self.out / "bridge-calls.jsonl")
+        self.observation_log = JsonLog(self.out / "observations.jsonl")
+        self.motion_log = JsonLog(self.out / "motions.jsonl")
+        self.perception = Perception(self.bridge.call("camera_parameters"))
+        self.roads = RoadMemory()
+        self.held_object_id = None
+        self.pending_grasp = None
+        self.recent = []
+        self.snapshot = None
+        self.actions = Actions(self)
+
+    def observe(self, *, motion=None):
+        odo = self.bridge.call("odometry")
+        road = self.bridge.call("local_road")
+        holding = self.bridge.call("holding")
+        observation = self.bridge.call("observe", {"category": None, "confidence": 0})
+        if odo["tick"] != observation["tick"] or road["tick"] != odo["tick"]:
+            raise RuntimeError("sensor snapshots do not share a simulation tick")
+        if motion is not None and hasattr(self.perception, "note_manipulation_boundary"):
+            self.perception.note_manipulation_boundary(motion, self.observation_count + 1)
+        perception = self.perception.update(observation, odo,
+            simulation_time_s=self.bridge.seconds, round_index=self.round,
+            observation_index=self.observation_count + 1)
+        self.roads.update(odo, road, observation_index=self.observation_count + 1)
+        self.observation_count += 1
+        self.snapshot = {"observation_index": self.observation_count, "round": self.round,
+                         "simulation_seconds": self.bridge.seconds, "odometry": odo,
+                         "road": road, "holding": holding, "observation": observation,
+                         "perception": perception, "objects": self.perception.objects(),
+                         "discovery_evidence": self.perception.discovery_evidence()}
+        self.actions.observe_pending_grasp(self.snapshot)
+        finalized_motion = (dict(motion, after_observation=self.observation_count)
+                            if motion is not None else None)
+        traversal_events = self.roads.observe_traversal(self.snapshot, finalized_motion)
+        if traversal_events:
+            self.snapshot["road_traversal_events"] = traversal_events
+        self.actions.note_historical_view(self.snapshot, finalized_motion)
+        if hasattr(self.roads, "observation_records"):
+            from .confirmation_sampling import _reverse_support
+            # A finite semantic summary of freshly verified reverse options.
+            # Frame/segment identifiers alone never count as new route support.
+            # The sampler still revalidates the chosen path before executing it.
+            self.snapshot["sampling_path_support"] = {"schema": "brain-sampling-path-options/v1",
+                "reverse_lengths_cm": [length for length in (10, 15.5, 16, 17, 18, 20)
+                    if _reverse_support(self.actions, length) is not None]}
+        if hasattr(self.perception, "note_sampling_context"):
+            self.perception.note_sampling_context(self.snapshot)
+        self.observation_log.write(self.snapshot)
+        return self.snapshot
+
+    def state(self):
+        objects = []
+        rows = self.perception.objects()
+        chains = reacquisition_chains(rows)
+        for row in rows:
+            objects.append({"id": row["id"], "category": row["category"],
+                            "position_m": {k: round(v, 3) for k, v in row["position_m"].items()},
+                            "confidence": round(row["confidence"], 3), "status": row["state"],
+                            "distance_cm": round(row["distance_cm"], 1),
+                            "bearing_deg": round(row["bearing_deg"], 1), "hit_count": row["hit_count"]})
+            for key in ("completion_classification", "ever_confirmed"):
+                if key in row:
+                    objects[-1][key] = row[key]
+            if "position_evidence" in row:
+                proof = row["position_evidence"]
+                objects[-1]["position_evidence"] = {
+                    key: proof[key] for key in ("position_semantics", "pixel_consistency",
+                        "source_records_complete", "position_is_identity_proof", "manipulation_requires")}
+                objects[-1]["position_evidence"].update(
+                    mean_reprojection_failure_count=len(proof["mean_reprojection_failed_frames"]),
+                    mutual_reprojection_failure_count=len(proof["mutual_reprojection_failed_pairs"]))
+            ambiguity = compact_identity_ambiguity(row.get("identity_ambiguity"))
+            if ambiguity is not None:
+                objects[-1]["identity_status"] = "ambiguous"
+                objects[-1]["identity_ambiguity"] = ambiguity
+            if row["id"] in chains:
+                objects[-1]["reacquired_as"] = chains[row["id"]]["current_object_id"]
+            if row.get("state") == "LOST" and hasattr(self.actions, "historical_view_revisit"):
+                capability = self.actions.historical_view_revisit(row["id"])
+                if capability.get("available"):
+                    objects[-1]["historical_view_revisit"] = capability
+        odo, road = self.snapshot["odometry"], self.snapshot["road"]
+        task_spec = getattr(self, "task_spec", None) or parse_task(self.config["task"])
+        exploration = (self.roads.exploration_status()
+                       if hasattr(self.roads, "exploration_status") else None)
+        discoveries = (self.perception.discovery_evidence()
+                       if hasattr(self.perception, "discovery_evidence") else None)
+        discovery_state = (self.perception.discovery_summary(
+            current_discovery_id=getattr(self, "active_discovery_id", None))
+            if hasattr(self.perception, "discovery_summary") else
+            {"schema": (discoveries or {}).get("schema"), "pending_count": 0,
+             "pending_record_count": len((discoveries or {}).get("unresolved", [])), "pending": []})
+        for item in discovery_state["pending"]:
+            item["candidate_ids"] = [value[:128] for value in item.get("candidate_ids", [])[:12]
+                                     if isinstance(value, str)]
+            if isinstance(item.get("reason"), str):
+                item["reason"] = item["reason"][:256]
+        completion = completion_progress(rows, self.perception.action_evidence(), task_spec,
+            holding=self.snapshot["holding"]["holding"], held_object_id=self.held_object_id,
+            pending_grasp=self.pending_grasp, nodes=len(self.roads.nodes),
+            unexplored=self.roads.unexplored(), exploration=exploration,
+            observed_detections=self.snapshot.get("perception", {}).get("detections"),
+            discovery_evidence=discoveries)
+        return {"task": self.config["task"], "round": self.round,
+                "task_spec": copy.deepcopy(task_spec),
+                "simulation_seconds": self.bridge.seconds,
+                "coordinate_convention": {
+                    "position_frame": "initial_odometry",
+                    "position_axes": {"x": "right", "z": "forward"},
+                    "object_bearing_deg": {"frame": "robot_relative", "positive": "right",
+                                           "negative": "left", "zero": "forward"},
+                    "heading_deg": {"frame": "initial_odometry", "positive": "left",
+                                    "negative": "right", "zero": "initial_forward"},
+                    "exit_angle_deg": {"frame": "robot_relative", "positive": "left",
+                                       "negative": "right", "zero": "forward"},
+                    "object_bearing_to_relative_turn": "negate"},
+                "objects": objects,
+                "completion": completion,
+                "discovery": discovery_state,
+                "navigation": (self.actions.navigation_state() if hasattr(self, "actions")
+                               and hasattr(self.actions, "navigation_state") else {}),
+                "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
+                                    "heading_deg": odo["headingDeg"]},
+                          "holding": self.snapshot["holding"]["holding"],
+                          "held_object_id": self.held_object_id,
+                          "pending_grasp_object_id": (self.pending_grasp or {}).get("object_id"),
+                          "on_road": road["onRoad"], "at_junction": road["atJunction"],
+                          "at_node": road.get("atNode", False),
+                          "exit_angles": [e["angleDeg"] for e in road["exits"]],
+                          "exits": self.roads.exits(odo, road),
+                          "front_clearance_cm": road["frontClearanceCm"]},
+                "junction_history": compact_junction_history(self.roads.summary()),
+                "exploration": exploration,
+                "exploration_hints": [{key: value for key, value in hint.items() if key in {
+                    "kind", "target_node_id", "target_exit_index", "target_heading_deg",
+                    "next_exit_angle_deg", "recorded_travelled_cm", "cost_basis", "traversal_ids",
+                    "target_anchor_gap_cm", "requires_fresh_arrival_and_exit_recheck"}}
+                    for hint in self.roads.frontier_hints(odo, road,
+                        observation_index=self.snapshot["observation_index"])],
+                "unexplored_exit_count": self.roads.unexplored(),
+                "observed_junction_count": len(self.roads.nodes),
+                "recent_actions": copy.deepcopy(self.recent[-5:])}
+
+
+def read_config():
+    raw = sys.stdin.readline(65537)
+    if len(raw) > 65536:
+        raise ValueError("robot capability message exceeds limit")
+    config = json.loads(raw)
+    allowed = {"schema", "origin", "bridge_id", "client_token", "task",
+               "simulation_step_ms", "max_rounds", "max_simulation_seconds"}
+    if not isinstance(config, dict) or set(config) - allowed:
+        raise ValueError("unexpected data in robot capability message")
+    if not isinstance(config.get("task"), str) or not config["task"].strip():
+        raise ValueError("one natural-language task is required")
+    if not 1 <= config.get("max_rounds", 200) <= 200:
+        raise ValueError("round cap must be 1..200")
+    if not 0 < config.get("max_simulation_seconds", 1200) <= 1200:
+        raise ValueError("simulation cap must be <=1200 seconds")
+    return config
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--replay")
+    parser.add_argument("--orchestrator-root", help="Pinned octos_robots checkout; live Executor callbacks")
+    args = parser.parse_args(argv)
+    out = Path(args.out).resolve()
+    # Driver may create an empty directory for the child; no old evidence is
+    # overwritten, and every JSONL is opened exclusively.
+    if out.exists() and any(out.iterdir()):
+        raise ValueError("brain output directory is not empty")
+    out.mkdir(parents=True, exist_ok=True)
+    config = read_config()
+    wall_start = time.monotonic()
+    runtime = None
+    llm = None
+    orchestration = None
+    dependency = None
+    formal_configuration = None
+    rounds = JsonLog(out / "rounds.jsonl")
+    status, reason, count = "failed", "not_started", 0
+    phase, completed_rounds = "startup", 0
+    stop_request = interruption = None
+    state = action = None
+    before_observation = None
+
+    def request_stop(signum, _frame):
+        nonlocal stop_request
+        if phase == "export":
+            return  # Finish the existing evidence export without another action.
+        first = stop_request is None
+        if first:
+            stop_request = {"signal": signal.Signals(signum).name, "requested_phase": phase,
+                "requested_round": getattr(runtime, "round", 0),
+                "requested_observation": getattr(runtime, "observation_count", 0)}
+        # One SIGINT lets the current bounded Actions call finish its readback.
+        # SIGTERM (driver's short deadline), or a second SIGINT, aborts promptly.
+        if signum == signal.SIGINT and first and phase == "action":
+            return
+        stop_request["aborting_signal"] = signal.Signals(signum).name
+        raise KeyboardInterrupt
+
+    def stop_position(*, safe_boundary):
+        snapshot = getattr(runtime, "snapshot", None) or {}
+        odo = snapshot.get("odometry", {})
+        return {**(stop_request or {"signal": "KeyboardInterrupt", "requested_phase": phase}),
+            "stopped_phase": phase, "active_round": getattr(runtime, "round", 0),
+            "completed_rounds": completed_rounds, "action": copy.deepcopy(action),
+            "before_observation": before_observation,
+            "last_observation": snapshot.get("observation_index"),
+            "bridge_sequence": getattr(getattr(runtime, "bridge", None), "sequence", None),
+            "odometry": {key: odo[key] for key in
+                ("rightCm", "forwardCm", "headingDeg", "distanceCm", "tick") if key in odo},
+            "safe_action_boundary": safe_boundary,
+            "action_outcome_unknown": not safe_boundary and phase == "action"}
+
+    previous_handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+    for sig in previous_handlers:
+        signal.signal(sig, request_stop)
+    try:
+        llm = LLMClient(log_path=out / "llm.jsonl", replay_path=args.replay,
+            transport_retries=1 if os.environ.get("LLM_TRANSPORT") == "codex-app-server" else 5)
+        formal_configuration = llm.validate_formal_configuration()
+        decide = llm.decide
+
+        def decide_at_action_boundary(state):
+            nonlocal phase
+            phase = "decision"
+            result = decide(state)
+            phase = "dispatch"
+            return result
+
+        llm.decide = decide_at_action_boundary
+        dependency = capture_world_model_provenance(WM_ROOT)
+        runtime = Runtime(config, out)
+        execute = runtime.actions.execute
+
+        def execute_at_action_boundary(action):
+            nonlocal phase
+            phase = "action"
+            return execute(action)
+
+        runtime.actions.execute = execute_at_action_boundary
+        if args.orchestrator_root:
+            from .orchestration import LiveOrchestration
+            orchestration = LiveOrchestration(runtime, llm, args.orchestrator_root)
+        for number in range(1, config.get("max_rounds", 200) + 1):
+            runtime.round = number
+            phase, state, action, before_observation = "observation", None, None, None
+            runtime.observe()
+            if runtime.bridge.seconds >= runtime.bridge.max_seconds:
+                raise SimulationLimit("simulation_time_limit")
+            state = runtime.state()
+            before_observation = runtime.snapshot["observation_index"]
+            action = None
+            try:
+                if orchestration is not None:
+                    action, result = orchestration.run_next(number, state)
+                else:
+                    # Preserve the original entry for strict historical replay.
+                    action = llm.decide(state)
+                    result = runtime.actions.execute(action)
+            except (Exception, KeyboardInterrupt) as exc:
+                if orchestration is not None:
+                    action = orchestration.last_action
+                count = number
+                error_evidence = copy.deepcopy(getattr(exc, "action_evidence", {}))
+                if isinstance(exc, KeyboardInterrupt):
+                    interruption = stop_position(safe_boundary=False)
+                    error_evidence.update(interruption=interruption,
+                        held_object_id=runtime.held_object_id,
+                        pending_grasp=copy.deepcopy(runtime.pending_grasp))
+                    if interruption["action_outcome_unknown"]:
+                        error_evidence["outcome_unknown"] = True
+                rounds.write({"round": number, "state": state, "action": action,
+                    **({"orchestration": orchestration.last_trace} if orchestration else {}),
+                    "llm_output": None if isinstance(exc, KeyboardInterrupt) and phase == "decision" else llm.last_record,
+                    "result": {"success": False,
+                               "reason": f"interrupted_during_{phase}" if isinstance(exc, KeyboardInterrupt) else str(exc),
+                               "error_type": type(exc).__name__, "evidence": error_evidence},
+                    "simulation_seconds": runtime.bridge.seconds,
+                    "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
+                raise
+            count = number
+            rounds.write({"round": number, "state": state, "action": action,
+                          **({"orchestration": orchestration.last_trace} if orchestration else {}),
+                          "llm_output": llm.last_record, "result": result,
+                          "simulation_seconds": runtime.bridge.seconds,
+                          "llm_call_count": llm.call_count, "llm_total_elapsed_s": llm.total_elapsed_s})
+            completed_rounds = number
+            phase = "action_boundary"
+            runtime.recent.append(compact_action_result(number, action, result,
+                                                        runtime.snapshot["observation_index"]))
+            runtime.recent = runtime.recent[-5:]
+            print(json.dumps({"round": number, "action": action["action"], "success": result["success"],
+                              "reason": result["reason"], "simulation_seconds": runtime.bridge.seconds}), flush=True)
+            if stop_request is not None:
+                interruption = stop_position(safe_boundary=True)
+                status, reason = "interrupted", "SIGINT: stopped_at_action_boundary"
+                break
+            if action["action"] == "done" and result["success"]:
+                status, reason = "done", "observation_completion"
+                break
+            if number >= config.get("max_rounds", 200):
+                reason = "round_limit"
+                break
+        if args.replay and interruption is None:
+            llm.assert_replay_consumed()
+    except KeyboardInterrupt:
+        interruption = interruption or stop_position(safe_boundary=phase == "action_boundary")
+        aborted = interruption.get("aborting_signal") == "SIGTERM"
+        status = "aborted" if aborted else "interrupted"
+        reason = f"{interruption.get('aborting_signal', interruption['signal'])}: stopped_during_{phase}"
+    except Exception as exc:
+        status, reason = "failed", f"{type(exc).__name__}: {exc}"
+    finally:
+        if stop_request is not None and interruption is None:
+            interruption = stop_position(safe_boundary=False)
+        phase = "export"
+        summary = {"version": VERSION, "runtime_version": RUNTIME_VERSION, "status": status, "reason": reason,
+                   **({"interruption": interruption} if interruption is not None else {}),
+                   "task": config["task"], "rounds": count,
+                   "task_spec": getattr(runtime, "task_spec", None),
+                   "llm_calls": llm.call_count if llm else 0,
+                   "llm_total_elapsed_s": llm.total_elapsed_s if llm else 0,
+                   "wall_elapsed_s": time.monotonic() - wall_start,
+                   "simulation_seconds": runtime.bridge.seconds if runtime else 0,
+                   "observations": runtime.observation_count if runtime else 0,
+                   "timeline": runtime.perception.timeline() if runtime else [],
+                   "final_objects": runtime.perception.objects() if runtime else [],
+                   "held_object_id": runtime.held_object_id if runtime else None,
+                   "pending_grasp": runtime.pending_grasp if runtime else None,
+                   "grab_attempts": runtime.actions.grab_attempts if runtime else {},
+                   "action_evidence": runtime.perception.action_evidence() if runtime else [],
+                   "discovery_evidence": (runtime.perception.discovery_evidence() if runtime
+                                          and hasattr(runtime.perception, "discovery_evidence") else None),
+                   "sampling_progress": (runtime.perception.sampling_progress_evidence() if runtime
+                                         and hasattr(runtime.perception, "sampling_progress_evidence") else None),
+                   "junction_history": runtime.roads.summary() if runtime else [],
+                   "road_evidence": (runtime.roads.road_evidence() if runtime
+                                     and hasattr(runtime.roads, "road_evidence") else None),
+                   "exploration_state": (runtime.roads.exploration_status() if runtime
+                                         and hasattr(runtime.roads, "exploration_status") else None),
+                   "limits": {"max_rounds": config.get("max_rounds", 200),
+                              "max_simulation_seconds": config.get("max_simulation_seconds", 1200)},
+                   "world_model": dependency,
+                   "formal_configuration": formal_configuration,
+                   **({"orchestration": dict(orchestration.provenance,
+                       run_id=orchestration.run_id)} if orchestration else {}),
+                   "source_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                                     for p in sorted(Path(__file__).parent.glob("*.py"))}}
+        dump(out / "summary.json", summary)
+        rounds.close()
+        if llm:
+            llm.close()
+        if runtime:
+            for log in (runtime.bridge.log, runtime.observation_log, runtime.motion_log):
+                log.close()
+        for sig, handler in previous_handlers.items():
+            signal.signal(sig, handler)
+    return 0 if status == "done" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

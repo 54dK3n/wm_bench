@@ -1,0 +1,560 @@
+{
+  "schema": "ended-run-independent-metrics-review/v1",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z",
+  "scope": "Only ended A44 run 20261015T225820Z. Independent raw-log counts/correlations; existing evaluator verdict retained without rerunning. Native turn terminal markers are counted, not comprehensively semantically validated. Source identity uses frozen start/end manifests; subsequent workspace edits are outside this run.",
+  "model_lifecycle": {
+    "started": 154,
+    "finished": 154,
+    "unique_start_call_indices": 154,
+    "unique_finish_call_indices": 154,
+    "unique_effective_action_decisions": 154,
+    "completed_action_rounds": 154,
+    "native_completed_markers": 154,
+    "transport_errors": 0,
+    "validation_errors": 0,
+    "checks": {
+      "all_call_indices_contiguous_1_to_154": true,
+      "all_decision_indices_contiguous_1_to_154": true,
+      "start_finish_log_call_decision_request_hash_match": true,
+      "raw_json_equals_logged_and_round_action": true,
+      "request_state_equals_round_state": true,
+      "one_error_free_completed_native_turn_marker_per_call": true,
+      "unique_native_turn_ids": true
+    },
+    "action_types": {
+      "explore": 62,
+      "look_around": 68,
+      "go_to": 13,
+      "pick": 11
+    },
+    "evidence": [
+      "llm_lifecycle:all",
+      "llm:all",
+      "rounds:1..154"
+    ]
+  },
+  "termination": {
+    "brain_status": "aborted",
+    "brain_reason": "SIGTERM: stopped_during_observation",
+    "interruption": {
+      "signal": "SIGTERM",
+      "requested_phase": "observation",
+      "requested_round": 155,
+      "requested_observation": 926,
+      "aborting_signal": "SIGTERM",
+      "stopped_phase": "observation",
+      "active_round": 155,
+      "completed_rounds": 154,
+      "action": null,
+      "last_observation": 926,
+      "bridge_sequence": 4321,
+      "safe_action_boundary": false,
+      "action_outcome_unknown": false
+    },
+    "driver_process": {
+      "code": 1,
+      "signal": null,
+      "spawnError": null,
+      "interrupted": "driver_monitor_error:MonitorGuardError: MONITOR_CONTROLLER_CLOSED",
+      "wallSeconds": 1572.633,
+      "wallTimeoutSeconds": 0
+    },
+    "monitor_recovery": {
+      "attempted": true,
+      "recovered": false,
+      "status": "terminal",
+      "failure": "MONITOR_CONTROLLER_CLOSED",
+      "error": {
+        "name": "Error",
+        "message": "CDP unavailable",
+        "code": "CDP_UNAVAILABLE"
+      }
+    },
+    "exit_codes": {
+      "driver_exit": 1,
+      "evaluator_exit": 1
+    },
+    "wrapper_exit": {
+      "value": 0,
+      "provenance": "Parent reported session63303; not driver/evaluator status."
+    },
+    "last_completed_round": 154,
+    "last_action": {
+      "action": "look_around",
+      "params": {}
+    },
+    "last_action_reason": "full_circle_views_observed",
+    "round155_model_calls": 0,
+    "evidence": [
+      "brain_summary:status,reason,interruption",
+      "driver_summary:trials[0].process",
+      "exit_codes",
+      "llm",
+      "rounds:154"
+    ]
+  },
+  "manipulation_and_delivery": {
+    "high_level_pick": 11,
+    "native_grab": 0,
+    "native_release": 0,
+    "native_record_method_counts": {
+      "camera_parameters": 1,
+      "odometry": 926,
+      "local_road": 926,
+      "holding": 926,
+      "observe": 926,
+      "take_exit": 9,
+      "turn": 556,
+      "follow_road": 23,
+      "forward": 23,
+      "backward": 5
+    },
+    "public_observations": 926,
+    "public_holding_true": 0,
+    "public_holding_false": 926,
+    "native_holding_sensor_reads": 926,
+    "native_holding_true": 0,
+    "native_holding_false": 926,
+    "samples": 5073,
+    "sample_holding_nonnull": 0,
+    "distinct_state_ids": {
+      "HELD": [],
+      "DELIVERED": []
+    },
+    "done": 0,
+    "record_complete": true,
+    "final_sample_tick": 20109,
+    "original_evaluator": {
+      "success": false,
+      "required_delivery_count": 2,
+      "delivered_target_ids": [],
+      "qualifying_delivered_target_ids": [],
+      "final_target_flags": [
+        {
+          "truth_id": "guangyang-target-1",
+          "active_delivery_event": false,
+          "inside_storage": false,
+          "held": false,
+          "sample_tick": 20109
+        },
+        {
+          "truth_id": "guangyang-target-2",
+          "active_delivery_event": false,
+          "inside_storage": false,
+          "held": false,
+          "sample_tick": 20109
+        }
+      ],
+      "terminal_done": {
+        "verified": false,
+        "round": 154,
+        "observation_index": 925,
+        "observation_tick": 20109
+      },
+      "failures": [
+        "no_active_delivery_event:guangyang-target-1",
+        "final_position_outside_storage:guangyang-target-1",
+        "no_active_delivery_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error",
+        "task_completion:delivery_identity_or_evidence_unresolved",
+        "task_completion:required_delivery_count_not_met",
+        "done_not_selected_in_recorded_llm_call",
+        "done_post_action_completion_not_corroborated"
+      ],
+      "metrics": {
+        "rounds": 154,
+        "llm_calls": 154,
+        "llm_total_elapsed_s": 730.1762226340006,
+        "simulation_seconds": 402.18,
+        "observations": 926,
+        "failed_rounds": 58,
+        "failed_actions": 58,
+        "execution_failures": 0,
+        "external_stop_failures": 0,
+        "bridge_calls": 4321,
+        "nonwhitelist_brain_requests": 0
+      }
+    },
+    "evidence": [
+      "record:calls[].method, holding outcomes",
+      "samples:all holding, final tick",
+      "observations:holding,objects[].state",
+      "llm:action",
+      "evaluation:delivery,failures,metrics"
+    ]
+  },
+  "earliest_persistent_blocker": {
+    "interpretation": "r35 begins the persistent confirmed-target acquisition failure. It later evolves to STALE/LOST identity; no claim that one unchanged failure reason caused every subsequent action.",
+    "object_id": "target_013",
+    "precursor": {
+      "rounds": [
+        30,
+        31,
+        32,
+        33
+      ],
+      "reason": "grab_identity_not_uniquely_visible",
+      "round33_retry_probe": {
+        "limit_cm": 0.1,
+        "previous_limit_cm": 0.15000000000000568,
+        "requires_new_view": false
+      }
+    },
+    "round": 35,
+    "reason": "pick_approach_view_budget_exhausted",
+    "observations": {
+      "before_observation": 155,
+      "after_observation": 165,
+      "final_observation": 166
+    },
+    "verified_forward_motions": 10,
+    "each_requested_cm": 0.1,
+    "sum_measured_cm": 1.0,
+    "bridge_request_ids": [
+      "brain-000708",
+      "brain-000713",
+      "brain-000718",
+      "brain-000723",
+      "brain-000728",
+      "brain-000733",
+      "brain-000738",
+      "brain-000743",
+      "brain-000748",
+      "brain-000753"
+    ],
+    "grab_attempts": 0,
+    "road_return_reason": "already_on_observed_road",
+    "later_repeat_rejections": [
+      41,
+      46,
+      52,
+      58,
+      63,
+      69
+    ],
+    "public_state_transitions": [
+      {
+        "observation": 31,
+        "round": 8,
+        "state": "TENTATIVE"
+      },
+      {
+        "observation": 113,
+        "round": 28,
+        "state": "CONFIRMED"
+      },
+      {
+        "observation": 343,
+        "round": 74,
+        "state": "STALE"
+      },
+      {
+        "observation": 627,
+        "round": 113,
+        "state": "LOST"
+      }
+    ],
+    "final_state": "LOST",
+    "historical_view_A": {
+      "source_observation": 339,
+      "frame_id": "339",
+      "goal_semantics": "historical_robot_camera_viewpoint",
+      "object_id": "target_013",
+      "public_camera_position_m": [
+        -1.819,
+        1.1159999999999999
+      ],
+      "public_camera_heading_deg": -89.3,
+      "available_rounds": [
+        114,
+        115
+      ],
+      "selected_rounds": [
+        115
+      ]
+    },
+    "historical_view_B": {
+      "source_observation": 164,
+      "frame_id": "164",
+      "goal_semantics": "historical_robot_camera_viewpoint",
+      "object_id": "target_013",
+      "public_camera_position_m": [
+        -1.82,
+        1.1159999999999999
+      ],
+      "public_camera_heading_deg": -89.3,
+      "available_rounds": [
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154
+      ],
+      "selected_rounds": []
+    },
+    "A_result": {
+      "round": 115,
+      "success": false,
+      "reason": "historical_view_revisited_identity_unresolved",
+      "arrived": true,
+      "after_observation": 638,
+      "final_observation": 639
+    },
+    "B_selection_count": 0,
+    "evidence": [
+      "rounds:33,35,41,46,52,58,63,69,115",
+      "motions:round35",
+      "observations:343,627,926",
+      "llm and rounds:114..154"
+    ]
+  },
+  "failed_actions_by_reason": {
+    "confirmation_no_safe_independent_viewpoint": {
+      "count": 3,
+      "rounds": [
+        9,
+        26,
+        114
+      ]
+    },
+    "road_node_observed_without_completed_traversal": {
+      "count": 1,
+      "rounds": [
+        10
+      ]
+    },
+    "road_blocked_returned_to_observed_node": {
+      "count": 1,
+      "rounds": [
+        17
+      ]
+    },
+    "confirmation_needs_fresh_observation": {
+      "count": 1,
+      "rounds": [
+        25
+      ]
+    },
+    "grab_identity_not_uniquely_visible": {
+      "count": 4,
+      "rounds": [
+        30,
+        31,
+        32,
+        33
+      ]
+    },
+    "pick_approach_view_budget_exhausted": {
+      "count": 1,
+      "rounds": [
+        35
+      ]
+    },
+    "directed_passage_still_blocked": {
+      "count": 36,
+      "rounds": [
+        36,
+        38,
+        43,
+        48,
+        54,
+        56,
+        60,
+        65,
+        68,
+        73,
+        75,
+        79,
+        81,
+        85,
+        87,
+        91,
+        93,
+        96,
+        99,
+        102,
+        105,
+        109,
+        111,
+        116,
+        119,
+        123,
+        125,
+        128,
+        131,
+        134,
+        137,
+        140,
+        143,
+        147,
+        149,
+        153
+      ]
+    },
+    "known_route_exhausted_needs_exploration": {
+      "count": 4,
+      "rounds": [
+        39,
+        49,
+        66,
+        72
+      ]
+    },
+    "action_repeat_without_new_evidence": {
+      "count": 6,
+      "rounds": [
+        41,
+        46,
+        52,
+        58,
+        63,
+        69
+      ]
+    },
+    "historical_view_revisited_identity_unresolved": {
+      "count": 1,
+      "rounds": [
+        115
+      ]
+    }
+  },
+  "sources": {
+    "actions_version": {
+      "value": "autonomous-brain-actions/v44",
+      "verified_source": "autonomous_brain/actions.py"
+    },
+    "runtime_version": "autonomous-brain-runtime/v21",
+    "brain_version": "autonomous-brain/v2",
+    "native_llm_versions": [
+      "autonomous-brain-llm/v25"
+    ],
+    "native_cli_versions": {
+      "0.162.0-alpha.17.2": 154
+    },
+    "actions_sha256": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+    "run_sha256": "e077a141b175039bc8e373307a25baa4ba367eee339b83059a65224156d25f21",
+    "navigation_progress_sha256": "9c01219b74e625d89284a9939793a9a05a5ac7e16e65a855883dc8383415e4d8",
+    "native_client_sha256": "0d5ac7aae20c4eda6242428d5e218c55ba96d8763fda2a271088ff37104b9d28",
+    "frozen_manifests_equal": true,
+    "all_brain_summary_hashes_match_manifest": true,
+    "evaluator_source_proof": {
+      "status": "verified",
+      "failures": [],
+      "recorded_before_after_equal": true,
+      "driver_sources_unchanged": true,
+      "brain_summary_hashes_match": true,
+      "actual_orchestrator_matches": true,
+      "actual_world_model_matches": true,
+      "formal_configuration_matches": true,
+      "run_configuration_matches": true,
+      "recorded_brain_and_driver_files": 16
+    },
+    "evidence": [
+      "manifest",
+      "driver_summary:sourceManifestAfterRun,sourcesUnchanged",
+      "brain_summary:source_sha256,runtime_version",
+      "llm:version",
+      "collector_result:versions.actions and native_cli, captured before later workspace update",
+      "evaluation:source_proof"
+    ]
+  },
+  "evidence": {
+    "collector": {
+      "path": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/collect-result.py",
+      "sha256": "486e47640855a2874632c1936741e66461f4272103904b103f7e75181b4d3414"
+    },
+    "collector_result": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/run-20261015T225820Z-result.json",
+      "sha256": "10f94490dc76f89537314eaf93fa64bd9b9f4291b388c174814a85ea7ccd6e0a"
+    },
+    "manifest": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/manifest.json",
+      "sha256": "c9db74c6ae9836b19febd95008dde60f10df407343ed7e3c241afad301757284"
+    },
+    "driver_summary": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/summary.json",
+      "sha256": "15ff430211855c4872a0ea33b14dfb5a79f97ff4d43be2ec7e38eea27c439c8c"
+    },
+    "exit_codes": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z-exit-codes.json",
+      "sha256": "daaedb04c41c8fcd62ea32d40a2a3776518f24ce9c2d6b290f721f1c3117c3c2"
+    },
+    "brain_summary": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/summary.json",
+      "sha256": "b65eb9d2928d13f322735ca997ecdb4ca9b4a1e100222e0eaa760bf3644f491d"
+    },
+    "llm_lifecycle": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/llm.lifecycle.jsonl",
+      "sha256": "d6b301aecd3aa5f4af4f810d1ebb26915baa283c5848423c8b1c772a267e0c75"
+    },
+    "llm": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/llm.jsonl",
+      "sha256": "751f475ae5344755bdfd9772ece5fd46cd5c2e1f1084425a15b61aca314ed7e3"
+    },
+    "rounds": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "f26991740a27c8ecd1eb6e466ae2ef02f7a6b9187e66d6b3e398eea38fea0e14"
+    },
+    "observations": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl",
+      "sha256": "fb59a714cb857fae938f77143d17261295d6d8bbb0007a97d3474d57e35cbde6"
+    },
+    "motions": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/motions.jsonl",
+      "sha256": "7488c4e4f3259a6585c7b8b61065f3179e47e6a96b78ab3f66971a30fd4d0d56"
+    },
+    "bridge_calls": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "ee3200b45279bb5fc4eb61527ed736b8170fb0295dbaeea83d89a4cc7078767d"
+    },
+    "record": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/record.json.gz",
+      "sha256": "ad058cdb5649d306fec72cd6ce1689f39bdbe8bb435cdb2f07f01521dd924000"
+    },
+    "samples": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/samples.json.gz",
+      "sha256": "0fb7b59f18d5d3c064bbbd89d1676dbd5e9a0509f36c95677fbf75d6c57320d0"
+    },
+    "evaluation": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z-evaluation/evaluation.json",
+      "sha256": "707edf37aad3493c74d69fcedaa5177f548d94a4564eca49b5038184ce6a9a1a"
+    }
+  }
+}

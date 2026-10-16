@@ -1,0 +1,43 @@
+..................F.............................F......................  [100%]
+=================================== FAILURES ===================================
+_ test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab __
+
+    def test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab():
+        r = SameCategoryReturnRuntime()
+        r.rival_after_return = True
+        result = r.pick()
+        assert not result['success'] and result['evidence']['authorization_recovery']['success']
+        assert r.inverse_attempts == 1
+        assert 'retry_probe' not in result['evidence'] and 'pick_retry' not in result['evidence']
+        assert r.actions._pick_probe_limits == {} and not r.perception.action_evidence()
+        assert len(actual_grabs(r)) == 1
+>       assert not r.perception.check_grasp_identity(r.object_id, r.snapshot)['authorized']
+E       assert not True
+
+tests/test_brain_pick_same_category_return.py:193: AssertionError
+_ test_clipped_empty_grab_probe_restores_supported_near_view_and_halves_next_model_pick _
+
+    def test_clipped_empty_grab_probe_restores_supported_near_view_and_halves_next_model_pick():
+        r = ClippedRetryRuntime(grab_results=(False, False, False, True))
+        initial = r.perception.confirmed(r.object_id)
+        assert r.perception.visible(r.object_id)["fed_to_world_model"] is False
+        for expected in (3., 1.5):
+            result = r.pick()
+            assert not result["success"] and result["reason"] == "grab_identity_not_uniquely_visible"
+            assert result["evidence"]["authorization_recovery"]["success"]
+            assert result["evidence"]["retry_probe"]["limit_cm"] == pytest.approx(expected)
+            assert r.forward == pytest.approx(r.entry["forwardCm"])
+            assert r.perception.confirmed(r.object_id)["hit_count"] == initial["hit_count"]
+            assert r.held_object_id is None and r.pending_grasp is None
+            assert not r.perception.action_evidence()
+        # The normal execute failure guard must consume the new bound, not block
+        # it merely because the camera returned to the same supported view.
+        result = r.pick()
+>       assert result["success"] and result["reason"] == "grasp_observed"
+E       assert (False)
+
+tests/test_brain_pick_pixel_recovery.py:85: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_pick_same_category_return.py::test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab
+FAILED tests/test_brain_pick_pixel_recovery.py::test_clipped_empty_grab_probe_restores_supported_near_view_and_halves_next_model_pick
+2 failed, 69 passed in 7.56s

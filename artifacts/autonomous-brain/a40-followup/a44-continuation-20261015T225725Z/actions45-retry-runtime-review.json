@@ -1,0 +1,209 @@
+{
+  "schema": "wm-independent-runtime-review/v1",
+  "created_at": "2026-10-16T02:21:14.022682+00:00",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z",
+  "conclusion": "本局存在一次早期 CDP_TIMEOUT 且已成功恢复；最终由 brain round_limit（200 轮）结束，没有运行中 monitor terminal 或 action interruption。首 controller close 在脑结束后的 stop 阶段；4685 个请求客户端和服务端全部 completed，无未完成/未知请求。不得沿用前两局终止原因。",
+  "scope": {
+    "read_only_source_audit": true,
+    "production_or_monitor_changed": false,
+    "run_started_or_intervened": false,
+    "requests_reissued": false,
+    "physical_record_samples_captures_read": false,
+    "truth_or_delivery_evaluation_used": false
+  },
+  "brain_and_driver": {
+    "brain_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/brain/summary.json"
+    },
+    "brain_status": "failed",
+    "brain_reason": "round_limit",
+    "rounds": 200,
+    "interruption": null,
+    "observations": 1017,
+    "simulation_seconds": 405.72,
+    "driver_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/summary.json"
+    },
+    "driver_status": "complete",
+    "sourcesUnchanged": true,
+    "process": {
+      "code": 1,
+      "signal": null,
+      "spawnError": null,
+      "interrupted": null,
+      "wallTimeoutSeconds": 0
+    },
+    "exit_codes_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z-exit-codes.json"
+    },
+    "exit_codes": {
+      "driver_exit": 1,
+      "evaluator_exit": 1
+    },
+    "interpretation": "退出码 1/1 不等于 CDP 终止。本局 brain reason=round_limit；process.interrupted=null，未报告 SIGTERM action interruption。"
+  },
+  "monitor": {
+    "diagnostic_counts": {
+      "cdp_request_timeout": 1,
+      "driver_monitor_error": 1,
+      "runtime_monitor_recovered": 1,
+      "runtime_monitor_terminal": 0,
+      "cdp_websocket_error": 0,
+      "controller_close_requested": 1
+    },
+    "unintentional_cdp_websocket_closes": 0,
+    "recovery": {
+      "attempted": true,
+      "recovered": true,
+      "status": "degraded_verified_recovered",
+      "originalTargetOnly": true,
+      "timeoutMs": 8000,
+      "tick": 0,
+      "actuatorResubmissions": 0,
+      "brainRestarted": false
+    },
+    "first_timeout": {
+      "time": "2026-10-16T00:42:01.081Z",
+      "method": "Runtime.evaluate",
+      "requestId": 23,
+      "timeoutMs": 2000,
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/driver-diagnostics.jsonl",
+        "line": 60
+      }
+    },
+    "recovered_at": "2026-10-16T00:42:02.045Z",
+    "recovery_before": {
+      "controllerGeneration": 1,
+      "tick": 0,
+      "inFlight": [
+        "brain-000005"
+      ],
+      "queued": [],
+      "requests": 5,
+      "dispatches": 5,
+      "terminals": 4
+    },
+    "recovery_after": {
+      "controllerGeneration": 1,
+      "tick": 0,
+      "inFlight": [],
+      "queued": [],
+      "requests": 5,
+      "dispatches": 5,
+      "terminals": 5
+    },
+    "root_cause_of_early_timeout": "unknown; the event recovered and is not evidence of a terminal runtime failure in this run",
+    "diagnostic_line_refs": {
+      "timeout": 60,
+      "pause": 61,
+      "driver_monitor_error": 63,
+      "intentional_reconnect": 64,
+      "recovered": 67
+    }
+  },
+  "stop_order": {
+    "brain_end_pause": "2026-10-16T02:15:23.788Z",
+    "brain_ended_before_page_stop_snapshot": "2026-10-16T02:15:23.952Z",
+    "first_controller_close_requested": "2026-10-16T02:15:23.989Z",
+    "page_client_ended": "2026-10-16T02:15:24.193Z",
+    "after_page_export": "2026-10-16T02:16:16.348Z",
+    "cleanup_cdp_close": "2026-10-16T02:16:17.279Z",
+    "bridge_server_closed": "2026-10-16T02:16:17.690Z",
+    "exact_brain_exit_wall_time": null,
+    "boundary": "脑退出没有独立精确墙钟时间；brain_ended_before_page_stop 快照和无中断的 process 结果确证脑先结束、随后 stop/controller close。cleanup 的 MONITOR_CONTROLLER_CLOSED 不能作为脑运行终止原因。",
+    "diagnostic_line_refs": {
+      "brain_end_pause": 83,
+      "brain_ended_before_page_stop_snapshot": 84,
+      "first_controller_close_requested": 86,
+      "after_page_export": 88,
+      "cleanup_cdp_close": 90,
+      "bridge_server_closed": 99
+    }
+  },
+  "bridge": {
+    "server_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/server-bridge-trace.json"
+    },
+    "client_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/brain/bridge-calls.jsonl"
+    },
+    "complete": true,
+    "stage": "after_server_bridge_close",
+    "totalEvents": 14055,
+    "retainedEvents": 14055,
+    "server_counts": {
+      "request": 4685,
+      "dispatch": 4685,
+      "terminal": 4685
+    },
+    "server_terminal_statuses": {
+      "completed": 4685
+    },
+    "client_count": 4685,
+    "client_202_count": 4685,
+    "client_completed_count": 4685,
+    "all_client_requests_match_server": true,
+    "all_client_terminals_match_server": true,
+    "unknown_or_nonterminal_client_requests": [],
+    "last_request": {
+      "requestId": "brain-004685",
+      "method": "observe",
+      "client_line": 4685,
+      "server_seq": [
+        14053,
+        14054,
+        14055
+      ],
+      "status": "completed",
+      "tick": 20286,
+      "frameId": 1017
+    },
+    "inFlight_at_brain_end_pause": [],
+    "queued_at_brain_end_pause": []
+  },
+  "envelope_and_export": {
+    "envelope_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/envelope.json"
+    },
+    "controllerErrors": [],
+    "export_complete": true,
+    "export_failures": [],
+    "cdpExportRecovery": null,
+    "stopError": null
+  },
+  "limitations": [
+    "该审计只确认运行和停止边界；请求 completed 不表示每个高层动作或最终任务成功。",
+    "早期 CDP timeout 的底层原因未知，未用其他局事件或 CPU/并行审计假设归因。"
+  ],
+  "sources": [
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/driver-diagnostics.jsonl",
+      "sha256": "3e15b653865c9f9f9ce1fb22665ff6a02c78d1f3d91e043e095dfd8792a34a45"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/summary.json",
+      "sha256": "036a792ab84063d9fbb040957a75ecd1ad5bb9be68417054862b63d0eee62b82"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/brain/summary.json",
+      "sha256": "cf3a92414ac928b689e15baebd9c7bc240a2de4acc27f2ffebbbbb938d549328"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/envelope.json",
+      "sha256": "6139a02de354086494c45e79e806f000ddccaaf683768dbc6bbc00ab62007c54"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/server-bridge-trace.json",
+      "sha256": "1bdf1bd57ae2398f714ff938f9d4b28a1fc812fd11164fc5f487843c9a364afb"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "c4c5dc5387a2611dec4295cd6c0576e1c3bef571feb8012b753824fe28824419"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z-exit-codes.json",
+      "sha256": "daaedb04c41c8fcd62ea32d40a2a3776518f24ce9c2d6b290f721f1c3117c3c2"
+    }
+  ]
+}

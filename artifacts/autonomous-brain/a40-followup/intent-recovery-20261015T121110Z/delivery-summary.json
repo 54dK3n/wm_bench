@@ -1,0 +1,106 @@
+{
+  "schema": "a44-delivery-summary/v1",
+  "outcome": "Original two-ball task FAIL: one delivered, different second ball held, no done; round limit reached.",
+  "code": {
+    "baseline_commit": "cc15a3329aad56b4f779203dbe688cb64c886312",
+    "changes": [
+      "autonomous_brain/actions.py",
+      "autonomous_brain/navigation_progress.py",
+      "tests/test_brain_historical_view_revisit.py"
+    ],
+    "preserved": "Existing A41-A43 working-tree changes; Runtime21, native25, vendored WorldModel and existing octos_robots.Executor",
+    "patch": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/historical-view-intent-v44.patch",
+    "sha256_manifest": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/source-hashes.json"
+  },
+  "regressions": {
+    "new_focus_passed": 10,
+    "related_passed": 326,
+    "current_checkout_targeted_passed": 92,
+    "counts_overlap": true,
+    "logs": [
+      "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/focused-tests.txt",
+      "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/related-tests.txt",
+      "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/production-targeted-tests.txt"
+    ],
+    "git_diff_check_exit": 0
+  },
+  "new_run": {
+    "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z",
+    "version": "Actions44 / Runtime21 / native25",
+    "result": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/run-20261015T122605Z-result-v2.json",
+    "result_sha256": "d2272b6bb192f4f13ce97cf0ae15ed126d1b341fbc17a0589870fa8a13e0e47d",
+    "model_started": 201,
+    "effective_action_turns": 200,
+    "grab": 25,
+    "grab_post_sensor_true": 2,
+    "grab_post_sensor_false": 23,
+    "release": 1,
+    "distinct_physical_balls_grabbed": 2,
+    "HELD_distinct_wm_ids": 2,
+    "DELIVERED_distinct_wm_ids": 1,
+    "done": 0,
+    "physical_delivery_count": 1,
+    "required_physical_delivery_count": 2,
+    "simulation_seconds": 1011.9,
+    "llm_total_elapsed_s": 1119.4471722049973,
+    "wall_elapsed_s": 3522.825045958,
+    "driver_exit": 1,
+    "evaluator_exit": 1,
+    "unresolved_terminal_blocker": {
+      "first_round": 196,
+      "reason": "storage_free_point_not_observed",
+      "review": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/terminal-placement-review.json"
+    },
+    "earlier_prolonged_pick_failure": {
+      "first_round": 107,
+      "resolved_by_distinct_second_physical_grasp_round": 194
+    },
+    "position_error": {
+      "sample_scope": "Evaluator-bound red-ball position samples",
+      "count": 323,
+      "mean_cm": 9.551415472728705,
+      "rmse_cm": 10.31301516020892,
+      "max_cm": 15.245449302075967
+    },
+    "judge": {
+      "scope": "Bound pick/place only",
+      "match": 16,
+      "false_positive": 0,
+      "false_negative": 0,
+      "unverifiable": 3,
+      "not_evaluated": 181
+    },
+    "source_proof": {
+      "status": "verified",
+      "failures": [],
+      "recorded_before_after_equal": true,
+      "driver_sources_unchanged": true,
+      "brain_summary_hashes_match": true,
+      "actual_orchestrator_matches": true,
+      "actual_world_model_matches": true
+    }
+  },
+  "preexisting_independent_run": {
+    "path": "artifacts/autonomous-brain/a40-followup/run-20261015T120610Z",
+    "version": "Actions43 / Runtime21 / native25",
+    "result": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/existing-a43-result.json",
+    "status": "already running when this work began; ended during decision by SIGINT; not A44 validation",
+    "model_started": 80,
+    "effective_action_turns": 79,
+    "grab": 0,
+    "release": 0,
+    "HELD": 0,
+    "DELIVERED": 0,
+    "done": 0,
+    "physical_delivery_count": 0,
+    "driver_exit": 1,
+    "evaluator_exit": 1
+  },
+  "coverage_limits": {
+    "historical_A_to_B": "Regression passed. Live r146 returned to A; fresh successor already confirmed during traversal. No subsequent historical B selected in this run.",
+    "live_review": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/live-public-coverage-review.json",
+    "old_bridge_failure": "Original CDP/fetch triggering cause remains unknown; no monitor changes.",
+    "bridge_review": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/review.json"
+  },
+  "further_production_changes": "none"
+}

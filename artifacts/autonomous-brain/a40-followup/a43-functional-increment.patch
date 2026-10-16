@@ -1,0 +1,2202 @@
+diff --git a/autonomous_brain/actions.py b/autonomous_brain/actions.py
+index e25c744..d76e940 100644
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,9 +7,9 @@ import re
+ 
+ from .bridge import SimulationLimit
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+-from .observation_quality import positive_pixel_support
++from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v40"
++VERSION = "autonomous-brain-actions/v43"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -358,6 +358,7 @@ class Actions:
+             view = {"schema": "historical-view-revisit/v1", "available": True,
+                 "navigation_only": True, "requires_fresh_identity": True,
+                 "source_observation": snapshot["observation_index"], "frame_id": str(sensor["frameId"]),
++                "source_fed_to_world_model": item.get("fed_to_world_model") is True,
+                 "position_m": list(position(snapshot["odometry"])),
+                 "heading_deg": snapshot["odometry"]["headingDeg"],
+                 "goal_semantics": "historical_robot_camera_viewpoint"}
+@@ -381,7 +382,13 @@ class Actions:
+         record, context = self._navigation_record(object_id), self._navigation_context(object_id)
+         if self.r.navigation_progress.blocked(record, context):
+             return None
+-        for view in reversed(self._historical_views.get(object_id, [])):
++        # Prefer a view that could contribute to normal tracking at its source.
++        # A recent near-only view cannot seed a successor after LOST. This is
++        # navigation priority only: retain near fallbacks and every route gate;
++        # arrival still requires fresh Perception and identity evidence.
++        views = sorted(reversed(self._historical_views.get(object_id, [])),
++                       key=lambda view: view.get("source_fed_to_world_model") is not True)
++        for view in views:
+             source = roads.observation_records(view["source_observation"], view["source_observation"])
+             frames = source.get("observations", [])
+             if (source.get("invalid_observation_indices") or len(frames) != 1
+@@ -1937,23 +1944,41 @@ class Actions:
+                     or w <= 0 or h <= 0 or x < 0 or y < 0 or x + w > width or y + h > height):
+                 return False
+             balls.append((source, item, (x, y, x + w, y + h)))
+-        selected = [row for row in balls if row[1]["category"] == category]
++        def bottom_clipped(row):
++            source, item, (left, top, right, bottom) = row
++            quality = item.get("pixel_quality") or {}
++            return (quality == source.get("pixelQuality")
++                    and str(quality.get("frameId")) == str(raw.get("frameId"))
++                    and quality.get("status") == "unknown"
++                    and quality.get("reason") == "source_bbox_touches_boundary"
++                    and 0 < left < right < width and 0 < top < bottom == height)
++
++        selected = [row for row in balls
++                    if row[1]["category"] == category and bottom_clipped(row)]
+         if len(selected) != 1:
+             return False
+         source, item, (left, top, right, bottom) = selected[0]
+-        quality = item.get("pixel_quality") or {}
+-        if (quality != source.get("pixelQuality")
+-                or str(quality.get("frameId")) != str(raw.get("frameId"))
+-                or quality.get("status") != "unknown"
+-                or quality.get("reason") != "source_bbox_touches_boundary"
+-                or not 0 < left < right < width or not 0 < top < bottom == height):
+-            return False
+-        # Different-category side pixels remain evidence/competitors. Their
+-        # separation only permits undoing our motion; fresh restored identity
+-        # and complete positive pixels are still required before learning.
+-        return all(peer["category"] != category
+-                   and (r < left or right < l or b < top or bottom < t)
+-                   for _, peer, (l, t, r, b) in balls if peer is not item)
++        for peer_source, peer, (l, t, r, b) in balls:
++            if peer is item:
++                continue
++            if not (r < left or right < l or b < top or bottom < t):
++                return False
++            if peer["category"] == category:
++                # A full, explicitly supported peer may remain a competitor
++                # while we undo our own verified forward step. Separation
++                # identifies neither box; fresh restored identity still gates
++                # learning and every subsequent grab. Old missing quality is
++                # not sufficient for this additional navigation case.
++                if not (0 < l < r < width and 0 < t < b < height):
++                    return False
++                try:
++                    support = pixel_quality(peer_source, raw.get("frameId"))
++                except (KeyError, TypeError, ValueError):
++                    return False
++                if (support is None or support.get("status") != "supported"
++                        or support != peer.get("pixel_quality")):
++                    return False
++        return True
+ 
+     def remember_empty_grab_navigation(self, object_id, grab_ref, motion, receipt):
+         """Remember a failed operation pose, without caching identity authority."""
+@@ -2180,6 +2205,7 @@ class Actions:
+             before_holding = self.s["holding"].get("holding")
+             selected = None
+             plan = None
++            short_departure = False
+             basic = segment.get("execution", {}).get("kind") == "basic_translation"
+             remaining_segment = segment["travelled_cm"] - leg_travel
+             unexpected_node = (road.get("atNode") and (departure.get("at_node") is False
+@@ -2235,7 +2261,52 @@ class Actions:
+                     return False, "reposition_junction_context_changed", steps
+                 selected = {"recorded_exit_heading_deg": wanted, "fresh_angle_deg": fresh[0]["angleDeg"],
+                             "source_observation": departure.get("observation_index")}
+-                result = self.take_observed_exit(fresh[0]["angleDeg"])
++                if remaining_segment < 10:
++                    # take_exit has no distance bound. For a leg shorter than
++                    # follow_road's minimum, use the existing straight-motion
++                    # proof and the recorded arc length, or leave it pending.
++                    source_motion = segment.get("motion") or {}
++                    receipt = source_motion.get("actuator_result") or {}
++                    chord = distance(tuple(departure["position_m"]), tuple(arrival["position_m"])) * 100
++                    if (started or not .2 <= remaining_segment < 10
++                            or type(before_holding) is not bool
++                            or source_motion.get("outcome_unknown") or receipt.get("error")
++                            or receipt.get("accepted") is not True
++                            or receipt.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}
++                            or not old_exits or departure.get("at_node") is not True
++                            or distance(p, tuple(departure["position_m"])) * 100 > .2
++                            or abs(chord - segment["travelled_cm"]) > .2
++                            or abs(wrap(departure["travel_heading_deg"] - arrival["travel_heading_deg"])) > .2
++                            or abs(wrap(wanted - departure["travel_heading_deg"])) > .2):
++                        return False, "reposition_short_node_departure_not_proved", steps
++                    if not self._align_approach_body(wanted, budget, steps):
++                        return False, ("reposition_motion_budget_exhausted" if budget[0] <= 0
++                                       else "reposition_short_node_departure_not_aligned"), steps
++                    road, odo = self.s["road"], self.s["odometry"]
++                    current_exits = [wrap(odo["headingDeg"] + e["angleDeg"]) for e in road.get("exits", [])]
++                    fresh = [e for e in road.get("exits", [])
++                             if abs(wrap(odo["headingDeg"] + e["angleDeg"] - wanted)) <= 5]
++                    if (road.get("onRoad") is not True or road.get("atNode") is not True
++                            or self.s["holding"].get("holding") is not before_holding
++                            or len(fresh) != 1 or len(old_exits) != len(current_exits)
++                            or any(sum(abs(wrap(x - y)) <= 5 for y in current_exits) != 1 for x in old_exits)):
++                        return False, "reposition_short_node_departure_context_changed", steps
++                    local = copy.deepcopy(segment)
++                    local["execution"] = {"kind": "basic_translation", "method": "forward",
++                        "departure_body_heading_deg": wanted}
++                    plan = self._approach_basic_plan(local, remaining_segment, False)
++                    if plan is None:
++                        return False, "reposition_short_node_departure_not_safe", steps
++                    plan["basis"] = "recorded_short_straight_leg_and_fresh_node_exit"
++                    selected["fresh_angle_deg"] = fresh[0]["angleDeg"]
++                    self.r.roads.chosen(odo, fresh[0]["angleDeg"], observation_index=self.s["observation_index"])
++                    before, before_odo = self.s["observation_index"], copy.deepcopy(odo)
++                    before_sensor = copy.deepcopy(self.s.get("observation", {}))
++                    p = position(before_odo)
++                    short_departure = True
++                    result = self.move(plan["method"], plan["params"])
++                else:
++                    result = self.take_observed_exit(fresh[0]["angleDeg"])
+             else:
+                 error = road.get("headingErrorDeg")
+                 if type(error) not in (int, float) or not math.isfinite(error):
+@@ -2353,7 +2424,8 @@ class Actions:
+             for other in range(index, len(segments)):
+                 current = segments[other]
+                 expected_distance += current["travelled_cm"]
+-                exact = current.get("execution", {}).get("kind") == "basic_translation" or connection is not None
++                exact = (current.get("execution", {}).get("kind") == "basic_translation"
++                         or connection is not None or short_departure)
+                 end_heading = (current["execution"]["arrival_body_heading_deg"]
+                     if current.get("execution", {}).get("kind") == "basic_translation"
+                     else current["arrival"]["travel_heading_deg"])
+@@ -2374,7 +2446,7 @@ class Actions:
+                     matched = other
+                 if current["arrival"].get("at_node"):
+                     break
+-                if basic or (other + 1 < len(segments)
++                if basic or short_departure or (other + 1 < len(segments)
+                         and segments[other + 1].get("execution", {}).get("kind") == "basic_translation"):
+                     break
+                 if (other + 1 < len(segments) and abs(wrap(current["arrival"]["travel_heading_deg"]
+diff --git a/tests/test_brain_empty_grab_navigation.py b/tests/test_brain_empty_grab_navigation.py
+index 272f24b..ea5edf1 100644
+--- a/tests/test_brain_empty_grab_navigation.py
++++ b/tests/test_brain_empty_grab_navigation.py
+@@ -254,4 +254,4 @@ def test_no_grab_refinement_reaches_native_model_without_forcing_pick(tmp_path,
+     assert sent[0]["thinking"] == {"type": "low"}
+     assert "没有抓取命令" in sent[0]["messages"][0]["content"]
+     assert json.loads(sent[0]["messages"][1]["content"])["recent_actions"][0] == summary
+-    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v22"
++    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25"
+diff --git a/tests/test_brain_evidence_capabilities.py b/tests/test_brain_evidence_capabilities.py
+index ab238d8..728831c 100644
+--- a/tests/test_brain_evidence_capabilities.py
++++ b/tests/test_brain_evidence_capabilities.py
+@@ -11,7 +11,7 @@ from test_brain_pending_grasp_audit import chain
+ from tools.brain_evidence_audit import audit_observed_ledger, audit_unknown_discoveries
+ 
+ 
+-MODERN = ("v15", "v16", "v17", "v18", "v19", "v20")
++MODERN = ("v15", "v16", "v17", "v18", "v19", "v20", "v21")
+ LEGACY = tuple(f"v{i}" for i in range(1, 15))
+ MISSING = object()
+ 
+@@ -67,7 +67,7 @@ def test_modern_runtime_cannot_fall_back_when_command_contract_is_deleted(real_a
+     assert not any(row["verified"] for row in result["deliveries"])
+ 
+ 
+-@pytest.mark.parametrize("version", MODERN + ("v21", MISSING))
++@pytest.mark.parametrize("version", MODERN + ("v22", MISSING))
+ @pytest.mark.parametrize("fault", ["grab-reference", "release-reference", "duplicate-grab-event", "duplicate-request-id", "grab-motion-deleted"])
+ def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace, version, fault):
+     data = trace_with_version(real_action_trace, version)
+@@ -99,7 +99,7 @@ def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace
+         assert result["picks"][0]["verified"] is False
+ 
+ 
+-@pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
++@pytest.mark.parametrize("version", [MISSING, "v22", "v100", "v015", "v17-extra", "V17", ""])
+ @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
+ def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
+     data = trace_with_version(real_action_trace, version)
+@@ -153,7 +153,7 @@ def test_explicit_legacy_discovery_preserves_v1_ledger(version):
+ 
+ 
+ @pytest.mark.parametrize("schema", ["brain-discovery-evidence/v1", "brain-discovery-evidence/v2"])
+-@pytest.mark.parametrize("version", [MISSING, "v21"])
++@pytest.mark.parametrize("version", [MISSING, "v22"])
+ def test_unknown_discovery_runtime_does_not_infer_capabilities(schema, version):
+     summary = {"discovery_evidence": {"schema": schema, "unresolved": [], "records": [], "resolutions": []}}
+     if version is not MISSING:
+@@ -208,7 +208,7 @@ def test_modern_runtime_accepts_independently_verified_v2_discovery(version):
+ 
+ @pytest.mark.parametrize("fault", ["missing-authorization", "boolean-only", "old-frame", "false-geometry",
+     "raw-deletion", "duplicate-detection", "competing-object", "wrong-command"])
+-@pytest.mark.parametrize("version", ["v18", "v19", "v20"])
++@pytest.mark.parametrize("version", ["v18", "v19", "v20", "v21"])
+ def test_authorized_runtime_grab_is_recomputed_from_original_public_evidence(real_action_trace, fault, version):
+     data = trace_with_version(real_action_trace, version)
+     summary, observations, rounds, bridge, _ = data
+diff --git a/tests/test_brain_historical_view_revisit.py b/tests/test_brain_historical_view_revisit.py
+index ce48fda..991b703 100644
+--- a/tests/test_brain_historical_view_revisit.py
++++ b/tests/test_brain_historical_view_revisit.py
+@@ -277,3 +277,76 @@ def test_final_heading_unknown_cannot_mark_candidate_arrived():
+     assert not any(a.get('candidate_reached') or a.get('status') == 'historical_view_revisited'
+                    for a in record['approach_attempts'])
+     assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def mixed_revisit_runtime():
++    r = ClippedRetryRuntime(clip_gap=100)
++    r.roads = RoadMemory()
++    original = r.observe
++
++    def observe(*, motion=None):
++        original(motion=motion)
++        r.roads.update(r.snapshot['odometry'], r.snapshot['road'], r.snapshot['observation_index'])
++        finalized = dict(motion, after_observation=r.snapshot['observation_index']) if motion else None
++        r.roads.observe_traversal(r.snapshot, finalized)
++        r.actions.note_historical_view(r.snapshot, finalized)
++        return r.snapshot
++
++    r.observe = observe
++    r.observe()
++    # Real conversion changes feed classification as the public bbox becomes
++    # smaller at a more distant measured robot pose. Both sources stay confirmed.
++    fed = []
++    for distance in (35, 5):
++        r.actions.move('backward', {'distanceCm': distance, 'speed': 30})
++        source = copy.deepcopy(r.snapshot)
++        assert source['perception']['detections'][0]['fed_to_world_model'] is True
++        assert r.perception.confirmed(r.object_id)
++        assert r.perception.check_grasp_identity(r.object_id, source)['authorized']
++        fed.append(source)
++    r.actions.move('forward', {'distanceCm': 40, 'speed': 30})
++    near = copy.deepcopy(r.snapshot)
++    assert near['perception']['detections'][0]['fed_to_world_model'] is False
++    assert r.perception.confirmed(r.object_id)
++    assert r.perception.check_grasp_identity(r.object_id, near)['authorized']
++    # Loss is produced by normal WM expiry, not an internal state assignment.
++    r.override_items = []
++    r.actions.move('backward', {'distanceCm': 5, 'speed': 30})
++    r.bridge.seconds += 60
++    r.observe()
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    return r, fed, near
++
++
++def test_historical_view_prefers_latest_fed_source_over_newer_visibility_only_source():
++    r, fed, near = mixed_revisit_runtime()
++    before = copy.deepcopy(r.perception.objects())
++    commands_before = len(r.bridge_records)
++    assert fed[0]['observation_index'] < fed[1]['observation_index'] < near['observation_index']
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == fed[1]['observation_index']
++    assert view['position_m'] == list(position(fed[1]['odometry']))
++    assert r.perception.objects() == before
++    assert len(r.bridge_records) == commands_before and not actual_grabs(r)
++
++
++def test_historical_view_keeps_near_fallback_when_fed_sources_have_no_exact_route():
++    r, fed, near = mixed_revisit_runtime()
++    # Remove only the recorded graph connections to the two fed viewpoints.
++    # Keep all cached observations; source eligibility must not bypass route checks.
++    points = {position(source['odometry']) for source in fed}
++    for point in points:
++        r.roads._approach_edges.pop(point, None)
++    for edges in r.roads._approach_edges.values():
++        for point in points:
++            edges.pop(point, None)
++    for point in points:
++        route = r.roads.route_to(r.snapshot['odometry'], point)
++        assert not route or route[-1] != point
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == near['observation_index']
++    assert view['position_m'] == list(position(near['odometry']))
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
+diff --git a/tests/test_brain_native_retry.py b/tests/test_brain_native_retry.py
+index d0a791a..cf758a4 100644
+--- a/tests/test_brain_native_retry.py
++++ b/tests/test_brain_native_retry.py
+@@ -99,7 +99,7 @@ def test_same_decision_retry_waits_without_dispatch_then_executor_runs_at_most_o
+     assert [row["transport_retry_index"] for row in saved] == [0, 1]
+     assert [row["transport_retry_delay_s"] for row in saved] == [0, 1]
+     assert len({row["request_sha256"] for row in saved}) == 1
+-    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v23" for row in saved)
++    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25" for row in saved)
+     assert all(row["request"]["model"] == "gpt-6.1-sol" and row["request"]["thinking"] == {"type":"low"}
+                for row in saved)
+     assert [row["event"] for row in records(tmp_path/"native.lifecycle.jsonl")] == ["started","finished","started","finished"]
+diff --git a/tests/test_brain_pick_probe_feedback.py b/tests/test_brain_pick_probe_feedback.py
+index 5186c97..73708e2 100644
+--- a/tests/test_brain_pick_probe_feedback.py
++++ b/tests/test_brain_pick_probe_feedback.py
+@@ -151,7 +151,7 @@ def test_actual_native_request_receives_new_bound_and_keeps_model_choice(tmp_pat
+     assert received["evidence"]["pick_retry"]["next_probe_limit_cm"] == 3
+     assert received["reason"] == "completed_empty_grab_probe_refined"
+     assert received["success"] is False and received["evidence"]["grab_authorization"]["authorized"] is False
+-    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v21"
++    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25"
+     with patch.object(chatgpt_transport, "invoke", side_effect=AssertionError("no replay inference")):
+         with LLMClient(tmp_path/"replay.jsonl", replay_path=tmp_path/"calls.jsonl") as client:
+             assert client.decide(state) == {"action": "explore", "params": {}}
+diff --git a/tests/test_brain_state_evidence.py b/tests/test_brain_state_evidence.py
+index 03237c4..334e490 100644
+--- a/tests/test_brain_state_evidence.py
++++ b/tests/test_brain_state_evidence.py
+@@ -289,7 +289,7 @@ class NextModelStateTests(unittest.TestCase):
+         self.assertEqual(recent["after_observation"], 2)
+         self.assertEqual(recent["evidence"]["final_observation"], 2)
+         self.assertEqual(logged_rounds[0]["result"], results[0])
+-        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v19")
++        self.assertEqual(summary["runtime_version"], "autonomous-brain-runtime/v21")
+ 
+     def test_main_retains_five_recent_results_and_state_does_not_alias_runtime(self):
+         states, runtime, _, _, _ = self.run_offline(8)
+diff --git a/tests/test_brain_pick_same_category_return.py b/tests/test_brain_pick_same_category_return.py
+new file mode 100644
+index 0000000..9aad60c
+--- /dev/null
++++ b/tests/test_brain_pick_same_category_return.py
+@@ -0,0 +1,213 @@
++"""Same-frame red side pixels may permit undoing a known approach, never a grab.
++
++The 205/206 source window is original public evidence. Actuators and future
++readings in SameCategoryReturnRuntime are synthetic component inputs, not a
++competition or a model run. Original observations and peer records stay intact.
++"""
++import copy
++import json
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++
++from autonomous_brain.actions import Actions
++from autonomous_brain.observation_quality import pixel_quality
++from autonomous_brain.perception import Perception
++from test_brain_grab_authorization import actual_grabs
++from test_brain_pick_pixel_recovery import ClippedRetryRuntime, commands
++
++
++PUBLIC = json.loads((Path(__file__).parent / 'fixtures' /
++    'run_20261015T110439_r45_same_red_bottom_clip_public.json').read_text())
++
++
++def public_actions():
++    row = copy.deepcopy(PUBLIC['observations'][-1])
++    return Actions(SimpleNamespace(snapshot=row)), row
++
++
++class SameCategoryReturnRuntime(ClippedRetryRuntime):
++    def __init__(self, **kwargs):
++        self.bad_receipt_method = None
++        super().__init__(**kwargs)
++
++    def observe(self, *, motion=None):
++        original = self.perception.update
++
++        def public_sensor(raw, odo, **kwargs):
++            if not self.holding and self.forward > self.clip_after:
++                peer = {'category': 'red-ball', 'source': 'virtual-cv', 'confidence': .92,
++                    'bbox': {'x': 176, 'y': 40, 'w': 12, 'h': 14},
++                    'pixelQuality': {'schema': 'red-component-quality/v1',
++                        'frameId': int(raw['frameId']), 'componentPixels': 35,
++                        'redSectorPixels': 34, 'status': 'supported',
++                        'reason': 'red_sector_majority'}}
++                assert pixel_quality(peer, raw['frameId']) == peer['pixelQuality']
++                raw['detections'].append(peer)
++            return original(raw, odo, **kwargs)
++
++        self.perception.update = public_sensor
++        try:
++            return super().observe(motion=motion)
++        finally:
++            self.perception.update = original
++
++    def call(self, method, params):
++        result = super().call(method, params)
++        return {} if method == self.bad_receipt_method else result
++
++
++def test_public_same_red_layout_permits_only_inverse_and_keeps_both_original_records():
++    actions, row = public_actions()
++    original = copy.deepcopy(row)
++    source, clipped = PUBLIC['observations']
++    motion, = PUBLIC['motions']
++    assert (source['observation_index'], clipped['observation_index']) == (205, 206)
++    assert motion['method'] == 'forward' and motion['actuator_result']['completed'] is True
++    assert motion['motion_verification']['motion_verified'] is True
++    assert motion['motion_verification']['before_holding'] is False
++    assert motion['motion_verification']['after_holding'] is False
++    assert motion['motion_verification']['measured_cm'] == pytest.approx(6.000833275471005)
++    assert actions._bottom_clip_inverse_candidate('red-ball')
++    assert row == original
++    # A new Perception/WM consumes only the original public camera and raw frame.
++    # It must not use the clipped source as a positive identity or discard a peer.
++    perception = Perception(PUBLIC['camera'])
++    row['perception'] = perception.update(row['observation'], row['odometry'],
++        simulation_time_s=row['simulation_seconds'], round_index=row['round'],
++        observation_index=row['observation_index'])
++    assert actions._bottom_clip_inverse_candidate('red-ball')
++    assert row['observation'] == original['observation']
++    assert [item['category'] for item in row['perception']['detections']] == [
++        item['category'] for item in original['observation']['detections']]
++    converted = [item for item in row['perception']['detections'] if item['category'] == 'red-ball']
++    assert [item['category'] for item in converted] == ['red-ball', 'red-ball']
++    assert [item['pixel_quality']['status'] for item in converted] == ['unknown', 'supported']
++    assert all(item['track_id'] is None and item['fed_to_world_model'] is False for item in converted)
++    assert not any(obj['category'] == 'red-ball' for obj in perception.objects())
++    assert not perception._grab_authorizations
++
++
++@pytest.mark.parametrize('fault', ['missing-quality', 'unknown-quality', 'old-quality-frame',
++    'raw-quality-mismatch', 'invalid-counts', 'wrong-schema', 'side-clip', 'top-clip',
++    'touch', 'overlap', 'second-bottom-clip'])
++def test_same_red_peer_must_be_complete_strictly_supported_bound_and_separate(fault):
++    actions, row = public_actions()
++    raw = row['observation']['detections'][1]
++    item = row['perception']['detections'][1]
++    if fault == 'missing-quality':
++        raw.pop('pixelQuality'); item.pop('pixel_quality')
++    elif fault == 'raw-quality-mismatch':
++        raw['pixelQuality']['redSectorPixels'] -= 1
++    elif fault in {'unknown-quality', 'old-quality-frame', 'invalid-counts', 'wrong-schema'}:
++        quality = copy.deepcopy(raw['pixelQuality'])
++        if fault == 'unknown-quality':
++            quality.update(status='unknown', reason='red_sector_not_majority', redSectorPixels=0)
++        elif fault == 'old-quality-frame':
++            quality['frameId'] -= 1
++        elif fault == 'invalid-counts':
++            quality['redSectorPixels'] = quality['componentPixels'] + 1
++        else:
++            quality['schema'] = 'unrecognized-quality/v1'
++        raw['pixelQuality'] = quality
++        item['pixel_quality'] = copy.deepcopy(quality)
++    else:
++        box = copy.deepcopy(raw['bbox'])
++        if fault == 'side-clip': box['x'] = 0
++        elif fault == 'top-clip': box['y'] = 0
++        elif fault == 'touch': box['y'] = 316 - box['h']
++        elif fault == 'overlap': box['y'] = 310
++        else:
++            box.update(x=10, y=470, w=12, h=10)
++            raw['pixelQuality'].update(status='unknown', reason='source_bbox_touches_boundary')
++            item['pixel_quality'] = copy.deepcopy(raw['pixelQuality'])
++        raw['bbox'] = box
++        item['bbox'] = copy.deepcopy(box)
++    original = copy.deepcopy(row)
++    assert not actions._bottom_clip_inverse_candidate('red-ball')
++    assert row == original
++
++
++def test_same_red_peer_allows_measured_inverse_then_fresh_identity_before_smaller_probe():
++    r = SameCategoryReturnRuntime(grab_results=(False, True))
++    result = r.pick()
++    assert not result['success'] and result['reason'] == 'grab_identity_not_uniquely_visible'
++    assert result['evidence']['authorization_recovery']['success']
++    probe = result['evidence']['retry_probe']
++    assert probe['limit_cm'] == 3
++    clipped = next(o for o in r.observations if o['observation_index'] == probe['clipped_observation'])
++    assert [d['category'] for d in clipped['observation']['detections']] == ['red-ball', 'red-ball']
++    assert [d['category'] for d in clipped['perception']['detections']] == ['red-ball', 'red-ball']
++    assert [d['pixel_quality']['status'] for d in clipped['perception']['detections']] == ['unknown', 'supported']
++    assert clipped['perception']['detections'][0]['track_id'] is None
++    assert clipped['perception']['detections'][0]['fed_to_world_model'] is False
++    assert commands(r, 'backward') == [{'distanceCm': pytest.approx(6), 'speed': 20}]
++    assert r.forward == pytest.approx(r.entry['forwardCm'])
++    assert probe['restored_observation'] > probe['clipped_observation']
++    assert r.perception.check_grasp_identity(r.object_id, r.snapshot)['authorized']
++    assert r.pending_grasp is None and r.held_object_id is None
++    assert len(actual_grabs(r)) == 1 and not r.perception.action_evidence()
++    # A separate decision consumes the smaller bound without reusing the old
++    # empty grab. It remains failed while its new view is clipped.
++    second = r.pick()
++    assert not second['success'] and second['evidence']['attempts'] == []
++    assert second['evidence']['retry_probe']['limit_cm'] == 1.5
++    assert len(actual_grabs(r)) == 1
++
++
++@pytest.mark.parametrize('fault', ['forward-unknown', 'unknown', 'partial'])
++def test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse(fault):
++    r = SameCategoryReturnRuntime(recovery_fault=fault)
++    if fault == 'partial':
++        result = r.pick()
++        assert not result['success']
++        assert not result['evidence']['authorization_recovery']['success']
++    else:
++        with pytest.raises(ConnectionError):
++            r.pick()
++    assert r.inverse_attempts == (0 if fault == 'forward-unknown' else 1)
++    assert r.actions._pick_probe_limits == {} and not r.perception.action_evidence()
++    assert len(actual_grabs(r)) == 1
++
++
++@pytest.mark.parametrize('method', ['grab', 'forward'])
++def test_same_red_peer_cannot_replace_a_completed_source_command_receipt(method):
++    r = SameCategoryReturnRuntime()
++    r.bad_receipt_method = method
++    result = r.pick()
++    assert not result['success'] and 'retry_probe' not in result['evidence']
++    assert not commands(r, 'backward') and r.actions._pick_probe_limits == {}
++    assert len(actual_grabs(r)) == 1
++
++
++def test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab():
++    r = SameCategoryReturnRuntime()
++    r.rival_after_return = True
++    checks = []
++    original = r.perception.check_grasp_identity
++
++    def record_identity_check(object_id, snapshot):
++        result = original(object_id, snapshot)
++        checks.append({'observation_index': snapshot['observation_index'],
++            'red_count': sum(item['category'] == 'red-ball'
++                             for item in snapshot['observation']['detections']),
++            'result': copy.deepcopy(result)})
++        return result
++
++    r.perception.check_grasp_identity = record_identity_check
++    result = r.pick()
++    assert not result['success'] and result['evidence']['authorization_recovery']['success']
++    assert r.inverse_attempts == 1
++    assert 'retry_probe' not in result['evidence'] and 'pick_retry' not in result['evidence']
++    assert r.actions._pick_probe_limits == {} and not r.perception.action_evidence()
++    assert len(actual_grabs(r)) == 1
++    # The fixture inserts the rival only in the inverse readback. Actions then
++    # observes once more when finishing; assert the original check at the
++    # actual learning boundary, without substituting that later camera frame.
++    restored_index = result['evidence']['authorization_recovery']['after_observation']
++    restored_checks = [check for check in checks if check['observation_index'] == restored_index]
++    assert restored_checks
++    assert all(check['red_count'] == 2 and check['result']['authorized'] is False
++               and check['result']['reason'] == 'grab_identity_competition'
++               for check in restored_checks)
+diff --git a/tests/fixtures/run_20261015T110439_r45_same_red_bottom_clip_public.json b/tests/fixtures/run_20261015T110439_r45_same_red_bottom_clip_public.json
+new file mode 100644
+index 0000000..427c368
+--- /dev/null
++++ b/tests/fixtures/run_20261015T110439_r45_same_red_bottom_clip_public.json
+@@ -0,0 +1,1125 @@
++{
++  "description": "Original public 205-to-206 window from the real A41 run; no future inverse or identity claim. Synthetic actuator continuations belong only to the tests.",
++  "source": "artifacts/autonomous-brain/a40-followup/run-20261015T110439Z/map-05-run-1/brain",
++  "camera": {
++    "width": 640,
++    "height": 480,
++    "fx": 415.69219381653056,
++    "fy": 415.69219381653056,
++    "cx": 320,
++    "cy": 240,
++    "verticalFovDeg": 60,
++    "mount": {
++      "forwardCm": 5.375,
++      "rightCm": 0,
++      "upCm": 8.0625,
++      "pitchDeg": -8
++    }
++  },
++  "observations": [
++    {
++      "observation_index": 205,
++      "round": 45,
++      "simulation_seconds": 132.38,
++      "observation": {
++        "frameId": 205,
++        "tick": 6619,
++        "width": 640,
++        "height": 480,
++        "detections": [
++          {
++            "category": "red-ball",
++            "confidence": 0.934171327642037,
++            "bbox": {
++              "x": 208,
++              "y": 256,
++              "w": 172,
++              "h": 158
++            },
++            "source": "virtual-cv",
++            "pixelQuality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 205,
++              "componentPixels": 6614,
++              "redSectorPixels": 6614,
++              "status": "supported",
++              "reason": "red_sector_majority"
++            }
++          },
++          {
++            "category": "blue-ball",
++            "confidence": 0.7993055555555555,
++            "bbox": {
++              "x": 622,
++              "y": 154,
++              "w": 18,
++              "h": 32
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8138842975206613,
++            "bbox": {
++              "x": 574,
++              "y": 202,
++              "w": 63,
++              "h": 110
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8886956521739131,
++            "bbox": {
++              "x": 0,
++              "y": 184,
++              "w": 66,
++              "h": 20
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8225,
++            "bbox": {
++              "x": 507,
++              "y": 184,
++              "w": 35,
++              "h": 80
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.912,
++            "bbox": {
++              "x": 403,
++              "y": 182,
++              "w": 43,
++              "h": 20
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.842857142857143,
++            "bbox": {
++              "x": 545,
++              "y": 208,
++              "w": 20,
++              "h": 40
++            },
++            "source": "virtual-cv"
++          }
++        ]
++      },
++      "odometry": {
++        "forwardCm": 111.1,
++        "rightCm": -176.4,
++        "headingDeg": -90.7,
++        "distanceCm": 967.5,
++        "tick": 6619
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": -0.4,
++        "headingErrorDeg": 4.2,
++        "leftClearanceCm": 8.1,
++        "rightClearanceCm": 9,
++        "frontClearanceCm": 10.3,
++        "atJunction": false,
++        "atNode": false,
++        "exits": [],
++        "tick": 6619
++      },
++      "holding": {
++        "holding": false
++      },
++      "perception": {
++        "version": "autonomous-brain-perception/v23",
++        "frame_id": "205",
++        "tick": 6619,
++        "simulation_time_s": 132.38,
++        "round": 45,
++        "world_model_pose": {
++          "x": -1.764,
++          "z": 1.111,
++          "yaw_rad": 1.583013631558857,
++          "pose_uncertainty_cm": 0.0
++        },
++        "coordinate_convention": "x right, z forward in initial odometry frame; yaw/bearing right positive",
++        "raw_observation": {
++          "frameId": 205,
++          "tick": 6619,
++          "width": 640,
++          "height": 480,
++          "detections": [
++            {
++              "category": "red-ball",
++              "confidence": 0.934171327642037,
++              "bbox": {
++                "x": 208,
++                "y": 256,
++                "w": 172,
++                "h": 158
++              },
++              "source": "virtual-cv",
++              "pixelQuality": {
++                "schema": "red-component-quality/v1",
++                "frameId": 205,
++                "componentPixels": 6614,
++                "redSectorPixels": 6614,
++                "status": "supported",
++                "reason": "red_sector_majority"
++              }
++            },
++            {
++              "category": "blue-ball",
++              "confidence": 0.7993055555555555,
++              "bbox": {
++                "x": 622,
++                "y": 154,
++                "w": 18,
++                "h": 32
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8138842975206613,
++              "bbox": {
++                "x": 574,
++                "y": 202,
++                "w": 63,
++                "h": 110
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8886956521739131,
++              "bbox": {
++                "x": 0,
++                "y": 184,
++                "w": 66,
++                "h": 20
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8225,
++              "bbox": {
++                "x": 507,
++                "y": 184,
++                "w": 35,
++                "h": 80
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.912,
++              "bbox": {
++                "x": 403,
++                "y": 182,
++                "w": 43,
++                "h": 20
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.842857142857143,
++              "bbox": {
++                "x": 545,
++                "y": 208,
++                "w": 20,
++                "h": 40
++              },
++              "source": "virtual-cv"
++            }
++          ]
++        },
++        "odometry": {
++          "forwardCm": 111.1,
++          "rightCm": -176.4,
++          "headingDeg": -90.7,
++          "distanceCm": 967.5,
++          "tick": 6619
++        },
++        "detections": [
++          {
++            "category": "red-ball",
++            "source": "virtual-cv",
++            "confidence": 0.934171327642037,
++            "bbox": {
++              "x": 208.0,
++              "y": 256.0,
++              "w": 172.0,
++              "h": 158.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": false,
++            "track_id": "target_010",
++            "pixel_quality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 205,
++              "componentPixels": 6614,
++              "redSectorPixels": 6614,
++              "status": "supported",
++              "reason": "red_sector_majority"
++            },
++            "physical_size": {
++              "diameter_cm": 5.5,
++              "radius_cm": 2.75,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-published-width-formula+M5",
++            "raw_distance_cm": 19,
++            "raw_bearing_deg": -3.58,
++            "distance_cm": 26.164663776922556,
++            "bearing_deg": -2.87500856489542,
++            "position_m": {
++              "x": -1.5025418615070538,
++              "z": 1.1209299985772232
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "near_field_visibility_for_active_track",
++            "visibility_refresh_only": true,
++            "discovery_id": "red-discovery-137"
++          },
++          {
++            "category": "blue-ball",
++            "source": "virtual-cv",
++            "confidence": 0.7993055555555555,
++            "bbox": {
++              "x": 622.0,
++              "y": 154.0,
++              "w": 18.0,
++              "h": 32.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": false,
++            "track_id": "distractor_024",
++            "physical_size": {
++              "diameter_cm": 5.5,
++              "radius_cm": 2.75,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-published-width-formula+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": 36.8,
++            "distance_cm": 133.009283328698,
++            "bearing_deg": 35.46951102190583,
++            "position_m": {
++              "x": -0.6902500014195765,
++              "z": 0.3260109008973906
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8138842975206613,
++            "bbox": {
++              "x": 574.0,
++              "y": 202.0,
++              "w": 63.0,
++              "h": 110.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": true,
++            "track_id": "obstacle_039",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 72,
++            "raw_bearing_deg": 34.48,
++            "distance_cm": 94.89641406899699,
++            "bearing_deg": 32.71747073935833,
++            "position_m": {
++              "x": -0.9719186387507496,
++              "z": 0.5883719702532332
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": null
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8886956521739131,
++            "bbox": {
++              "x": 0.0,
++              "y": 184.0,
++              "w": 66.0,
++              "h": 20.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": true,
++            "track_id": "obstacle_016",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 69,
++            "raw_bearing_deg": -34.62,
++            "distance_cm": 91.32754196882722,
++            "bearing_deg": -32.78205926334207,
++            "position_m": {
++              "x": -0.9901924459741411,
++              "z": 1.5960709860827662
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": null
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8225,
++            "bbox": {
++              "x": 507.0,
++              "y": 184.0,
++              "w": 35.0,
++              "h": 80.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": false,
++            "track_id": "obstacle_001",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": 26.19,
++            "distance_cm": 119.79690150624467,
++            "bearing_deg": 25.101638447124603,
++            "position_m": {
++              "x": -0.6854609185417473,
++              "z": 0.5895757861233552
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.912,
++            "bbox": {
++              "x": 403.0,
++              "y": 182.0,
++              "w": 43.0,
++              "h": 20.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": true,
++            "track_id": "obstacle_040",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 88,
++            "raw_bearing_deg": 14.11,
++            "distance_cm": 99.06641690013599,
++            "bearing_deg": 13.383055642914886,
++            "position_m": {
++              "x": -0.8031112151196316,
++              "z": 0.8699434945198862
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": null
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.842857142857143,
++            "bbox": {
++              "x": 545.0,
++              "y": 208.0,
++              "w": 20.0,
++              "h": 40.0
++            },
++            "frame_id": "205",
++            "fed_to_world_model": false,
++            "track_id": null,
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": 29.48,
++            "distance_cm": 123.15921385504373,
++            "bearing_deg": 28.299557453033536,
++            "position_m": {
++              "x": -0.6868206326511574,
++              "z": 0.5139206030206809
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          }
++        ],
++        "newly_confirmed": [],
++        "visibility_expectation_unknown": [
++          {
++            "object_id": "target_025",
++            "reason": "uncalibrated_width_proxy_does_not_support_expected_visibility",
++            "source_frame_ids": [
++              "62"
++            ],
++            "conflicting_frame_pairs": [],
++            "decay": "existing_time_only_decay",
++            "positive_visibility": false
++          }
++        ]
++      }
++    },
++    {
++      "observation_index": 206,
++      "round": 45,
++      "simulation_seconds": 133.34,
++      "observation": {
++        "frameId": 206,
++        "tick": 6667,
++        "width": 640,
++        "height": 480,
++        "detections": [
++          {
++            "category": "red-ball",
++            "confidence": 0.9276045782804196,
++            "bbox": {
++              "x": 86,
++              "y": 316,
++              "w": 358,
++              "h": 164
++            },
++            "source": "virtual-cv",
++            "pixelQuality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 206,
++              "componentPixels": 13851,
++              "redSectorPixels": 13851,
++              "status": "unknown",
++              "reason": "source_bbox_touches_boundary"
++            }
++          },
++          {
++            "category": "red-ball",
++            "confidence": 0.9033333333333333,
++            "bbox": {
++              "x": 176,
++              "y": 190,
++              "w": 12,
++              "h": 14
++            },
++            "source": "virtual-cv",
++            "pixelQuality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 206,
++              "componentPixels": 35,
++              "redSectorPixels": 34,
++              "status": "supported",
++              "reason": "red_sector_majority"
++            }
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.912,
++            "bbox": {
++              "x": 407,
++              "y": 182,
++              "w": 43,
++              "h": 20
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8600000000000001,
++            "bbox": {
++              "x": 580,
++              "y": 210,
++              "w": 23,
++              "h": 50
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8540000000000001,
++            "bbox": {
++              "x": 592,
++              "y": 248,
++              "w": 23,
++              "h": 50
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8350000000000001,
++            "bbox": {
++              "x": 0,
++              "y": 178,
++              "w": 46,
++              "h": 30
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.7885714285714286,
++            "bbox": {
++              "x": 174,
++              "y": 208,
++              "w": 81,
++              "h": 30
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "obstacle",
++            "confidence": 0.8200000000000001,
++            "bbox": {
++              "x": 98,
++              "y": 206,
++              "w": 23,
++              "h": 30
++            },
++            "source": "virtual-cv"
++          },
++          {
++            "category": "storage-zone",
++            "confidence": 1,
++            "bbox": {
++              "x": 501,
++              "y": 192,
++              "w": 1,
++              "h": 1
++            },
++            "source": "storage-ground-pixels"
++          }
++        ]
++      },
++      "odometry": {
++        "forwardCm": 111,
++        "rightCm": -170.4,
++        "headingDeg": -90.7,
++        "distanceCm": 973.5,
++        "tick": 6667
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 4.2,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 4.3,
++        "atJunction": false,
++        "atNode": false,
++        "exits": [],
++        "tick": 6667
++      },
++      "holding": {
++        "holding": false
++      },
++      "perception": {
++        "version": "autonomous-brain-perception/v23",
++        "frame_id": "206",
++        "tick": 6667,
++        "simulation_time_s": 133.34,
++        "round": 45,
++        "world_model_pose": {
++          "x": -1.704,
++          "z": 1.11,
++          "yaw_rad": 1.583013631558857,
++          "pose_uncertainty_cm": 0.0
++        },
++        "coordinate_convention": "x right, z forward in initial odometry frame; yaw/bearing right positive",
++        "raw_observation": {
++          "frameId": 206,
++          "tick": 6667,
++          "width": 640,
++          "height": 480,
++          "detections": [
++            {
++              "category": "red-ball",
++              "confidence": 0.9276045782804196,
++              "bbox": {
++                "x": 86,
++                "y": 316,
++                "w": 358,
++                "h": 164
++              },
++              "source": "virtual-cv",
++              "pixelQuality": {
++                "schema": "red-component-quality/v1",
++                "frameId": 206,
++                "componentPixels": 13851,
++                "redSectorPixels": 13851,
++                "status": "unknown",
++                "reason": "source_bbox_touches_boundary"
++              }
++            },
++            {
++              "category": "red-ball",
++              "confidence": 0.9033333333333333,
++              "bbox": {
++                "x": 176,
++                "y": 190,
++                "w": 12,
++                "h": 14
++              },
++              "source": "virtual-cv",
++              "pixelQuality": {
++                "schema": "red-component-quality/v1",
++                "frameId": 206,
++                "componentPixels": 35,
++                "redSectorPixels": 34,
++                "status": "supported",
++                "reason": "red_sector_majority"
++              }
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.912,
++              "bbox": {
++                "x": 407,
++                "y": 182,
++                "w": 43,
++                "h": 20
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8600000000000001,
++              "bbox": {
++                "x": 580,
++                "y": 210,
++                "w": 23,
++                "h": 50
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8540000000000001,
++              "bbox": {
++                "x": 592,
++                "y": 248,
++                "w": 23,
++                "h": 50
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8350000000000001,
++              "bbox": {
++                "x": 0,
++                "y": 178,
++                "w": 46,
++                "h": 30
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.7885714285714286,
++              "bbox": {
++                "x": 174,
++                "y": 208,
++                "w": 81,
++                "h": 30
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "obstacle",
++              "confidence": 0.8200000000000001,
++              "bbox": {
++                "x": 98,
++                "y": 206,
++                "w": 23,
++                "h": 30
++              },
++              "source": "virtual-cv"
++            },
++            {
++              "category": "storage-zone",
++              "confidence": 1,
++              "bbox": {
++                "x": 501,
++                "y": 192,
++                "w": 1,
++                "h": 1
++              },
++              "source": "storage-ground-pixels"
++            }
++          ]
++        },
++        "odometry": {
++          "forwardCm": 111,
++          "rightCm": -170.4,
++          "headingDeg": -90.7,
++          "distanceCm": 973.5,
++          "tick": 6667
++        },
++        "detections": [
++          {
++            "category": "red-ball",
++            "source": "virtual-cv",
++            "confidence": 0.9276045782804196,
++            "bbox": {
++              "x": 86.0,
++              "y": 316.0,
++              "w": 358.0,
++              "h": 164.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": null,
++            "pixel_quality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 206,
++              "componentPixels": 13851,
++              "redSectorPixels": 13851,
++              "status": "unknown",
++              "reason": "source_bbox_touches_boundary"
++            },
++            "physical_size": {
++              "diameter_cm": 5.5,
++              "radius_cm": 2.75,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-published-width-formula+M5",
++            "raw_distance_cm": 12,
++            "raw_bearing_deg": -7.54,
++            "distance_cm": 19.07804021910651,
++            "bearing_deg": -5.507820608203164,
++            "position_m": {
++              "x": -1.5138908723274382,
++              "z": 1.1259900417686202
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "pixel_geometry_support_unknown",
++            "discovery_id": "red-discovery-138"
++          },
++          {
++            "category": "red-ball",
++            "source": "virtual-cv",
++            "confidence": 0.9033333333333333,
++            "bbox": {
++              "x": 176.0,
++              "y": 190.0,
++              "w": 12.0,
++              "h": 14.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": null,
++            "pixel_quality": {
++              "schema": "red-component-quality/v1",
++              "frameId": 206,
++              "componentPixels": 35,
++              "redSectorPixels": 34,
++              "status": "supported",
++              "reason": "red_sector_majority"
++            },
++            "physical_size": {
++              "diameter_cm": 5.5,
++              "radius_cm": 2.75,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-published-width-formula+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": -18.36,
++            "distance_cm": 113.86243570968878,
++            "bearing_deg": -17.54278468978554,
++            "position_m": {
++              "x": -0.6142187555192338,
++              "z": 1.4399125122699257
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "current_red_competitor_geometry_unknown",
++            "discovery_id": "red-discovery-139"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.912,
++            "bbox": {
++              "x": 407.0,
++              "y": 182.0,
++              "w": 43.0,
++              "h": 20.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": true,
++            "track_id": "obstacle_040",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 88,
++            "raw_bearing_deg": 14.63,
++            "distance_cm": 99.27055040674344,
++            "bearing_deg": 13.87838679045478,
++            "position_m": {
++              "x": -0.743255456057409,
++              "z": 0.8601317565389276
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": null
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8600000000000001,
++            "bbox": {
++              "x": 580.0,
++              "y": 210.0,
++              "w": 23.0,
++              "h": 50.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": null,
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": 33.15,
++            "distance_cm": 127.6449343448788,
++            "bearing_deg": 31.884399723749063,
++            "position_m": {
++              "x": -0.6284649827765019,
++              "z": 0.42257920229535406
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8540000000000001,
++            "bbox": {
++              "x": 592.0,
++              "y": 248.0,
++              "w": 23.0,
++              "h": 50.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": null,
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": 34.29,
++            "distance_cm": 129.21611774996236,
++            "bearing_deg": 33.00194910895912,
++            "position_m": {
++              "x": -0.6290055719603078,
++              "z": 0.3930150013279017
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8350000000000001,
++            "bbox": {
++              "x": 0.0,
++              "y": 178.0,
++              "w": 46.0,
++              "h": 30.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": "obstacle_031",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 97,
++            "raw_bearing_deg": -35.54,
++            "distance_cm": 127.29070134947641,
++            "bearing_deg": -34.19093614296147,
++            "position_m": {
++              "x": -0.6424297603327511,
++              "z": 1.8123965342005746
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.7885714285714286,
++            "bbox": {
++              "x": 174.0,
++              "y": 208.0,
++              "w": 81.0,
++              "h": 30.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": true,
++            "track_id": "obstacle_017",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 49,
++            "raw_bearing_deg": -14.24,
++            "distance_cm": 58.13367540652641,
++            "bearing_deg": -12.98995966437823,
++            "position_m": {
++              "x": -1.1359858041461388,
++              "z": 1.2337428581196868
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": null
++          },
++          {
++            "category": "obstacle",
++            "source": "virtual-cv",
++            "confidence": 0.8200000000000001,
++            "bbox": {
++              "x": 98.0,
++              "y": 206.0,
++              "w": 23.0,
++              "h": 30.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": false,
++            "track_id": "obstacle_034",
++            "physical_size": {
++              "diameter_cm": 5.75,
++              "radius_cm": 2.875,
++              "source": "virtual-cv-scene-unit-adapter/v1"
++            },
++            "method": "virtual-cv-expanded-obstacle-width-approximation+M5",
++            "raw_distance_cm": 100,
++            "raw_bearing_deg": -26.86,
++            "distance_cm": 120.43544538033355,
++            "bearing_deg": -25.751742196694938,
++            "position_m": {
++              "x": -0.6129442725948471,
++              "z": 1.6199676951458233
++            },
++            "position_semantics": "approximate_width_range_estimate",
++            "reason": "outside_demo_memory_window"
++          },
++          {
++            "category": "storage-zone",
++            "source": "storage-ground-pixels",
++            "confidence": 1.0,
++            "bbox": {
++              "x": 501.0,
++              "y": 192.0,
++              "w": 1.0,
++              "h": 1.0
++            },
++            "frame_id": "206",
++            "fed_to_world_model": true,
++            "track_id": "storage-zone_015",
++            "method": "visible-ground-region-bbox-centre",
++            "distance_cm": 344.823614996831,
++            "bearing_deg": 23.102579267316568,
++            "position_m": {
++              "x": 1.4509343576213567,
++              "z": -0.2816615051975069
++            }
++          }
++        ],
++        "newly_confirmed": [],
++        "visibility_expectation_unknown": [
++          {
++            "object_id": "target_010",
++            "reason": "current_unknown_pixels_do_not_support_missed_sighting",
++            "frame_id": "206",
++            "detection_indices": [
++              0
++            ],
++            "basis": "existing_coarse_association_gate_only_not_identity",
++            "decay": "existing_time_only_decay",
++            "positive_visibility": false
++          },
++          {
++            "object_id": "target_025",
++            "reason": "uncalibrated_width_proxy_does_not_support_expected_visibility",
++            "source_frame_ids": [
++              "62"
++            ],
++            "conflicting_frame_pairs": [],
++            "decay": "existing_time_only_decay",
++            "positive_visibility": false
++          }
++        ]
++      }
++    }
++  ],
++  "motions": [
++    {
++      "method": "forward",
++      "params": {
++        "distanceCm": 6,
++        "speed": 20
++      },
++      "before_observation": 205,
++      "after_observation": 206,
++      "actuator_result": {
++        "completed": true
++      },
++      "motion_verification": {
++        "method": "forward",
++        "before_observation": 205,
++        "after_observation": 206,
++        "before_on_road": true,
++        "after_on_road": true,
++        "before_holding": false,
++        "after_holding": false,
++        "before_frame_id": 205,
++        "after_frame_id": 206,
++        "frame_fresh": true,
++        "measured_cm": 6.000833275471005,
++        "heading_change_deg": 0.0,
++        "requested_cm": 6,
++        "along_cm": 6.000773918046237,
++        "across_cm": 0.026690531954556118,
++        "applicable": true,
++        "motion_verified": true,
++        "reasons": [],
++        "holding_changed": false,
++        "road_changed": false
++      }
++    }
++  ]
++}
+diff --git a/tests/test_brain_short_node_departure.py b/tests/test_brain_short_node_departure.py
+new file mode 100644
+index 0000000..7f7cdf7
+--- /dev/null
++++ b/tests/test_brain_short_node_departure.py
+@@ -0,0 +1,192 @@
++"""Bounded short node departures; synthetic sensors, real Actions/RoadMemory.
++
++The r106 fixture is original public evidence, not a successful retry. Future
++readings use the existing RegionRuntime renderer and actual command contract.
++No model, simulator connection, task truth, or identity restoration is involved.
++"""
++import copy
++import json
++from pathlib import Path
++
++import pytest
++
++from autonomous_brain.actions import Actions, ObservedMotionFailure
++from autonomous_brain.navigation import RoadMemory, distance, evidence_version, position
++from test_brain_executable_recovery import RegionRuntime
++from test_brain_navigation_reposition import sensor
++
++
++PUBLIC = json.loads((Path(__file__).parent / 'fixtures' /
++    'run_20261015T112325_r106_short_node_departure_public.json').read_text())
++
++
++def short_node_runtime(*, aligned=True):
++    r = RegionRuntime()
++    # The original public synthetic leg starts outside the existing node region
++    # and terminates inside it. Its 20 cm road request observes an 8.2 cm leg.
++    r.snapshot = sensor(1, (0, .20), heading=-180)
++    r.roads = RoadMemory()
++    r.calls.clear(); r.motions.clear(); r.observations.clear()
++    r.actions = Actions(r)
++    r.refresh(); r.register()
++    r.partial = .41
++    r.actions.move('follow_road', {'distanceCm': 20, 'speed': 50})
++    r.partial = 1.
++    assert r.snapshot['road']['atNode'] is True
++    if aligned:
++        r.actions.move('turn', {'angleDeg': -180, 'speed': 50})
++    # Historical-view navigation uses the exact recorded route, not the
++    # separate operation-standoff candidate filter (which excludes near poses).
++    route = r.roads.route_to(r.snapshot['odometry'], (0, .20))
++    assert route and route[-1] == (0, .20)
++    segments = [copy.deepcopy(r.roads._approach_edges[a][b]) for a, b in zip(route, route[1:])]
++    candidate = {'position_m': list(route[-1]), 'path': [list(p) for p in route],
++        'segments': segments, 'source': 'observed_on_road_motion_endpoints',
++        'route_version': evidence_version([[s['segment_version'], s['direction']] for s in segments])}
++    assert len(candidate['segments']) == 1
++    segment = candidate['segments'][0]
++    assert segment['direction'] == 'reverse_attempt'
++    assert segment['travelled_cm'] == pytest.approx(8.2)
++    assert segment['departure']['at_node'] is True
++    assert segment['arrival']['at_node'] is False
++    r.calls.clear(); r.motions.clear()
++    return r, candidate
++
++
++def test_original_r106_take_exit_travel_exceeded_its_short_recorded_leg():
++    rows = {row['observation_index']: row for row in PUBLIC['observations']}
++    source, turn, exit_motion = PUBLIC['motions']
++    assert (source['before_observation'], source['after_observation']) == (516, 517)
++    arc = rows[517]['odometry']['distanceCm'] - rows[516]['odometry']['distanceCm']
++    chord = distance(position(rows[516]['odometry']), position(rows[517]['odometry'])) * 100
++    assert arc == pytest.approx(8.2) and chord == pytest.approx(8.300602387778873)
++    assert abs(arc-chord) <= .2
++    assert rows[516]['road']['atNode'] is False and rows[517]['road']['atNode'] is True
++    assert position(rows[568]['odometry']) == position(rows[517]['odometry'])
++    assert turn['method'] == 'turn' and turn['actuator_result']['completed'] is True
++    assert exit_motion['method'] == 'take_exit'
++    assert rows[570]['odometry']['distanceCm'] - rows[569]['odometry']['distanceCm'] == pytest.approx(40.6)
++    assert exit_motion['actuator_result']['accepted'] is True
++    # An accepted primitive is not evidence that this short arc was retraced.
++    assert rows[570]['odometry']['distanceCm'] - rows[569]['odometry']['distanceCm'] > arc + .2
++
++
++@pytest.mark.parametrize('holding', [False, True])
++def test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint(holding):
++    r, candidate = short_node_runtime()
++    r.snapshot['holding']['holding'] = holding
++    before = r.snapshot['observation_index']
++    reached, reason, steps = r.actions._follow_approach_path(candidate, [5])
++    assert reached, reason
++    assert r.calls == [('forward', {'distanceCm': pytest.approx(8.2), 'speed': 30})]
++    assert r.snapshot['observation_index'] > before
++    assert distance(position(r.snapshot['odometry']), candidate['position_m']) <= .002
++    assert abs(r.snapshot['odometry']['headingDeg']) <= .2
++    assert r.snapshot['road']['atNode'] is False
++    assert r.snapshot['holding']['holding'] is holding
++    assert steps[-1]['completed_segment_ids'] == [candidate['segments'][0]['segment_id']]
++    assert steps[-1]['historical_arc_retraced'] is True
++    assert r.motions[-1]['motion_verification']['motion_verified'] is True
++
++
++@pytest.mark.parametrize('fault', ['curved-arc', 'changed-tangent', 'duplicate-exit',
++    'changed-node', 'start-jump', 'unknown-source'])
++def test_short_node_departure_rejects_unproved_source_without_take_exit_fallback(fault):
++    r, candidate = short_node_runtime()
++    segment = candidate['segments'][0]
++    if fault == 'curved-arc': segment['travelled_cm'] += 1
++    elif fault == 'changed-tangent': segment['arrival']['travel_heading_deg'] += 3
++    elif fault == 'duplicate-exit':
++        r.snapshot['road']['exits'].append(copy.deepcopy(r.snapshot['road']['exits'][0]))
++    elif fault == 'changed-node':
++        r.snapshot['road']['exits'].append({'angleDeg': 90})
++    elif fault == 'start-jump': r.snapshot['odometry']['rightCm'] += 1
++    else: segment['motion']['outcome_unknown'] = True
++    reached, _, steps = r.actions._follow_approach_path(candidate, [5])
++    assert not reached and r.calls == []
++    assert all(not step.get('completed_segment_ids') for step in steps)
++
++
++@pytest.mark.parametrize('fault', ['exits', 'node-flag', 'pose', 'front', 'side', 'holding', 'holding-unknown'])
++def test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward(fault):
++    r, candidate = short_node_runtime(aligned=False)
++    original = r.observe
++
++    def changed(*, motion=None):
++        original(motion=motion)
++        if (motion or {}).get('method') == 'turn':
++            if fault == 'exits': r.snapshot['road']['exits'].append({'angleDeg': 90})
++            elif fault == 'node-flag': r.snapshot['road']['atNode'] = False
++            elif fault == 'pose': r.snapshot['odometry']['rightCm'] += 1
++            elif fault == 'front': r.snapshot['road']['frontClearanceCm'] = 8.2
++            elif fault == 'side':
++                r.snapshot['road'].update(leftClearanceCm=.1, rightClearanceCm=.1)
++            else: r.snapshot['holding']['holding'] = True if fault == 'holding' else None
++
++    r.observe = changed
++    try:
++        reached, _, steps = r.actions._follow_approach_path(candidate, [5])
++    except ObservedMotionFailure:
++        reached, steps = False, []
++    assert not reached
++    assert r.calls == [('turn', {'angleDeg': -180, 'speed': 50})]
++    assert all(not step.get('completed_segment_ids') for step in steps)
++
++
++def test_short_node_departure_unknown_forward_is_sent_once_and_not_completed():
++    r, candidate = short_node_runtime()
++    original = r.call
++
++    def unknown(method, params):
++        original(method, params)
++        raise ConnectionError('synthetic_short_departure_ack_unknown')
++
++    r.bridge.call = unknown
++    with pytest.raises(ConnectionError, match='synthetic_short_departure_ack_unknown'):
++        r.actions._follow_approach_path(candidate, [5])
++    assert len(r.calls) == 1 and r.calls[0][0] == 'forward'
++    assert len(r.motions) == 1 and r.motions[0]['outcome_unknown'] is True
++
++
++@pytest.mark.parametrize('fault', ['partial', 'heading', 'holding'])
++def test_short_node_departure_failed_forward_does_not_complete_old_segment(fault):
++    r, candidate = short_node_runtime()
++    if fault == 'partial': r.partial = .5
++    elif fault == 'heading': r.heading_drift = .3
++    else:
++        original = r.call
++        def changed(method, params):
++            result = original(method, params)
++            r.snapshot['holding']['holding'] = True
++            return result
++        r.bridge.call = changed
++    try:
++        reached, _, steps = r.actions._follow_approach_path(candidate, [5])
++    except ObservedMotionFailure:
++        reached, steps = False, []
++    assert not reached and len(r.calls) == 1 and r.calls[0][0] == 'forward'
++    assert all(not step.get('completed_segment_ids') for step in steps)
++
++
++def test_short_node_departure_exact_endpoint_with_changed_node_flag_is_not_arrival():
++    r, candidate = short_node_runtime()
++    original = r.refresh
++
++    def changed_endpoint():
++        original()
++        if distance(position(r.snapshot['odometry']), candidate['position_m']) <= .002:
++            r.snapshot['road'].update(atNode=True, exits=[{'angleDeg': 0}, {'angleDeg': -180}])
++
++    r.refresh = changed_endpoint
++    reached, reason, steps = r.actions._follow_approach_path(candidate, [5])
++    assert not reached and reason == 'reposition_arrival_node_context_changed'
++    assert r.calls == [('forward', {'distanceCm': pytest.approx(8.2), 'speed': 30})]
++    assert distance(position(r.snapshot['odometry']), candidate['position_m']) <= .002
++    assert all(not step.get('completed_segment_ids') for step in steps)
++
++
++def test_short_node_departure_zero_budget_cannot_align_or_translate():
++    r, candidate = short_node_runtime(aligned=False)
++    reached, reason, steps = r.actions._follow_approach_path(candidate, [0])
++    assert not reached and reason == 'reposition_motion_budget_exhausted'
++    assert r.calls == [] and steps == []
+diff --git a/tests/fixtures/run_20261015T112325_r106_short_node_departure_public.json b/tests/fixtures/run_20261015T112325_r106_short_node_departure_public.json
+new file mode 100644
+index 0000000..639d5db
+--- /dev/null
++++ b/tests/fixtures/run_20261015T112325_r106_short_node_departure_public.json
+@@ -0,0 +1,293 @@
++{
++  "description": "Original public road and odometry only. Actual historical follow_road and unsuccessful reverse take_exit; no future bounded forward reading is supplied.",
++  "source": "artifacts/autonomous-brain/a40-followup/run-20261015T112325Z/map-05-run-1/brain",
++  "observations": [
++    {
++      "observation_index": 516,
++      "round": 97,
++      "simulation_seconds": 348.04,
++      "odometry": {
++        "forwardCm": 110.4,
++        "rightCm": -0.3,
++        "headingDeg": -179.3,
++        "distanceCm": 2374.5,
++        "tick": 17402
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 0,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 158.9,
++        "atJunction": false,
++        "atNode": false,
++        "exits": [],
++        "tick": 17402
++      },
++      "holding": {
++        "holding": false
++      },
++      "observation": {
++        "frameId": 516,
++        "tick": 17402
++      }
++    },
++    {
++      "observation_index": 517,
++      "round": 97,
++      "simulation_seconds": 348.58,
++      "odometry": {
++        "forwardCm": 102.1,
++        "rightCm": -0.2,
++        "headingDeg": -179.3,
++        "distanceCm": 2382.7,
++        "tick": 17429
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 0,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 150.7,
++        "atJunction": true,
++        "atNode": true,
++        "exits": [
++          {
++            "angleDeg": 89.3
++          },
++          {
++            "angleDeg": -1.4
++          },
++          {
++            "angleDeg": -90.7
++          },
++          {
++            "angleDeg": -180
++          }
++        ],
++        "tick": 17429
++      },
++      "holding": {
++        "holding": false
++      },
++      "observation": {
++        "frameId": 517,
++        "tick": 17429
++      }
++    },
++    {
++      "observation_index": 568,
++      "round": 106,
++      "simulation_seconds": 393.96,
++      "odometry": {
++        "forwardCm": 102.1,
++        "rightCm": -0.2,
++        "headingDeg": -179.3,
++        "distanceCm": 2799.3,
++        "tick": 19698
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 0,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 150.7,
++        "atJunction": true,
++        "atNode": true,
++        "exits": [
++          {
++            "angleDeg": 89.3
++          },
++          {
++            "angleDeg": -1.4
++          },
++          {
++            "angleDeg": -90.7
++          },
++          {
++            "angleDeg": -180
++          }
++        ],
++        "tick": 19698
++      },
++      "holding": {
++        "holding": false
++      },
++      "observation": {
++        "frameId": 568,
++        "tick": 19698
++      }
++    },
++    {
++      "observation_index": 569,
++      "round": 106,
++      "simulation_seconds": 396.22,
++      "odometry": {
++        "forwardCm": 102.1,
++        "rightCm": -0.2,
++        "headingDeg": 0.7,
++        "distanceCm": 2799.3,
++        "tick": 19811
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 0,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 138.4,
++        "atJunction": true,
++        "atNode": true,
++        "exits": [
++          {
++            "angleDeg": 178.6
++          },
++          {
++            "angleDeg": 89.3
++          },
++          {
++            "angleDeg": 0
++          },
++          {
++            "angleDeg": -90.7
++          }
++        ],
++        "tick": 19811
++      },
++      "holding": {
++        "holding": false
++      },
++      "observation": {
++        "frameId": 569,
++        "tick": 19811
++      }
++    },
++    {
++      "observation_index": 570,
++      "round": 106,
++      "simulation_seconds": 401.08,
++      "odometry": {
++        "forwardCm": 111.5,
++        "rightCm": -0.3,
++        "headingDeg": 0.7,
++        "distanceCm": 2839.9,
++        "tick": 20054
++      },
++      "road": {
++        "onRoad": true,
++        "lateralOffsetCm": 0,
++        "headingErrorDeg": 0,
++        "leftClearanceCm": 8.6,
++        "rightClearanceCm": 8.6,
++        "frontClearanceCm": 129,
++        "atJunction": false,
++        "atNode": false,
++        "exits": [],
++        "tick": 20054
++      },
++      "holding": {
++        "holding": false
++      },
++      "observation": {
++        "frameId": 570,
++        "tick": 20054
++      }
++    }
++  ],
++  "motions": [
++    {
++      "method": "follow_road",
++      "params": {
++        "distanceCm": 16,
++        "speed": 50
++      },
++      "before_observation": 516,
++      "after_observation": 517,
++      "actuator_result": {
++        "accepted": true,
++        "stoppedBy": "junction",
++        "distanceCm": 8.3,
++        "elapsedTicks": 27
++      },
++      "motion_verification": {
++        "method": "follow_road",
++        "before_observation": 516,
++        "after_observation": 517,
++        "before_on_road": true,
++        "after_on_road": true,
++        "before_holding": false,
++        "after_holding": false,
++        "before_frame_id": 516,
++        "after_frame_id": 517,
++        "frame_fresh": true,
++        "measured_cm": 8.300602387778873,
++        "heading_change_deg": 0.0,
++        "applicable": false
++      }
++    },
++    {
++      "method": "turn",
++      "params": {
++        "angleDeg": -180,
++        "speed": 50
++      },
++      "before_observation": 568,
++      "after_observation": 569,
++      "actuator_result": {
++        "completed": true
++      },
++      "motion_verification": {
++        "method": "turn",
++        "before_observation": 568,
++        "after_observation": 569,
++        "before_on_road": true,
++        "after_on_road": true,
++        "before_holding": false,
++        "after_holding": false,
++        "before_frame_id": 568,
++        "after_frame_id": 569,
++        "frame_fresh": true,
++        "measured_cm": 0.0,
++        "heading_change_deg": -180.0,
++        "applicable": true,
++        "motion_verified": true,
++        "reasons": [],
++        "holding_changed": false,
++        "road_changed": false
++      }
++    },
++    {
++      "method": "take_exit",
++      "params": {
++        "angleDeg": 0,
++        "speed": 50
++      },
++      "before_observation": 569,
++      "after_observation": 570,
++      "actuator_result": {
++        "accepted": true,
++        "stoppedBy": "entered_road",
++        "distanceCm": 40.6,
++        "elapsedTicks": 243
++      },
++      "motion_verification": {
++        "method": "take_exit",
++        "before_observation": 569,
++        "after_observation": 570,
++        "before_on_road": true,
++        "after_on_road": true,
++        "before_holding": false,
++        "after_holding": false,
++        "before_frame_id": 569,
++        "after_frame_id": 570,
++        "frame_fresh": true,
++        "measured_cm": 9.400531899844825,
++        "heading_change_deg": 0.0,
++        "applicable": false
++      }
++    }
++  ]
++}

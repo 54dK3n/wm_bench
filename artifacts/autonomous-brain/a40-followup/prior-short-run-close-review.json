@@ -1,0 +1,180 @@
+{
+  "scope": "Read-only analysis of existing real A40 short run; not a new platform run or synthetic reproduction",
+  "review_baseline": "cc15a3329aad56b4f779203dbe688cb64c886312",
+  "run": "run-20261013T115310Z",
+  "timezone": "UTC",
+  "conclusion": "The initiating connection failure remains unknown. The existing evidence does not establish a production controller lifecycle bug requiring a patch. A new independent run with the same frozen source is justified; the explicitly closed old controller must not be revived.",
+  "observed_timeline": [
+    {
+      "time": "2026-10-13T11:53:51.445Z",
+      "diagnostics_lines": [
+        69
+      ],
+      "event": "CDP WebSocket TypeError; no pending CDP requests"
+    },
+    {
+      "time": "2026-10-13T11:53:51.446Z",
+      "diagnostics_lines": [
+        70,
+        71
+      ],
+      "event": "Monitor pauses dispatch: 48 requests, 48 dispatches, 48 terminals; no queued or in-flight command"
+    },
+    {
+      "time": "2026-10-13T11:53:51.447Z",
+      "diagnostics_lines": [
+        72,
+        73,
+        74
+      ],
+      "event": "Unintentional WebSocket close code 1006; monitor pauses again"
+    },
+    {
+      "time": "2026-10-13T11:53:51.448Z",
+      "diagnostics_lines": [
+        75
+      ],
+      "event": "First explicit controller close endpoint invoked during brain phase"
+    },
+    {
+      "time": "2026-10-13T11:53:51.455Z",
+      "diagnostics_lines": [
+        76
+      ],
+      "event": "144-event complete bridge trace saved; last request brain-000048 holding completed false at tick336"
+    },
+    {
+      "time": null,
+      "source": "map-05-run-1/brain/bridge-calls.jsonl:49",
+      "event": "brain-000049 observe submission returns HTTP409 BRIDGE_CLOSED; no terminal; absent from server trace",
+      "ordering": "After controller close, before brain exit; no separate wall timestamp recorded"
+    },
+    {
+      "time": "2026-10-13T11:53:51.478Z",
+      "diagnostics_lines": [
+        77
+      ],
+      "event": "Brain ended; guard reports MONITOR_CONTROLLER_CLOSED"
+    },
+    {
+      "time": "2026-10-13T11:53:51.480Z",
+      "diagnostics_lines": [
+        78,
+        79,
+        80,
+        81
+      ],
+      "event": "Driver enters stop/export path after brain exit"
+    },
+    {
+      "time": "2026-10-13T11:53:51.517Z",
+      "diagnostics_lines": [
+        84
+      ],
+      "event": "Export-only reconnect to original page succeeds; running true, healthy false, errorCount1, tick336"
+    },
+    {
+      "time": "2026-10-13T11:53:51.522Z",
+      "diagnostics_lines": [
+        85,
+        86
+      ],
+      "event": "Second explicit controller close during page-stop/export"
+    },
+    {
+      "time": "2026-10-13T11:53:51.525Z",
+      "source": "map-05-run-1/envelope.json management.clientEndedAt",
+      "event": "Page stop recorded"
+    },
+    {
+      "time": "2026-10-13T11:53:52.264Z",
+      "diagnostics_lines": [
+        90
+      ],
+      "event": "Browser process exits code0"
+    },
+    {
+      "time": "2026-10-13T11:53:52.267Z",
+      "diagnostics_lines": [
+        94
+      ],
+      "event": "Server bridge final cleanup close"
+    }
+  ],
+  "controller_close_path": {
+    "recorded_error": "TypeError: Failed to fetch",
+    "recorded_error_location": "robot-backend-runtime.js:122 controlLoop GET /next; request fetch at line13",
+    "production_path": "controlLoop catch marks context.failed, records controllerError, then POSTs /close",
+    "production_source": "workspaces/guangyang-platform/projects/car-python/robot-backend-runtime.js",
+    "production_lines": [
+      119,
+      122,
+      139,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147
+    ],
+    "status": "Supported by recorded stack, close event before stop, and unhealthy original page; initial GET failure has no independent wall timestamp"
+  },
+  "monitor_facts": {
+    "running_recovery_attempted": false,
+    "running_recovery_status": "not_needed",
+    "recorded_running_recovery_or_terminal_events": false,
+    "explanation": "Brain exited before a subsequent monitor polling cycle. Do not describe a failed running recovery attempt. Export reconnect was separate and occurred after brain exit.",
+    "guard_check_closed_source": "tools/autonomous_brain_monitor.js:125",
+    "recover_source": "tools/autonomous_brain_driver.js:333-379",
+    "pause_semantics": "Pause aborts the server long-poll waiter, whose abort listener resolves command:null; it does not close the controller, HTTP socket, or page.",
+    "pause_sources": [
+      "tools/autonomous_brain_monitor.js:100",
+      "workspaces/guangyang-platform/projects/car-python/backend/robot-bridge.js:119",
+      "workspaces/guangyang-platform/projects/car-python/server.js:2523"
+    ]
+  },
+  "not_established": [
+    "Exact wall-clock ordering between the controller GET fetch failure and the CDP error",
+    "Whether a common environment/network event caused both failures",
+    "That the event was only a transient CDP interruption",
+    "That monitor pause caused the fetch failure",
+    "That HTTP409 was the initiating cause",
+    "That all completed requests authorize reopening an explicitly closed controller",
+    "Any platform exercise or falsification of A40 historical-view revisit"
+  ],
+  "source_verification": {
+    "driver_monitor_diagnostics_equal_review_baseline": true,
+    "driver_monitor_diagnostics_match_original_run_manifest": true,
+    "platform_runtime_matches_original_envelope": true,
+    "platform_runtime_sha256": "4d5b86a5ec75da8c40bec370e6c2f9ff366b1ecfca6834f25981a399518fff50",
+    "original_run_sources_unchanged": true
+  },
+  "originals": {
+    "driver-diagnostics.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/driver-diagnostics.jsonl",
+      "sha256": "6d866983bb9d631687f9277cec4fdc1324e36e306935bac68f1cf43f1703b263"
+    },
+    "map-05-run-1/server-bridge-trace.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/server-bridge-trace.json",
+      "sha256": "ec07bf708b4bd0a6957a3cb929539808cfa2e5f31a19f636db99e6e46266d204"
+    },
+    "map-05-run-1/envelope.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/envelope.json",
+      "sha256": "119e47fbde08aa94ff09bd8b063068a817180c64dd4c2bf8ea94bea3740d1c65"
+    },
+    "map-05-run-1/brain/bridge-calls.jsonl": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "e2ce94800dda0811cd975dd56d6928cba6477d9ffa7bdcc1e30dfdc30540e18a"
+    },
+    "map-05-run-1/brain/summary.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/map-05-run-1/brain/summary.json",
+      "sha256": "c009cececd832a93f9d7144978078eadc6697fdc172cec174522df839405be00"
+    },
+    "summary.json": {
+      "path": "artifacts/autonomous-brain/near-visibility-live/run-20261013T115310Z/summary.json",
+      "sha256": "19df1c1dad59dbcfa6b693594faea32c847c1224091fc8a82bd351313548748e"
+    }
+  },
+  "mutations": "Only this new review artifact; no original evidence, production source, running controller, or request changed"
+}

@@ -1,0 +1,82 @@
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -9,7 +9,7 @@
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+ from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v44"
++VERSION = "autonomous-brain-actions/v45"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -1539,6 +1539,8 @@
+         anchors = [bound.get("anchor_odometry")]
+         if "observed_return_odometry" in bound:
+             anchors.append(bound["observed_return_odometry"])
++        if "budget_return_odometry" in bound:
++            anchors.append(bound["budget_return_odometry"])
+         if (not isinstance(point, (list, tuple)) or len(point) != 2
+                 or not all(type(v) in (int, float) and math.isfinite(v) for v in point)):
+             return False
+@@ -2890,6 +2892,8 @@
+         remaining_road_path = None
+         identity_failure_context = None
+         navigation_probes = []
++        completed_supported_approaches = 0
++        budget_approach_unresolved = False
+ 
+         def finish(success, reason, **evidence):
+             # Fix the manipulation witness before road recovery changes the
+@@ -2915,6 +2919,38 @@
+                 learned_probe_bound["observed_return_odometry"] = copy.deepcopy(self.s["odometry"])
+                 learned_probe_bound["return_observation"] = self.s["observation_index"]
+                 evidence["retry_probe"].update(copy.deepcopy(learned_probe_bound))
++            if reason == "pick_approach_view_budget_exhausted":
++                bound = self._pick_probe_limits.get(object_id, {})
++                limit, previous = bound.get("limit_cm"), bound.get("previous_limit_cm")
++                indices = [bound.get("source_observation"),
++                    bound.get("clipped_observation", bound.get("missing_observation")),
++                    bound.get("restored_observation"), bound.get("return_observation")]
++                anchors = [bound.get(key) for key in ("anchor_odometry", "observed_return_odometry")]
++                if (budget_approach_unresolved and completed_supported_approaches == 10
++                        and len(trajectory) == 10 and not attempts
++                        and all(row.get("method") == "forward" and not row.get("outcome_unknown")
++                            and row.get("motion_verification", {}).get("motion_verified") is True
++                            for row in trajectory)
++                        and bound.get("probe_kind") == "fresh_supported_approach"
++                        and bound.get("requires_new_view") is False
++                        and all(type(v) in (int, float) and math.isfinite(v) for v in (limit, previous))
++                        and .1 <= limit < previous <= 6
++                        and all(type(i) is int and i >= 0 for i in indices)
++                        and indices[0] < indices[1] < indices[2] <= indices[3] <= action_before
++                        and all(isinstance(anchor, dict) and all(type(anchor.get(k)) in (int, float)
++                            and math.isfinite(anchor[k]) for k in ("rightCm", "forwardCm", "headingDeg"))
++                            for anchor in anchors)
++                        and recovery.get("success") is True
++                        and self.s["holding"].get("holding") is False
++                        and getattr(self.r, "held_object_id", None) is None
++                        and not getattr(self.r, "pending_grasp", None)):
++                    # Exhausting a learned small-step approach requires the
++                    # existing independent-view planner, not another same-view
++                    # pick. Keep its original evidence and this return's scope.
++                    bound.update(requires_new_view=True,
++                        budget_return_odometry=copy.deepcopy(self.s["odometry"]),
++                        budget_return_observation=self.s["observation_index"])
++                    evidence["retry_probe"] = copy.deepcopy(bound)
+             if (self.s.get("holding") or {}).get("holding") is False:
+                 if getattr(self.r, "held_object_id", None) == object_id:
+                     marked = self.r.perception.mark_release_unverified(object_id,
+@@ -3219,7 +3255,13 @@
+                         if not self._completed_pick_receipt(probe_result):
+                             self._empty_grab_navigation.clear()
+                             return finish(False, "pick_probe_receipt_not_completed")
++                        completed_supported_approaches += 1
+                 else:
++                    # The last forward may already have reached the existing
++                    # pick range, including off road. Check before returning.
++                    target = self.r.perception.confirmed(object_id)
++                    budget_approach_unresolved = bool(target is not None
++                        and self.object_geometry(target)[0] > 22.5)
+                     return finish(False, "pick_approach_view_budget_exhausted")
+                 target = self.r.perception.confirmed(object_id)
+                 if target is None:

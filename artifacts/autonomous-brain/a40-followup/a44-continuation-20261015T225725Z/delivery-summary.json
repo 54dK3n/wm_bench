@@ -1,0 +1,1040 @@
+{
+  "schema": "a40-followup-delivery-summary/v1",
+  "created_utc": "2026-10-16T02:25:16.817620+00:00",
+  "overall_result": "FAIL: no new independent run completed two different red-ball deliveries and observed done",
+  "scope": "Three real independent map-05 runs in this turn; no results joined across sessions. Historical one-ball PASS remains unchanged and is not a result of this turn.",
+  "base_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+  "branch": "codex/autonomous-brain",
+  "source_status": {
+    "new_commit": false,
+    "pushed_this_turn": false,
+    "worktree_changes_preserved": true,
+    "verification": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/final-source-check.json",
+      "sha256": "4e0c046d5cab323828a7fc71aa7133e7681a7a4743f822564393041d9efab352"
+    }
+  },
+  "changes": {
+    "already_present_at_start": "Actions44 and NavigationProgress contain the A/B recovery-intent change. Retained and verified; not claimed as newly authored this turn.",
+    "historical_contract": "Camera pose/heading intent, retained attempts, scoped completed-arrival unresolved successor handling at go_to entry and candidate selection. LOST, unknown-motion, road, direction, clearance and empty-gripper gates retained.",
+    "this_turn": "Actions45: after ten verified fresh supported approach steps exhaust the budget outside grab range, require a new supported view only with complete prior shrink evidence, verified successful return and empty known gripper; preserve existing evidence and add budget-return pose as an independent-view anchor.",
+    "files": [
+      "autonomous_brain/actions.py",
+      "tests/test_brain_pick_budget_guardrails.py"
+    ],
+    "preexisting_test_unchanged": "tests/test_brain_pick_budget_new_view.py",
+    "incremental_patch": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-actions45.patch",
+      "sha256": "27760e638982b3c4281c155acdaea15ed4f889d9c56dbbc8e520ea5daf0e99c2"
+    },
+    "full_current_two_source_file_patch": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/current-brain-source-from-cc15.patch",
+      "sha256": "d3484f858e20260cea08f4e574005f33c3ea209c0f2ad7b0da50f8bb96bf0be4"
+    },
+    "full_patch_caveat": "Includes pre-existing changes since frozen revision; incremental patch alone identifies this turn production change.",
+    "review": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-review.json",
+      "sha256": "56b34a29d647c812409df10dc04a0c90c097581e7fed2cc45c0583d362f02e7e"
+    },
+    "details": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/changes.json",
+      "sha256": "167b558b0f30916da246038e45ffe5998f54cd8abe8888e6dde8daaf1050fcfb"
+    }
+  },
+  "regressions": {
+    "historical_focused": {
+      "passed": 13,
+      "deselected": 16,
+      "output": {
+        "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/focused-tests.txt",
+        "sha256": "506e0ceeee47ac742e94f100fefd0f227f1f26f802d4987de636a2d4a9663056"
+      }
+    },
+    "applied_A45_targeted": {
+      "passed": 18,
+      "failed": 0,
+      "output": {
+        "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/applied-focused-tests.txt",
+        "sha256": "b71559bb7f5a11bc60984de91ccfe8f1d3bfeb95fdc88be225221f4af377d0f5"
+      }
+    },
+    "related_suites": {
+      "passed": 250,
+      "failed": 5,
+      "all_five_reproduced_on_unmodified_A44": true,
+      "output": {
+        "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-related-tests.txt",
+        "sha256": "dd4ec7a2682b5aa7ded60d58446cbb93b85f0248e7f759269f8d78997c8257d6"
+      },
+      "baseline_output": {
+        "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-baseline-failures.txt",
+        "sha256": "e89c1b711775a6684f3f14e01c967b5241563d74ea6f5b8273cf2488e7004e44"
+      }
+    },
+    "commands_and_exact_nodes": {
+      "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-validation.json",
+      "sha256": "5d0f2924d258b8570070318cd23c93711c323503d56a09094abc19f0eb9e211d"
+    },
+    "git_diff_check_exit": 0
+  },
+  "runs": [
+    {
+      "run": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z",
+      "versions": {
+        "brain": "autonomous-brain/v2",
+        "runtime": "autonomous-brain-runtime/v21",
+        "actions": {
+          "value": "autonomous-brain-actions/v44",
+          "verified_source": "autonomous_brain/actions.py"
+        },
+        "native_llm": [
+          "autonomous-brain-llm/v25"
+        ],
+        "native_cli": {
+          "0.162.0-alpha.17.2": 154
+        },
+        "evaluator": "autonomous-brain-offline-evaluation/v9",
+        "brain_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+        "platform_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0"
+      },
+      "actions_sha256": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_orchestrator_matches": true,
+        "actual_world_model_matches": true
+      },
+      "model_configuration": {
+        "model": "gpt-6.1-sol",
+        "thinking": "low",
+        "temperature": null,
+        "stream": true,
+        "formal_run": true,
+        "transport": "codex-app-server"
+      },
+      "model_started": 154,
+      "model_finished": 154,
+      "valid_model_decisions": 154,
+      "completed_actions": 154,
+      "interrupted_actions": 0,
+      "native_completed_model_receipts": 154,
+      "grab_calls": 0,
+      "release_calls": 0,
+      "post_grab_holding_true": 0,
+      "post_grab_holding_false": 0,
+      "distinct_WM_HELD": 0,
+      "distinct_WM_DELIVERED": 0,
+      "done_actions": 0,
+      "evaluation": {
+        "success": false,
+        "delivered_distinct_balls": 0,
+        "required_balls": 2,
+        "driver_exit": 1,
+        "evaluator_exit": 1
+      },
+      "timing": {
+        "simulation_seconds": 402.18,
+        "llm_total_elapsed_seconds": 730.1762226340006
+      },
+      "observations": 926,
+      "nonwhitelist_requests": 0,
+      "termination": {
+        "brain_status": "aborted",
+        "brain_reason": "SIGTERM: stopped_during_observation",
+        "interruption": {
+          "signal": "SIGTERM",
+          "requested_phase": "observation",
+          "requested_round": 155,
+          "requested_observation": 926,
+          "aborting_signal": "SIGTERM",
+          "stopped_phase": "observation",
+          "active_round": 155,
+          "completed_rounds": 154,
+          "action": null,
+          "last_observation": 926,
+          "bridge_sequence": 4321,
+          "safe_action_boundary": false,
+          "action_outcome_unknown": false
+        },
+        "driver_process": {
+          "code": 1,
+          "signal": null,
+          "spawnError": null,
+          "interrupted": "driver_monitor_error:MonitorGuardError: MONITOR_CONTROLLER_CLOSED",
+          "wallSeconds": 1572.633,
+          "wallTimeoutSeconds": 0
+        },
+        "monitor_recovery": {
+          "attempted": true,
+          "recovered": false,
+          "status": "terminal",
+          "failure": "MONITOR_CONTROLLER_CLOSED",
+          "error": {
+            "name": "Error",
+            "message": "CDP unavailable",
+            "code": "CDP_UNAVAILABLE"
+          }
+        },
+        "exit_codes": {
+          "driver_exit": 1,
+          "evaluator_exit": 1
+        },
+        "wrapper_exit": {
+          "value": 0,
+          "provenance": "Parent reported session63303; not driver/evaluator status."
+        },
+        "last_completed_round": 154,
+        "last_action": {
+          "action": "look_around",
+          "params": {}
+        },
+        "last_action_reason": "full_circle_views_observed",
+        "round155_model_calls": 0,
+        "evidence": [
+          "brain_summary:status,reason,interruption",
+          "driver_summary:trials[0].process",
+          "exit_codes",
+          "llm",
+          "rounds:154"
+        ]
+      },
+      "earliest_unresolved_or_persistent_acquisition_blocker": {
+        "interpretation": "r35 begins the persistent confirmed-target acquisition failure. It later evolves to STALE/LOST identity; no claim that one unchanged failure reason caused every subsequent action.",
+        "object_id": "target_013",
+        "precursor": {
+          "rounds": [
+            30,
+            31,
+            32,
+            33
+          ],
+          "reason": "grab_identity_not_uniquely_visible",
+          "round33_retry_probe": {
+            "limit_cm": 0.1,
+            "previous_limit_cm": 0.15000000000000568,
+            "requires_new_view": false
+          }
+        },
+        "round": 35,
+        "reason": "pick_approach_view_budget_exhausted",
+        "observations": {
+          "before_observation": 155,
+          "after_observation": 165,
+          "final_observation": 166
+        },
+        "verified_forward_motions": 10,
+        "each_requested_cm": 0.1,
+        "sum_measured_cm": 1.0,
+        "bridge_request_ids": [
+          "brain-000708",
+          "brain-000713",
+          "brain-000718",
+          "brain-000723",
+          "brain-000728",
+          "brain-000733",
+          "brain-000738",
+          "brain-000743",
+          "brain-000748",
+          "brain-000753"
+        ],
+        "grab_attempts": 0,
+        "road_return_reason": "already_on_observed_road",
+        "later_repeat_rejections": [
+          41,
+          46,
+          52,
+          58,
+          63,
+          69
+        ],
+        "public_state_transitions": [
+          {
+            "observation": 31,
+            "round": 8,
+            "state": "TENTATIVE"
+          },
+          {
+            "observation": 113,
+            "round": 28,
+            "state": "CONFIRMED"
+          },
+          {
+            "observation": 343,
+            "round": 74,
+            "state": "STALE"
+          },
+          {
+            "observation": 627,
+            "round": 113,
+            "state": "LOST"
+          }
+        ],
+        "final_state": "LOST",
+        "historical_view_A": {
+          "source_observation": 339,
+          "frame_id": "339",
+          "goal_semantics": "historical_robot_camera_viewpoint",
+          "object_id": "target_013",
+          "public_camera_position_m": [
+            -1.819,
+            1.1159999999999999
+          ],
+          "public_camera_heading_deg": -89.3,
+          "available_rounds": [
+            114,
+            115
+          ],
+          "selected_rounds": [
+            115
+          ]
+        },
+        "historical_view_B": {
+          "source_observation": 164,
+          "frame_id": "164",
+          "goal_semantics": "historical_robot_camera_viewpoint",
+          "object_id": "target_013",
+          "public_camera_position_m": [
+            -1.82,
+            1.1159999999999999
+          ],
+          "public_camera_heading_deg": -89.3,
+          "available_rounds": [
+            116,
+            117,
+            118,
+            119,
+            120,
+            121,
+            122,
+            123,
+            124,
+            125,
+            126,
+            127,
+            128,
+            129,
+            130,
+            131,
+            132,
+            133,
+            134,
+            135,
+            136,
+            137,
+            138,
+            139,
+            140,
+            141,
+            142,
+            143,
+            144,
+            145,
+            146,
+            147,
+            148,
+            149,
+            150,
+            151,
+            152,
+            153,
+            154
+          ],
+          "selected_rounds": []
+        },
+        "A_result": {
+          "round": 115,
+          "success": false,
+          "reason": "historical_view_revisited_identity_unresolved",
+          "arrived": true,
+          "after_observation": 638,
+          "final_observation": 639
+        },
+        "B_selection_count": 0,
+        "evidence": [
+          "rounds:33,35,41,46,52,58,63,69,115",
+          "motions:round35",
+          "observations:343,627,926",
+          "llm and rounds:114..154"
+        ]
+      },
+      "per_ball_timeline": [
+        {
+          "truth_id": "guangyang-target-1",
+          "wm_track_ids": [
+            "target_013"
+          ],
+          "first_raw_seen": {
+            "observation_index": 5,
+            "round": 2,
+            "frame_id": "5",
+            "tick": 138,
+            "simulation_seconds": 2.76
+          },
+          "first_logged_wm_presence": {
+            "observation_index": 31,
+            "round": 8,
+            "frame_id": "31",
+            "tick": 778,
+            "simulation_seconds": 15.56,
+            "track_id": "target_013"
+          },
+          "first_confirmed": {
+            "observation_index": 113,
+            "round": 28,
+            "frame_id": "113",
+            "tick": 3976,
+            "simulation_seconds": 79.52,
+            "track_id": "target_013"
+          },
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        },
+        {
+          "truth_id": "guangyang-target-2",
+          "wm_track_ids": [
+            "target_033"
+          ],
+          "first_raw_seen": {
+            "observation_index": 69,
+            "round": 17,
+            "frame_id": "69",
+            "tick": 2147,
+            "simulation_seconds": 42.94
+          },
+          "first_logged_wm_presence": {
+            "observation_index": 102,
+            "round": 25,
+            "frame_id": "102",
+            "tick": 3736,
+            "simulation_seconds": 74.72,
+            "track_id": "target_033"
+          },
+          "first_confirmed": null,
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        }
+      ],
+      "evidence": {
+        "collector_result": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/run-20261015T225820Z-result.json",
+          "sha256": "10f94490dc76f89537314eaf93fa64bd9b9f4291b388c174814a85ea7ccd6e0a"
+        },
+        "independent_metrics": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/metrics-review.json",
+          "sha256": "bd7513c471d398d92e27158064ebedc6d5a0f72951db9e71f723a79e8b4e3841"
+        },
+        "runtime_review": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/final-close-review.json",
+          "sha256": "7cbe6aa08921a672e132c7191df4883fd23ad7923c5351a04c3af34f11a72fd1"
+        },
+        "full_source_hashes_in_collector": true
+      }
+    },
+    {
+      "run": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z",
+      "versions": {
+        "brain": "autonomous-brain/v2",
+        "runtime": "autonomous-brain-runtime/v21",
+        "actions": {
+          "value": "autonomous-brain-actions/v45",
+          "verified_source": "autonomous_brain/actions.py"
+        },
+        "native_llm": [
+          "autonomous-brain-llm/v25"
+        ],
+        "native_cli": {
+          "0.162.0-alpha.17.2": 26
+        },
+        "evaluator": "autonomous-brain-offline-evaluation/v9",
+        "brain_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+        "platform_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0"
+      },
+      "actions_sha256": "ae5c9fbd05fbf489180aebe159a67504b24ae6497528e6636648fd067cf6d6d4",
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_orchestrator_matches": true,
+        "actual_world_model_matches": true
+      },
+      "model_configuration": {
+        "model": "gpt-6.1-sol",
+        "thinking": "low",
+        "temperature": null,
+        "stream": true,
+        "formal_run": true,
+        "transport": "codex-app-server"
+      },
+      "model_started": 26,
+      "model_finished": 26,
+      "valid_model_decisions": 26,
+      "completed_actions": 25,
+      "interrupted_actions": 1,
+      "native_completed_model_receipts": 26,
+      "grab_calls": 4,
+      "release_calls": 0,
+      "post_grab_holding_true": 0,
+      "post_grab_holding_false": 4,
+      "distinct_WM_HELD": 0,
+      "distinct_WM_DELIVERED": 0,
+      "done_actions": 0,
+      "evaluation": {
+        "success": false,
+        "delivered_distinct_balls": 0,
+        "required_balls": 2,
+        "driver_exit": 1,
+        "evaluator_exit": 1
+      },
+      "timing": {
+        "simulation_seconds": 105.02,
+        "llm_total_elapsed_seconds": 140.89731916399998
+      },
+      "observations": 140,
+      "nonwhitelist_requests": 0,
+      "termination": {
+        "brain_status": "aborted",
+        "brain_reason": "SIGTERM: stopped_during_action",
+        "summary_rounds": 26,
+        "interruption": {
+          "signal": "SIGTERM",
+          "requested_phase": "action",
+          "requested_round": 26,
+          "requested_observation": 140,
+          "aborting_signal": "SIGTERM",
+          "stopped_phase": "action",
+          "active_round": 26,
+          "completed_rounds": 25,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "before_observation": 140,
+          "last_observation": 140,
+          "bridge_sequence": 655,
+          "safe_action_boundary": false,
+          "action_outcome_unknown": true
+        },
+        "driver_process": {
+          "code": 1,
+          "signal": null,
+          "spawnError": null,
+          "interrupted": "driver_monitor_error:Error: CDP Runtime.evaluate timeout",
+          "wallSeconds": 296.245,
+          "wallTimeoutSeconds": 0
+        },
+        "monitor_recovery": {
+          "attempted": true,
+          "recovered": true,
+          "status": "terminal"
+        },
+        "exit_codes": {
+          "driver_exit": 1,
+          "evaluator_exit": 1
+        },
+        "wrapper_exit": {
+          "value": 0,
+          "provenance": "Parent reported session58104; not driver/evaluator status."
+        },
+        "evidence": [
+          "brain_summary:status,reason,interruption",
+          "driver_summary:trials[0].process",
+          "exit_codes",
+          "rounds:26"
+        ]
+      },
+      "earliest_unresolved_or_persistent_acquisition_blocker": {
+        "first_round": 24,
+        "repeated_round": 25,
+        "reason": "grab_identity_not_uniquely_visible",
+        "object_id": "target_013",
+        "interpretation": "Target acquisition remains unresolved after completed picks r24/r25. This short run does not establish the long-lived r35 budget-exhaustion failure seen in A44; r26 execution was interrupted with unknown outcome. Earlier exploration failures were followed by further confirmed-target progress.",
+        "pick_evidence": [
+          {
+            "round": 24,
+            "reason": "grab_identity_not_uniquely_visible",
+            "observations": {
+              "before_observation": 110,
+              "after_observation": 120,
+              "final_observation": 121
+            },
+            "attempt_records": 2,
+            "retry_probe": {
+              "limit_cm": 3.0,
+              "previous_limit_cm": 6.0,
+              "requires_new_view": false,
+              "source_observation": 115,
+              "clipped_observation": 116,
+              "restored_observation": 117,
+              "return_observation": 120
+            },
+            "authorization_reason": "grab_identity_not_uniquely_visible",
+            "recovery_reason": "returned_to_recorded_confirmed_view"
+          },
+          {
+            "round": 25,
+            "reason": "grab_identity_not_uniquely_visible",
+            "observations": {
+              "before_observation": 122,
+              "after_observation": 138,
+              "final_observation": 139
+            },
+            "attempt_records": 2,
+            "retry_probe": {
+              "limit_cm": 1.484924240491759,
+              "previous_limit_cm": 3.0,
+              "requires_new_view": false,
+              "source_observation": 130,
+              "clipped_observation": 131,
+              "restored_observation": 132,
+              "return_observation": 138
+            },
+            "authorization_reason": "grab_identity_not_uniquely_visible",
+            "recovery_reason": "returned_to_recorded_confirmed_view"
+          }
+        ],
+        "public_state_transitions": [
+          {
+            "observation": 31,
+            "round": 8,
+            "state": "TENTATIVE"
+          },
+          {
+            "observation": 90,
+            "round": 22,
+            "state": "CONFIRMED"
+          },
+          {
+            "observation": 105,
+            "round": 23,
+            "state": "STALE"
+          },
+          {
+            "observation": 106,
+            "round": 23,
+            "state": "CONFIRMED"
+          }
+        ],
+        "final_public_target_state": "CONFIRMED",
+        "evidence": [
+          "rounds:22..26",
+          "observations:target_013 transitions",
+          "bridge_calls:grab and holding sequence"
+        ]
+      },
+      "per_ball_timeline": [
+        {
+          "truth_id": "guangyang-target-1",
+          "wm_track_ids": [
+            "target_013"
+          ],
+          "first_raw_seen": {
+            "observation_index": 5,
+            "round": 2,
+            "frame_id": "5",
+            "tick": 138,
+            "simulation_seconds": 2.76
+          },
+          "first_logged_wm_presence": {
+            "observation_index": 31,
+            "round": 8,
+            "frame_id": "31",
+            "tick": 778,
+            "simulation_seconds": 15.56,
+            "track_id": "target_013"
+          },
+          "first_confirmed": {
+            "observation_index": 90,
+            "round": 22,
+            "frame_id": "90",
+            "tick": 3034,
+            "simulation_seconds": 60.68,
+            "track_id": "target_013"
+          },
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        },
+        {
+          "truth_id": "guangyang-target-2",
+          "wm_track_ids": [],
+          "first_raw_seen": {
+            "observation_index": 41,
+            "round": 11,
+            "frame_id": "41",
+            "tick": 1114,
+            "simulation_seconds": 22.28
+          },
+          "first_logged_wm_presence": null,
+          "first_confirmed": null,
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        }
+      ],
+      "evidence": {
+        "collector_result": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/run-20261015T232732Z-result.json",
+          "sha256": "f9c1bb36f0aabdf6076b795cff97526d2e2ab7a3dfaeac0f2cdb9acbf50fd129"
+        },
+        "independent_metrics": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/actions45-metrics-review.json",
+          "sha256": "ff127e5efd3cd10dc390b60dd9c4d869f25eaa1d6edaadbeaa467242dd540992"
+        },
+        "runtime_review": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/actions45-close-review.json",
+          "sha256": "60e056b9aa8d5e3c1ddf993d903be8bedb7d6b4e89b5e9e96d31644bcbd79881"
+        },
+        "full_source_hashes_in_collector": true
+      },
+      "count_correction": {
+        "superseded_collector_field": "counts.completed_action_turns",
+        "raw_value": 26,
+        "corrected_value": 25,
+        "reason": "round 26 is an interrupted action with unknown outcome; raw collector preserved. Model decision 26 itself was valid."
+      }
+    },
+    {
+      "run": "artifacts/autonomous-brain/a40-followup/run-20261016T004124Z",
+      "versions": {
+        "brain": "autonomous-brain/v2",
+        "runtime": "autonomous-brain-runtime/v21",
+        "actions": {
+          "value": "autonomous-brain-actions/v45",
+          "verified_source": "autonomous_brain/actions.py"
+        },
+        "native_llm": [
+          "autonomous-brain-llm/v25"
+        ],
+        "native_cli": {
+          "0.162.0-alpha.17.2": 201
+        },
+        "evaluator": "autonomous-brain-offline-evaluation/v9",
+        "brain_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+        "platform_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0"
+      },
+      "actions_sha256": "ae5c9fbd05fbf489180aebe159a67504b24ae6497528e6636648fd067cf6d6d4",
+      "source_proof": {
+        "status": "verified",
+        "failures": [],
+        "recorded_before_after_equal": true,
+        "driver_sources_unchanged": true,
+        "brain_summary_hashes_match": true,
+        "actual_orchestrator_matches": true,
+        "actual_world_model_matches": true
+      },
+      "model_configuration": {
+        "model": "gpt-6.1-sol",
+        "thinking": "low",
+        "temperature": null,
+        "stream": true,
+        "formal_run": true,
+        "transport": "codex-app-server"
+      },
+      "model_started": 201,
+      "model_finished": 201,
+      "valid_model_decisions": 200,
+      "completed_actions": 200,
+      "interrupted_actions": 0,
+      "native_completed_model_receipts": 200,
+      "grab_calls": 0,
+      "release_calls": 0,
+      "post_grab_holding_true": 0,
+      "post_grab_holding_false": 0,
+      "distinct_WM_HELD": 0,
+      "distinct_WM_DELIVERED": 0,
+      "done_actions": 0,
+      "evaluation": {
+        "success": false,
+        "delivered_distinct_balls": 0,
+        "required_balls": 2,
+        "driver_exit": 1,
+        "evaluator_exit": 1
+      },
+      "timing": {
+        "simulation_seconds": 405.72,
+        "llm_total_elapsed_seconds": 1428.545197997001
+      },
+      "observations": 1017,
+      "nonwhitelist_requests": 0,
+      "termination": {
+        "brain_status": "failed",
+        "brain_reason": "round_limit",
+        "rounds": 200,
+        "interruption": null,
+        "simulation_seconds": 405.72,
+        "llm_total_elapsed_s": 1428.545197997001,
+        "brain_wall_elapsed_s": 4852.8024050839995,
+        "driver_process": {
+          "code": 1,
+          "signal": null,
+          "spawnError": null,
+          "interrupted": null,
+          "wallSeconds": 5605.712,
+          "wallTimeoutSeconds": 0
+        },
+        "exit_codes": {
+          "driver_exit": 1,
+          "evaluator_exit": 1
+        },
+        "wrapper_exit": {
+          "value": 0,
+          "provenance": "Parent reported session45086; not driver/evaluator status."
+        },
+        "last_completed_action": {
+          "round": 200,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "reason": "directed_passage_still_blocked"
+        },
+        "evidence": [
+          "brain_summary",
+          "driver_summary:trials[0].process",
+          "exit_codes",
+          "rounds:200"
+        ]
+      },
+      "earliest_unresolved_or_persistent_acquisition_blocker": {
+        "object_id": "target_010",
+        "first_round": 33,
+        "reason": "pick_requires_new_supported_view",
+        "trigger": "minimum_probe_clipped_requires_new_view",
+        "interpretation": "At the minimum 0.1cm probe, a clipped view required a new supported view. r34 navigation had no verified repositioning route. Subsequent blocked exploration and failed independent-view sampling did not resolve acquisition before the round limit. This is not the A45 ten-step budget-exhaustion trigger.",
+        "r33_observations": {
+          "before_observation": 142,
+          "after_observation": 145,
+          "final_observation": 146
+        },
+        "r33_retry_probe": {
+          "limit_cm": 0.1,
+          "previous_limit_cm": 0.1,
+          "requires_new_view": true,
+          "probe_kind": "fresh_supported_approach",
+          "source_observation": 143,
+          "clipped_observation": 144,
+          "restored_observation": 145,
+          "return_observation": 145,
+          "reason": "minimum_probe_clipped_requires_new_view"
+        },
+        "r33_motions": [
+          {
+            "method": "forward",
+            "params": {
+              "distanceCm": 0.1,
+              "speed": 30
+            },
+            "before_observation": 142,
+            "after_observation": 143,
+            "request_id": "brain-000647",
+            "motion_verified": true
+          },
+          {
+            "method": "forward",
+            "params": {
+              "distanceCm": 0.1,
+              "speed": 30
+            },
+            "before_observation": 143,
+            "after_observation": 144,
+            "request_id": "brain-000652",
+            "motion_verified": true
+          },
+          {
+            "method": "backward",
+            "params": {
+              "distanceCm": 0.1000000000000334,
+              "speed": 20
+            },
+            "before_observation": 144,
+            "after_observation": 145,
+            "request_id": "brain-000657",
+            "motion_verified": true
+          }
+        ],
+        "r34": {
+          "action": {
+            "action": "go_to",
+            "params": {
+              "object_id": "target_010"
+            }
+          },
+          "reason": "pick_requires_new_supported_view",
+          "road_reposition_status": "no_verified_route_needs_exploration",
+          "observations": {
+            "before_observation": 147,
+            "after_observation": 147,
+            "final_observation": 148
+          }
+        },
+        "later_directed_passage_blocked_rounds": [
+          36,
+          38,
+          42,
+          44,
+          48,
+          51,
+          53,
+          57,
+          59,
+          61,
+          65,
+          67,
+          69,
+          71,
+          74,
+          77,
+          79,
+          82,
+          87,
+          91,
+          96,
+          102,
+          105,
+          110,
+          116,
+          122,
+          128,
+          133,
+          139,
+          144,
+          149,
+          155,
+          159,
+          165,
+          171,
+          176,
+          182,
+          187,
+          192,
+          197,
+          200
+        ],
+        "public_state_transitions": [
+          {
+            "observation": 19,
+            "round": 6,
+            "state": "TENTATIVE"
+          },
+          {
+            "observation": 103,
+            "round": 27,
+            "state": "CONFIRMED"
+          },
+          {
+            "observation": 291,
+            "round": 56,
+            "state": "STALE"
+          },
+          {
+            "observation": 607,
+            "round": 111,
+            "state": "LOST"
+          }
+        ],
+        "final_public_target_state": "LOST",
+        "evidence": [
+          "rounds:33,34 and later failure reasons",
+          "motions:round33",
+          "observations:target_010 transitions"
+        ]
+      },
+      "per_ball_timeline": [
+        {
+          "truth_id": "guangyang-target-1",
+          "wm_track_ids": [
+            "target_010"
+          ],
+          "first_raw_seen": {
+            "observation_index": 5,
+            "round": 2,
+            "frame_id": "5",
+            "tick": 138,
+            "simulation_seconds": 2.76
+          },
+          "first_logged_wm_presence": {
+            "observation_index": 19,
+            "round": 6,
+            "frame_id": "19",
+            "tick": 546,
+            "simulation_seconds": 10.92,
+            "track_id": "target_010"
+          },
+          "first_confirmed": {
+            "observation_index": 103,
+            "round": 27,
+            "frame_id": "103",
+            "tick": 3744,
+            "simulation_seconds": 74.88,
+            "track_id": "target_010"
+          },
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        },
+        {
+          "truth_id": "guangyang-target-2",
+          "wm_track_ids": [
+            "target_030"
+          ],
+          "first_raw_seen": {
+            "observation_index": 57,
+            "round": 15,
+            "frame_id": "57",
+            "tick": 1915,
+            "simulation_seconds": 38.3
+          },
+          "first_logged_wm_presence": {
+            "observation_index": 92,
+            "round": 24,
+            "frame_id": "92",
+            "tick": 3504,
+            "simulation_seconds": 70.08,
+            "track_id": "target_030"
+          },
+          "first_confirmed": null,
+          "first_grabbed_truth_event": null,
+          "first_delivered_truth_event": null,
+          "final_active_delivery_truth_event": null,
+          "delivery_revocations": []
+        }
+      ],
+      "evidence": {
+        "collector_result": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/run-20261016T004124Z-result.json",
+          "sha256": "8097eca585b9f6543f27a3aa092cf7a923c2b539ec5cca397e485bcfda602a88"
+        },
+        "independent_metrics": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/actions45-retry-metrics-review.json",
+          "sha256": "b7fe433d45ceef2d8e5b27c3f4d5f7e12d12de92e290c073ceceddd9201ffbb2"
+        },
+        "runtime_review": {
+          "path": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/actions45-retry-runtime-review.json",
+          "sha256": "ea1771c9a80914538d35d6808d1d0bf7c48a4fa662a625cd1eafbb76274e1d6f"
+        },
+        "full_source_hashes_in_collector": true
+      }
+    }
+  ],
+  "coverage_limits": [
+    "No real run proved safe independent A-to-B execution. First run exposed B after unresolved A, but model did not choose it; saved A/B poses differed by only 1 mm with same heading. Third run selected A once and had no exposed B after it.",
+    "Neither Actions45 real run triggered the new ten-step budget-return branch. Its positive proof is targeted regression coverage only.",
+    "The third run triggered the pre-existing minimum-probe-clipped new-view path, then had no verified reposition route. This is distinct from the Actions45 new branch.",
+    "CDP initiating root causes remain unknown. First two sessions stopped safely at their terminal conditions; second run interrupted action remains unknown despite late server completion. Third run recovered its one early timeout and ended naturally at round_limit.",
+    "Component findings are not assigned retroactively as A39/A40 root causes. No monitor or safety-threshold changes made."
+  ],
+  "raw_count_correction": "For run-20261015T232732Z use 25 completed actions plus 1 interrupted action, not raw collector completed_action_turns=26. Independent review and this summary supersede that field only.",
+  "report_path_policy": "All evidence paths in this report are repository-relative."
+}

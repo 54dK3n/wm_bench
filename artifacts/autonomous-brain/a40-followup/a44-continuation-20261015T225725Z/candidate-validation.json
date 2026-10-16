@@ -1,0 +1,85 @@
+{
+  "schema": "isolated-actions-candidate/v1",
+  "temporary_workspace": {
+    "kind": "external_temp",
+    "basename": "wm-pick-budget.9ea138ek"
+  },
+  "production_source_modified": false,
+  "real_run_started_or_stopped": false,
+  "base_actions_version": "autonomous-brain-actions/v44",
+  "base_actions_sha256": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+  "production_actions_sha256_at_finish": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+  "candidate_actions_version": "autonomous-brain-actions/v45",
+  "candidate_actions_sha256": "ae5c9fbd05fbf489180aebe159a67504b24ae6497528e6636648fd067cf6d6d4",
+  "incremental_patch": "candidate-actions45.patch",
+  "preexisting_user_test": {
+    "path": "tests/test_brain_pick_budget_new_view.py",
+    "modified": false,
+    "sha256": "97e4cac25107fc4d7cfa6d91c273e908e02765377723803e3eac3e9e71189d62",
+    "production_sha256": "97e4cac25107fc4d7cfa6d91c273e908e02765377723803e3eac3e9e71189d62"
+  },
+  "new_test": {
+    "artifact": "candidate-test_brain_pick_budget_guardrails.py",
+    "destination": "tests/test_brain_pick_budget_guardrails.py",
+    "cases": 7
+  },
+  "changes": [
+    "Use the existing fresh_supported_approach bound only when complete ordered source/failure/restoration/return evidence and finite anchors remain.",
+    "Count exactly ten supported forward steps after completed receipts; retain existing verified motion and early-return checks.",
+    "Capture confirmed geometric distance >22.5cm at forward-budget exhaustion before any road return.",
+    "Only after successful observed return with an empty known gripper, preserve the old bound/anchors and add requires_new_view plus the budget return observation/odometry.",
+    "Include the budget return anchor in the existing independent-position gap rule; reuse the existing road planner and identity gates."
+  ],
+  "checks": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2:. python3 -m pytest -p no:cacheprovider -q tests/test_brain_pick_budget_new_view.py",
+      "source": "unmodified A44 before patch",
+      "result": "5 failed, 6 passed in 10.83s",
+      "log": "candidate-baseline-existing-tests.txt"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2:. python3 -m pytest -p no:cacheprovider -q tests/test_brain_pick_budget_new_view.py tests/test_brain_pick_budget_guardrails.py",
+      "source": "candidate A45",
+      "result": "18 passed in 24.30s",
+      "log": "candidate-focused-tests.txt"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2:. python3 -m pytest -p no:cacheprovider -q tests/test_brain_pick_pixel_recovery.py tests/test_brain_pick_missing_pixels.py tests/test_brain_supported_initial_approach.py tests/test_brain_empty_grab_navigation.py tests/test_brain_pick_probe_feedback.py tests/test_brain_pick_new_view_navigation.py tests/test_brain_pick_road_return.py tests/test_brain_near_pick_navigation.py tests/test_brain_grab_authorization.py tests/test_brain_state_evidence.py tests/test_brain_historical_view_revisit.py tests/test_brain_historical_view_contract.py tests/test_brain_route_contract.py tests/test_brain_route_progress.py",
+      "source": "candidate A45",
+      "result": "5 failed, 250 passed in 157.91s",
+      "log": "candidate-related-tests.txt"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2:. python3 - (script below)",
+      "script": "import importlib.util, sys\nimport autonomous_brain\nspec=importlib.util.spec_from_file_location('autonomous_brain.actions','actions.baseline.py')\nmodule=importlib.util.module_from_spec(spec)\nsys.modules[spec.name]=module\nspec.loader.exec_module(module)\nimport pytest\nraise SystemExit(pytest.main(['-p','no:cacheprovider','-q',*['tests/test_brain_pick_pixel_recovery.py::test_clipped_empty_grab_probe_restores_supported_near_view_and_halves_next_model_pick', 'tests/test_brain_pick_missing_pixels.py::test_missing_after_completed_empty_grab_restores_and_next_model_pick_uses_bound', 'tests/test_brain_empty_grab_navigation.py::test_approach_budget_exhaustion_never_falls_through_to_grab', 'tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[ClippedRetryRuntime]', 'tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[MissingRetryRuntime]']]))\n",
+      "source": "unmodified A44 loaded under autonomous_brain.actions in same isolated environment",
+      "result": "same 5 nodes failed in 2.31s",
+      "log": "candidate-baseline-failures.txt"
+    },
+    {
+      "command": "git apply --check artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-actions45.patch",
+      "cwd": ".",
+      "result": "exit 0, read-only check"
+    }
+  ],
+  "existing_failures": [
+    "tests/test_brain_pick_pixel_recovery.py::test_clipped_empty_grab_probe_restores_supported_near_view_and_halves_next_model_pick",
+    "tests/test_brain_pick_missing_pixels.py::test_missing_after_completed_empty_grab_restores_and_next_model_pick_uses_bound",
+    "tests/test_brain_empty_grab_navigation.py::test_approach_budget_exhaustion_never_falls_through_to_grab",
+    "tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[ClippedRetryRuntime]",
+    "tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[MissingRetryRuntime]"
+  ],
+  "limitations": [
+    "The five related legacy expectation failures remain; they reproduce against unchanged A44.",
+    "No live simulator/model/API call, production patch application, geometry calibration, threshold change, or provider change was performed.",
+    "The new marker exposes the existing new-view recovery path; it does not guarantee a legal route or successful grasp."
+  ],
+  "artifact_sha256": {
+    "candidate-actions45.patch": "27760e638982b3c4281c155acdaea15ed4f889d9c56dbbc8e520ea5daf0e99c2",
+    "candidate-test_brain_pick_budget_guardrails.py": "51e53f0ed7880910e3324ba30b85c1ebd2cc81e2ff39b6c7de292ce655b15856",
+    "candidate-baseline-existing-tests.txt": "ed5b735cfd939df2d09ce1420dc582e540d5db1f4ced6197ed9f8173445b891c",
+    "candidate-focused-tests.txt": "978cc8c9e38ce02f88d39550c5c1df023a24b6a739019c78e54202eb25be2bf3",
+    "candidate-related-tests.txt": "dd4ec7a2682b5aa7ded60d58446cbb93b85f0248e7f759269f8d78997c8257d6",
+    "candidate-baseline-failures.txt": "e89c1b711775a6684f3f14e01c967b5241563d74ea6f5b8273cf2488e7004e44"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "scope": "Read-only public observations through round 170; no truth/record/samples/captures read",
+  "real_historical_coverage": {
+    "selected_round": 146,
+    "object_id": "target_108",
+    "source_observation": 707,
+    "arrived_observation": 865,
+    "success": false,
+    "reason": "historical_view_revisited_identity_unresolved",
+    "fresh_successor": {
+      "object_id": "target_123",
+      "confirmed_observation": 863,
+      "round": 146,
+      "old_to_new_binding": "target_108 -> target_123",
+      "next_model_action_round": 147,
+      "next_action": "go_to(target_123)",
+      "next_action_is_historical_view_B": false
+    }
+  },
+  "candidate_absence_limits": [
+    "Old target_108 has a reacquisition binding and is excluded by the existing candidate gate.",
+    "Navigation attempt alias merge does not automatically migrate per-object historical views.",
+    "Three actual grabs at round151 clear saved historical views under the existing rule.",
+    "Public observations907-924 contain full supported near detections; fed=false does not by itself reject near fallback.",
+    "Public artifacts do not expose complete historical cache and per-candidate rejection reasons; a safe reachable B after successor123 becomes LOST is not proven.",
+    "No basis to attribute missing capability to A44 or assert a new defect."
+  ],
+  "coverage_conclusion": "A-to-B without fresh successor identity is covered by regression tests, not demonstrated by this live branch.",
+  "evidence": [
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:146",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:147",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:151",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl:863",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl:865",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl:967"
+  ],
+  "empty_grab_review": {
+    "rounds": [
+      107,
+      110
+    ],
+    "authorization_observations": [
+      589,
+      592,
+      594,
+      609,
+      611,
+      613
+    ],
+    "observations": "Full supported unique red boxes; synchronized sensor frames/ticks; completed grab receipts and holding=false. Memory distance disagrees with near-field estimate. Public evidence does not establish which range estimate is accurate or demonstrate an association/projection implementation defect.",
+    "change": "No threshold, range replacement, or retry-count change."
+  }
+}

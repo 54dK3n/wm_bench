@@ -1,0 +1,87 @@
+Command: python3 -m pytest -q tests/test_brain_pick_same_category_return.py
+F...........F.FF..F                                                      [100%]
+=================================== FAILURES ===================================
+_ test_public_same_red_layout_permits_only_inverse_and_keeps_both_original_records _
+
+    def test_public_same_red_layout_permits_only_inverse_and_keeps_both_original_records():
+        actions, row = public_actions()
+        original = copy.deepcopy(row)
+        source, clipped = PUBLIC['observations']
+        motion, = PUBLIC['motions']
+        assert (source['observation_index'], clipped['observation_index']) == (205, 206)
+        assert motion['method'] == 'forward' and motion['actuator_result']['completed'] is True
+        assert motion['motion_verification']['motion_verified'] is True
+        assert motion['motion_verification']['before_holding'] is False
+        assert motion['motion_verification']['after_holding'] is False
+        assert motion['motion_verification']['measured_cm'] == pytest.approx(6.000833275471005)
+>       assert actions._bottom_clip_inverse_candidate('red-ball')
+E       AssertionError: assert False
+E        +  where False = _bottom_clip_inverse_candidate('red-ball')
+E        +    where _bottom_clip_inverse_candidate = <autonomous_brain.actions.Actions object at 0x1069fc8e0>._bottom_clip_inverse_candidate
+
+tests/test_brain_pick_same_category_return.py:72: AssertionError
+_ test_same_red_peer_allows_measured_inverse_then_fresh_identity_before_smaller_probe _
+
+    def test_same_red_peer_allows_measured_inverse_then_fresh_identity_before_smaller_probe():
+        r = SameCategoryReturnRuntime(grab_results=(False, True))
+        result = r.pick()
+        assert not result['success'] and result['reason'] == 'grab_identity_not_uniquely_visible'
+>       assert result['evidence']['authorization_recovery']['success']
+E       assert False
+
+tests/test_brain_pick_same_category_return.py:133: AssertionError
+_ test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse[unknown] _
+
+fault = 'unknown'
+
+    @pytest.mark.parametrize('fault', ['forward-unknown', 'unknown', 'partial'])
+    def test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse(fault):
+        r = SameCategoryReturnRuntime(recovery_fault=fault)
+        if fault == 'partial':
+            result = r.pick()
+            assert not result['success']
+            assert not result['evidence']['authorization_recovery']['success']
+        else:
+            with pytest.raises(ConnectionError):
+>               r.pick()
+E               Failed: DID NOT RAISE <class 'ConnectionError'>
+
+tests/test_brain_pick_same_category_return.py:165: Failed
+_ test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse[partial] _
+
+fault = 'partial'
+
+    @pytest.mark.parametrize('fault', ['forward-unknown', 'unknown', 'partial'])
+    def test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse(fault):
+        r = SameCategoryReturnRuntime(recovery_fault=fault)
+        if fault == 'partial':
+            result = r.pick()
+            assert not result['success']
+            assert not result['evidence']['authorization_recovery']['success']
+        else:
+            with pytest.raises(ConnectionError):
+                r.pick()
+>       assert r.inverse_attempts == (0 if fault == 'forward-unknown' else 1)
+E       assert 0 == 1
+E        +  where 0 = <test_brain_pick_same_category_return.SameCategoryReturnRuntime object at 0x106ca1af0>.inverse_attempts
+
+tests/test_brain_pick_same_category_return.py:166: AssertionError
+_ test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab __
+
+    def test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab():
+        r = SameCategoryReturnRuntime()
+        r.rival_after_return = True
+        result = r.pick()
+>       assert not result['success'] and result['evidence']['authorization_recovery']['success']
+E       assert (not False and False)
+
+tests/test_brain_pick_same_category_return.py:185: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_pick_same_category_return.py::test_public_same_red_layout_permits_only_inverse_and_keeps_both_original_records
+FAILED tests/test_brain_pick_same_category_return.py::test_same_red_peer_allows_measured_inverse_then_fresh_identity_before_smaller_probe
+FAILED tests/test_brain_pick_same_category_return.py::test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse[unknown]
+FAILED tests/test_brain_pick_same_category_return.py::test_same_red_peer_never_retries_unknown_motion_or_learns_from_partial_inverse[partial]
+FAILED tests/test_brain_pick_same_category_return.py::test_same_red_inverse_returning_to_competition_cannot_learn_or_offer_a_grab
+5 failed, 14 passed in 1.49s
+
+pytest_exit=1

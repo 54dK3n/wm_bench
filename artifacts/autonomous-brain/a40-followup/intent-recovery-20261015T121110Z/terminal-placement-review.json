@@ -1,0 +1,48 @@
+{
+  "schema": "terminal-placement-review/v1",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z",
+  "round": 196,
+  "reason": "storage_free_point_not_observed",
+  "source_observations": [
+    1180,
+    1181
+  ],
+  "storage_bbox_xywh": [
+    147,
+    247,
+    325,
+    72
+  ],
+  "candidates_pixels": [
+    [
+      228.25,
+      283
+    ],
+    [
+      390.75,
+      283
+    ]
+  ],
+  "delivered_red_ball_bbox_xywh": [
+    250,
+    218,
+    104,
+    76
+  ],
+  "existing_expanded_occupied_rectangle_xyxy": [
+    198,
+    180,
+    406,
+    332
+  ],
+  "reproduction": "choose_release_aim with original public observation1180 rejects both current candidates before any ground projection",
+  "trajectory_count": 0,
+  "release_sent": false,
+  "holding_after": true,
+  "conclusion": "Existing two-candidate rule correctly rejects both occupied candidates; this does not prove the entire storage region lacks physical space. No concrete pixel/association implementation defect established; no additional production patch.",
+  "evidence": [
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:196",
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl:1180",
+    "autonomous_brain/actions.py:3691"
+  ]
+}

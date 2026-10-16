@@ -1,0 +1,176 @@
+diff --git a/autonomous_brain/actions.py b/autonomous_brain/actions.py
+index e25c744..db2df1e 100644
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,9 +7,9 @@ import re
+ 
+ from .bridge import SimulationLimit
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+-from .observation_quality import positive_pixel_support
++from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v40"
++VERSION = "autonomous-brain-actions/v42"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -358,6 +358,7 @@ class Actions:
+             view = {"schema": "historical-view-revisit/v1", "available": True,
+                 "navigation_only": True, "requires_fresh_identity": True,
+                 "source_observation": snapshot["observation_index"], "frame_id": str(sensor["frameId"]),
++                "source_fed_to_world_model": item.get("fed_to_world_model") is True,
+                 "position_m": list(position(snapshot["odometry"])),
+                 "heading_deg": snapshot["odometry"]["headingDeg"],
+                 "goal_semantics": "historical_robot_camera_viewpoint"}
+@@ -381,7 +382,13 @@ class Actions:
+         record, context = self._navigation_record(object_id), self._navigation_context(object_id)
+         if self.r.navigation_progress.blocked(record, context):
+             return None
+-        for view in reversed(self._historical_views.get(object_id, [])):
++        # Prefer a view that could contribute to normal tracking at its source.
++        # A recent near-only view cannot seed a successor after LOST. This is
++        # navigation priority only: retain near fallbacks and every route gate;
++        # arrival still requires fresh Perception and identity evidence.
++        views = sorted(reversed(self._historical_views.get(object_id, [])),
++                       key=lambda view: view.get("source_fed_to_world_model") is not True)
++        for view in views:
+             source = roads.observation_records(view["source_observation"], view["source_observation"])
+             frames = source.get("observations", [])
+             if (source.get("invalid_observation_indices") or len(frames) != 1
+@@ -1937,23 +1944,41 @@ class Actions:
+                     or w <= 0 or h <= 0 or x < 0 or y < 0 or x + w > width or y + h > height):
+                 return False
+             balls.append((source, item, (x, y, x + w, y + h)))
+-        selected = [row for row in balls if row[1]["category"] == category]
++        def bottom_clipped(row):
++            source, item, (left, top, right, bottom) = row
++            quality = item.get("pixel_quality") or {}
++            return (quality == source.get("pixelQuality")
++                    and str(quality.get("frameId")) == str(raw.get("frameId"))
++                    and quality.get("status") == "unknown"
++                    and quality.get("reason") == "source_bbox_touches_boundary"
++                    and 0 < left < right < width and 0 < top < bottom == height)
++
++        selected = [row for row in balls
++                    if row[1]["category"] == category and bottom_clipped(row)]
+         if len(selected) != 1:
+             return False
+         source, item, (left, top, right, bottom) = selected[0]
+-        quality = item.get("pixel_quality") or {}
+-        if (quality != source.get("pixelQuality")
+-                or str(quality.get("frameId")) != str(raw.get("frameId"))
+-                or quality.get("status") != "unknown"
+-                or quality.get("reason") != "source_bbox_touches_boundary"
+-                or not 0 < left < right < width or not 0 < top < bottom == height):
+-            return False
+-        # Different-category side pixels remain evidence/competitors. Their
+-        # separation only permits undoing our motion; fresh restored identity
+-        # and complete positive pixels are still required before learning.
+-        return all(peer["category"] != category
+-                   and (r < left or right < l or b < top or bottom < t)
+-                   for _, peer, (l, t, r, b) in balls if peer is not item)
++        for peer_source, peer, (l, t, r, b) in balls:
++            if peer is item:
++                continue
++            if not (r < left or right < l or b < top or bottom < t):
++                return False
++            if peer["category"] == category:
++                # A full, explicitly supported peer may remain a competitor
++                # while we undo our own verified forward step. Separation
++                # identifies neither box; fresh restored identity still gates
++                # learning and every subsequent grab. Old missing quality is
++                # not sufficient for this additional navigation case.
++                if not (0 < l < r < width and 0 < t < b < height):
++                    return False
++                try:
++                    support = pixel_quality(peer_source, raw.get("frameId"))
++                except (KeyError, TypeError, ValueError):
++                    return False
++                if (support is None or support.get("status") != "supported"
++                        or support != peer.get("pixel_quality")):
++                    return False
++        return True
+ 
+     def remember_empty_grab_navigation(self, object_id, grab_ref, motion, receipt):
+         """Remember a failed operation pose, without caching identity authority."""
+diff --git a/tests/test_brain_historical_view_revisit.py b/tests/test_brain_historical_view_revisit.py
+index ce48fda..991b703 100644
+--- a/tests/test_brain_historical_view_revisit.py
++++ b/tests/test_brain_historical_view_revisit.py
+@@ -277,3 +277,76 @@ def test_final_heading_unknown_cannot_mark_candidate_arrived():
+     assert not any(a.get('candidate_reached') or a.get('status') == 'historical_view_revisited'
+                    for a in record['approach_attempts'])
+     assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def mixed_revisit_runtime():
++    r = ClippedRetryRuntime(clip_gap=100)
++    r.roads = RoadMemory()
++    original = r.observe
++
++    def observe(*, motion=None):
++        original(motion=motion)
++        r.roads.update(r.snapshot['odometry'], r.snapshot['road'], r.snapshot['observation_index'])
++        finalized = dict(motion, after_observation=r.snapshot['observation_index']) if motion else None
++        r.roads.observe_traversal(r.snapshot, finalized)
++        r.actions.note_historical_view(r.snapshot, finalized)
++        return r.snapshot
++
++    r.observe = observe
++    r.observe()
++    # Real conversion changes feed classification as the public bbox becomes
++    # smaller at a more distant measured robot pose. Both sources stay confirmed.
++    fed = []
++    for distance in (35, 5):
++        r.actions.move('backward', {'distanceCm': distance, 'speed': 30})
++        source = copy.deepcopy(r.snapshot)
++        assert source['perception']['detections'][0]['fed_to_world_model'] is True
++        assert r.perception.confirmed(r.object_id)
++        assert r.perception.check_grasp_identity(r.object_id, source)['authorized']
++        fed.append(source)
++    r.actions.move('forward', {'distanceCm': 40, 'speed': 30})
++    near = copy.deepcopy(r.snapshot)
++    assert near['perception']['detections'][0]['fed_to_world_model'] is False
++    assert r.perception.confirmed(r.object_id)
++    assert r.perception.check_grasp_identity(r.object_id, near)['authorized']
++    # Loss is produced by normal WM expiry, not an internal state assignment.
++    r.override_items = []
++    r.actions.move('backward', {'distanceCm': 5, 'speed': 30})
++    r.bridge.seconds += 60
++    r.observe()
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    return r, fed, near
++
++
++def test_historical_view_prefers_latest_fed_source_over_newer_visibility_only_source():
++    r, fed, near = mixed_revisit_runtime()
++    before = copy.deepcopy(r.perception.objects())
++    commands_before = len(r.bridge_records)
++    assert fed[0]['observation_index'] < fed[1]['observation_index'] < near['observation_index']
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == fed[1]['observation_index']
++    assert view['position_m'] == list(position(fed[1]['odometry']))
++    assert r.perception.objects() == before
++    assert len(r.bridge_records) == commands_before and not actual_grabs(r)
++
++
++def test_historical_view_keeps_near_fallback_when_fed_sources_have_no_exact_route():
++    r, fed, near = mixed_revisit_runtime()
++    # Remove only the recorded graph connections to the two fed viewpoints.
++    # Keep all cached observations; source eligibility must not bypass route checks.
++    points = {position(source['odometry']) for source in fed}
++    for point in points:
++        r.roads._approach_edges.pop(point, None)
++    for edges in r.roads._approach_edges.values():
++        for point in points:
++            edges.pop(point, None)
++    for point in points:
++        route = r.roads.route_to(r.snapshot['odometry'], point)
++        assert not route or route[-1] != point
++    view = r.actions.historical_view_revisit(r.object_id)
++    assert view['available'] and view['navigation_only'] and view['requires_fresh_identity']
++    assert view['source_observation'] == near['observation_index']
++    assert view['position_m'] == list(position(near['odometry']))
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert not r.perception._grab_authorizations and not actual_grabs(r)

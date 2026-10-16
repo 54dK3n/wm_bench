@@ -1,0 +1,74 @@
+COMPONENT TESTS ONLY; synthetic sensor/actuator, not a competition.
+cwd=/private/tmp/wm-budget-view-a43-uqxn68t8
+PYTHONPATH=/private/tmp/wm-budget-view-a43-uqxn68t8:/Users/ken/Desktop/wm_bench/vendor/wm_kit_opt2:/Users/ken/Desktop/wm_bench:/Users/ken/Desktop/wm_bench/tests
+command=python3 -m pytest -q /Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py
+actions_sha256=13191177e2a504b1741f6b2d7c1003a300693f064e9bf7735f3883cc0a0a3fad
+FFFFF......                                                              [100%]
+=================================== FAILURES ===================================
+_ test_ten_verified_small_steps_require_new_view_without_erasing_probe_or_return _
+
+    def test_ten_verified_small_steps_require_new_view_without_erasing_probe_or_return():
+        r = reduced_initial_probe()
+        old, result = consume_budget(r)
+        bound = r.actions._pick_probe_limits[r.object_id]
+>       assert bound["requires_new_view"] is True
+E       assert False is True
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py:72: AssertionError
+________ test_exhaustion_go_to_consumes_existing_independent_road_route ________
+
+    def test_exhaustion_go_to_consumes_existing_independent_road_route():
+        # .375cm is naturally learned and meets the unchanged route verifier's
+        # minimum .2cm measured motion. The exact .1cm budget case is above.
+        r = reduced_initial_probe(shrinks=4, recorded_road=True)
+        consume_budget(r)
+        bound = copy.deepcopy(r.actions._pick_probe_limits[r.object_id])
+>       assert bound["requires_new_view"] is True
+E       assert False is True
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py:96: AssertionError
+_ test_budget_return_is_third_gap_anchor_before_original_fresh_reset_and_grab __
+
+    def test_budget_return_is_third_gap_anchor_before_original_fresh_reset_and_grab():
+        r = reduced_initial_probe()
+        consume_budget(r)
+        bound = copy.deepcopy(r.actions._pick_probe_limits[r.object_id])
+>       assert bound["requires_new_view"] is True
+E       assert False is True
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py:122: AssertionError
+_ test_independent_budget_view_still_requires_full_unique_pixels[unknown-pixels] _
+
+fault = 'unknown-pixels'
+
+    @pytest.mark.parametrize("fault", ["unknown-pixels", "rival"])
+    def test_independent_budget_view_still_requires_full_unique_pixels(fault):
+        r = reduced_initial_probe()
+        consume_budget(r)
+        bound = copy.deepcopy(r.actions._pick_probe_limits[r.object_id])
+>       assert bound["requires_new_view"] is True
+E       assert False is True
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py:148: AssertionError
+____ test_independent_budget_view_still_requires_full_unique_pixels[rival] _____
+
+fault = 'rival'
+
+    @pytest.mark.parametrize("fault", ["unknown-pixels", "rival"])
+    def test_independent_budget_view_still_requires_full_unique_pixels(fault):
+        r = reduced_initial_probe()
+        consume_budget(r)
+        bound = copy.deepcopy(r.actions._pick_probe_limits[r.object_id])
+>       assert bound["requires_new_view"] is True
+E       assert False is True
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py:148: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py::test_ten_verified_small_steps_require_new_view_without_erasing_probe_or_return
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py::test_exhaustion_go_to_consumes_existing_independent_road_route
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py::test_budget_return_is_third_gap_anchor_before_original_fresh_reset_and_grab
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py::test_independent_budget_view_still_requires_full_unique_pixels[unknown-pixels]
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py::test_independent_budget_view_still_requires_full_unique_pixels[rival]
+5 failed, 6 passed in 9.79s
+
+pytest_exit=1

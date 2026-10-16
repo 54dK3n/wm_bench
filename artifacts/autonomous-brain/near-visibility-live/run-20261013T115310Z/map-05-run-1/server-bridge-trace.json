@@ -1,0 +1,1980 @@
+{
+  "evaluationOnly": true,
+  "source": "server.robotBridge.trace (in process)",
+  "stage": "after_server_bridge_close",
+  "session": "controller-1",
+  "complete": true,
+  "totalEvents": 144,
+  "retainedEvents": 144,
+  "protocolVersion": "chenlong.robot-bridge/v1",
+  "events": [
+    {
+      "seq": 1,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000001",
+      "method": "camera_parameters",
+      "params": {}
+    },
+    {
+      "seq": 2,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000001"
+    },
+    {
+      "seq": 3,
+      "tick": 0,
+      "type": "terminal",
+      "requestId": "brain-000001",
+      "status": "completed",
+      "result": {
+        "width": 640,
+        "height": 480,
+        "fx": 415.69219381653056,
+        "fy": 415.69219381653056,
+        "cx": 320,
+        "cy": 240,
+        "verticalFovDeg": 60,
+        "mount": {
+          "forwardCm": 5.375,
+          "rightCm": 0,
+          "upCm": 8.0625,
+          "pitchDeg": -8
+        }
+      }
+    },
+    {
+      "seq": 4,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000002",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 5,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000002"
+    },
+    {
+      "seq": 6,
+      "tick": 0,
+      "type": "terminal",
+      "requestId": "brain-000002",
+      "status": "completed",
+      "result": {
+        "forwardCm": 0,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 0,
+        "tick": 0
+      }
+    },
+    {
+      "seq": 7,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000003",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 8,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000003"
+    },
+    {
+      "seq": 9,
+      "tick": 0,
+      "type": "terminal",
+      "requestId": "brain-000003",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 240.4,
+        "atJunction": false,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 0
+          }
+        ],
+        "tick": 0
+      }
+    },
+    {
+      "seq": 10,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000004",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 11,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000004"
+    },
+    {
+      "seq": 12,
+      "tick": 0,
+      "type": "terminal",
+      "requestId": "brain-000004",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 13,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000005",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 14,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000005"
+    },
+    {
+      "seq": 15,
+      "tick": 0,
+      "type": "terminal",
+      "requestId": "brain-000005",
+      "status": "completed",
+      "result": {
+        "frameId": 1,
+        "tick": 0,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.8069444444444444,
+            "bbox": {
+              "x": 162,
+              "y": 150,
+              "w": 24,
+              "h": 36
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8748299319727891,
+            "bbox": {
+              "x": 248,
+              "y": 160,
+              "w": 141,
+              "h": 90
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8628571428571429,
+            "bbox": {
+              "x": 95,
+              "y": 212,
+              "w": 20,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8240000000000001,
+            "bbox": {
+              "x": 6,
+              "y": 242,
+              "w": 29,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 16,
+      "tick": 0,
+      "type": "request",
+      "requestId": "brain-000006",
+      "method": "take_exit",
+      "params": {
+        "angleDeg": 0,
+        "speed": 50
+      }
+    },
+    {
+      "seq": 17,
+      "tick": 0,
+      "type": "dispatch",
+      "requestId": "brain-000006"
+    },
+    {
+      "seq": 18,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000006",
+      "status": "completed",
+      "result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "distanceCm": 25,
+        "elapsedTicks": 81
+      }
+    },
+    {
+      "seq": 19,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000007",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 20,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000007"
+    },
+    {
+      "seq": 21,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000007",
+      "status": "completed",
+      "result": {
+        "forwardCm": 25,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 25,
+        "tick": 81
+      }
+    },
+    {
+      "seq": 22,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000008",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 23,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000008"
+    },
+    {
+      "seq": 24,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000008",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 215.4,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 90
+          },
+          {
+            "angleDeg": 0.8
+          },
+          {
+            "angleDeg": -90
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 81
+      }
+    },
+    {
+      "seq": 25,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000009",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 26,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000009"
+    },
+    {
+      "seq": 27,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000009",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 28,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000010",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 29,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000010"
+    },
+    {
+      "seq": 30,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000010",
+      "status": "completed",
+      "result": {
+        "frameId": 2,
+        "tick": 81,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "obstacle",
+            "confidence": 0.8707142857142858,
+            "bbox": {
+              "x": 199,
+              "y": 114,
+              "w": 242,
+              "h": 200
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8215384615384616,
+            "bbox": {
+              "x": 42,
+              "y": 266,
+              "w": 37,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8545454545454546,
+            "bbox": {
+              "x": 379,
+              "y": 198,
+              "w": 32,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8666666666666667,
+            "bbox": {
+              "x": 118,
+              "y": 270,
+              "w": 26,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 31,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000011",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 32,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000011"
+    },
+    {
+      "seq": 33,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000011",
+      "status": "completed",
+      "result": {
+        "forwardCm": 25,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 25,
+        "tick": 81
+      }
+    },
+    {
+      "seq": 34,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000012",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 35,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000012"
+    },
+    {
+      "seq": 36,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000012",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 215.4,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 90
+          },
+          {
+            "angleDeg": 0.8
+          },
+          {
+            "angleDeg": -90
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 81
+      }
+    },
+    {
+      "seq": 37,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000013",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 38,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000013"
+    },
+    {
+      "seq": 39,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000013",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 40,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000014",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 41,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000014"
+    },
+    {
+      "seq": 42,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000014",
+      "status": "completed",
+      "result": {
+        "frameId": 3,
+        "tick": 81,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "obstacle",
+            "confidence": 0.8707142857142858,
+            "bbox": {
+              "x": 199,
+              "y": 114,
+              "w": 242,
+              "h": 200
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8215384615384616,
+            "bbox": {
+              "x": 42,
+              "y": 266,
+              "w": 37,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8545454545454546,
+            "bbox": {
+              "x": 379,
+              "y": 198,
+              "w": 32,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8666666666666667,
+            "bbox": {
+              "x": 118,
+              "y": 270,
+              "w": 26,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 43,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000015",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 44,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000015"
+    },
+    {
+      "seq": 45,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000015",
+      "status": "completed",
+      "result": {
+        "forwardCm": 25,
+        "rightCm": 0,
+        "headingDeg": 0,
+        "distanceCm": 25,
+        "tick": 81
+      }
+    },
+    {
+      "seq": 46,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000016",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 47,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000016"
+    },
+    {
+      "seq": 48,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000016",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 7.3,
+        "rightClearanceCm": 7.3,
+        "frontClearanceCm": 215.4,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 90
+          },
+          {
+            "angleDeg": 0.8
+          },
+          {
+            "angleDeg": -90
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 81
+      }
+    },
+    {
+      "seq": 49,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000017",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 50,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000017"
+    },
+    {
+      "seq": 51,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000017",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 52,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000018",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 53,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000018"
+    },
+    {
+      "seq": 54,
+      "tick": 81,
+      "type": "terminal",
+      "requestId": "brain-000018",
+      "status": "completed",
+      "result": {
+        "frameId": 4,
+        "tick": 81,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "obstacle",
+            "confidence": 0.8707142857142858,
+            "bbox": {
+              "x": 199,
+              "y": 114,
+              "w": 242,
+              "h": 200
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8215384615384616,
+            "bbox": {
+              "x": 42,
+              "y": 266,
+              "w": 37,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8545454545454546,
+            "bbox": {
+              "x": 379,
+              "y": 198,
+              "w": 32,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8666666666666667,
+            "bbox": {
+              "x": 118,
+              "y": 270,
+              "w": 26,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 55,
+      "tick": 81,
+      "type": "request",
+      "requestId": "brain-000019",
+      "method": "turn",
+      "params": {
+        "angleDeg": 90,
+        "speed": 50
+      }
+    },
+    {
+      "seq": 56,
+      "tick": 81,
+      "type": "dispatch",
+      "requestId": "brain-000019"
+    },
+    {
+      "seq": 57,
+      "tick": 138,
+      "type": "terminal",
+      "requestId": "brain-000019",
+      "status": "completed",
+      "result": {
+        "completed": true
+      }
+    },
+    {
+      "seq": 58,
+      "tick": 138,
+      "type": "request",
+      "requestId": "brain-000020",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 59,
+      "tick": 138,
+      "type": "dispatch",
+      "requestId": "brain-000020"
+    },
+    {
+      "seq": 60,
+      "tick": 138,
+      "type": "terminal",
+      "requestId": "brain-000020",
+      "status": "completed",
+      "result": {
+        "forwardCm": 25,
+        "rightCm": 0,
+        "headingDeg": 90,
+        "distanceCm": 25,
+        "tick": 138
+      }
+    },
+    {
+      "seq": 61,
+      "tick": 138,
+      "type": "request",
+      "requestId": "brain-000021",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 62,
+      "tick": 138,
+      "type": "dispatch",
+      "requestId": "brain-000021"
+    },
+    {
+      "seq": 63,
+      "tick": 138,
+      "type": "terminal",
+      "requestId": "brain-000021",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": -2.4,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 6.1,
+        "rightClearanceCm": 11,
+        "frontClearanceCm": 275.6,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 90
+          },
+          {
+            "angleDeg": 0
+          },
+          {
+            "angleDeg": -89.2
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 138
+      }
+    },
+    {
+      "seq": 64,
+      "tick": 138,
+      "type": "request",
+      "requestId": "brain-000022",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 65,
+      "tick": 138,
+      "type": "dispatch",
+      "requestId": "brain-000022"
+    },
+    {
+      "seq": 66,
+      "tick": 138,
+      "type": "terminal",
+      "requestId": "brain-000022",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 67,
+      "tick": 138,
+      "type": "request",
+      "requestId": "brain-000023",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 68,
+      "tick": 138,
+      "type": "dispatch",
+      "requestId": "brain-000023"
+    },
+    {
+      "seq": 69,
+      "tick": 138,
+      "type": "terminal",
+      "requestId": "brain-000023",
+      "status": "completed",
+      "result": {
+        "frameId": 5,
+        "tick": 138,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "red-ball",
+            "confidence": 0.907,
+            "bbox": {
+              "x": 548,
+              "y": 188,
+              "w": 20,
+              "h": 12
+            },
+            "source": "virtual-cv",
+            "pixelQuality": {
+              "schema": "red-component-quality/v1",
+              "frameId": 5,
+              "componentPixels": 51,
+              "redSectorPixels": 48,
+              "status": "supported",
+              "reason": "red_sector_majority"
+            }
+          },
+          {
+            "category": "blue-ball",
+            "confidence": 0.8571428571428571,
+            "bbox": {
+              "x": 170,
+              "y": 188,
+              "w": 18,
+              "h": 14
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.7725714285714286,
+            "bbox": {
+              "x": 517,
+              "y": 218,
+              "w": 58,
+              "h": 70
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8192,
+            "bbox": {
+              "x": 568,
+              "y": 228,
+              "w": 29,
+              "h": 50
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8171428571428572,
+            "bbox": {
+              "x": 181,
+              "y": 204,
+              "w": 20,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8200000000000001,
+            "bbox": {
+              "x": 591,
+              "y": 246,
+              "w": 17,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 70,
+      "tick": 138,
+      "type": "request",
+      "requestId": "brain-000024",
+      "method": "take_exit",
+      "params": {
+        "angleDeg": 0,
+        "speed": 50
+      }
+    },
+    {
+      "seq": 71,
+      "tick": 138,
+      "type": "dispatch",
+      "requestId": "brain-000024"
+    },
+    {
+      "seq": 72,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000024",
+      "status": "completed",
+      "result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "distanceCm": 27.4,
+        "elapsedTicks": 146
+      }
+    },
+    {
+      "seq": 73,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000025",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 74,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000025"
+    },
+    {
+      "seq": 75,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000025",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -25,
+        "headingDeg": 90,
+        "distanceCm": 52.4,
+        "tick": 284
+      }
+    },
+    {
+      "seq": 76,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000026",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 77,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000026"
+    },
+    {
+      "seq": 78,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000026",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 250.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 284
+      }
+    },
+    {
+      "seq": 79,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000027",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 80,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000027"
+    },
+    {
+      "seq": 81,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000027",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 82,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000028",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 83,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000028"
+    },
+    {
+      "seq": 84,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000028",
+      "status": "completed",
+      "result": {
+        "frameId": 6,
+        "tick": 284,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.8403308823529412,
+            "bbox": {
+              "x": 432,
+              "y": 130,
+              "w": 32,
+              "h": 68
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "blue-ball",
+            "confidence": 0.9157692307692307,
+            "bbox": {
+              "x": 126,
+              "y": 190,
+              "w": 26,
+              "h": 16
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.9,
+            "bbox": {
+              "x": 128,
+              "y": 220,
+              "w": 52,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.78,
+            "bbox": {
+              "x": 53,
+              "y": 202,
+              "w": 95,
+              "h": 40
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8685714285714285,
+            "bbox": {
+              "x": 605,
+              "y": 218,
+              "w": 20,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 85,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000029",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 86,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000029"
+    },
+    {
+      "seq": 87,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000029",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -25,
+        "headingDeg": 90,
+        "distanceCm": 52.4,
+        "tick": 284
+      }
+    },
+    {
+      "seq": 88,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000030",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 89,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000030"
+    },
+    {
+      "seq": 90,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000030",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 250.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 284
+      }
+    },
+    {
+      "seq": 91,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000031",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 92,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000031"
+    },
+    {
+      "seq": 93,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000031",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 94,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000032",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 95,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000032"
+    },
+    {
+      "seq": 96,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000032",
+      "status": "completed",
+      "result": {
+        "frameId": 7,
+        "tick": 284,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.8403308823529412,
+            "bbox": {
+              "x": 432,
+              "y": 130,
+              "w": 32,
+              "h": 68
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "blue-ball",
+            "confidence": 0.9157692307692307,
+            "bbox": {
+              "x": 126,
+              "y": 190,
+              "w": 26,
+              "h": 16
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.9,
+            "bbox": {
+              "x": 128,
+              "y": 220,
+              "w": 52,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.78,
+            "bbox": {
+              "x": 53,
+              "y": 202,
+              "w": 95,
+              "h": 40
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8685714285714285,
+            "bbox": {
+              "x": 605,
+              "y": 218,
+              "w": 20,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 97,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000033",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 98,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000033"
+    },
+    {
+      "seq": 99,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000033",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -25,
+        "headingDeg": 90,
+        "distanceCm": 52.4,
+        "tick": 284
+      }
+    },
+    {
+      "seq": 100,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000034",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 101,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000034"
+    },
+    {
+      "seq": 102,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000034",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 250.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 284
+      }
+    },
+    {
+      "seq": 103,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000035",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 104,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000035"
+    },
+    {
+      "seq": 105,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000035",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 106,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000036",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 107,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000036"
+    },
+    {
+      "seq": 108,
+      "tick": 284,
+      "type": "terminal",
+      "requestId": "brain-000036",
+      "status": "completed",
+      "result": {
+        "frameId": 8,
+        "tick": 284,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.8403308823529412,
+            "bbox": {
+              "x": 432,
+              "y": 130,
+              "w": 32,
+              "h": 68
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "blue-ball",
+            "confidence": 0.9157692307692307,
+            "bbox": {
+              "x": 126,
+              "y": 190,
+              "w": 26,
+              "h": 16
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.9,
+            "bbox": {
+              "x": 128,
+              "y": 220,
+              "w": 52,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.78,
+            "bbox": {
+              "x": 53,
+              "y": 202,
+              "w": 95,
+              "h": 40
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8685714285714285,
+            "bbox": {
+              "x": 605,
+              "y": 218,
+              "w": 20,
+              "h": 20
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 109,
+      "tick": 284,
+      "type": "request",
+      "requestId": "brain-000037",
+      "method": "follow_road",
+      "params": {
+        "distanceCm": 16,
+        "speed": 50
+      }
+    },
+    {
+      "seq": 110,
+      "tick": 284,
+      "type": "dispatch",
+      "requestId": "brain-000037"
+    },
+    {
+      "seq": 111,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000037",
+      "status": "completed",
+      "result": {
+        "accepted": true,
+        "stoppedBy": "max_distance",
+        "distanceCm": 16,
+        "elapsedTicks": 52
+      }
+    },
+    {
+      "seq": 112,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000038",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 113,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000038"
+    },
+    {
+      "seq": 114,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000038",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -41,
+        "headingDeg": 90,
+        "distanceCm": 68.4,
+        "tick": 336
+      }
+    },
+    {
+      "seq": 115,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000039",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 116,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000039"
+    },
+    {
+      "seq": 117,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000039",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 234.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 336
+      }
+    },
+    {
+      "seq": 118,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000040",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 119,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000040"
+    },
+    {
+      "seq": 120,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000040",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 121,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000041",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 122,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000041"
+    },
+    {
+      "seq": 123,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000041",
+      "status": "completed",
+      "result": {
+        "frameId": 9,
+        "tick": 336,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.9077777777777778,
+            "bbox": {
+              "x": 94,
+              "y": 192,
+              "w": 32,
+              "h": 18
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8560000000000001,
+            "bbox": {
+              "x": 44,
+              "y": 222,
+              "w": 78,
+              "h": 50
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.782,
+            "bbox": {
+              "x": 0,
+              "y": 218,
+              "w": 58,
+              "h": 100
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8690909090909091,
+            "bbox": {
+              "x": 603,
+              "y": 262,
+              "w": 32,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 124,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000042",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 125,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000042"
+    },
+    {
+      "seq": 126,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000042",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -41,
+        "headingDeg": 90,
+        "distanceCm": 68.4,
+        "tick": 336
+      }
+    },
+    {
+      "seq": 127,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000043",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 128,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000043"
+    },
+    {
+      "seq": 129,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000043",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 234.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 336
+      }
+    },
+    {
+      "seq": 130,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000044",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 131,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000044"
+    },
+    {
+      "seq": 132,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000044",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    },
+    {
+      "seq": 133,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000045",
+      "method": "observe",
+      "params": {
+        "category": null,
+        "confidence": 0
+      }
+    },
+    {
+      "seq": 134,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000045"
+    },
+    {
+      "seq": 135,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000045",
+      "status": "completed",
+      "result": {
+        "frameId": 10,
+        "tick": 336,
+        "width": 640,
+        "height": 480,
+        "detections": [
+          {
+            "category": "blue-ball",
+            "confidence": 0.9077777777777778,
+            "bbox": {
+              "x": 94,
+              "y": 192,
+              "w": 32,
+              "h": 18
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8560000000000001,
+            "bbox": {
+              "x": 44,
+              "y": 222,
+              "w": 78,
+              "h": 50
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.782,
+            "bbox": {
+              "x": 0,
+              "y": 218,
+              "w": 58,
+              "h": 100
+            },
+            "source": "virtual-cv"
+          },
+          {
+            "category": "obstacle",
+            "confidence": 0.8690909090909091,
+            "bbox": {
+              "x": 603,
+              "y": 262,
+              "w": 32,
+              "h": 30
+            },
+            "source": "virtual-cv"
+          }
+        ]
+      }
+    },
+    {
+      "seq": 136,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000046",
+      "method": "odometry",
+      "params": {}
+    },
+    {
+      "seq": 137,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000046"
+    },
+    {
+      "seq": 138,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000046",
+      "status": "completed",
+      "result": {
+        "forwardCm": 27.4,
+        "rightCm": -41,
+        "headingDeg": 90,
+        "distanceCm": 68.4,
+        "tick": 336
+      }
+    },
+    {
+      "seq": 139,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000047",
+      "method": "local_road",
+      "params": {}
+    },
+    {
+      "seq": 140,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000047"
+    },
+    {
+      "seq": 141,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000047",
+      "status": "completed",
+      "result": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 234.6,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 336
+      }
+    },
+    {
+      "seq": 142,
+      "tick": 336,
+      "type": "request",
+      "requestId": "brain-000048",
+      "method": "holding",
+      "params": {}
+    },
+    {
+      "seq": 143,
+      "tick": 336,
+      "type": "dispatch",
+      "requestId": "brain-000048"
+    },
+    {
+      "seq": 144,
+      "tick": 336,
+      "type": "terminal",
+      "requestId": "brain-000048",
+      "status": "completed",
+      "result": {
+        "holding": false
+      }
+    }
+  ],
+  "note": "Diagnostic bridge trace is not the simulator physical record."
+}

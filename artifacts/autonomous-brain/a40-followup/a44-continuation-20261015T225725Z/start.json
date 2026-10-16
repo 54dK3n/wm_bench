@@ -1,0 +1,36 @@
+{
+  "schema": "a44-continuation/v1",
+  "head": "cc15a3329aad56b4f779203dbe688cb64c886312",
+  "source_changes_this_turn": [],
+  "reason": "Current A44 implementation and 34 brain/WorldModel/Executor source files match previous verified run; preserve all working-tree changes.",
+  "versions": "Actions44 / Runtime21 / native25",
+  "prior_run": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z",
+  "sha256": {
+    "autonomous_brain/actions.py": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+    "autonomous_brain/navigation_progress.py": "9c01219b74e625d89284a9939793a9a05a5ac7e16e65a855883dc8383415e4d8",
+    "tests/test_brain_historical_view_revisit.py": "ae9651d5b20d0be526444115eaa9713730c95b47b2e2e934dd2137d878064eba",
+    "artifacts/autonomous-brain/a40-followup/run_current.sh": "fbabaf6861a27cbcd4e0ba39b11b9f24fda626bf80836d2b9ad6f1c961325c42",
+    "artifacts/autonomous-brain/pixel-quality-next/preflight-gate.json": "be87715b17ecc3858d258bebf118b7ab26625d7d259db10d1d1c425d6445028e"
+  },
+  "regression_basis": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z",
+  "closed_bridge_review_reused": "artifacts/autonomous-brain/a40-followup/prior-short-run-close-review.json",
+  "closed_bridge_cause": "initiating CDP/fetch failure unknown; no monitor change",
+  "real_run": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z",
+  "current_targeted_tests": {
+    "passed": 13,
+    "deselected": 16,
+    "elapsed_seconds": 2.91,
+    "exit_code": 0,
+    "log": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/focused-tests.txt",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vendor/wm_kit_opt2:. python3 -m pytest -q -p no:cacheprovider tests/test_brain_historical_view_revisit.py -k 'distinct_historical or tried_historical or saved_heading or different_view or second_view or actual_revisit_executes or unknown_revisit_motion or final_heading_unknown'"
+  },
+  "old_bridge_original_hashes_match": {
+    "driver-diagnostics.jsonl": true,
+    "map-05-run-1/server-bridge-trace.json": true,
+    "map-05-run-1/envelope.json": true,
+    "map-05-run-1/brain/bridge-calls.jsonl": true,
+    "map-05-run-1/brain/summary.json": true,
+    "summary.json": true
+  },
+  "platform_files_checked_unchanged": 14
+}

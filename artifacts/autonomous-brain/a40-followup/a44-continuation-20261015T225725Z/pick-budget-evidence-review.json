@@ -1,0 +1,129 @@
+{
+  "schema": "pick-budget-evidence-review/v1",
+  "scope": "Independent read-only review of public round evidence r33-r35 from the active A44 continuation; no run intervention or production changes.",
+  "run": "run-20261015T225820Z",
+  "evidence_boundary": {
+    "rounds_reviewed": [33, 34, 35],
+    "truth_record_samples_captures_read": false,
+    "run_outcome_assessed": false,
+    "candidate_patch_assessed": false
+  },
+  "sources": {
+    "rounds": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl",
+    "implementation": "autonomous_brain/actions.py",
+    "existing_test_read_only": "tests/test_brain_pick_budget_new_view.py"
+  },
+  "observed_sequence": [
+    {
+      "round": 33,
+      "action": "pick(target_013)",
+      "reason": "grab_identity_not_uniquely_visible",
+      "observation_refs": {
+        "action_before": 148,
+        "clipped": 149,
+        "restored": 150,
+        "road_return": 150,
+        "final": 151
+      },
+      "known_conditions": {
+        "grab_attempt_count": 0,
+        "forward_requested_cm": 0.15000000000000568,
+        "inverse_requested_cm": 0.20000000000002238,
+        "forward_and_inverse_motion_verified": true,
+        "road_return_success": true,
+        "learned_probe_kind": "fresh_supported_approach",
+        "learned_limit_cm": 0.1,
+        "requires_new_view": false,
+        "retry_probe_reason": "smaller_probe_after_supported_view_restoration",
+        "anchor_and_observed_return_preserved": true
+      }
+    },
+    {
+      "round": 34,
+      "action": "go_to(target_013)",
+      "reason": "target_seen_at_standoff",
+      "observation_refs": {
+        "action_before": 152,
+        "action_after_and_final": 154
+      },
+      "known_conditions": {
+        "navigation_probe_requires_new_view": false,
+        "navigation_probe_changed_view": false,
+        "navigation_probe_independent_supported_view": false,
+        "navigation_probe_blocked": false,
+        "navigation_probe_min_hit_pose_gap_m": 0.15
+      }
+    },
+    {
+      "round": 35,
+      "action": "pick(target_013)",
+      "reason": "pick_approach_view_budget_exhausted",
+      "observation_refs": {
+        "action_before": 155,
+        "ten_forward_transitions": "155->156->157->158->159->160->161->162->163->164->165",
+        "post_action_and_road_return": 165,
+        "final": 166
+      },
+      "known_conditions": {
+        "grab_attempt_count": 0,
+        "trajectory_motion_count": 10,
+        "all_trajectory_methods": "forward",
+        "each_requested_distance_cm": 0.1,
+        "all_trajectory_motion_verified": true,
+        "trajectory_unknown_outcome_reported": false,
+        "road_return_success": true,
+        "road_return_reason": "already_on_observed_road",
+        "road_return_anchor_observation": 165,
+        "road_return_motion_count": 0,
+        "retry_probe_in_result": false
+      }
+    }
+  ],
+  "source_findings": [
+    {
+      "reference": "autonomous_brain/actions.py:3149-3223 pick bounded approach loop",
+      "finding": "The ten-iteration loop else returns pick_approach_view_budget_exhausted through finish without setting a new-view obligation. This matches the r35 public result."
+    },
+    {
+      "reference": "autonomous_brain/actions.py:1537-1581 _pick_probe_position_is_independent and pick_probe_view_status",
+      "finding": "Independent-view checks currently compare against the original probe anchor and its observed return, then require current supported pixels, empty known gripper and unchanged identity authorization."
+    },
+    {
+      "reference": "autonomous_brain/actions.py:2705-2717 _go_to",
+      "finding": "An already-blocked pick probe view is handed to the existing _road_reposition planner with require_new_pick_view=True, after current road, identity and empty-gripper checks."
+    },
+    {
+      "reference": "autonomous_brain/actions.py:2480-2540 _road_reposition",
+      "finding": "The planner retains independent-view filtering, prior approach failure guards and observed-route candidate checks; the handoff does not itself establish an executable alternative route."
+    }
+  ],
+  "minimum_repair_constraints": {
+    "proposed_scope": "Connect known exhaustion of an existing reduced fresh-supported approach to the existing new-view requirement.",
+    "required_known_conditions": [
+      "Existing reduced probe bound has complete origin and return-anchor evidence.",
+      "The bounded approach finishes normally with verified motion and no grab or unknown outcome.",
+      "Road return is known successful and the gripper is known empty, with no held object or pending grasp."
+    ],
+    "state_to_preserve": [
+      "Existing reduced limit and original probe metadata.",
+      "Original anchor_odometry and observed_return_odometry.",
+      "Navigation and manipulation failure records, passage obligations, identity and grasp gates."
+    ],
+    "budget_return_anchor": "Record the successful budget return as an additional independent-position exclusion anchor. Do not replace either older anchor. Cumulative approach or return displacement must not let the failure endpoint immediately qualify as its own new view.",
+    "unknown_behavior": "Unknown execution or readback must continue to propagate through existing failure handling, without action replay or a fabricated successful budget return.",
+    "unnecessary_changes": [
+      "Increasing approach iterations or the reduced step limit.",
+      "Clearing failure records or bypassing blocked-route and identity checks.",
+      "Changing the A44 historical-view logic."
+    ]
+  },
+  "unknown_boundaries": [
+    "The public r35 result does not serialize the internal probe-bound dictionary after the action. Absence of its new-view transition is established jointly by the result and the inspected source, not by a logged post-action dictionary.",
+    "No safe reachable alternative viewpoint or eventual successful pickup is established by this review.",
+    "The budget-return-anchor requirement is a code-path safety condition, not a claim that the r35 endpoint already exceeded the 0.15 m old-anchor threshold.",
+    "The pre-existing test file was read but not modified or treated as evidence that a candidate patch already passes.",
+    "The active run's later behavior, completion status and physical truth were not assessed."
+  ],
+  "conclusion": "The public sequence supports a bounded pick-budget handoff gap. A narrowly gated new-view obligation can reuse the existing road planner while retaining old bounds and safety rules; this review does not establish a navigation or task-success outcome.",
+  "mutations": "Only this review artifact was created. No production source, existing test, run artifact or active process was changed."
+}

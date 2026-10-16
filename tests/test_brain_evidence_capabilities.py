@@ -11,7 +11,7 @@ from test_brain_pending_grasp_audit import chain
 from tools.brain_evidence_audit import audit_observed_ledger, audit_unknown_discoveries
 
 
-MODERN = ("v15", "v16", "v17", "v18", "v19", "v20")
+MODERN = ("v15", "v16", "v17", "v18", "v19", "v20", "v21")
 LEGACY = tuple(f"v{i}" for i in range(1, 15))
 MISSING = object()
 
@@ -67,7 +67,7 @@ def test_modern_runtime_cannot_fall_back_when_command_contract_is_deleted(real_a
     assert not any(row["verified"] for row in result["deliveries"])
 
 
-@pytest.mark.parametrize("version", MODERN + ("v21", MISSING))
+@pytest.mark.parametrize("version", MODERN + ("v22", MISSING))
 @pytest.mark.parametrize("fault", ["grab-reference", "release-reference", "duplicate-grab-event", "duplicate-request-id", "grab-motion-deleted"])
 def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace, version, fault):
     data = trace_with_version(real_action_trace, version)
@@ -99,7 +99,7 @@ def test_modern_runtime_rejects_conflicting_or_reused_commands(real_action_trace
         assert result["picks"][0]["verified"] is False
 
 
-@pytest.mark.parametrize("version", [MISSING, "v21", "v100", "v015", "v17-extra", "V17", ""])
+@pytest.mark.parametrize("version", [MISSING, "v22", "v100", "v015", "v17-extra", "V17", ""])
 @pytest.mark.parametrize("field", [None, "grasp_chain", "command_ref"])
 def test_missing_or_unknown_runtime_never_infers_a_legacy_contract(real_action_trace, version, field):
     data = trace_with_version(real_action_trace, version)
@@ -153,7 +153,7 @@ def test_explicit_legacy_discovery_preserves_v1_ledger(version):
 
 
 @pytest.mark.parametrize("schema", ["brain-discovery-evidence/v1", "brain-discovery-evidence/v2"])
-@pytest.mark.parametrize("version", [MISSING, "v21"])
+@pytest.mark.parametrize("version", [MISSING, "v22"])
 def test_unknown_discovery_runtime_does_not_infer_capabilities(schema, version):
     summary = {"discovery_evidence": {"schema": schema, "unresolved": [], "records": [], "resolutions": []}}
     if version is not MISSING:
@@ -208,7 +208,7 @@ def test_modern_runtime_accepts_independently_verified_v2_discovery(version):
 
 @pytest.mark.parametrize("fault", ["missing-authorization", "boolean-only", "old-frame", "false-geometry",
     "raw-deletion", "duplicate-detection", "competing-object", "wrong-command"])
-@pytest.mark.parametrize("version", ["v18", "v19", "v20"])
+@pytest.mark.parametrize("version", ["v18", "v19", "v20", "v21"])
 def test_authorized_runtime_grab_is_recomputed_from_original_public_evidence(real_action_trace, fault, version):
     data = trace_with_version(real_action_trace, version)
     summary, observations, rounds, bridge, _ = data

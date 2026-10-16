@@ -1,0 +1,210 @@
+{
+  "schema": "a44-public-only-stall-review/v1",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z",
+  "scope": {
+    "single_completed_line_snapshot": true,
+    "last_completed_action_round": 61,
+    "last_completed_model_decision": 62,
+    "round62_action_result_included": false,
+    "public_only": true,
+    "truth_sources_read": false,
+    "run_controlled_or_stopped": false,
+    "production_or_model_state_changed": false,
+    "note": "Five public logs were read once each in sequence. Complete round results end at r61. Later r62 motion/observation lines are excluded from conclusions; its completed model decision/state is labeled separately."
+  },
+  "finding": "The r55/r57 local directed-passage refusal was already escaped autonomously by r59-r61 in this snapshot. It is not evidence of a continuing global deadlock or exhausted legal actions.",
+  "block_basis": {
+    "original_round": 50,
+    "original_reason": "front_clearance",
+    "entry_observation": 257,
+    "entry_front_clearance_cm": 2.8,
+    "stop_observation": 258,
+    "stop_front_clearance_cm": 0.3,
+    "original_forward_distance_cm": 2.5,
+    "blocked_direction_heading_deg": -90,
+    "reused_at_rounds": [
+      55,
+      57
+    ],
+    "round55_completed_forward_cm": 20,
+    "round55_motion_source_line": 177,
+    "round55_stop_observation": 286,
+    "round55_remaining_front_clearance_cm": 2.8,
+    "round57_motion_count": 0,
+    "local_transport_recovery": "no_current_observed_exit_successor",
+    "recorded_return_support": "no_verified_return_support",
+    "important_scope": "motion_not_sent refers to the blocked follow-up request. r55 had already executed one 20 cm follow_road; r57 executed no motion."
+  },
+  "autonomous_progress_after_refusals": [
+    {
+      "round": 59,
+      "action": "go_to",
+      "object_id": "storage-zone_048",
+      "success": true,
+      "reason": "target_seen_at_standoff",
+      "before_observation": 310,
+      "after_observation": 331,
+      "motion_source_lines": [
+        194,
+        213
+      ],
+      "first_motion": "turn -180 degrees followed by observed road traversal",
+      "at_node_after": true
+    },
+    {
+      "round": 60,
+      "action": "explore",
+      "exit_angle": 94.6,
+      "success": true,
+      "reason": "other_objects_observed",
+      "before_observation": 332,
+      "after_observation": 335,
+      "road_progress": "exit_entered",
+      "new_other_objects": 3
+    },
+    {
+      "round": 61,
+      "action": "explore",
+      "success": true,
+      "reason": "next_junction_observed",
+      "before_observation": 337,
+      "after_observation": 338,
+      "road_progress": "next_junction_verified",
+      "different_node_verified": true,
+      "new_traversal_count": 1
+    }
+  ],
+  "legal_options": {
+    "during_r55_r57": {
+      "at_node": false,
+      "current_exit_angles": [],
+      "executable_discovery_count": 0,
+      "confirmed_storage_go_to_ids": [
+        "storage-zone_014",
+        "storage-zone_015",
+        "storage-zone_036",
+        "storage-zone_048"
+      ],
+      "other_options": [
+        "look_around {}",
+        "explore {} remains a valid action form but its forward passage was refused"
+      ],
+      "unavailable_target_actions": "The remaining red hypotheses were never confirmed and had no historical-view capability; no current supported red pick or historical red go_to was exposed. done lacked required deliveries."
+    },
+    "after_r61_in_model_state62": {
+      "at_node": true,
+      "current_fresh_unblocked_unexplored_exit_angles": [
+        176.9,
+        99.5,
+        9.5,
+        -80.5
+      ],
+      "legal_exit_action": "explore with one exact current exit angle; each move still requires its normal current clearance checks",
+      "model_selected_action": {
+        "action": "explore",
+        "params": {
+          "exit_angle": 9.5
+        }
+      },
+      "action_completion_not_claimed": true,
+      "other_options": [
+        "look_around {}",
+        "go_to for eligible CONFIRMED objects, subject to route checks"
+      ],
+      "executable_discovery_count": 0,
+      "pending_exit_count": 65,
+      "ready_for_done": false,
+      "observed_delivered_count": 1,
+      "required_count": 2
+    }
+  },
+  "pixel_and_association_evidence": {
+    "target_025": {
+      "status_state62": "LOST",
+      "ever_confirmed": false,
+      "accepted_hit_count": 2,
+      "accepted_hit_frames": [
+        62,
+        160
+      ],
+      "public_pixel_quality": [
+        "supported/red_sector_majority",
+        "supported/red_sector_majority"
+      ],
+      "public_red_sector_pixels": [
+        97,
+        94
+      ],
+      "public_component_pixels": [
+        177,
+        154
+      ],
+      "position_consistency": "incompatible_original_pixels",
+      "mean_reprojection_failure_count": 2,
+      "mutual_reprojection_failure_count": 1,
+      "source_records_complete": true,
+      "interpretation": "There is actual logged inconsistency between the two accepted source views and the stored approximate geometric hypothesis. This supports withholding identity/manipulation authority. Public logs alone do not identify a detector false positive, physical identity swap, or a unique root cause."
+    },
+    "target_034": {
+      "status_state62": "LOST",
+      "ever_confirmed": false,
+      "accepted_hit_count": 1,
+      "accepted_hit_frames": [
+        130
+      ],
+      "position_consistency": "insufficient_original_views",
+      "mean_reprojection_failure_count": 0,
+      "mutual_reprojection_failure_count": 0,
+      "public_pixel_quality": "supported/red_sector_majority",
+      "interpretation": "Evidence is insufficient for confirmation; it is not a demonstrated pixel inconsistency."
+    },
+    "physical_identity_conclusion": "No truth data, rendered image, record, samples, or captures were used. No claim of a true second-ball identity or physical delivery verdict is made."
+  },
+  "evidence_sources": {
+    "block": [
+      "map-05-run-1/brain/rounds.jsonl:50,55,57",
+      "map-05-run-1/brain/observations.jsonl:257-258,285-286,298",
+      "map-05-run-1/brain/motions.jsonl:177"
+    ],
+    "escape": [
+      "map-05-run-1/brain/rounds.jsonl:59-61",
+      "map-05-run-1/brain/motions.jsonl:194-217",
+      "map-05-run-1/brain/observations.jsonl:310,331,337-339"
+    ],
+    "options": [
+      "map-05-run-1/brain/llm.jsonl:55,57,59,62 request.messages[1].content",
+      "map-05-run-1/brain/rounds.jsonl:59 state and result"
+    ],
+    "pixel_association": [
+      "map-05-run-1/brain/observations.jsonl:62,130-132,160 perception.detections and objects.hit_poses",
+      "map-05-run-1/brain/llm.jsonl:50,55,57,62 request.messages[1].content objects[target_025,target_034].position_evidence"
+    ]
+  },
+  "snapshot_input_prefixes": {
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl": {
+      "complete_lines": 61,
+      "complete_bytes": 17515508,
+      "sha256": "a65428ec403bf6c1c1aff18bbb8946cc8723738dd55ba084432427f0b88681ec"
+    },
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl": {
+      "complete_lines": 342,
+      "complete_bytes": 50554738,
+      "sha256": "a489d41629c99fea0304d3b11413d98a7f237f4cd82dbd03d7ad3c502dd8520d"
+    },
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/motions.jsonl": {
+      "complete_lines": 219,
+      "complete_bytes": 210057,
+      "sha256": "e7623028c504131c9e1345445b608b94a1ac20e32a7826d42b706027d51d59cf"
+    },
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/bridge-calls.jsonl": {
+      "complete_lines": 1595,
+      "complete_bytes": 714240,
+      "sha256": "946218d1bbb98c961936331269457075aaec29241e6ca3b9b9df7c28944a2e4c"
+    },
+    "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/llm.jsonl": {
+      "complete_lines": 62,
+      "complete_bytes": 14850576,
+      "sha256": "8a73ccd81821c045bfee927402f515f07355e2343b748c393bf5ce84c9245bf8"
+    }
+  }
+}

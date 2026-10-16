@@ -1,0 +1,32 @@
+{
+  "schema": "superseded-run-results/v1",
+  "replacements": [
+    {
+      "superseded": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/run-20261015T122605Z-result.json",
+      "superseded_sha256": "4bdbfefd6ffc9fc1bd8cc8e0af72d0b6351aa466ce61fd52782b4e18c4ea516d",
+      "replacement": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/run-20261015T122605Z-result-v2.json",
+      "replacement_sha256": "d2272b6bb192f4f13ce97cf0ae15ed126d1b341fbc17a0589870fa8a13e0e47d",
+      "reason": "The original manipulation statistics read holding from terminal.result, which contains completed:true but no holding field. Its 25 holding_unknown entries were absent terminal fields, not unknown execution outcomes. v2 separates terminal completion from the first actual holding sensor request after each manipulation and before the next grab/release.",
+      "verified_counts": {
+        "grab_calls": 25,
+        "terminal_completed": 25,
+        "post_grab_holding_true": 2,
+        "post_grab_holding_false": 23,
+        "post_grab_sensor_unavailable": 0,
+        "release_calls": 1,
+        "post_release_holding_false": 1,
+        "native_distinct_successfully_grabbed_target_ids": 2
+      }
+    }
+  ],
+  "collector": {
+    "path": "artifacts/autonomous-brain/a40-followup/intent-recovery-20261015T121110Z/collect-result.py",
+    "sha256": "486e47640855a2874632c1936741e66461f4272103904b103f7e75181b4d3414"
+  },
+  "validation": {
+    "public_bridge_sequence_and_next_manipulation_boundary": "passed",
+    "native_record_grab_outcomes": "2 accepted distinct targets; 23 failed grabs",
+    "production_code_modified": false,
+    "original_result_preserved": true
+  }
+}

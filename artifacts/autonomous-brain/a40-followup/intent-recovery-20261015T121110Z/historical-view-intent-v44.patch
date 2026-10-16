@@ -1,0 +1,395 @@
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -9,7 +9,7 @@
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+ from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v43"
++VERSION = "autonomous-brain-actions/v44"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -368,6 +368,13 @@
+             rows.append(view)
+             del rows[:-12]
+ 
++    @staticmethod
++    def _historical_view_intent(view):
++        # A fresh frame or a different route does not create another viewpoint.
++        return {"schema": "historical-view-intent/v1",
++                "position_m": copy.deepcopy(view["position_m"]),
++                "heading_deg": wrap(view["heading_deg"])}
++
+     def _historical_view_candidate(self, object_id):
+         target = self.r.perception.get_object(object_id)
+         roads = self.r.roads
+@@ -380,8 +387,6 @@
+                 or self.s.get("observation_index") in getattr(roads, "_invalid_indices", ())):
+             return None
+         record, context = self._navigation_record(object_id), self._navigation_context(object_id)
+-        if self.r.navigation_progress.blocked(record, context):
+-            return None
+         # Prefer a view that could contribute to normal tracking at its source.
+         # A recent near-only view cannot seed a successor after LOST. This is
+         # navigation priority only: retain near fallbacks and every route gate;
+@@ -389,6 +394,9 @@
+         views = sorted(reversed(self._historical_views.get(object_id, [])),
+                        key=lambda view: view.get("source_fed_to_world_model") is not True)
+         for view in views:
++            intent = self._historical_view_intent(view)
++            if self.r.navigation_progress.historical_view_tried(record, intent):
++                continue
+             source = roads.observation_records(view["source_observation"], view["source_observation"])
+             frames = source.get("observations", [])
+             if (source.get("invalid_observation_indices") or len(frames) != 1
+@@ -418,12 +426,15 @@
+             if not safe:
+                 continue
+             candidate = {"position_m": copy.deepcopy(view["position_m"]),
++                "historical_view_intent": intent,
+                 "path": [list(p) for p in route], "segments": segments,
+                 "route_version": evidence_version([[s["segment_version"], s["direction"]] for s in segments]),
+                 "source": "observed_on_road_motion_endpoints", "observation_index": view["source_observation"],
+                 "travelled_cm": sum(s["travelled_cm"] for s in segments)}
+             if (roads._approach_execution_unavailable(candidate, self.s["odometry"]) is None
+-                    and not self.r.navigation_progress.approach_blocked(record, candidate, context)):
++                    and not self.r.navigation_progress.approach_blocked(record, candidate, context)
++                    and not self.r.navigation_progress.blocked(record, context,
++                        historical_view_intent=intent)):
+                 return copy.deepcopy(view), candidate
+         return None
+ 
+@@ -2076,7 +2087,9 @@
+             current = next((oid for oid in row["identity_ids"]
+                             if self.r.perception.confirmed(oid) is not None), object_id)
+             context = self._navigation_context(current)
+-            blocked = progress.blocked(row, context)
++            planned = self._historical_view_candidate(current)
++            intent = planned[1]["historical_view_intent"] if planned else None
++            blocked = progress.blocked(row, context, historical_view_intent=intent)
+             output.append({"canonical_object_id": row["canonical_object_id"],
+                 "identity_ids": row["identity_ids"], "attempt_count": len(row["attempts"]),
+                 "last_result": row["last_result"], "recent_attempts": row["attempts"][-3:],
+@@ -2649,8 +2662,17 @@
+             outcome = self.result(True, "navigation_subgoal_already_satisfied", object_id=object_id,
+                                   navigation_subgoal=readiness)
+         else:
+-            blocked = self.r.navigation_progress.blocked(row, self._navigation_context(object_id))
+-            if blocked is not None:
++            planned = self._historical_view_candidate(object_id)
++            intent = planned[1]["historical_view_intent"] if planned else None
++            blocked = self.r.navigation_progress.blocked(row, self._navigation_context(object_id),
++                historical_view_intent=intent)
++            views = self._historical_views.get(object_id, [])
++            exhausted = ((self.r.perception.get_object(object_id) or {}).get("state") == "LOST"
++                and views and all(self.r.navigation_progress.historical_view_tried(
++                    row, self._historical_view_intent(view)) for view in views))
++            if exhausted:
++                outcome = self.result(False, "historical_view_revisit_exhausted", object_id=object_id)
++            elif blocked is not None:
+                 outcome = self.result(False, "navigation_repeat_without_new_evidence", object_id=object_id,
+                     previous_failure=blocked["reason"], failure_context=blocked["context"],
+                     recovery_options=["explore_observed_exits", "look_around_for_changed_target_or_road_evidence",
+--- a/autonomous_brain/navigation_progress.py
++++ b/autonomous_brain/navigation_progress.py
+@@ -279,11 +279,22 @@
+                     self.action_failures.pop((action, old_id)))
+         return self.records[canonical_id]
+ 
++    @staticmethod
++    def historical_view_tried(row, intent):
++        return any(attempt.get("historical_view_intent") == intent
++                   for attempt in row.get("approach_attempts", []))
++
+     def approach_blocked(self, row, candidate, context):
+         """The same failed route/conditions may not repeat; a place is not banned."""
+         return next((attempt for attempt in reversed(row.get("approach_attempts", []))
+             if attempt["candidate_position_m"] == candidate["position_m"]
+             and attempt["route_version"] == candidate["route_version"]
++            and not (candidate.get("historical_view_intent") is not None
++                and attempt.get("historical_view_intent") is not None
++                and candidate["historical_view_intent"] != attempt["historical_view_intent"]
++                and attempt.get("candidate_reached") is True
++                and attempt.get("status") == "historical_view_revisited"
++                and attempt.get("reason") == "historical_view_revisited_identity_unresolved")
+             and (not changed(attempt["context"], context)
+                  or not changed(attempt.get("failure_context", attempt["context"]), context))), None)
+ 
+@@ -298,6 +309,8 @@
+             "failure_context": copy.deepcopy(failure_context if failure_context is not None else context),
+             "before_observation": before_observation, "after_observation": after_observation,
+             "arrival_evidence": copy.deepcopy(arrival_evidence)}
++        if candidate.get("historical_view_intent") is not None:
++            attempt["historical_view_intent"] = copy.deepcopy(candidate["historical_view_intent"])
+         attempts = row.setdefault("approach_attempts", [])
+         if (attempts and attempts[-1]["route_version"] == attempt["route_version"]
+                 and attempts[-1]["before_observation"] == before_observation
+@@ -313,11 +326,19 @@
+             row["tried_approach_positions"].append(copy.deepcopy(candidate["position_m"]))
+         return copy.deepcopy(attempt)
+ 
+-    def blocked(self, row, context):
++    def blocked(self, row, context, *, historical_view_intent=None):
+         # Check every failed endpoint, so turning away and back or completing a
+-        # short loop cannot erase an already exhausted approach.
++        # short loop cannot erase an already exhausted approach. Only a known
++        # historical-view arrival is scoped to its saved pose and orientation.
++        def another_view(attempt):
++            return (historical_view_intent is not None
++                and attempt.get("historical_view_arrived") is True
++                and attempt["reason"] == "historical_view_revisited_identity_unresolved"
++                and attempt.get("historical_view_intent") is not None
++                and attempt["historical_view_intent"] != historical_view_intent)
+         return next((attempt for attempt in reversed(row["attempts"])
+-                     if not attempt["success"] and not changed(attempt["context"], context)), None)
++                     if not attempt["success"] and not changed(attempt["context"], context)
++                     and not another_view(attempt)), None)
+ 
+     def remember(self, row, context, outcome, readiness):
+         result = {"success": outcome["success"], "reason": outcome["reason"],
+@@ -327,9 +348,29 @@
+                   # Directional passage obligations live in RoadMemory and are
+                   # consumed by search/motion checks independently of changed().
+                   "passage_failures": copy.deepcopy(outcome["evidence"].get("passage_failures", []))}
++        view = outcome["evidence"].get("historical_view_revisit") or {}
++        if (outcome["reason"] == "historical_view_revisited_identity_unresolved"
++                and view.get("schema") == "historical-view-revisit/v1"
++                and type(view.get("after_observation")) is int
++                and view.get("arrived") is True and view.get("navigation_only") is True
++                and view.get("requires_fresh_identity") is True
++                and outcome["evidence"].get("outcome_unknown") is not True):
++            intent = {"schema": "historical-view-intent/v1",
++                      "position_m": copy.deepcopy(view["position_m"]),
++                      "heading_deg": wrap(view["heading_deg"])}
++            # Bind the result to the existing verified approach, including the
++            # second remember after execute's final read-only observation.
++            if any(attempt.get("historical_view_intent") == intent
++                    and attempt.get("candidate_reached") is True
++                    and attempt.get("status") == "historical_view_revisited"
++                    and attempt.get("reason") == "historical_view_revisited_identity_unresolved"
++                    and attempt.get("after_observation") == view["after_observation"]
++                    for attempt in row.get("approach_attempts", [])):
++                result.update(historical_view_intent=intent, historical_view_arrived=True)
+         row["last_result"] = result
+         if outcome["reason"] not in {"navigation_repeat_without_new_evidence",
+-                                     "navigation_subgoal_already_satisfied"}:
++                                     "navigation_subgoal_already_satisfied",
++                                     "historical_view_revisit_exhausted"}:
+             if not row["attempts"] or row["attempts"][-1] != result:
+                 row["attempts"].append(result)
+         if readiness["standoff_ready"]:
+--- a/tests/test_brain_historical_view_revisit.py
++++ b/tests/test_brain_historical_view_revisit.py
+@@ -350,3 +350,212 @@
+     assert view['position_m'] == list(position(near['odometry']))
+     assert r.perception.get_object(r.object_id)['state'] == 'LOST'
+     assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def revisit(r):
++    return r.actions.execute({'action': 'go_to', 'params': {'object_id': r.object_id}})
++
++
++def test_distinct_historical_view_continues_after_known_unresolved_arrival():
++    r, fed, _ = mixed_revisit_runtime()
++    bound = {'limit_cm': .1, 'requires_new_view': True,
++             'anchor_odometry': copy.deepcopy(fed[1]['odometry'])}
++    r.actions._pick_probe_limits[r.object_id] = copy.deepcopy(bound)
++    identities = [o['id'] for o in r.perception.objects()]
++    first = revisit(r)
++    assert first['reason'] == 'historical_view_revisited_identity_unresolved'
++    assert first['evidence']['historical_view_revisit']['source_observation'] == fed[1]['observation_index']
++    record = r.actions._navigation_record(r.object_id)
++    prior_attempts = copy.deepcopy(record['attempts'])
++    prior_approaches = copy.deepcopy(record['approach_attempts'])
++    assert len(prior_attempts) == len(prior_approaches) == 1
++    assert prior_attempts[0]['historical_view_arrived'] is True
++    # Default target-level protection is retained. Only the separately checked
++    # next historical viewpoint supplies another navigation intent.
++    assert r.navigation_progress.blocked(record, r.actions._navigation_context(r.object_id))
++    candidate = r.actions.historical_view_revisit(r.object_id)
++    assert candidate['available'] and candidate['source_observation'] == fed[0]['observation_index']
++    # The next native25 model decision receives B through production state
++    # assembly, then the unchanged validator accepts only navigation to LOST.
++    from autonomous_brain.run import Runtime
++    from autonomous_brain.llm import ActionValidationError, validate_action
++    r.config = {'task': '把一个红球放到存放区'}
++    action = {'action': 'go_to', 'params': {'object_id': r.object_id}}
++    r.recent = [compact_action_result(r.round, action, first, r.snapshot['observation_index'])]
++    r.snapshot['road']['atJunction'] = False
++    state = Runtime.state(r)
++    target = next(row for row in state['objects'] if row['id'] == r.object_id)
++    assert target['status'] == 'LOST'
++    assert target['historical_view_revisit'] == candidate
++    assert state['recent_actions'][-1]['reason'] == 'historical_view_revisited_identity_unresolved'
++    assert state['navigation'][0]['recent_attempts'] == prior_attempts
++    assert state['navigation'][0]['repeat_blocked'] is False
++    accepted = validate_action(action, state, transcript_version='autonomous-brain-llm/v25')
++    with pytest.raises(ActionValidationError, match='pick requires a CONFIRMED'):
++        validate_action({'action': 'pick', 'params': {'object_id': r.object_id}}, state,
++                        transcript_version='autonomous-brain-llm/v25')
++    second = r.actions.execute(accepted)
++    assert not second['success'] and second['reason'] == 'historical_view_revisited_identity_unresolved'
++    assert second['evidence']['historical_view_revisit']['arrived']
++    assert position(r.snapshot['odometry']) == pytest.approx(position(fed[0]['odometry']))
++    assert record['attempts'][:len(prior_attempts)] == prior_attempts
++    assert record['approach_attempts'][:len(prior_approaches)] == prior_approaches
++    assert len(record['approach_attempts']) == 2
++    assert r.actions._pick_probe_limits[r.object_id] == bound
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert [o['id'] for o in r.perception.objects()] == identities
++    assert not r.actions.current_pick_ready(r.object_id)
++    assert not r.actions.navigation_readiness(r.object_id)['operation_ready']
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def test_tried_historical_poses_do_not_repeat_after_frames_routes_or_exhaustion():
++    r, _, _ = mixed_revisit_runtime()
++    views = copy.deepcopy(r.actions._historical_views[r.object_id])
++    for _ in views:
++        assert revisit(r)['reason'] == 'historical_view_revisited_identity_unresolved'
++    record = r.actions._navigation_record(r.object_id)
++    attempts = copy.deepcopy(record['attempts'])
++    approaches = copy.deepcopy(record['approach_attempts'])
++    # Each actual return created fresh observed graph segments, with route
++    # versions different from the route that originally attempted that pose.
++    old_versions = {attempt['route_version'] for attempt in approaches}
++    new_versions = set()
++    from autonomous_brain.navigation import evidence_version
++    for view in views:
++        route = r.roads.route_to(r.snapshot['odometry'], tuple(view['position_m']))
++        if route and tuple(route[-1]) == tuple(view['position_m']):
++            segments = [r.roads._approach_edges[a][b] for a, b in zip(route, route[1:])]
++            new_versions.add(evidence_version([[s['segment_version'], s['direction']] for s in segments]))
++    assert new_versions - old_versions
++    before = len(r.bridge_records)
++    for _ in range(2):
++        r.observe()
++        assert not r.actions.historical_view_revisit(r.object_id)['available']
++        assert revisit(r)['reason'] == 'historical_view_revisit_exhausted'
++    assert record['attempts'] == attempts and record['approach_attempts'] == approaches
++    assert not any(row['request']['method'] in {'forward', 'backward', 'turn', 'grab'}
++                   for row in r.bridge_records[before:])
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++def same_position_views_runtime():
++    r = ClippedRetryRuntime(clip_gap=100)
++    r.roads = RoadMemory()
++    original = r.observe
++    def observe(*, motion=None):
++        original(motion=motion)
++        r.roads.update(r.snapshot['odometry'], r.snapshot['road'], r.snapshot['observation_index'])
++        finalized = dict(motion, after_observation=r.snapshot['observation_index']) if motion else None
++        r.roads.observe_traversal(r.snapshot, finalized)
++        r.actions.note_historical_view(r.snapshot, finalized)
++        return r.snapshot
++    r.observe = observe
++    r.observe()
++    for _ in range(2):
++        r.actions.move('turn', {'angleDeg': 10, 'speed': 30})
++    duplicate = copy.deepcopy(r.actions._historical_views[r.object_id][-1])
++    r.observe()  # A second valid source frame at the same saved pose/heading.
++    sources = copy.deepcopy(r.actions._historical_views[r.object_id])
++    assert [source['heading_deg'] for source in sources] == [0, 10, 20]
++    assert len({tuple(source['position_m']) for source in sources}) == 1
++    r.override_items = []
++    r.actions.move('turn', {'angleDeg': -20, 'speed': 30})
++    r.actions.move('backward', {'distanceCm': 20, 'speed': 30})
++    r.bridge.seconds += 60
++    r.observe()
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    r.command_start = len(r.bridge_records)
++    return r, sources, duplicate
++
++
++def test_saved_heading_distinguishes_views_and_source_frame_does_not():
++    r, sources, duplicate = same_position_views_runtime()
++    assert duplicate['source_observation'] != sources[-1]['source_observation']
++    assert duplicate['frame_id'] != sources[-1]['frame_id']
++    assert duplicate['position_m'] == sources[-1]['position_m']
++    assert duplicate['heading_deg'] == sources[-1]['heading_deg']
++    for expected in (20, 10, 0):
++        candidate = r.actions.historical_view_revisit(r.object_id)
++        assert candidate['available'] and candidate['heading_deg'] == expected
++        result = revisit(r)
++        assert result['evidence']['historical_view_revisit']['arrived']
++        assert r.snapshot['odometry']['headingDeg'] == expected
++        if expected == 20:
++            r.actions._historical_views[r.object_id].append(duplicate)
++    record = r.actions._navigation_record(r.object_id)
++    # Both final candidates have the same position and empty route; headings
++    # still give independent camera views, without target-identity authority.
++    assert record['approach_attempts'][1]['route_version'] == record['approach_attempts'][2]['route_version']
++    assert len(record['approach_attempts']) == 3
++    assert commands(r, 'turn') == [{'angleDeg': 20.0, 'speed': 50},
++                                  {'angleDeg': -10.0, 'speed': 50},
++                                  {'angleDeg': -10.0, 'speed': 50}]
++    assert revisit(r)['reason'] == 'historical_view_revisit_exhausted'
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++@pytest.mark.parametrize('fault', ['ordinary-failure', 'unknown-arrival', 'unverified-arrival',
++                                   'mismatched-arrival', 'blocked-route'])
++def test_different_view_does_not_erase_other_failure_or_safety_guards(fault):
++    r, _, _ = mixed_revisit_runtime()
++    arrived = revisit(r)
++    assert arrived['evidence']['historical_view_revisit']['arrived']
++    record = r.actions._navigation_record(r.object_id)
++    prior = copy.deepcopy(record['approach_attempts'])
++    if fault == 'blocked-route':
++        r.roads._approach_edges.clear()
++    else:
++        # Start with the real, complete A result so each fault independently
++        # tests its guard instead of failing on unrelated missing evidence.
++        outcome = copy.deepcopy(arrived)
++        if fault == 'ordinary-failure':
++            outcome['reason'] = 'route_blocked'
++        elif fault == 'unknown-arrival':
++            outcome['evidence']['outcome_unknown'] = True
++        elif fault == 'unverified-arrival':
++            outcome['evidence']['historical_view_revisit']['arrived'] = False
++        else:
++            outcome['evidence']['historical_view_revisit']['after_observation'] += 1
++        r.actions.remember_navigation_result(r.object_id, outcome)
++        assert 'historical_view_arrived' not in record['attempts'][-1]
++    before = len(r.bridge_records)
++    assert not r.actions.historical_view_revisit(r.object_id)['available']
++    rejected = revisit(r)
++    assert not rejected['success']
++    assert rejected['reason'] in {'navigation_repeat_without_new_evidence',
++                                  'historical_view_revisit_unavailable'}
++    assert record['approach_attempts'] == prior
++    assert len(prior) == 1 < len(r.actions._historical_views[r.object_id])
++    assert not any(row['request']['method'] in {'forward', 'backward', 'turn', 'grab'}
++                   for row in r.bridge_records[before:])
++    assert not r.perception._grab_authorizations and not actual_grabs(r)
++
++
++@pytest.mark.parametrize('failure_at', ['translation', 'heading'])
++def test_second_view_unknown_ack_stops_after_one_send_without_consuming_success(failure_at):
++    r = mixed_revisit_runtime()[0] if failure_at == 'translation' else same_position_views_runtime()[0]
++    assert revisit(r)['evidence']['historical_view_revisit']['arrived']
++    record = r.actions._navigation_record(r.object_id)
++    prior = copy.deepcopy(record['approach_attempts'])
++    assert r.actions.historical_view_revisit(r.object_id)['available']
++    original = r.bridge.call
++    sent = []
++    def unknown(method, params):
++        sent.append((method, copy.deepcopy(params)))
++        original(method, params)
++        raise ConnectionError('synthetic_second_view_ack_unknown')
++    r.bridge.call = unknown
++    with pytest.raises(ConnectionError, match='synthetic_second_view_ack_unknown') as caught:
++        revisit(r)
++    assert len(sent) == 1
++    assert sent[0][0] in ({'forward', 'backward'} if failure_at == 'translation' else {'turn'})
++    assert caught.value.action_evidence['outcome_unknown']
++    assert record['approach_attempts'][:len(prior)] == prior
++    failed = record['approach_attempts'][-1]
++    assert failed['candidate_reached'] is False and failed['status'] == 'route_not_reached'
++    assert not r.actions.historical_view_revisit(r.object_id)['available']
++    assert not revisit(r)['success'] and len(sent) == 1
++    assert r.perception.get_object(r.object_id)['state'] == 'LOST'
++    assert not r.perception._grab_authorizations and not actual_grabs(r)

@@ -1,0 +1,37 @@
+{
+  "schema": "applied-actions-candidate/v1",
+  "after_run_ended": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z",
+  "version": "autonomous-brain-actions/v45",
+  "changes": [
+    "autonomous_brain/actions.py",
+    "tests/test_brain_pick_budget_guardrails.py"
+  ],
+  "preexisting_test_preserved": "tests/test_brain_pick_budget_new_view.py",
+  "sha256": {
+    "autonomous_brain/actions.py": "ae5c9fbd05fbf489180aebe159a67504b24ae6497528e6636648fd067cf6d6d4",
+    "tests/test_brain_pick_budget_guardrails.py": "51e53f0ed7880910e3324ba30b85c1ebd2cc81e2ff39b6c7de292ce655b15856",
+    "tests/test_brain_pick_budget_new_view.py": "97e4cac25107fc4d7cfa6d91c273e908e02765377723803e3eac3e9e71189d62",
+    "autonomous_brain/navigation_progress.py": "9c01219b74e625d89284a9939793a9a05a5ac7e16e65a855883dc8383415e4d8"
+  },
+  "patch": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-actions45.patch",
+  "validation": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-validation.json",
+  "review": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-review.json",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z",
+  "runtime": "autonomous-brain-runtime/v21",
+  "model": "gpt-6.1-sol",
+  "transport": "codex-app-server",
+  "native_llm_version": "v25",
+  "task": "把两个红球送到绿色存放区",
+  "budget": {
+    "rounds": 200,
+    "simulation_seconds": 1200
+  },
+  "post_apply_test": {
+    "exit_code": 0,
+    "passed": 18,
+    "seconds": 15.89,
+    "log": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/applied-focused-tests.txt",
+    "sha256": "b71559bb7f5a11bc60984de91ccfe8f1d3bfeb95fdc88be225221f4af377d0f5"
+  },
+  "diff_check_exit_code": 0
+}

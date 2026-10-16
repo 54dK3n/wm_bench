@@ -1,0 +1,109 @@
+{
+  "schema": "pick-budget-candidate-review/v1",
+  "review_status": "no_blocking_findings",
+  "scope": "Independent read-only source and public-evidence review of the temporary actions/v45 candidate. The active real run and its production source were not modified.",
+  "candidate": {
+    "patch": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-actions45.patch",
+    "patch_sha256": "27760e638982b3c4281c155acdaea15ed4f889d9c56dbbc8e520ea5daf0e99c2",
+    "additional_tests": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/candidate-test_brain_pick_budget_guardrails.py",
+    "additional_tests_sha256": "51e53f0ed7880910e3324ba30b85c1ebd2cc81e2ff39b6c7de292ce655b15856",
+    "temporary_directory": "/private/tmp/wm-pick-budget.9ea138ek",
+    "candidate_actions_sha256": "ae5c9fbd05fbf489180aebe159a67504b24ae6497528e6636648fd067cf6d6d4",
+    "expected_hashes_match": true,
+    "patch_exactly_matches_production_to_temporary_actions_diff": true
+  },
+  "production_boundary_at_review": {
+    "actions": "autonomous_brain/actions.py",
+    "actions_version": "autonomous-brain-actions/v44",
+    "actions_sha256": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+    "preexisting_test": "tests/test_brain_pick_budget_new_view.py",
+    "preexisting_test_sha256": "97e4cac25107fc4d7cfa6d91c273e908e02765377723803e3eac3e9e71189d62",
+    "preexisting_test_matches_temporary_copy": true,
+    "new_guardrails_test_present_in_production": false,
+    "production_changes_by_reviewer": false
+  },
+  "public_evidence": {
+    "rounds": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/rounds.jsonl",
+    "observations": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/observations.jsonl",
+    "round_refs": [33, 34, 35],
+    "specific_observation_ref": 165,
+    "prior_review": "artifacts/autonomous-brain/a40-followup/a44-continuation-20261015T225725Z/pick-budget-evidence-review.json",
+    "r35_match": {
+      "prior_probe_kind": "fresh_supported_approach",
+      "prior_limit_cm": 0.1,
+      "prior_previous_limit_cm": 0.15000000000000568,
+      "prior_requires_new_view": false,
+      "prior_source_order": "148 < 149 < 150 <= 150 <= action_before 155",
+      "trajectory": "10 forward motions, each requested 0.1 cm, all motion_verified, no reported unknown outcome",
+      "grab_attempts": 0,
+      "road_return": "success=true, already_on_observed_road, observation165",
+      "target_state_at_observation165": "CONFIRMED",
+      "holding_at_observation165": false,
+      "on_road_at_observation165": true,
+      "existing_object_geometry_distance_cm_at_observation165": 30.65118684012266,
+      "distance_is_sensor_and_memory_derived_not_truth": true,
+      "existing_pick_range_threshold_cm": 22.5,
+      "publicly_checkable_transition_predicates_match": true
+    }
+  },
+  "review_findings": [
+    {
+      "topic": "narrow_transition",
+      "assessment": "The new transition requires the budget-exhausted reason, ten completed supported approaches, exactly ten verified forward trajectory entries, no grasp attempts, complete ordered prior shrink evidence and finite original anchors. Turns, incomplete receipts, missing prior evidence and unrelated budget failures do not enter this transition."
+    },
+    {
+      "topic": "pre_return_range_boundary",
+      "assessment": "The candidate captures whether the target is still CONFIRMED and its existing object_geometry distance remains greater than 22.5 cm before finish performs road return. It does not add another grasp authorization rule. A tenth step already inside range cannot be reclassified as unresolved merely because return later moves away, including an off-road endpoint."
+    },
+    {
+      "topic": "unknown_and_holding",
+      "assessment": "A supported approach is counted only after the existing completed-receipt check. Unknown exceptions retain existing propagation, verified-motion and holding-change failures return through their original failure reasons, and the transition additionally requires known-empty holding, no held_object_id and no pending_grasp. No actuator replay or new exception recovery is introduced."
+    },
+    {
+      "topic": "failed_or_unknown_return",
+      "assessment": "The mutation occurs after return_place_path and requires recovery.success is True. Failed returns cannot establish the budget anchor; return exceptions do not reach the mutation. Existing return_place_path rejects unknown trajectory or sensor state before reporting success."
+    },
+    {
+      "topic": "bound_and_anchor_preservation",
+      "assessment": "bound.update changes requires_new_view and appends budget_return_odometry/budget_return_observation. Existing limit, previous limit, original anchor, original observed-return anchor and source metadata remain intact. The budget return is added as a third independent-position exclusion anchor, preventing the budget endpoint from immediately satisfying its own new-view requirement."
+    },
+    {
+      "topic": "existing_state_and_planner_handoff",
+      "assessment": "The existing shared pick_probe_view_status feeds current_pick_ready, navigation_readiness and go_to. The new obligation therefore reaches the unchanged _road_reposition(require_new_pick_view=True) path without bypassing action_failure_guard, historical approach failures, current road checks, passage constraints or fresh identity authorization."
+    },
+    {
+      "topic": "scope",
+      "assessment": "The patch changes the actions version, the shared anchor list and the narrow pick-budget transition. It does not change historical-view selection, monitor/controller behavior, route thresholds, grasp range, loop budget or probe step size."
+    }
+  ],
+  "verification": {
+    "candidate_actions_ast_parse": "passed",
+    "candidate_additional_tests_ast_parse": "passed",
+    "hash_and_exact_diff_checks": "passed",
+    "public_predicate_check": "passed",
+    "test_execution_by_this_reviewer": "not repeated; a separate agent is running the targeted tests",
+    "additional_tests_read": [
+      "Approach exits before budget without setting an obligation.",
+      "Tenth step already within pick range, with and without later return displacement.",
+      "Tenth step within pick range off road before return.",
+      "Failed road return.",
+      "Tenth incomplete receipt.",
+      "Native model-state exposure and unchanged road-planner handoff."
+    ],
+    "preexisting_tests_read": [
+      "Old bound preservation and budget-return anchor.",
+      "Third-anchor independence and original fresh-view reset.",
+      "Unknown pixels and identity competitors.",
+      "Unknown motion, changed holding and unknown holding.",
+      "Incomplete prior shrink evidence."
+    ]
+  },
+  "limits": [
+    "This is a source and public-evidence review, not a new physical run or a runtime proof that a safe alternative view exists.",
+    "The new counter is not present in the already-running A44 process. The observed sequence matches its intended branch, but this review does not claim the candidate executed during that run.",
+    "The candidate deliberately leaves turn-containing or otherwise different budget-exhaustion paths outside its narrow transition.",
+    "No claim is made about later active-run behavior, completion, pickup success or physical truth."
+  ],
+  "blocking_findings": [],
+  "mutations": "Only this candidate-review.json artifact was created. Production code, existing tests, active-run evidence and processes were not changed."
+}

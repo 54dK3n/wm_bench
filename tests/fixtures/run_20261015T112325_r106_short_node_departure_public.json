@@ -1,0 +1,293 @@
+{
+  "description": "Original public road and odometry only. Actual historical follow_road and unsuccessful reverse take_exit; no future bounded forward reading is supplied.",
+  "source": "artifacts/autonomous-brain/a40-followup/run-20261015T112325Z/map-05-run-1/brain",
+  "observations": [
+    {
+      "observation_index": 516,
+      "round": 97,
+      "simulation_seconds": 348.04,
+      "odometry": {
+        "forwardCm": 110.4,
+        "rightCm": -0.3,
+        "headingDeg": -179.3,
+        "distanceCm": 2374.5,
+        "tick": 17402
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 158.9,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 17402
+      },
+      "holding": {
+        "holding": false
+      },
+      "observation": {
+        "frameId": 516,
+        "tick": 17402
+      }
+    },
+    {
+      "observation_index": 517,
+      "round": 97,
+      "simulation_seconds": 348.58,
+      "odometry": {
+        "forwardCm": 102.1,
+        "rightCm": -0.2,
+        "headingDeg": -179.3,
+        "distanceCm": 2382.7,
+        "tick": 17429
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 150.7,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 89.3
+          },
+          {
+            "angleDeg": -1.4
+          },
+          {
+            "angleDeg": -90.7
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 17429
+      },
+      "holding": {
+        "holding": false
+      },
+      "observation": {
+        "frameId": 517,
+        "tick": 17429
+      }
+    },
+    {
+      "observation_index": 568,
+      "round": 106,
+      "simulation_seconds": 393.96,
+      "odometry": {
+        "forwardCm": 102.1,
+        "rightCm": -0.2,
+        "headingDeg": -179.3,
+        "distanceCm": 2799.3,
+        "tick": 19698
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 150.7,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 89.3
+          },
+          {
+            "angleDeg": -1.4
+          },
+          {
+            "angleDeg": -90.7
+          },
+          {
+            "angleDeg": -180
+          }
+        ],
+        "tick": 19698
+      },
+      "holding": {
+        "holding": false
+      },
+      "observation": {
+        "frameId": 568,
+        "tick": 19698
+      }
+    },
+    {
+      "observation_index": 569,
+      "round": 106,
+      "simulation_seconds": 396.22,
+      "odometry": {
+        "forwardCm": 102.1,
+        "rightCm": -0.2,
+        "headingDeg": 0.7,
+        "distanceCm": 2799.3,
+        "tick": 19811
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 138.4,
+        "atJunction": true,
+        "atNode": true,
+        "exits": [
+          {
+            "angleDeg": 178.6
+          },
+          {
+            "angleDeg": 89.3
+          },
+          {
+            "angleDeg": 0
+          },
+          {
+            "angleDeg": -90.7
+          }
+        ],
+        "tick": 19811
+      },
+      "holding": {
+        "holding": false
+      },
+      "observation": {
+        "frameId": 569,
+        "tick": 19811
+      }
+    },
+    {
+      "observation_index": 570,
+      "round": 106,
+      "simulation_seconds": 401.08,
+      "odometry": {
+        "forwardCm": 111.5,
+        "rightCm": -0.3,
+        "headingDeg": 0.7,
+        "distanceCm": 2839.9,
+        "tick": 20054
+      },
+      "road": {
+        "onRoad": true,
+        "lateralOffsetCm": 0,
+        "headingErrorDeg": 0,
+        "leftClearanceCm": 8.6,
+        "rightClearanceCm": 8.6,
+        "frontClearanceCm": 129,
+        "atJunction": false,
+        "atNode": false,
+        "exits": [],
+        "tick": 20054
+      },
+      "holding": {
+        "holding": false
+      },
+      "observation": {
+        "frameId": 570,
+        "tick": 20054
+      }
+    }
+  ],
+  "motions": [
+    {
+      "method": "follow_road",
+      "params": {
+        "distanceCm": 16,
+        "speed": 50
+      },
+      "before_observation": 516,
+      "after_observation": 517,
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "junction",
+        "distanceCm": 8.3,
+        "elapsedTicks": 27
+      },
+      "motion_verification": {
+        "method": "follow_road",
+        "before_observation": 516,
+        "after_observation": 517,
+        "before_on_road": true,
+        "after_on_road": true,
+        "before_holding": false,
+        "after_holding": false,
+        "before_frame_id": 516,
+        "after_frame_id": 517,
+        "frame_fresh": true,
+        "measured_cm": 8.300602387778873,
+        "heading_change_deg": 0.0,
+        "applicable": false
+      }
+    },
+    {
+      "method": "turn",
+      "params": {
+        "angleDeg": -180,
+        "speed": 50
+      },
+      "before_observation": 568,
+      "after_observation": 569,
+      "actuator_result": {
+        "completed": true
+      },
+      "motion_verification": {
+        "method": "turn",
+        "before_observation": 568,
+        "after_observation": 569,
+        "before_on_road": true,
+        "after_on_road": true,
+        "before_holding": false,
+        "after_holding": false,
+        "before_frame_id": 568,
+        "after_frame_id": 569,
+        "frame_fresh": true,
+        "measured_cm": 0.0,
+        "heading_change_deg": -180.0,
+        "applicable": true,
+        "motion_verified": true,
+        "reasons": [],
+        "holding_changed": false,
+        "road_changed": false
+      }
+    },
+    {
+      "method": "take_exit",
+      "params": {
+        "angleDeg": 0,
+        "speed": 50
+      },
+      "before_observation": 569,
+      "after_observation": 570,
+      "actuator_result": {
+        "accepted": true,
+        "stoppedBy": "entered_road",
+        "distanceCm": 40.6,
+        "elapsedTicks": 243
+      },
+      "motion_verification": {
+        "method": "take_exit",
+        "before_observation": 569,
+        "after_observation": 570,
+        "before_on_road": true,
+        "after_on_road": true,
+        "before_holding": false,
+        "after_holding": false,
+        "before_frame_id": 569,
+        "after_frame_id": 570,
+        "frame_fresh": true,
+        "measured_cm": 9.400531899844825,
+        "heading_change_deg": 0.0,
+        "applicable": false
+      }
+    }
+  ]
+}

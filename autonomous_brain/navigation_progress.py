@@ -279,11 +279,22 @@ class NavigationProgress:
                     self.action_failures.pop((action, old_id)))
         return self.records[canonical_id]
 
+    @staticmethod
+    def historical_view_tried(row, intent):
+        return any(attempt.get("historical_view_intent") == intent
+                   for attempt in row.get("approach_attempts", []))
+
     def approach_blocked(self, row, candidate, context):
         """The same failed route/conditions may not repeat; a place is not banned."""
         return next((attempt for attempt in reversed(row.get("approach_attempts", []))
             if attempt["candidate_position_m"] == candidate["position_m"]
             and attempt["route_version"] == candidate["route_version"]
+            and not (candidate.get("historical_view_intent") is not None
+                and attempt.get("historical_view_intent") is not None
+                and candidate["historical_view_intent"] != attempt["historical_view_intent"]
+                and attempt.get("candidate_reached") is True
+                and attempt.get("status") == "historical_view_revisited"
+                and attempt.get("reason") == "historical_view_revisited_identity_unresolved")
             and (not changed(attempt["context"], context)
                  or not changed(attempt.get("failure_context", attempt["context"]), context))), None)
 
@@ -298,6 +309,8 @@ class NavigationProgress:
             "failure_context": copy.deepcopy(failure_context if failure_context is not None else context),
             "before_observation": before_observation, "after_observation": after_observation,
             "arrival_evidence": copy.deepcopy(arrival_evidence)}
+        if candidate.get("historical_view_intent") is not None:
+            attempt["historical_view_intent"] = copy.deepcopy(candidate["historical_view_intent"])
         attempts = row.setdefault("approach_attempts", [])
         if (attempts and attempts[-1]["route_version"] == attempt["route_version"]
                 and attempts[-1]["before_observation"] == before_observation
@@ -313,11 +326,19 @@ class NavigationProgress:
             row["tried_approach_positions"].append(copy.deepcopy(candidate["position_m"]))
         return copy.deepcopy(attempt)
 
-    def blocked(self, row, context):
+    def blocked(self, row, context, *, historical_view_intent=None):
         # Check every failed endpoint, so turning away and back or completing a
-        # short loop cannot erase an already exhausted approach.
+        # short loop cannot erase an already exhausted approach. Only a known
+        # historical-view arrival is scoped to its saved pose and orientation.
+        def another_view(attempt):
+            return (historical_view_intent is not None
+                and attempt.get("historical_view_arrived") is True
+                and attempt["reason"] == "historical_view_revisited_identity_unresolved"
+                and attempt.get("historical_view_intent") is not None
+                and attempt["historical_view_intent"] != historical_view_intent)
         return next((attempt for attempt in reversed(row["attempts"])
-                     if not attempt["success"] and not changed(attempt["context"], context)), None)
+                     if not attempt["success"] and not changed(attempt["context"], context)
+                     and not another_view(attempt)), None)
 
     def remember(self, row, context, outcome, readiness):
         result = {"success": outcome["success"], "reason": outcome["reason"],
@@ -327,9 +348,29 @@ class NavigationProgress:
                   # Directional passage obligations live in RoadMemory and are
                   # consumed by search/motion checks independently of changed().
                   "passage_failures": copy.deepcopy(outcome["evidence"].get("passage_failures", []))}
+        view = outcome["evidence"].get("historical_view_revisit") or {}
+        if (outcome["reason"] == "historical_view_revisited_identity_unresolved"
+                and view.get("schema") == "historical-view-revisit/v1"
+                and type(view.get("after_observation")) is int
+                and view.get("arrived") is True and view.get("navigation_only") is True
+                and view.get("requires_fresh_identity") is True
+                and outcome["evidence"].get("outcome_unknown") is not True):
+            intent = {"schema": "historical-view-intent/v1",
+                      "position_m": copy.deepcopy(view["position_m"]),
+                      "heading_deg": wrap(view["heading_deg"])}
+            # Bind the result to the existing verified approach, including the
+            # second remember after execute's final read-only observation.
+            if any(attempt.get("historical_view_intent") == intent
+                    and attempt.get("candidate_reached") is True
+                    and attempt.get("status") == "historical_view_revisited"
+                    and attempt.get("reason") == "historical_view_revisited_identity_unresolved"
+                    and attempt.get("after_observation") == view["after_observation"]
+                    for attempt in row.get("approach_attempts", [])):
+                result.update(historical_view_intent=intent, historical_view_arrived=True)
         row["last_result"] = result
         if outcome["reason"] not in {"navigation_repeat_without_new_evidence",
-                                     "navigation_subgoal_already_satisfied"}:
+                                     "navigation_subgoal_already_satisfied",
+                                     "historical_view_revisit_exhausted"}:
             if not row["attempts"] or row["attempts"][-1] != result:
                 row["attempts"].append(result)
         if readiness["standoff_ready"]:

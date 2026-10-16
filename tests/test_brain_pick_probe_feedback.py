@@ -151,7 +151,7 @@ def test_actual_native_request_receives_new_bound_and_keeps_model_choice(tmp_pat
     assert received["evidence"]["pick_retry"]["next_probe_limit_cm"] == 3
     assert received["reason"] == "completed_empty_grab_probe_refined"
     assert received["success"] is False and received["evidence"]["grab_authorization"]["authorized"] is False
-    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v21"
+    assert json.loads((tmp_path/"calls.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25"
     with patch.object(chatgpt_transport, "invoke", side_effect=AssertionError("no replay inference")):
         with LLMClient(tmp_path/"replay.jsonl", replay_path=tmp_path/"calls.jsonl") as client:
             assert client.decide(state) == {"action": "explore", "params": {}}

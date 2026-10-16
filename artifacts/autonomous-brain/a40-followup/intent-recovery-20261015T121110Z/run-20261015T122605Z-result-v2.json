@@ -1,0 +1,1397 @@
+{
+  "schema": "ended-run-compact-result/v2",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z",
+  "scope": "Final artifacts only; original evaluator verdict copied without rerun. No record/samples/captures/maps read.",
+  "versions": {
+    "brain": "autonomous-brain/v2",
+    "runtime": "autonomous-brain-runtime/v21",
+    "actions": {
+      "value": "autonomous-brain-actions/v44",
+      "verified_source": "autonomous_brain/actions.py"
+    },
+    "native_llm": [
+      "autonomous-brain-llm/v25"
+    ],
+    "native_cli": {
+      "0.162.0-alpha.17.2": 201
+    },
+    "evaluator": "autonomous-brain-offline-evaluation/v9",
+    "brain_revision": "cc15a3329aad56b4f779203dbe688cb64c886312",
+    "platform_revision": "54b36f82109836226cf654e9a676ddf0c3b07cd0"
+  },
+  "source_hashes": {
+    "brain": {
+      "__init__.py": "5f4a11f3ef47bad76588239300013e51ccbfb371b8e0eb261738072e28885eb7",
+      "actions.py": "e397ab5101875465e20e636019f911ee09b3071f9589151a09dd119ded5c7f26",
+      "bridge.py": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "chatgpt_transport.py": "f37f6e687fea7e0b970017d1818d808b49a83784ac1e351e825be285a5a9f68a",
+      "confirmation_sampling.py": "bcdaa625dec0c80ae28b687db77fbf279c18423b4298f74614e6e7a6373a5471",
+      "llm.py": "97791801f4be0044484a2f1f100421dbd65835a020af191be1b7d4dc1321ffe3",
+      "navigation.py": "1f5a3e3f13bcd65315d9278978ae6e21271e14554db718b38677cb96b6e0738d",
+      "navigation_progress.py": "9c01219b74e625d89284a9939793a9a05a5ac7e16e65a855883dc8383415e4d8",
+      "observation_quality.py": "1e8b76abc34e4c28e289546bcf2800150981e838ac422b21c1fa4fce72873e17",
+      "orchestration.py": "4d3966e8fbb63bec69c09b37c202d48d0284fdee7c880cc04ae07ba17629d77b",
+      "perception.py": "b035f6d51f6b21adf8da5f3b52d355d6d75b6e27355bbc76e6cdec02b932a07a",
+      "provenance.py": "87ce5564e72ca7eb7c9dc7a579c76f08e71678680ad8073a7c050e00d8d1f321",
+      "road_evidence.py": "8cad2cec432d886b361e2617213b6e4ed3dcb38b1639fd2c110a24b2228afc9c",
+      "run.py": "e077a141b175039bc8e373307a25baa4ba367eee339b83059a65224156d25f21",
+      "task.py": "a3225f8506c335cd8f5ac5ab49a3164bedb6ed11ac4075b8760d4a3dd7041ca0"
+    },
+    "world_model": "10895f70be67c9d70b1073256d7e264451934c8d025a11a82128bb7ad956cd7c",
+    "orchestrator": {
+      "orchestrator/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "orchestrator/executor.py": "329e218bc07586030e7d442f94fbabe1defa9b597ff2f46aa67bc5cfb03f0e4e",
+      "orchestrator/judge.py": "9ba46caf44ef96fc1fb6c15e20f0a0e31fb7caf3c2a979966f7bc5429584cf3e",
+      "orchestrator/planner.py": "c21a678f1a4ea2dadd60a5bcd27c85eeb30939f3de902f9d1022d3118da4b61b",
+      "skills/registry.json": "962bbed01ec94f94a8953e640532a7f752d1bb0db2ae08d939d07a26f78fd37d"
+    },
+    "platform": {
+      "competition-core.js": "2b9c86e56043b0c6c61023ac263b43e9de7e2223144786fdd561741e70dc57e8",
+      "robot-record.js": "1b43cb787b0a05307526e849d440215266e06140590fb506abfacaa50bbd0950",
+      "robot-backend-runtime.js": "4d5b86a5ec75da8c40bec370e6c2f9ff366b1ecfca6834f25981a399518fff50",
+      "robot-bridge-contract.js": "ce95185583638d4ed1cc3269062794219b362c564c64847ac3265d6f26b3963b",
+      "backend/robot-bridge.js": "3c3d93599d94763e5dfb1d36f52937d5c366705df744b3e064d1f2f4e7501a54",
+      "server.js": "03886877a5369ba397163144dd43c1d1e7392f1c96f0f30299b4f6fec6d0dbc7",
+      "app.js": "55acd2843d202f83c83549d4a2640f1d995358bc654546732cbaca500ae28c83",
+      "vision.js": "62274a407a689c8e48ab869eae43de5da0b4717a66e47b7bb7951ce20d654da2",
+      "vision-pixel-core.js": "7627c0429e338f481948bdcb6ab59af901ad6ed0cee8001ef38d51dfa063c614",
+      "python-worker.js": "da03874afeb165e3504220d1b520375eacd67ee2349eefaab75dbdeadf2c33b4",
+      "storage-region-pixels.js": "08638b4165941ff7ed6cc22602343f8c5155498b07132124d62969c902ede2e2",
+      "robot-camera-detector.js": "1aabe623297d7dec5125eb696f2579f5af634808354c4be38ea972b6abaf00fc",
+      "index.html": "e61b3b7f467a16abe82b0b312ff6bdd877f830955e181b8e79394dfdeab0f102",
+      "tests/robot-checkpoint-clock.test.js": "3894613b8bb45472743d7206ab79c41a59f3f45e0aaf28d495bb94c4dc531e92"
+    },
+    "native_client": "0d5ac7aae20c4eda6242428d5e218c55ba96d8763fda2a271088ff37104b9d28",
+    "driver": "33902b7d4ebc062642d0da349c9cde0efd293335556fc583b6909dc272ddb999",
+    "evaluator": "a7bfd08cceae971432c40d5188ece959182f929f1796e7c570f6dd7e8ac3cc04"
+  },
+  "source_proof": {
+    "status": "verified",
+    "failures": [],
+    "recorded_before_after_equal": true,
+    "driver_sources_unchanged": true,
+    "brain_summary_hashes_match": true,
+    "actual_orchestrator_matches": true,
+    "actual_world_model_matches": true
+  },
+  "model_configuration": {
+    "model": "gpt-6.1-sol",
+    "thinking": "low",
+    "temperature": null,
+    "stream": true,
+    "formal_run": true,
+    "transport": "codex-app-server"
+  },
+  "counts": {
+    "model_started": 201,
+    "model_finished": 201,
+    "effective_model_action_records": 200,
+    "native_completed_turn_receipts": 201,
+    "completed_action_turns": 200,
+    "round_records": 200,
+    "action_types": {
+      "explore": 131,
+      "look_around": 23,
+      "go_to": 27,
+      "pick": 17,
+      "place": 2
+    },
+    "bridge_calls": 5604,
+    "observations": 1201,
+    "public_holding_true": 131,
+    "public_holding_false": 1070,
+    "distinct_HELD": 2,
+    "distinct_DELIVERED": 1,
+    "done": 0
+  },
+  "manipulations": {
+    "grab": {
+      "calls": 25,
+      "terminal_completed": 25,
+      "actuator_completed_true": 25,
+      "terminal_status_counts": {
+        "completed": 25
+      },
+      "missing_or_nonterminal_receipts": 0,
+      "post_call_sensor_holding_true": 2,
+      "post_call_sensor_holding_false": 23,
+      "post_call_sensor_holding_unavailable": 0,
+      "sensor_rule": "First holding request strictly after this command and before the next grab/release in public bridge order; no fallback across that boundary.",
+      "evidence_path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "evidence": [
+        {
+          "command_request_id": "brain-000491",
+          "command_source_line": 491,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-000519",
+          "first_post_call_holding_request_id": "brain-000494",
+          "holding_source_line": 494,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-000519",
+          "command_source_line": 519,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-000547",
+          "first_post_call_holding_request_id": "brain-000522",
+          "holding_source_line": 522,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-000547",
+          "command_source_line": 547,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-000936",
+          "first_post_call_holding_request_id": "brain-000550",
+          "holding_source_line": 550,
+          "holding_terminal_status": "completed",
+          "sensor_holding": true
+        },
+        {
+          "command_request_id": "brain-002734",
+          "command_source_line": 2734,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002749",
+          "first_post_call_holding_request_id": "brain-002737",
+          "holding_source_line": 2737,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002749",
+          "command_source_line": 2749,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002759",
+          "first_post_call_holding_request_id": "brain-002752",
+          "holding_source_line": 2752,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002759",
+          "command_source_line": 2759,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002828",
+          "first_post_call_holding_request_id": "brain-002762",
+          "holding_source_line": 2762,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002828",
+          "command_source_line": 2828,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002838",
+          "first_post_call_holding_request_id": "brain-002831",
+          "holding_source_line": 2831,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002838",
+          "command_source_line": 2838,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002848",
+          "first_post_call_holding_request_id": "brain-002841",
+          "holding_source_line": 2841,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002848",
+          "command_source_line": 2848,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002932",
+          "first_post_call_holding_request_id": "brain-002851",
+          "holding_source_line": 2851,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002932",
+          "command_source_line": 2932,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002942",
+          "first_post_call_holding_request_id": "brain-002935",
+          "holding_source_line": 2935,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002942",
+          "command_source_line": 2942,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002965",
+          "first_post_call_holding_request_id": "brain-002945",
+          "holding_source_line": 2945,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002965",
+          "command_source_line": 2965,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002975",
+          "first_post_call_holding_request_id": "brain-002968",
+          "holding_source_line": 2968,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002975",
+          "command_source_line": 2975,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002998",
+          "first_post_call_holding_request_id": "brain-002978",
+          "holding_source_line": 2978,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-002998",
+          "command_source_line": 2998,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-003008",
+          "first_post_call_holding_request_id": "brain-003001",
+          "holding_source_line": 3001,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-003008",
+          "command_source_line": 3008,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-003031",
+          "first_post_call_holding_request_id": "brain-003011",
+          "holding_source_line": 3011,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-003031",
+          "command_source_line": 3031,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-003041",
+          "first_post_call_holding_request_id": "brain-003034",
+          "holding_source_line": 3034,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-003041",
+          "command_source_line": 3041,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-003069",
+          "first_post_call_holding_request_id": "brain-003044",
+          "holding_source_line": 3044,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-003069",
+          "command_source_line": 3069,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-003092",
+          "first_post_call_holding_request_id": "brain-003072",
+          "holding_source_line": 3072,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-003092",
+          "command_source_line": 3092,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-004199",
+          "first_post_call_holding_request_id": "brain-003095",
+          "holding_source_line": 3095,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-004199",
+          "command_source_line": 4199,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-004209",
+          "first_post_call_holding_request_id": "brain-004202",
+          "holding_source_line": 4202,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-004209",
+          "command_source_line": 4209,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-004224",
+          "first_post_call_holding_request_id": "brain-004212",
+          "holding_source_line": 4212,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-004224",
+          "command_source_line": 4224,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-005312",
+          "first_post_call_holding_request_id": "brain-004227",
+          "holding_source_line": 4227,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-005312",
+          "command_source_line": 5312,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-005340",
+          "first_post_call_holding_request_id": "brain-005315",
+          "holding_source_line": 5315,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-005340",
+          "command_source_line": 5340,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-005368",
+          "first_post_call_holding_request_id": "brain-005343",
+          "holding_source_line": 5343,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        },
+        {
+          "command_request_id": "brain-005368",
+          "command_source_line": 5368,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": null,
+          "first_post_call_holding_request_id": "brain-005371",
+          "holding_source_line": 5371,
+          "holding_terminal_status": "completed",
+          "sensor_holding": true
+        }
+      ]
+    },
+    "release": {
+      "calls": 1,
+      "terminal_completed": 1,
+      "actuator_completed_true": 1,
+      "terminal_status_counts": {
+        "completed": 1
+      },
+      "missing_or_nonterminal_receipts": 0,
+      "post_call_sensor_holding_true": 0,
+      "post_call_sensor_holding_false": 1,
+      "post_call_sensor_holding_unavailable": 0,
+      "sensor_rule": "First holding request strictly after this command and before the next grab/release in public bridge order; no fallback across that boundary.",
+      "evidence_path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "evidence": [
+        {
+          "command_request_id": "brain-000936",
+          "command_source_line": 936,
+          "terminal_status": "completed",
+          "actuator_completed": true,
+          "next_manipulation_request_id": "brain-002734",
+          "first_post_call_holding_request_id": "brain-000939",
+          "holding_source_line": 939,
+          "holding_terminal_status": "completed",
+          "sensor_holding": false
+        }
+      ]
+    }
+  },
+  "distinct_state_ids": {
+    "HELD": [
+      "target_010",
+      "target_147"
+    ],
+    "DELIVERED": [
+      "target_010"
+    ]
+  },
+  "state_count_semantics": "Distinct WM IDs, not distinct physical balls; evaluator owns physical identity/delivery counts.",
+  "termination": {
+    "status": "failed",
+    "reason": "round_limit",
+    "driver_exit": 1,
+    "evaluator_exit": 1,
+    "interruption": null
+  },
+  "original_evaluation": {
+    "success": false,
+    "failures": [
+      "final_truth_gripper_not_empty_or_unknown",
+      "no_active_delivery_event:guangyang-target-2",
+      "final_position_outside_storage:guangyang-target-2",
+      "round_limit_reached",
+      "brain_did_not_finish_with_observed_done",
+      "terminal_done_not_corroborated",
+      "execution_or_controller_error",
+      "task_completion:gripper_or_grasp_not_resolved",
+      "task_completion:delivery_identity_or_evidence_unresolved",
+      "task_completion:required_delivery_count_not_met",
+      "done_not_selected_in_recorded_llm_call",
+      "done_post_action_completion_not_corroborated"
+    ],
+    "metrics": {
+      "rounds": 200,
+      "llm_calls": 201,
+      "llm_total_elapsed_s": 1119.4471722049973,
+      "simulation_seconds": 1011.9,
+      "observations": 1201,
+      "failed_rounds": 72,
+      "failed_actions": 72,
+      "execution_failures": 0,
+      "external_stop_failures": 0,
+      "bridge_calls": 5604,
+      "nonwhitelist_brain_requests": 0
+    },
+    "delivery": {
+      "expected_target_ids": [
+        "guangyang-target-1",
+        "guangyang-target-2"
+      ],
+      "required_delivery_count": 2,
+      "qualifying_delivered_target_ids": [
+        "guangyang-target-1"
+      ],
+      "delivered_target_ids": [
+        "guangyang-target-1"
+      ],
+      "failures": [
+        "final_truth_gripper_not_empty_or_unknown",
+        "no_active_delivery_event:guangyang-target-2",
+        "final_position_outside_storage:guangyang-target-2",
+        "round_limit_reached",
+        "brain_did_not_finish_with_observed_done",
+        "terminal_done_not_corroborated",
+        "execution_or_controller_error"
+      ],
+      "terminal_done": {
+        "verified": false,
+        "round": 200,
+        "observation_index": 1201,
+        "observation_tick": 50595
+      }
+    },
+    "final_target_flags": [
+      {
+        "truth_id": "guangyang-target-1",
+        "active_delivery_event": true,
+        "inside_storage": true,
+        "held": false,
+        "sample_tick": 50595
+      },
+      {
+        "truth_id": "guangyang-target-2",
+        "active_delivery_event": false,
+        "inside_storage": false,
+        "held": true,
+        "sample_tick": 50595
+      }
+    ],
+    "task_completion": {
+      "required_count": 2,
+      "delivered_count": 1,
+      "ready_for_done": false,
+      "unmet_conditions": [
+        "gripper_or_grasp_not_resolved",
+        "delivery_identity_or_evidence_unresolved",
+        "required_delivery_count_not_met"
+      ]
+    }
+  },
+  "historical_view_revisit": {
+    "available": [
+      {
+        "round": 146,
+        "object_ids": [
+          "target_108"
+        ],
+        "view_refs": [
+          "target_108:707:707"
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "round": 146,
+        "object_id": "target_108",
+        "capability_available": true,
+        "success": false,
+        "reason": "historical_view_revisited_identity_unresolved",
+        "view_basis": "action_result",
+        "public_robot_view": {
+          "source_observation": 707,
+          "frame_id": "707",
+          "position_m": [
+            0.156,
+            1.932
+          ],
+          "heading_deg": 139.1,
+          "goal_semantics": "historical_robot_camera_viewpoint",
+          "arrived": true,
+          "after_observation": 865
+        }
+      }
+    ],
+    "public_view_catalog": {
+      "target_108:707:707": {
+        "object_id": "target_108",
+        "source_observation": 707,
+        "frame_id": "707",
+        "position_m": [
+          0.156,
+          1.932
+        ],
+        "heading_deg": 139.1,
+        "goal_semantics": "historical_robot_camera_viewpoint"
+      }
+    },
+    "observed_navigation_identity_groups": [
+      {
+        "first_observed_round": 147,
+        "canonical_object_id": "target_108",
+        "identity_ids": [
+          "target_108",
+          "target_123"
+        ],
+        "selected_action": "go_to",
+        "selected_object_id": "target_123"
+      },
+      {
+        "first_observed_round": 189,
+        "canonical_object_id": "target_108",
+        "identity_ids": [
+          "target_108",
+          "target_123",
+          "target_147"
+        ],
+        "selected_action": "explore",
+        "selected_object_id": null
+      }
+    ],
+    "semantics": "Available capability is not a selected revisit. Navigation identity groups are observed aliases, not extra truth balls."
+  },
+  "per_ball_evaluator_timeline": [
+    {
+      "truth_id": "guangyang-target-1",
+      "wm_track_ids": [
+        "target_010"
+      ],
+      "first_raw_seen": {
+        "observation_index": 5,
+        "round": 2,
+        "frame_id": "5",
+        "tick": 138,
+        "simulation_seconds": 2.76
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 19,
+        "round": 6,
+        "frame_id": "19",
+        "tick": 546,
+        "simulation_seconds": 10.92,
+        "track_id": "target_010"
+      },
+      "first_confirmed": {
+        "observation_index": 46,
+        "round": 12,
+        "frame_id": "46",
+        "tick": 1372,
+        "simulation_seconds": 27.44,
+        "track_id": "target_010"
+      },
+      "first_grabbed_truth_event": {
+        "tick": 4135,
+        "simulation_seconds": 82.7,
+        "event_index": 3,
+        "seq": 1472,
+        "type": "package_grabbed",
+        "package_id": "guangyang-target-1"
+      },
+      "first_delivered_truth_event": {
+        "tick": 9328,
+        "simulation_seconds": 186.56,
+        "event_index": 6,
+        "seq": 2980,
+        "type": "package_delivered",
+        "package_id": "guangyang-target-1"
+      },
+      "final_active_delivery_truth_event": {
+        "tick": 9328,
+        "simulation_seconds": 186.56,
+        "event_index": 6,
+        "seq": 2980,
+        "type": "package_delivered",
+        "package_id": "guangyang-target-1"
+      },
+      "delivery_revocations": []
+    },
+    {
+      "truth_id": "guangyang-target-2",
+      "wm_track_ids": [
+        "target_108",
+        "target_123",
+        "target_147"
+      ],
+      "first_raw_seen": {
+        "observation_index": 72,
+        "round": 17,
+        "frame_id": "72",
+        "tick": 2343,
+        "simulation_seconds": 46.86
+      },
+      "first_logged_wm_presence": {
+        "observation_index": 548,
+        "round": 102,
+        "frame_id": "548",
+        "tick": 23581,
+        "simulation_seconds": 471.62,
+        "track_id": "target_108"
+      },
+      "first_confirmed": {
+        "observation_index": 554,
+        "round": 103,
+        "frame_id": "554",
+        "tick": 23819,
+        "simulation_seconds": 476.38,
+        "track_id": "target_108"
+      },
+      "first_grabbed_truth_event": {
+        "tick": 48516,
+        "simulation_seconds": 970.32,
+        "event_index": 32,
+        "seq": 16151,
+        "type": "package_grabbed",
+        "package_id": "guangyang-target-2"
+      },
+      "first_delivered_truth_event": null,
+      "final_active_delivery_truth_event": null,
+      "delivery_revocations": []
+    }
+  ],
+  "public_red_track_timeline": [
+    {
+      "object_id": "target_010",
+      "first_seen_s": 10.92,
+      "first_seen_round": 6,
+      "first_seen_frame_id": "19",
+      "confirmed_s": 27.44,
+      "confirmed_round": 12,
+      "picked_s": 86.18,
+      "delivered_s": 189.66
+    },
+    {
+      "object_id": "target_025",
+      "first_seen_s": 37.22,
+      "first_seen_round": 15,
+      "first_seen_frame_id": "62",
+      "confirmed_s": null,
+      "picked_s": null,
+      "delivered_s": null
+    },
+    {
+      "object_id": "target_034",
+      "first_seen_s": 88.72,
+      "first_seen_round": 29,
+      "first_seen_frame_id": "130",
+      "confirmed_s": null,
+      "picked_s": null,
+      "delivered_s": null
+    },
+    {
+      "object_id": "target_108",
+      "first_seen_s": 471.62,
+      "first_seen_round": 102,
+      "first_seen_frame_id": "548",
+      "confirmed_s": 476.38,
+      "confirmed_round": 103,
+      "picked_s": null,
+      "delivered_s": null
+    },
+    {
+      "object_id": "target_123",
+      "first_seen_s": 704.84,
+      "first_seen_round": 146,
+      "first_seen_frame_id": "861",
+      "confirmed_s": 710.6,
+      "confirmed_round": 146,
+      "picked_s": null,
+      "delivered_s": null
+    },
+    {
+      "object_id": "target_147",
+      "first_seen_s": 903.9,
+      "first_seen_round": 180,
+      "first_seen_frame_id": "1076",
+      "confirmed_s": 922.98,
+      "confirmed_round": 187,
+      "picked_s": 973.8,
+      "delivered_s": null
+    }
+  ],
+  "failed_actions": {
+    "classification_counts": {
+      "action_failure": 72
+    },
+    "reason_counts": {
+      "confirmation_no_safe_independent_viewpoint": 4,
+      "road_node_observed_without_completed_traversal": 3,
+      "road_blocked_returned_to_observed_node": 12,
+      "grab_identity_not_uniquely_visible": 10,
+      "known_route_exhausted_needs_exploration": 3,
+      "directed_passage_still_blocked": 12,
+      "confirmation_current_evidence_not_corroborated": 1,
+      "visual_standoff_requires_road_reposition": 4,
+      "three_grab_attempts_failed": 3,
+      "pick_requires_new_supported_view": 2,
+      "pick_new_view_returned_to_observed_junction": 1,
+      "junction_identity_unresolved": 13,
+      "final_approach_requires_road_reposition": 1,
+      "historical_view_revisited_identity_unresolved": 1,
+      "action_repeat_without_new_evidence": 1,
+      "storage_free_point_not_observed": 1
+    },
+    "rows": [
+      {
+        "round": 7,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "confirmation_no_safe_independent_viewpoint",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:7"
+      },
+      {
+        "round": 8,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_node_observed_without_completed_traversal",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:8"
+      },
+      {
+        "round": 14,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "confirmation_no_safe_independent_viewpoint",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:14"
+      },
+      {
+        "round": 17,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:17"
+      },
+      {
+        "round": 26,
+        "action": "pick",
+        "object_id": "target_010",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:26"
+      },
+      {
+        "round": 27,
+        "action": "pick",
+        "object_id": "target_010",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:27"
+      },
+      {
+        "round": 30,
+        "action": "go_to",
+        "object_id": "storage-zone_015",
+        "failure_kind": "action_failure",
+        "reason": "known_route_exhausted_needs_exploration",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:30"
+      },
+      {
+        "round": 31,
+        "action": "go_to",
+        "object_id": "storage-zone_036",
+        "failure_kind": "action_failure",
+        "reason": "known_route_exhausted_needs_exploration",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:31"
+      },
+      {
+        "round": 33,
+        "action": "go_to",
+        "object_id": "storage-zone_048",
+        "failure_kind": "action_failure",
+        "reason": "known_route_exhausted_needs_exploration",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:33"
+      },
+      {
+        "round": 50,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:50"
+      },
+      {
+        "round": 55,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:55"
+      },
+      {
+        "round": 57,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:57"
+      },
+      {
+        "round": 64,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:64"
+      },
+      {
+        "round": 72,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:72"
+      },
+      {
+        "round": 84,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:84"
+      },
+      {
+        "round": 88,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:88"
+      },
+      {
+        "round": 90,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:90"
+      },
+      {
+        "round": 93,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:93"
+      },
+      {
+        "round": 103,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "confirmation_current_evidence_not_corroborated",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:103"
+      },
+      {
+        "round": 104,
+        "action": "go_to",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:104"
+      },
+      {
+        "round": 107,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "three_grab_attempts_failed",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:107"
+      },
+      {
+        "round": 108,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_node_observed_without_completed_traversal",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:108"
+      },
+      {
+        "round": 110,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "three_grab_attempts_failed",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:110"
+      },
+      {
+        "round": 111,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:111"
+      },
+      {
+        "round": 113,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:113"
+      },
+      {
+        "round": 114,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:114"
+      },
+      {
+        "round": 115,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:115"
+      },
+      {
+        "round": 116,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:116"
+      },
+      {
+        "round": 117,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:117"
+      },
+      {
+        "round": 118,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:118"
+      },
+      {
+        "round": 120,
+        "action": "pick",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "pick_requires_new_supported_view",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:120"
+      },
+      {
+        "round": 121,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:121"
+      },
+      {
+        "round": 123,
+        "action": "go_to",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "pick_new_view_returned_to_observed_junction",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:123"
+      },
+      {
+        "round": 124,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:124"
+      },
+      {
+        "round": 125,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:125"
+      },
+      {
+        "round": 126,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:126"
+      },
+      {
+        "round": 128,
+        "action": "go_to",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "pick_requires_new_supported_view",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:128"
+      },
+      {
+        "round": 131,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:131"
+      },
+      {
+        "round": 134,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:134"
+      },
+      {
+        "round": 138,
+        "action": "go_to",
+        "object_id": "storage-zone_014",
+        "failure_kind": "action_failure",
+        "reason": "final_approach_requires_road_reposition",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:138"
+      },
+      {
+        "round": 139,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:139"
+      },
+      {
+        "round": 141,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:141"
+      },
+      {
+        "round": 142,
+        "action": "go_to",
+        "object_id": "storage-zone_036",
+        "failure_kind": "action_failure",
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:142"
+      },
+      {
+        "round": 143,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:143"
+      },
+      {
+        "round": 144,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:144"
+      },
+      {
+        "round": 145,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:145"
+      },
+      {
+        "round": 146,
+        "action": "go_to",
+        "object_id": "target_108",
+        "failure_kind": "action_failure",
+        "reason": "historical_view_revisited_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:146"
+      },
+      {
+        "round": 147,
+        "action": "go_to",
+        "object_id": "target_123",
+        "failure_kind": "action_failure",
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:147"
+      },
+      {
+        "round": 148,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:148"
+      },
+      {
+        "round": 149,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:149"
+      },
+      {
+        "round": 151,
+        "action": "pick",
+        "object_id": "target_123",
+        "failure_kind": "action_failure",
+        "reason": "three_grab_attempts_failed",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:151"
+      },
+      {
+        "round": 153,
+        "action": "pick",
+        "object_id": "target_123",
+        "failure_kind": "action_failure",
+        "reason": "action_repeat_without_new_evidence",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:153"
+      },
+      {
+        "round": 155,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:155"
+      },
+      {
+        "round": 158,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:158"
+      },
+      {
+        "round": 160,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:160"
+      },
+      {
+        "round": 162,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:162"
+      },
+      {
+        "round": 165,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:165"
+      },
+      {
+        "round": 167,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "directed_passage_still_blocked",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:167"
+      },
+      {
+        "round": 170,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:170"
+      },
+      {
+        "round": 172,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:172"
+      },
+      {
+        "round": 173,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:173"
+      },
+      {
+        "round": 177,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_node_observed_without_completed_traversal",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:177"
+      },
+      {
+        "round": 181,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "confirmation_no_safe_independent_viewpoint",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:181"
+      },
+      {
+        "round": 183,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "confirmation_no_safe_independent_viewpoint",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:183"
+      },
+      {
+        "round": 184,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:184"
+      },
+      {
+        "round": 188,
+        "action": "go_to",
+        "object_id": "target_147",
+        "failure_kind": "action_failure",
+        "reason": "visual_standoff_requires_road_reposition",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:188"
+      },
+      {
+        "round": 189,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:189"
+      },
+      {
+        "round": 190,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "road_blocked_returned_to_observed_node",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:190"
+      },
+      {
+        "round": 192,
+        "action": "pick",
+        "object_id": "target_147",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:192"
+      },
+      {
+        "round": 193,
+        "action": "pick",
+        "object_id": "target_147",
+        "failure_kind": "action_failure",
+        "reason": "grab_identity_not_uniquely_visible",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:193"
+      },
+      {
+        "round": 196,
+        "action": "place",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "storage_free_point_not_observed",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:196"
+      },
+      {
+        "round": 200,
+        "action": "explore",
+        "object_id": null,
+        "failure_kind": "action_failure",
+        "reason": "junction_identity_unresolved",
+        "evidence": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl:200"
+      }
+    ]
+  },
+  "evidence": {
+    "manifest": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/manifest.json",
+      "sha256": "c9db74c6ae9836b19febd95008dde60f10df407343ed7e3c241afad301757284"
+    },
+    "brain_summary": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/summary.json",
+      "sha256": "114751293391b118aede6e9b2ab624260de3bcabb8588658fd397dcad4bc6ac1"
+    },
+    "exit_codes": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z-exit-codes.json",
+      "sha256": "daaedb04c41c8fcd62ea32d40a2a3776518f24ce9c2d6b290f721f1c3117c3c2"
+    },
+    "independent_evaluation": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z-evaluation/evaluation.json",
+      "sha256": "b7441fb9cde68c4763d52f662bb54b3cb788e2ebce4ae07d9daa5513ab823a2a"
+    },
+    "rounds": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "03b811e57ea7e6f4e62accb5bb1acf07354d674ba278b22d4f9d1ff53ff61b46"
+    },
+    "observations": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/observations.jsonl",
+      "sha256": "df90f8165731000dbf9db48d4440cdfb47441314baa2286993e453c93b6b132d"
+    },
+    "bridge-calls": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "da2a26090881bf67bb9466363d7f4f578af4edae342163ae6f3efe498b2833ab"
+    },
+    "llm": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/llm.jsonl",
+      "sha256": "11421e5d2acfa86c329a503230f270465392b5fab878e7a08078dd6d6ce81bf9"
+    },
+    "llm.lifecycle": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T122605Z/map-05-run-1/brain/llm.lifecycle.jsonl",
+      "sha256": "30382161c01157b55977d2d002b9d1ab5c5f31de13523c6c3b2b7fb7fed2806f"
+    }
+  }
+}

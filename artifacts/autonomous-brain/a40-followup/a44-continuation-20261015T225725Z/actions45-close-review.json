@@ -1,0 +1,693 @@
+{
+  "schema": "wm-independent-close-review/v1",
+  "created_at": "2026-10-16T00:03:41.278410+00:00",
+  "run": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z",
+  "audit_scope": "A45 independent run only; lifecycle and public bridge evidence; no A40/A44 event substitution",
+  "review_mode": {
+    "source_files_read_only": true,
+    "production_modified": false,
+    "new_monitor_patch": false,
+    "run_intervention": false,
+    "requests_reissued": false,
+    "network_used": false,
+    "secrets_read": false,
+    "physical_record_samples_captures_read": false,
+    "task_truth_or_delivery_outcome_used": false
+  },
+  "conclusion": {
+    "earliest_monitor_fault": "CDP_TIMEOUT: Runtime.evaluate request 24 exceeded 2000 ms at 2026-10-15T23:28:10.931Z; driver_monitor_error recorded at .933Z.",
+    "first_recovery": "Exactly one bounded recovery succeeded at 23:28:11.500Z on the original target/session identity after request 5 settled; actuatorResubmissions=0 and brainRestarted=false.",
+    "terminal_fault": "Second Runtime.evaluate timeout (request 227, 2000 ms) at 23:33:03.849Z; pause at 23:33:04.049Z; terminal at .053Z because the existing single recovery attempt had already been used.",
+    "terminal_reason_in_log": "not_recoverable_or_attempt_exhausted",
+    "terminal_reason_disambiguation": "CDP_TIMEOUT is on the recoverable error allowlist, while recovery.attempted was already true. The matching run source therefore identifies attempt exhaustion, without requiring a hypothesis about controller failure.",
+    "controller_close_relation": "The first explicit controller_close_requested is at 23:33:04.200Z in stop phase, after the monitor terminal and brain completion. It is not the logged trigger for this terminal.",
+    "action_unknown_preserved": "Round 26 explore was interrupted during action by SIGTERM and remains action_outcome_unknown=true. Server-side completion of request 655 does not retroactively complete the action or authorize replay.",
+    "root_cause": "unknown: evidence establishes CDP read timeout, not why the Runtime.evaluate response exceeded its deadline. No CPU-load/parallel-audit cause is established."
+  },
+  "timeline": [
+    {
+      "time": "2026-10-15T23:28:10.931Z",
+      "event": "cdp_request_timeout",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 68
+      },
+      "method": "Runtime.evaluate",
+      "requestId": 24,
+      "timeoutMs": 2000,
+      "phase": "map-05-run-1:brain"
+    },
+    {
+      "time": "2026-10-15T23:28:10.931Z",
+      "event": "monitor_bridge_paused",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 69
+      },
+      "reason": "monitor_read_failed",
+      "phase": "map-05-run-1:brain",
+      "requests": 5,
+      "dispatches": 5,
+      "terminals": 4,
+      "inFlight": [
+        "brain-000005"
+      ],
+      "tick": 0
+    },
+    {
+      "time": "2026-10-15T23:28:10.933Z",
+      "event": "driver_monitor_error",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 71
+      },
+      "phase": "map-05-run-1:brain",
+      "error": {
+        "code": "CDP_TIMEOUT",
+        "message": "CDP Runtime.evaluate timeout"
+      }
+    },
+    {
+      "time": "2026-10-15T23:28:10.935Z",
+      "event": "cdp_websocket_closed",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 72
+      },
+      "reason": "",
+      "phase": "map-05-run-1:brain",
+      "intentional": true
+    },
+    {
+      "time": "2026-10-15T23:28:10.936Z",
+      "event": "cdp_connected",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 73
+      },
+      "phase": "map-05-run-1:brain"
+    },
+    {
+      "time": "2026-10-15T23:28:11.500Z",
+      "event": "monitor_bridge_resumed",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 74
+      },
+      "phase": "map-05-run-1:brain",
+      "requests": 5,
+      "dispatches": 5,
+      "terminals": 5,
+      "inFlight": [],
+      "tick": 0
+    },
+    {
+      "time": "2026-10-15T23:28:11.500Z",
+      "event": "runtime_monitor_recovered",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 75
+      },
+      "timeoutMs": 8000,
+      "phase": "map-05-run-1:brain",
+      "status": "degraded_verified_recovered",
+      "tick": 0,
+      "error": {
+        "code": "CDP_TIMEOUT",
+        "message": "CDP Runtime.evaluate timeout"
+      }
+    },
+    {
+      "time": "2026-10-15T23:33:03.849Z",
+      "event": "cdp_request_timeout",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 85
+      },
+      "method": "Runtime.evaluate",
+      "requestId": 227,
+      "timeoutMs": 2000,
+      "phase": "map-05-run-1:brain"
+    },
+    {
+      "time": "2026-10-15T23:33:04.049Z",
+      "event": "monitor_bridge_paused",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 86
+      },
+      "reason": "monitor_read_failed",
+      "phase": "map-05-run-1:brain",
+      "requests": 655,
+      "dispatches": 655,
+      "terminals": 654,
+      "inFlight": [
+        "brain-000655"
+      ],
+      "tick": 5251
+    },
+    {
+      "time": "2026-10-15T23:33:04.053Z",
+      "event": "driver_monitor_error",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 88
+      },
+      "phase": "map-05-run-1:brain",
+      "error": {
+        "code": "CDP_TIMEOUT",
+        "message": "CDP Runtime.evaluate timeout"
+      }
+    },
+    {
+      "time": "2026-10-15T23:33:04.053Z",
+      "event": "runtime_monitor_terminal",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 89
+      },
+      "reason": "not_recoverable_or_attempt_exhausted",
+      "phase": "map-05-run-1:brain",
+      "error": {
+        "code": "CDP_TIMEOUT",
+        "message": "CDP Runtime.evaluate timeout"
+      }
+    },
+    {
+      "time": "2026-10-15T23:33:04.056Z",
+      "event": "monitor_bridge_paused",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 90
+      },
+      "reason": "brain_ended_or_monitor_terminal",
+      "phase": "map-05-run-1:brain",
+      "requests": 655,
+      "dispatches": 655,
+      "terminals": 654,
+      "inFlight": [
+        "brain-000655"
+      ],
+      "tick": 5251
+    },
+    {
+      "time": "2026-10-15T23:33:04.191Z",
+      "event": "bridge_trace_saved",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 91
+      },
+      "requestId": "brain-000655",
+      "phase": "map-05-run-1:stop",
+      "tick": 5251,
+      "stage": "brain_ended_before_page_stop"
+    },
+    {
+      "time": "2026-10-15T23:33:04.195Z",
+      "event": "monitor_bridge_paused",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 92
+      },
+      "reason": "brain_ended_before_page_stop",
+      "phase": "map-05-run-1:stop",
+      "requests": 655,
+      "dispatches": 655,
+      "terminals": 655,
+      "inFlight": [],
+      "tick": 5251
+    },
+    {
+      "time": "2026-10-15T23:33:04.200Z",
+      "event": "controller_close_requested",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 93
+      },
+      "reason": "explicit_close_endpoint",
+      "phase": "map-05-run-1:stop"
+    },
+    {
+      "time": "2026-10-15T23:33:04.224Z",
+      "event": "bridge_trace_saved",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 94
+      },
+      "requestId": "brain-000655",
+      "phase": "map-05-run-1:stop",
+      "tick": 5251,
+      "stage": "explicit_controller_close"
+    },
+    {
+      "time": "2026-10-15T23:33:04.235Z",
+      "event": "page_client_ended",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/envelope.json",
+        "json_pointer": "/management/clientEndedAt"
+      }
+    },
+    {
+      "time": "2026-10-15T23:33:11.372Z",
+      "event": "bridge_trace_saved",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 95
+      },
+      "requestId": "brain-000655",
+      "phase": "map-05-run-1:export",
+      "tick": 5251,
+      "stage": "after_page_export"
+    },
+    {
+      "time": "2026-10-15T23:33:12.087Z",
+      "event": "monitor_bridge_paused",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 97
+      },
+      "reason": "CDP closed by driver",
+      "phase": "cleanup",
+      "stateUnavailable": "MONITOR_CONTROLLER_CLOSED"
+    },
+    {
+      "time": "2026-10-15T23:33:12.091Z",
+      "event": "cdp_websocket_closed",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 99
+      },
+      "reason": "",
+      "phase": "cleanup",
+      "intentional": true
+    },
+    {
+      "time": "2026-10-15T23:33:12.129Z",
+      "event": "browser_process_exit",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 102
+      },
+      "phase": "cleanup"
+    },
+    {
+      "time": "2026-10-15T23:33:12.217Z",
+      "event": "bridge_server_closed",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 106
+      },
+      "reason": "server_lifecycle_close",
+      "phase": "cleanup"
+    },
+    {
+      "time": "2026-10-15T23:33:12.243Z",
+      "event": "bridge_trace_saved",
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 107
+      },
+      "requestId": "brain-000655",
+      "phase": "cleanup",
+      "tick": 5251,
+      "stage": "after_server_bridge_close"
+    }
+  ],
+  "brain_exit": {
+    "source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/summary.json",
+      "json_pointer": "/interruption"
+    },
+    "status": "aborted",
+    "reason": "SIGTERM: stopped_during_action",
+    "interruption": {
+      "signal": "SIGTERM",
+      "requested_phase": "action",
+      "requested_round": 26,
+      "requested_observation": 140,
+      "aborting_signal": "SIGTERM",
+      "stopped_phase": "action",
+      "active_round": 26,
+      "completed_rounds": 25,
+      "action": {
+        "action": "explore",
+        "params": {}
+      },
+      "before_observation": 140,
+      "last_observation": 140,
+      "bridge_sequence": 655,
+      "odometry": {
+        "rightCm": -132.3,
+        "forwardCm": 136.3,
+        "headingDeg": 134.9,
+        "distanceCm": 763.8,
+        "tick": 5125
+      },
+      "safe_action_boundary": false,
+      "action_outcome_unknown": true
+    },
+    "completed_action_rounds": 25,
+    "active_round": 26,
+    "round_log_rows": 26,
+    "summary_llm_calls": 26,
+    "round_result_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/rounds.jsonl",
+      "line": 26
+    },
+    "round_result": {
+      "success": false,
+      "reason": "interrupted_during_action",
+      "error_type": "KeyboardInterrupt",
+      "evidence": {
+        "interruption": {
+          "signal": "SIGTERM",
+          "requested_phase": "action",
+          "requested_round": 26,
+          "requested_observation": 140,
+          "aborting_signal": "SIGTERM",
+          "stopped_phase": "action",
+          "active_round": 26,
+          "completed_rounds": 25,
+          "action": {
+            "action": "explore",
+            "params": {}
+          },
+          "before_observation": 140,
+          "last_observation": 140,
+          "bridge_sequence": 655,
+          "odometry": {
+            "rightCm": -132.3,
+            "forwardCm": 136.3,
+            "headingDeg": 134.9,
+            "distanceCm": 763.8,
+            "tick": 5125
+          },
+          "safe_action_boundary": false,
+          "action_outcome_unknown": true
+        },
+        "held_object_id": null,
+        "pending_grasp": null,
+        "outcome_unknown": true
+      }
+    },
+    "exact_wall_clock_exit_time": null,
+    "exit_time_bound": {
+      "after_or_at": "2026-10-15T23:33:04.056Z",
+      "before_or_at": "2026-10-15T23:33:04.191Z",
+      "status": "inference from finally pause before SIGTERM, awaited child completion, then brain_ended_before_page_stop trace",
+      "sources": [
+        {
+          "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+          "line": 90
+        },
+        {
+          "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+          "line": 91
+        },
+        {
+          "path": "tools/autonomous_brain_driver.js",
+          "line_ranges": [
+            [
+              853,
+              866
+            ],
+            [
+              978,
+              983
+            ]
+          ]
+        }
+      ]
+    },
+    "process_exit": {
+      "code": 1,
+      "signal": null,
+      "spawnError": null,
+      "interrupted": "driver_monitor_error:Error: CDP Runtime.evaluate timeout"
+    },
+    "run_exit_codes": {
+      "driver_exit": 1,
+      "evaluator_exit": 1
+    },
+    "exit_codes_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z-exit-codes.json"
+    }
+  },
+  "request_655": {
+    "client_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "line": 655
+    },
+    "client": {
+      "request": {
+        "requestId": "brain-000655",
+        "method": "observe",
+        "params": {
+          "category": null,
+          "confidence": 0
+        }
+      },
+      "submission": {
+        "status": 202,
+        "body": {
+          "requestId": "brain-000655",
+          "status": "dispatched"
+        }
+      },
+      "terminal": null
+    },
+    "request_kind": "read-only observe sensor request, not an actuator request",
+    "server_source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/server-bridge-trace.json",
+      "sequence_numbers": [
+        1963,
+        1964,
+        1965
+      ]
+    },
+    "server_final": {
+      "request_seq": 1963,
+      "dispatch_seq": 1964,
+      "terminal_seq": 1965,
+      "status": "completed",
+      "tick": 5251,
+      "frameId": 141
+    },
+    "at_terminal_pause": {
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 90
+      },
+      "time": "2026-10-15T23:33:04.056Z",
+      "inFlight": [
+        "brain-000655"
+      ],
+      "requests": 655,
+      "dispatches": 655,
+      "terminals": 654
+    },
+    "completed_by_trace_saved": {
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 91
+      },
+      "time": "2026-10-15T23:33:04.191Z",
+      "totalEvents": 1965
+    },
+    "settled_confirmed": {
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+        "line": 92
+      },
+      "time": "2026-10-15T23:33:04.195Z",
+      "inFlight": [],
+      "requests": 655,
+      "dispatches": 655,
+      "terminals": 655
+    },
+    "exact_terminal_wall_clock_time": null,
+    "terminal_vs_brain_exit_order": "unknown; both occurred after the .056Z pause and by the .191Z trace snapshot, without separate terminal/exit wall timestamps",
+    "last_completed_actuator": {
+      "source": {
+        "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/bridge-calls.jsonl",
+        "line": 651
+      },
+      "request": {
+        "requestId": "brain-000651",
+        "method": "follow_road",
+        "params": {
+          "distanceCm": 20,
+          "speed": 50
+        }
+      },
+      "terminal": {
+        "requestId": "brain-000651",
+        "status": "completed",
+        "result": {
+          "accepted": true,
+          "stoppedBy": "junction",
+          "distanceCm": 15.9,
+          "elapsedTicks": 126
+        }
+      },
+      "server_terminal_seq": 1953,
+      "server_terminal_tick": 5251
+    },
+    "incomplete_snapshot": {
+      "brain_last_observation": 140,
+      "brain_last_snapshot_tick": 5125,
+      "server_observe_frameId": 141,
+      "server_observe_tick": 5251,
+      "explanation": "Runtime.observe gathers odometry, local_road, holding and observe before publishing a new snapshot. The client logged terminals for sensor requests 652–654, but no terminal for 655, so the brain retained snapshot 140.",
+      "code_source": {
+        "path": "autonomous_brain/run.py",
+        "line_ranges": [
+          [
+            295,
+            313
+          ]
+        ]
+      }
+    },
+    "disposition": "preserve action outcome unknown; do not reissue/resume this request or action from this audit"
+  },
+  "bridge_integrity": {
+    "complete": true,
+    "stage": "after_server_bridge_close",
+    "totalEvents": 1965,
+    "retainedEvents": 1965,
+    "server_event_counts": {
+      "request": 655,
+      "dispatch": 655,
+      "terminal": 655
+    },
+    "server_terminal_status_counts": {
+      "completed": 655
+    },
+    "client_count": 655,
+    "client_submitted_202_count": 655,
+    "client_completed_count": 654,
+    "client_missing_terminal_request_ids": [
+      "brain-000655"
+    ],
+    "all_client_requests_match_server": true,
+    "first_654_client_terminals_match_server": true,
+    "request_656_present": false,
+    "cdp_websocket_error_event_count": 0,
+    "unintentional_cdp_websocket_close_event_count": 0,
+    "controller_errors": []
+  },
+  "aggregate_recovery_field_caveat": {
+    "source": {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/summary.json",
+      "json_pointer": "/trials/0/process/monitorRecovery"
+    },
+    "attempted": true,
+    "recovered": true,
+    "status": "terminal",
+    "interpretation": "recovered=true retains the successful first recovery; status=terminal reflects the later exhausted-attempt event. It does not mean the second incident recovered."
+  },
+  "export": {
+    "complete": true,
+    "failures": [],
+    "cdpExportRecovery": null,
+    "note": "No export-only reconnect is recorded for this run."
+  },
+  "unknown_boundaries": [
+    "Why either CDP Runtime.evaluate read timed out is unknown.",
+    "No evidence attributes timeout to CPU, concurrent review, A45 action logic, or the earlier A44 close cause.",
+    "Exact brain exit time and exact server terminal-655 wall time are not logged separately.",
+    "The incomplete round 26 action cannot be classified as successfully completed from the server observe result.",
+    "This review does not evaluate delivery/task success or infer unlogged later motion."
+  ],
+  "code_evidence": {
+    "tools/autonomous_brain_driver.js": {
+      "line_ranges": [
+        [
+          333,
+          345
+        ],
+        [
+          360,
+          377
+        ],
+        [
+          828,
+          866
+        ],
+        [
+          977,
+          999
+        ]
+      ],
+      "manifest_sha256": "33902b7d4ebc062642d0da349c9cde0efd293335556fc583b6909dc272ddb999",
+      "observed_sha256": "33902b7d4ebc062642d0da349c9cde0efd293335556fc583b6909dc272ddb999",
+      "matches_run_manifest": true
+    },
+    "tools/autonomous_brain_monitor.js": {
+      "manifest_sha256": "0f6a8c437bff3e54adf3f6584fe46d8d46e4d45e91546d5b8f975fd929aeaf97",
+      "observed_sha256": "0f6a8c437bff3e54adf3f6584fe46d8d46e4d45e91546d5b8f975fd929aeaf97",
+      "matches_run_manifest": true
+    },
+    "autonomous_brain/run.py": {
+      "line_ranges": [
+        [
+          295,
+          313
+        ]
+      ],
+      "manifest_sha256": "e077a141b175039bc8e373307a25baa4ba367eee339b83059a65224156d25f21",
+      "observed_sha256": "e077a141b175039bc8e373307a25baa4ba367eee339b83059a65224156d25f21",
+      "matches_run_manifest": true
+    },
+    "autonomous_brain/bridge.py": {
+      "line_ranges": [
+        [
+          70,
+          105
+        ]
+      ],
+      "manifest_sha256": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "observed_sha256": "aa1f95b19bca69475d233985b35a44be64a78cdab6ce5125182b0cea4b5e6ad9",
+      "matches_run_manifest": true
+    }
+  },
+  "sources": [
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/driver-diagnostics.jsonl",
+      "sha256": "d710c95c034bb0fd37f2d416566a133eaff51b3c609b73c0a62e86d37a7b1608"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/server-bridge-trace.json",
+      "sha256": "f89ded1f815098f79fd7d0a21dada919aaa247b4b3a8734e25ea8d7673803d58"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/bridge-calls.jsonl",
+      "sha256": "49b8bfbf3c1f3f18ced116ef6e789e653c09351e82136f3b943d05717b6b64d9"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/summary.json",
+      "sha256": "919d4f6b0fef36120f8aef45c479f9815b791eadb3a92e35529ef470eb04171c"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/summary.json",
+      "sha256": "927699ede3def41fbd1b57138c9546025da09d34b49756b2b68918a8f0cdc18a"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/envelope.json",
+      "sha256": "049fb4092dbc60fe86d57285e97ce0d61845de4a4f68c6e9acc5273b95874862"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/map-05-run-1/brain/rounds.jsonl",
+      "sha256": "78d7bfba7c76e80323b62999a39393739463960f9bebd51780ef841d2fd54fae"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z/manifest.json",
+      "sha256": "9de487241b3dab51cad8497f941186781225b1bef7fa43e4891bf5254bf9db3c"
+    },
+    {
+      "path": "artifacts/autonomous-brain/a40-followup/run-20261015T232732Z-exit-codes.json",
+      "sha256": "daaedb04c41c8fcd62ea32d40a2a3776518f24ce9c2d6b290f721f1c3117c3c2"
+    }
+  ]
+}

@@ -1,0 +1,553 @@
+Command: python3 -m pytest -q tests/test_brain_short_node_departure.py
+Actions SHA256: 9d5b8426c29c6be06a961e2a1e8ad7f7d4cd4dbe81ec86a510d8c94c1d713edf
+.FFFF..FFF..FF..FFFF                                                     [100%]
+=================================== FAILURES ===================================
+_ test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint[False] _
+
+holding = False
+
+    @pytest.mark.parametrize('holding', [False, True])
+    def test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint(holding):
+        r, candidate = short_node_runtime()
+        r.snapshot['holding']['holding'] = holding
+        before = r.snapshot['observation_index']
+>       reached, reason, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a970d00>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint[True] _
+
+holding = True
+
+    @pytest.mark.parametrize('holding', [False, True])
+    def test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint(holding):
+        r, candidate = short_node_runtime()
+        r.snapshot['holding']['holding'] = holding
+        before = r.snapshot['observation_index']
+>       reached, reason, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10ad38ee0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[curved-arc] _
+
+fault = 'curved-arc'
+
+    @pytest.mark.parametrize('fault', ['curved-arc', 'changed-tangent', 'duplicate-exit',
+        'changed-node', 'start-jump', 'unknown-source'])
+    def test_short_node_departure_rejects_unproved_source_without_take_exit_fallback(fault):
+        r, candidate = short_node_runtime()
+        segment = candidate['segments'][0]
+        if fault == 'curved-arc': segment['travelled_cm'] += 1
+        elif fault == 'changed-tangent': segment['arrival']['travel_heading_deg'] += 3
+        elif fault == 'duplicate-exit':
+            r.snapshot['road']['exits'].append(copy.deepcopy(r.snapshot['road']['exits'][0]))
+        elif fault == 'changed-node':
+            r.snapshot['road']['exits'].append({'angleDeg': 90})
+        elif fault == 'start-jump': r.snapshot['odometry']['rightCm'] += 1
+        else: segment['motion']['outcome_unknown'] = True
+>       reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a5631c0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[changed-tangent] _
+
+fault = 'changed-tangent'
+
+    @pytest.mark.parametrize('fault', ['curved-arc', 'changed-tangent', 'duplicate-exit',
+        'changed-node', 'start-jump', 'unknown-source'])
+    def test_short_node_departure_rejects_unproved_source_without_take_exit_fallback(fault):
+        r, candidate = short_node_runtime()
+        segment = candidate['segments'][0]
+        if fault == 'curved-arc': segment['travelled_cm'] += 1
+        elif fault == 'changed-tangent': segment['arrival']['travel_heading_deg'] += 3
+        elif fault == 'duplicate-exit':
+            r.snapshot['road']['exits'].append(copy.deepcopy(r.snapshot['road']['exits'][0]))
+        elif fault == 'changed-node':
+            r.snapshot['road']['exits'].append({'angleDeg': 90})
+        elif fault == 'start-jump': r.snapshot['odometry']['rightCm'] += 1
+        else: segment['motion']['outcome_unknown'] = True
+>       reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10b8be8e0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[start-jump] _
+
+fault = 'start-jump'
+
+    @pytest.mark.parametrize('fault', ['curved-arc', 'changed-tangent', 'duplicate-exit',
+        'changed-node', 'start-jump', 'unknown-source'])
+    def test_short_node_departure_rejects_unproved_source_without_take_exit_fallback(fault):
+        r, candidate = short_node_runtime()
+        segment = candidate['segments'][0]
+        if fault == 'curved-arc': segment['travelled_cm'] += 1
+        elif fault == 'changed-tangent': segment['arrival']['travel_heading_deg'] += 3
+        elif fault == 'duplicate-exit':
+            r.snapshot['road']['exits'].append(copy.deepcopy(r.snapshot['road']['exits'][0]))
+        elif fault == 'changed-node':
+            r.snapshot['road']['exits'].append({'angleDeg': 90})
+        elif fault == 'start-jump': r.snapshot['odometry']['rightCm'] += 1
+        else: segment['motion']['outcome_unknown'] = True
+>       reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a6f5220>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[unknown-source] _
+
+fault = 'unknown-source'
+
+    @pytest.mark.parametrize('fault', ['curved-arc', 'changed-tangent', 'duplicate-exit',
+        'changed-node', 'start-jump', 'unknown-source'])
+    def test_short_node_departure_rejects_unproved_source_without_take_exit_fallback(fault):
+        r, candidate = short_node_runtime()
+        segment = candidate['segments'][0]
+        if fault == 'curved-arc': segment['travelled_cm'] += 1
+        elif fault == 'changed-tangent': segment['arrival']['travel_heading_deg'] += 3
+        elif fault == 'duplicate-exit':
+            r.snapshot['road']['exits'].append(copy.deepcopy(r.snapshot['road']['exits'][0]))
+        elif fault == 'changed-node':
+            r.snapshot['road']['exits'].append({'angleDeg': 90})
+        elif fault == 'start-jump': r.snapshot['odometry']['rightCm'] += 1
+        else: segment['motion']['outcome_unknown'] = True
+>       reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a5639d0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[exits] _
+
+fault = 'exits'
+
+    @pytest.mark.parametrize('fault', ['exits', 'node-flag', 'pose', 'front', 'side', 'holding', 'holding-unknown'])
+    def test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward(fault):
+        r, candidate = short_node_runtime(aligned=False)
+        original = r.observe
+    
+        def changed(*, motion=None):
+            original(motion=motion)
+            if (motion or {}).get('method') == 'turn':
+                if fault == 'exits': r.snapshot['road']['exits'].append({'angleDeg': 90})
+                elif fault == 'node-flag': r.snapshot['road']['atNode'] = False
+                elif fault == 'pose': r.snapshot['odometry']['rightCm'] += 1
+                elif fault == 'front': r.snapshot['road']['frontClearanceCm'] = 8.2
+                elif fault == 'side':
+                    r.snapshot['road'].update(leftClearanceCm=.1, rightClearanceCm=.1)
+                else: r.snapshot['holding']['holding'] = True if fault == 'holding' else None
+    
+        r.observe = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a87a1c0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[front] _
+
+fault = 'front'
+
+    @pytest.mark.parametrize('fault', ['exits', 'node-flag', 'pose', 'front', 'side', 'holding', 'holding-unknown'])
+    def test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward(fault):
+        r, candidate = short_node_runtime(aligned=False)
+        original = r.observe
+    
+        def changed(*, motion=None):
+            original(motion=motion)
+            if (motion or {}).get('method') == 'turn':
+                if fault == 'exits': r.snapshot['road']['exits'].append({'angleDeg': 90})
+                elif fault == 'node-flag': r.snapshot['road']['atNode'] = False
+                elif fault == 'pose': r.snapshot['odometry']['rightCm'] += 1
+                elif fault == 'front': r.snapshot['road']['frontClearanceCm'] = 8.2
+                elif fault == 'side':
+                    r.snapshot['road'].update(leftClearanceCm=.1, rightClearanceCm=.1)
+                else: r.snapshot['holding']['holding'] = True if fault == 'holding' else None
+    
+        r.observe = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10ab22bb0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[side] _
+
+fault = 'side'
+
+    @pytest.mark.parametrize('fault', ['exits', 'node-flag', 'pose', 'front', 'side', 'holding', 'holding-unknown'])
+    def test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward(fault):
+        r, candidate = short_node_runtime(aligned=False)
+        original = r.observe
+    
+        def changed(*, motion=None):
+            original(motion=motion)
+            if (motion or {}).get('method') == 'turn':
+                if fault == 'exits': r.snapshot['road']['exits'].append({'angleDeg': 90})
+                elif fault == 'node-flag': r.snapshot['road']['atNode'] = False
+                elif fault == 'pose': r.snapshot['odometry']['rightCm'] += 1
+                elif fault == 'front': r.snapshot['road']['frontClearanceCm'] = 8.2
+                elif fault == 'side':
+                    r.snapshot['road'].update(leftClearanceCm=.1, rightClearanceCm=.1)
+                else: r.snapshot['holding']['holding'] = True if fault == 'holding' else None
+    
+        r.observe = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a6d4940>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+___ test_short_node_departure_unknown_forward_is_sent_once_and_not_completed ___
+
+    def test_short_node_departure_unknown_forward_is_sent_once_and_not_completed():
+        r, candidate = short_node_runtime()
+        original = r.call
+    
+        def unknown(method, params):
+            original(method, params)
+            raise ConnectionError('synthetic_short_departure_ack_unknown')
+    
+        r.bridge.call = unknown
+        with pytest.raises(ConnectionError, match='synthetic_short_departure_ack_unknown'):
+>           r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+tests/test_brain_short_node_departure.py:141: in unknown
+    original(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a87a6d0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_failed_forward_does_not_complete_old_segment[partial] _
+
+fault = 'partial'
+
+    @pytest.mark.parametrize('fault', ['partial', 'heading', 'holding'])
+    def test_short_node_departure_failed_forward_does_not_complete_old_segment(fault):
+        r, candidate = short_node_runtime()
+        if fault == 'partial': r.partial = .5
+        elif fault == 'heading': r.heading_drift = .3
+        else:
+            original = r.call
+            def changed(method, params):
+                result = original(method, params)
+                r.snapshot['holding']['holding'] = True
+                return result
+            r.bridge.call = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10ad40fd0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_failed_forward_does_not_complete_old_segment[heading] _
+
+fault = 'heading'
+
+    @pytest.mark.parametrize('fault', ['partial', 'heading', 'holding'])
+    def test_short_node_departure_failed_forward_does_not_complete_old_segment(fault):
+        r, candidate = short_node_runtime()
+        if fault == 'partial': r.partial = .5
+        elif fault == 'heading': r.heading_drift = .3
+        else:
+            original = r.call
+            def changed(method, params):
+                result = original(method, params)
+                r.snapshot['holding']['holding'] = True
+                return result
+            r.bridge.call = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10ab4d7c0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+_ test_short_node_departure_failed_forward_does_not_complete_old_segment[holding] _
+
+fault = 'holding'
+
+    @pytest.mark.parametrize('fault', ['partial', 'heading', 'holding'])
+    def test_short_node_departure_failed_forward_does_not_complete_old_segment(fault):
+        r, candidate = short_node_runtime()
+        if fault == 'partial': r.partial = .5
+        elif fault == 'heading': r.heading_drift = .3
+        else:
+            original = r.call
+            def changed(method, params):
+                result = original(method, params)
+                r.snapshot['holding']['holding'] = True
+                return result
+            r.bridge.call = changed
+        try:
+>           reached, _, steps = r.actions._follow_approach_path(candidate, [5])
+
+tests/test_brain_short_node_departure.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autonomous_brain/actions.py:2263: in _follow_approach_path
+    result = self.take_observed_exit(fresh[0]["angleDeg"])
+autonomous_brain/actions.py:1282: in take_observed_exit
+    return self.move("take_exit", {"angleDeg": fresh_angle, "speed": 50})
+autonomous_brain/actions.py:715: in move
+    result = self.r.bridge.call(method, params)
+tests/test_brain_short_node_departure.py:159: in changed
+    result = original(method, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_brain_executable_recovery.RegionRuntime object at 0x10a6dd6d0>
+method = 'take_exit', params = {'angleDeg': 0, 'speed': 50}
+
+    def call(self,method,params):
+        params=normalize(method,params);self.calls.append((method,copy.deepcopy(params)))
+        odo=self.snapshot['odometry'];odo['tick']+=1
+        if method=='turn':odo['headingDeg']=wrap(odo['headingDeg']+params['angleDeg'])
+        else:
+>           assert method in {'forward','backward','follow_road'}
+E           AssertionError: assert 'take_exit' in {'backward', 'follow_road', 'forward'}
+
+tests/test_brain_executable_recovery.py:65: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_brain_short_node_departure.py::test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint[False]
+FAILED tests/test_brain_short_node_departure.py::test_short_recorded_node_departure_uses_exact_forward_and_fresh_endpoint[True]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[curved-arc]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[changed-tangent]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[start-jump]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rejects_unproved_source_without_take_exit_fallback[unknown-source]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[exits]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[front]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_rechecks_fresh_view_after_alignment_before_forward[side]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_unknown_forward_is_sent_once_and_not_completed
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_failed_forward_does_not_complete_old_segment[partial]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_failed_forward_does_not_complete_old_segment[heading]
+FAILED tests/test_brain_short_node_departure.py::test_short_node_departure_failed_forward_does_not_complete_old_segment[holding]
+13 failed, 7 passed in 2.61s
+
+pytest_exit=1
+Actions unchanged=True

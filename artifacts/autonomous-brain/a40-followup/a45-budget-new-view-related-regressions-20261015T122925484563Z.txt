@@ -1,0 +1,82 @@
+COMPONENT TESTS ONLY; isolated A45 candidate, not production or competition.
+cwd=/private/tmp/wm-approach-budget-a45-svgf6fn9
+PYTHONPATH=/private/tmp/wm-approach-budget-a45-svgf6fn9:/Users/ken/Desktop/wm_bench/vendor/wm_kit_opt2:/Users/ken/Desktop/wm_bench:/Users/ken/Desktop/wm_bench/tests
+command=python3 -m pytest -q /Users/ken/Desktop/wm_bench/tests/test_brain_pick_budget_new_view.py /Users/ken/Desktop/wm_bench/tests/test_brain_supported_initial_approach.py /Users/ken/Desktop/wm_bench/tests/test_brain_pick_new_view_navigation.py /Users/ken/Desktop/wm_bench/tests/test_brain_pick_probe_feedback.py
+actions_sha256=e52e8bb479a334cd03840d469a8c91901028b0e4199fa9fd484419cb83740bef
+..........................................FF.......................      [100%]
+=================================== FAILURES ===================================
+_ test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[ClippedRetryRuntime] _
+
+kind = <class 'test_brain_pick_pixel_recovery.ClippedRetryRuntime'>
+
+    @pytest.mark.parametrize("kind", [ClippedRetryRuntime, MissingRetryRuntime])
+    def test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source(kind):
+        r = kind()
+        result = r.pick()
+        original = copy.deepcopy(result)
+        assert result["success"] is False and result["reason"] == "grab_identity_not_uniquely_visible"
+        retry = result["evidence"]["pick_retry"]
+        assert retry["schema"] == "fresh-pick-probe-retry/v1"
+        assert retry["classification"] == "completed_empty_grab_probe_refined"
+        assert retry["observation_index"] == r.snapshot["observation_index"]
+        assert retry["frame_id"] == str(r.snapshot["observation"]["frameId"])
+        assert retry["observation_index"] > result["evidence"]["authorization_recovery"]["after_observation"]
+        assert retry["next_probe_limit_cm"] == 3 and retry["previous_limit_cm"] == 6
+        summary = compact_action_result(r.round, action(r), result, r.snapshot["observation_index"])
+        assert summary["success"] is False
+        assert summary["reason"] == "completed_empty_grab_probe_refined"
+        assert summary["original_reason"] == result["reason"]
+        assert summary["evidence"]["grab_authorization"]["authorized"] is False
+        assert summary["evidence"]["grab_authorization"]["observation_index"] < retry["observation_index"]
+        assert summary["evidence"]["pick_retry"] == retry
+        assert result == original
+        assert len(actual_grabs(r)) == 1 and r.pending_grasp is None and r.held_object_id is None
+        # The next model-selected pick gets a new proof and the reduced bound.
+        assert not r.pick()["success"]
+>       assert len(actual_grabs(r)) == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'request': {'method': 'grab', 'params': {}, 'requestId': 'brain-000019'}, 'terminal': {'result': {'completed': True}, 'status': 'completed'}}])
+E        +    where [{'request': {'method': 'grab', 'params': {}, 'requestId': 'brain-000019'}, 'terminal': {'result': {'completed': True}, 'status': 'completed'}}] = actual_grabs(<test_brain_pick_pixel_recovery.ClippedRetryRuntime object at 0x108b4c100>)
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_probe_feedback.py:49: AssertionError
+_ test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[MissingRetryRuntime] _
+
+kind = <class 'test_brain_pick_missing_pixels.MissingRetryRuntime'>
+
+    @pytest.mark.parametrize("kind", [ClippedRetryRuntime, MissingRetryRuntime])
+    def test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source(kind):
+        r = kind()
+        result = r.pick()
+        original = copy.deepcopy(result)
+        assert result["success"] is False and result["reason"] == "grab_identity_not_uniquely_visible"
+        retry = result["evidence"]["pick_retry"]
+        assert retry["schema"] == "fresh-pick-probe-retry/v1"
+        assert retry["classification"] == "completed_empty_grab_probe_refined"
+        assert retry["observation_index"] == r.snapshot["observation_index"]
+        assert retry["frame_id"] == str(r.snapshot["observation"]["frameId"])
+        assert retry["observation_index"] > result["evidence"]["authorization_recovery"]["after_observation"]
+        assert retry["next_probe_limit_cm"] == 3 and retry["previous_limit_cm"] == 6
+        summary = compact_action_result(r.round, action(r), result, r.snapshot["observation_index"])
+        assert summary["success"] is False
+        assert summary["reason"] == "completed_empty_grab_probe_refined"
+        assert summary["original_reason"] == result["reason"]
+        assert summary["evidence"]["grab_authorization"]["authorized"] is False
+        assert summary["evidence"]["grab_authorization"]["observation_index"] < retry["observation_index"]
+        assert summary["evidence"]["pick_retry"] == retry
+        assert result == original
+        assert len(actual_grabs(r)) == 1 and r.pending_grasp is None and r.held_object_id is None
+        # The next model-selected pick gets a new proof and the reduced bound.
+        assert not r.pick()["success"]
+>       assert len(actual_grabs(r)) == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'request': {'method': 'grab', 'params': {}, 'requestId': 'brain-000019'}, 'terminal': {'result': {'completed': True}, 'status': 'completed'}}])
+E        +    where [{'request': {'method': 'grab', 'params': {}, 'requestId': 'brain-000019'}, 'terminal': {'result': {'completed': True}, 'status': 'completed'}}] = actual_grabs(<test_brain_pick_missing_pixels.MissingRetryRuntime object at 0x108f8a7c0>)
+
+/Users/ken/Desktop/wm_bench/tests/test_brain_pick_probe_feedback.py:49: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[ClippedRetryRuntime]
+FAILED ../../../Users/ken/Desktop/wm_bench/tests/test_brain_pick_probe_feedback.py::test_refined_probe_feedback_uses_final_frame_and_preserves_failed_source[MissingRetryRuntime]
+2 failed, 65 passed in 27.60s
+
+pytest_exit=1
+source_unchanged=True

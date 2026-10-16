@@ -1,0 +1,404 @@
+diff --git a/autonomous_brain/actions.py b/autonomous_brain/actions.py
+index e25c744..72cb569 100644
+--- a/autonomous_brain/actions.py
++++ b/autonomous_brain/actions.py
+@@ -7,9 +7,9 @@ import re
+ 
+ from .bridge import SimulationLimit
+ from .navigation import distance, evidence_version, heading_to, position, wrap
+-from .observation_quality import positive_pixel_support
++from .observation_quality import pixel_quality, positive_pixel_support
+ 
+-VERSION = "autonomous-brain-actions/v40"
++VERSION = "autonomous-brain-actions/v45"
+ 
+ RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
+                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
+@@ -358,6 +358,7 @@ class Actions:
+             view = {"schema": "historical-view-revisit/v1", "available": True,
+                 "navigation_only": True, "requires_fresh_identity": True,
+                 "source_observation": snapshot["observation_index"], "frame_id": str(sensor["frameId"]),
++                "source_fed_to_world_model": item.get("fed_to_world_model") is True,
+                 "position_m": list(position(snapshot["odometry"])),
+                 "heading_deg": snapshot["odometry"]["headingDeg"],
+                 "goal_semantics": "historical_robot_camera_viewpoint"}
+@@ -367,6 +368,13 @@ class Actions:
+             rows.append(view)
+             del rows[:-12]
+ 
++    @staticmethod
++    def _historical_view_intent(view):
++        # A fresh frame or a different route does not create another viewpoint.
++        return {"schema": "historical-view-intent/v1",
++                "position_m": copy.deepcopy(view["position_m"]),
++                "heading_deg": wrap(view["heading_deg"])}
++
+     def _historical_view_candidate(self, object_id):
+         target = self.r.perception.get_object(object_id)
+         roads = self.r.roads
+@@ -379,9 +387,16 @@ class Actions:
+                 or self.s.get("observation_index") in getattr(roads, "_invalid_indices", ())):
+             return None
+         record, context = self._navigation_record(object_id), self._navigation_context(object_id)
+-        if self.r.navigation_progress.blocked(record, context):
+-            return None
+-        for view in reversed(self._historical_views.get(object_id, [])):
++        # Prefer a view that could contribute to normal tracking at its source.
++        # A recent near-only view cannot seed a successor after LOST. This is
++        # navigation priority only: retain near fallbacks and every route gate;
++        # arrival still requires fresh Perception and identity evidence.
++        views = sorted(reversed(self._historical_views.get(object_id, [])),
++                       key=lambda view: view.get("source_fed_to_world_model") is not True)
++        for view in views:
++            intent = self._historical_view_intent(view)
++            if self.r.navigation_progress.historical_view_tried(record, intent):
++                continue
+             source = roads.observation_records(view["source_observation"], view["source_observation"])
+             frames = source.get("observations", [])
+             if (source.get("invalid_observation_indices") or len(frames) != 1
+@@ -411,12 +426,15 @@ class Actions:
+             if not safe:
+                 continue
+             candidate = {"position_m": copy.deepcopy(view["position_m"]),
++                "historical_view_intent": intent,
+                 "path": [list(p) for p in route], "segments": segments,
+                 "route_version": evidence_version([[s["segment_version"], s["direction"]] for s in segments]),
+                 "source": "observed_on_road_motion_endpoints", "observation_index": view["source_observation"],
+                 "travelled_cm": sum(s["travelled_cm"] for s in segments)}
+             if (roads._approach_execution_unavailable(candidate, self.s["odometry"]) is None
+-                    and not self.r.navigation_progress.approach_blocked(record, candidate, context)):
++                    and not self.r.navigation_progress.approach_blocked(record, candidate, context)
++                    and not self.r.navigation_progress.blocked(record, context,
++                        historical_view_intent=intent)):
+                 return copy.deepcopy(view), candidate
+         return None
+ 
+@@ -1521,6 +1539,8 @@ class Actions:
+         anchors = [bound.get("anchor_odometry")]
+         if "observed_return_odometry" in bound:
+             anchors.append(bound["observed_return_odometry"])
++        if "budget_return_odometry" in bound:
++            anchors.append(bound["budget_return_odometry"])
+         if (not isinstance(point, (list, tuple)) or len(point) != 2
+                 or not all(type(v) in (int, float) and math.isfinite(v) for v in point)):
+             return False
+@@ -1937,23 +1957,41 @@ class Actions:
+                     or w <= 0 or h <= 0 or x < 0 or y < 0 or x + w > width or y + h > height):
+                 return False
+             balls.append((source, item, (x, y, x + w, y + h)))
+-        selected = [row for row in balls if row[1]["category"] == category]
++        def bottom_clipped(row):
++            source, item, (left, top, right, bottom) = row
++            quality = item.get("pixel_quality") or {}
++            return (quality == source.get("pixelQuality")
++                    and str(quality.get("frameId")) == str(raw.get("frameId"))
++                    and quality.get("status") == "unknown"
++                    and quality.get("reason") == "source_bbox_touches_boundary"
++                    and 0 < left < right < width and 0 < top < bottom == height)
++
++        selected = [row for row in balls
++                    if row[1]["category"] == category and bottom_clipped(row)]
+         if len(selected) != 1:
+             return False
+         source, item, (left, top, right, bottom) = selected[0]
+-        quality = item.get("pixel_quality") or {}
+-        if (quality != source.get("pixelQuality")
+-                or str(quality.get("frameId")) != str(raw.get("frameId"))
+-                or quality.get("status") != "unknown"
+-                or quality.get("reason") != "source_bbox_touches_boundary"
+-                or not 0 < left < right < width or not 0 < top < bottom == height):
+-            return False
+-        # Different-category side pixels remain evidence/competitors. Their
+-        # separation only permits undoing our motion; fresh restored identity
+-        # and complete positive pixels are still required before learning.
+-        return all(peer["category"] != category
+-                   and (r < left or right < l or b < top or bottom < t)
+-                   for _, peer, (l, t, r, b) in balls if peer is not item)
++        for peer_source, peer, (l, t, r, b) in balls:
++            if peer is item:
++                continue
++            if not (r < left or right < l or b < top or bottom < t):
++                return False
++            if peer["category"] == category:
++                # A full, explicitly supported peer may remain a competitor
++                # while we undo our own verified forward step. Separation
++                # identifies neither box; fresh restored identity still gates
++                # learning and every subsequent grab. Old missing quality is
++                # not sufficient for this additional navigation case.
++                if not (0 < l < r < width and 0 < t < b < height):
++                    return False
++                try:
++                    support = pixel_quality(peer_source, raw.get("frameId"))
++                except (KeyError, TypeError, ValueError):
++                    return False
++                if (support is None or support.get("status") != "supported"
++                        or support != peer.get("pixel_quality")):
++                    return False
++        return True
+ 
+     def remember_empty_grab_navigation(self, object_id, grab_ref, motion, receipt):
+         """Remember a failed operation pose, without caching identity authority."""
+@@ -2051,7 +2089,9 @@ class Actions:
+             current = next((oid for oid in row["identity_ids"]
+                             if self.r.perception.confirmed(oid) is not None), object_id)
+             context = self._navigation_context(current)
+-            blocked = progress.blocked(row, context)
++            planned = self._historical_view_candidate(current)
++            intent = planned[1]["historical_view_intent"] if planned else None
++            blocked = progress.blocked(row, context, historical_view_intent=intent)
+             output.append({"canonical_object_id": row["canonical_object_id"],
+                 "identity_ids": row["identity_ids"], "attempt_count": len(row["attempts"]),
+                 "last_result": row["last_result"], "recent_attempts": row["attempts"][-3:],
+@@ -2180,6 +2220,7 @@ class Actions:
+             before_holding = self.s["holding"].get("holding")
+             selected = None
+             plan = None
++            short_departure = False
+             basic = segment.get("execution", {}).get("kind") == "basic_translation"
+             remaining_segment = segment["travelled_cm"] - leg_travel
+             unexpected_node = (road.get("atNode") and (departure.get("at_node") is False
+@@ -2235,7 +2276,52 @@ class Actions:
+                     return False, "reposition_junction_context_changed", steps
+                 selected = {"recorded_exit_heading_deg": wanted, "fresh_angle_deg": fresh[0]["angleDeg"],
+                             "source_observation": departure.get("observation_index")}
+-                result = self.take_observed_exit(fresh[0]["angleDeg"])
++                if remaining_segment < 10:
++                    # take_exit has no distance bound. For a leg shorter than
++                    # follow_road's minimum, use the existing straight-motion
++                    # proof and the recorded arc length, or leave it pending.
++                    source_motion = segment.get("motion") or {}
++                    receipt = source_motion.get("actuator_result") or {}
++                    chord = distance(tuple(departure["position_m"]), tuple(arrival["position_m"])) * 100
++                    if (started or not .2 <= remaining_segment < 10
++                            or type(before_holding) is not bool
++                            or source_motion.get("outcome_unknown") or receipt.get("error")
++                            or receipt.get("accepted") is not True
++                            or receipt.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}
++                            or not old_exits or departure.get("at_node") is not True
++                            or distance(p, tuple(departure["position_m"])) * 100 > .2
++                            or abs(chord - segment["travelled_cm"]) > .2
++                            or abs(wrap(departure["travel_heading_deg"] - arrival["travel_heading_deg"])) > .2
++                            or abs(wrap(wanted - departure["travel_heading_deg"])) > .2):
++                        return False, "reposition_short_node_departure_not_proved", steps
++                    if not self._align_approach_body(wanted, budget, steps):
++                        return False, ("reposition_motion_budget_exhausted" if budget[0] <= 0
++                                       else "reposition_short_node_departure_not_aligned"), steps
++                    road, odo = self.s["road"], self.s["odometry"]
++                    current_exits = [wrap(odo["headingDeg"] + e["angleDeg"]) for e in road.get("exits", [])]
++                    fresh = [e for e in road.get("exits", [])
++                             if abs(wrap(odo["headingDeg"] + e["angleDeg"] - wanted)) <= 5]
++                    if (road.get("onRoad") is not True or road.get("atNode") is not True
++                            or self.s["holding"].get("holding") is not before_holding
++                            or len(fresh) != 1 or len(old_exits) != len(current_exits)
++                            or any(sum(abs(wrap(x - y)) <= 5 for y in current_exits) != 1 for x in old_exits)):
++                        return False, "reposition_short_node_departure_context_changed", steps
++                    local = copy.deepcopy(segment)
++                    local["execution"] = {"kind": "basic_translation", "method": "forward",
++                        "departure_body_heading_deg": wanted}
++                    plan = self._approach_basic_plan(local, remaining_segment, False)
++                    if plan is None:
++                        return False, "reposition_short_node_departure_not_safe", steps
++                    plan["basis"] = "recorded_short_straight_leg_and_fresh_node_exit"
++                    selected["fresh_angle_deg"] = fresh[0]["angleDeg"]
++                    self.r.roads.chosen(odo, fresh[0]["angleDeg"], observation_index=self.s["observation_index"])
++                    before, before_odo = self.s["observation_index"], copy.deepcopy(odo)
++                    before_sensor = copy.deepcopy(self.s.get("observation", {}))
++                    p = position(before_odo)
++                    short_departure = True
++                    result = self.move(plan["method"], plan["params"])
++                else:
++                    result = self.take_observed_exit(fresh[0]["angleDeg"])
+             else:
+                 error = road.get("headingErrorDeg")
+                 if type(error) not in (int, float) or not math.isfinite(error):
+@@ -2353,7 +2439,8 @@ class Actions:
+             for other in range(index, len(segments)):
+                 current = segments[other]
+                 expected_distance += current["travelled_cm"]
+-                exact = current.get("execution", {}).get("kind") == "basic_translation" or connection is not None
++                exact = (current.get("execution", {}).get("kind") == "basic_translation"
++                         or connection is not None or short_departure)
+                 end_heading = (current["execution"]["arrival_body_heading_deg"]
+                     if current.get("execution", {}).get("kind") == "basic_translation"
+                     else current["arrival"]["travel_heading_deg"])
+@@ -2374,7 +2461,7 @@ class Actions:
+                     matched = other
+                 if current["arrival"].get("at_node"):
+                     break
+-                if basic or (other + 1 < len(segments)
++                if basic or short_departure or (other + 1 < len(segments)
+                         and segments[other + 1].get("execution", {}).get("kind") == "basic_translation"):
+                     break
+                 if (other + 1 < len(segments) and abs(wrap(current["arrival"]["travel_heading_deg"]
+@@ -2577,8 +2664,17 @@ class Actions:
+             outcome = self.result(True, "navigation_subgoal_already_satisfied", object_id=object_id,
+                                   navigation_subgoal=readiness)
+         else:
+-            blocked = self.r.navigation_progress.blocked(row, self._navigation_context(object_id))
+-            if blocked is not None:
++            planned = self._historical_view_candidate(object_id)
++            intent = planned[1]["historical_view_intent"] if planned else None
++            blocked = self.r.navigation_progress.blocked(row, self._navigation_context(object_id),
++                historical_view_intent=intent)
++            views = self._historical_views.get(object_id, [])
++            exhausted = ((self.r.perception.get_object(object_id) or {}).get("state") == "LOST"
++                and views and all(self.r.navigation_progress.historical_view_tried(
++                    row, self._historical_view_intent(view)) for view in views))
++            if exhausted:
++                outcome = self.result(False, "historical_view_revisit_exhausted", object_id=object_id)
++            elif blocked is not None:
+                 outcome = self.result(False, "navigation_repeat_without_new_evidence", object_id=object_id,
+                     previous_failure=blocked["reason"], failure_context=blocked["context"],
+                     recovery_options=["explore_observed_exits", "look_around_for_changed_target_or_road_evidence",
+@@ -2796,6 +2892,8 @@ class Actions:
+         remaining_road_path = None
+         identity_failure_context = None
+         navigation_probes = []
++        completed_supported_approaches = 0
++        budget_approach_unresolved = False
+ 
+         def finish(success, reason, **evidence):
+             # Fix the manipulation witness before road recovery changes the
+@@ -2821,6 +2919,38 @@ class Actions:
+                 learned_probe_bound["observed_return_odometry"] = copy.deepcopy(self.s["odometry"])
+                 learned_probe_bound["return_observation"] = self.s["observation_index"]
+                 evidence["retry_probe"].update(copy.deepcopy(learned_probe_bound))
++            if reason == "pick_approach_view_budget_exhausted":
++                bound = self._pick_probe_limits.get(object_id, {})
++                limit, previous = bound.get("limit_cm"), bound.get("previous_limit_cm")
++                indices = [bound.get("source_observation"),
++                    bound.get("clipped_observation", bound.get("missing_observation")),
++                    bound.get("restored_observation"), bound.get("return_observation")]
++                anchors = [bound.get(key) for key in ("anchor_odometry", "observed_return_odometry")]
++                if (budget_approach_unresolved and completed_supported_approaches == 10
++                        and len(trajectory) == 10 and not attempts
++                        and all(row.get("method") == "forward" and not row.get("outcome_unknown")
++                            and row.get("motion_verification", {}).get("motion_verified") is True
++                            for row in trajectory)
++                        and bound.get("probe_kind") == "fresh_supported_approach"
++                        and bound.get("requires_new_view") is False
++                        and all(type(v) in (int, float) and math.isfinite(v) for v in (limit, previous))
++                        and .1 <= limit < previous <= 6
++                        and all(type(i) is int and i >= 0 for i in indices)
++                        and indices[0] < indices[1] < indices[2] <= indices[3] <= action_before
++                        and all(isinstance(anchor, dict) and all(type(anchor.get(k)) in (int, float)
++                            and math.isfinite(anchor[k]) for k in ("rightCm", "forwardCm", "headingDeg"))
++                            for anchor in anchors)
++                        and recovery.get("success") is True
++                        and self.s["holding"].get("holding") is False
++                        and getattr(self.r, "held_object_id", None) is None
++                        and not getattr(self.r, "pending_grasp", None)):
++                    # Exhausting a learned small-step approach requires the
++                    # existing independent-view planner, not another same-view
++                    # pick. Keep its original evidence and this return's scope.
++                    bound.update(requires_new_view=True,
++                        budget_return_odometry=copy.deepcopy(self.s["odometry"]),
++                        budget_return_observation=self.s["observation_index"])
++                    evidence["retry_probe"] = copy.deepcopy(bound)
+             if (self.s.get("holding") or {}).get("holding") is False:
+                 if getattr(self.r, "held_object_id", None) == object_id:
+                     marked = self.r.perception.mark_release_unverified(object_id,
+@@ -3125,7 +3255,13 @@ class Actions:
+                         if not self._completed_pick_receipt(probe_result):
+                             self._empty_grab_navigation.clear()
+                             return finish(False, "pick_probe_receipt_not_completed")
++                        completed_supported_approaches += 1
+                 else:
++                    # The last forward may already have reached the existing
++                    # pick range, including off road. Check before returning.
++                    target = self.r.perception.confirmed(object_id)
++                    budget_approach_unresolved = bool(target is not None
++                        and self.object_geometry(target)[0] > 22.5)
+                     return finish(False, "pick_approach_view_budget_exhausted")
+                 target = self.r.perception.confirmed(object_id)
+                 if target is None:
+diff --git a/autonomous_brain/navigation_progress.py b/autonomous_brain/navigation_progress.py
+index 07f9e7b..fbdc721 100644
+--- a/autonomous_brain/navigation_progress.py
++++ b/autonomous_brain/navigation_progress.py
+@@ -279,11 +279,22 @@ class NavigationProgress:
+                     self.action_failures.pop((action, old_id)))
+         return self.records[canonical_id]
+ 
++    @staticmethod
++    def historical_view_tried(row, intent):
++        return any(attempt.get("historical_view_intent") == intent
++                   for attempt in row.get("approach_attempts", []))
++
+     def approach_blocked(self, row, candidate, context):
+         """The same failed route/conditions may not repeat; a place is not banned."""
+         return next((attempt for attempt in reversed(row.get("approach_attempts", []))
+             if attempt["candidate_position_m"] == candidate["position_m"]
+             and attempt["route_version"] == candidate["route_version"]
++            and not (candidate.get("historical_view_intent") is not None
++                and attempt.get("historical_view_intent") is not None
++                and candidate["historical_view_intent"] != attempt["historical_view_intent"]
++                and attempt.get("candidate_reached") is True
++                and attempt.get("status") == "historical_view_revisited"
++                and attempt.get("reason") == "historical_view_revisited_identity_unresolved")
+             and (not changed(attempt["context"], context)
+                  or not changed(attempt.get("failure_context", attempt["context"]), context))), None)
+ 
+@@ -298,6 +309,8 @@ class NavigationProgress:
+             "failure_context": copy.deepcopy(failure_context if failure_context is not None else context),
+             "before_observation": before_observation, "after_observation": after_observation,
+             "arrival_evidence": copy.deepcopy(arrival_evidence)}
++        if candidate.get("historical_view_intent") is not None:
++            attempt["historical_view_intent"] = copy.deepcopy(candidate["historical_view_intent"])
+         attempts = row.setdefault("approach_attempts", [])
+         if (attempts and attempts[-1]["route_version"] == attempt["route_version"]
+                 and attempts[-1]["before_observation"] == before_observation
+@@ -313,11 +326,19 @@ class NavigationProgress:
+             row["tried_approach_positions"].append(copy.deepcopy(candidate["position_m"]))
+         return copy.deepcopy(attempt)
+ 
+-    def blocked(self, row, context):
++    def blocked(self, row, context, *, historical_view_intent=None):
+         # Check every failed endpoint, so turning away and back or completing a
+-        # short loop cannot erase an already exhausted approach.
++        # short loop cannot erase an already exhausted approach. Only a known
++        # historical-view arrival is scoped to its saved pose and orientation.
++        def another_view(attempt):
++            return (historical_view_intent is not None
++                and attempt.get("historical_view_arrived") is True
++                and attempt["reason"] == "historical_view_revisited_identity_unresolved"
++                and attempt.get("historical_view_intent") is not None
++                and attempt["historical_view_intent"] != historical_view_intent)
+         return next((attempt for attempt in reversed(row["attempts"])
+-                     if not attempt["success"] and not changed(attempt["context"], context)), None)
++                     if not attempt["success"] and not changed(attempt["context"], context)
++                     and not another_view(attempt)), None)
+ 
+     def remember(self, row, context, outcome, readiness):
+         result = {"success": outcome["success"], "reason": outcome["reason"],
+@@ -327,9 +348,29 @@ class NavigationProgress:
+                   # Directional passage obligations live in RoadMemory and are
+                   # consumed by search/motion checks independently of changed().
+                   "passage_failures": copy.deepcopy(outcome["evidence"].get("passage_failures", []))}
++        view = outcome["evidence"].get("historical_view_revisit") or {}
++        if (outcome["reason"] == "historical_view_revisited_identity_unresolved"
++                and view.get("schema") == "historical-view-revisit/v1"
++                and type(view.get("after_observation")) is int
++                and view.get("arrived") is True and view.get("navigation_only") is True
++                and view.get("requires_fresh_identity") is True
++                and outcome["evidence"].get("outcome_unknown") is not True):
++            intent = {"schema": "historical-view-intent/v1",
++                      "position_m": copy.deepcopy(view["position_m"]),
++                      "heading_deg": wrap(view["heading_deg"])}
++            # Bind the result to the existing verified approach, including the
++            # second remember after execute's final read-only observation.
++            if any(attempt.get("historical_view_intent") == intent
++                    and attempt.get("candidate_reached") is True
++                    and attempt.get("status") == "historical_view_revisited"
++                    and attempt.get("reason") == "historical_view_revisited_identity_unresolved"
++                    and attempt.get("after_observation") == view["after_observation"]
++                    for attempt in row.get("approach_attempts", [])):
++                result.update(historical_view_intent=intent, historical_view_arrived=True)
+         row["last_result"] = result
+         if outcome["reason"] not in {"navigation_repeat_without_new_evidence",
+-                                     "navigation_subgoal_already_satisfied"}:
++                                     "navigation_subgoal_already_satisfied",
++                                     "historical_view_revisit_exhausted"}:
+             if not row["attempts"] or row["attempts"][-1] != result:
+                 row["attempts"].append(result)
+         if readiness["standoff_ready"]:

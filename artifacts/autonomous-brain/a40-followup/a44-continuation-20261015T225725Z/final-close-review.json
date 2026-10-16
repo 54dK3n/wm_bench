@@ -1,0 +1,205 @@
+{
+  "schema": "final-close-review/v1",
+  "run": "run-20261015T225820Z",
+  "scope": "Independent lifecycle review of this A44 continuation only. No old A40 run values or events are used as evidence for this run.",
+  "timezone": "UTC",
+  "conclusion": "A CDP connection failure paused dispatch. One bounded running-monitor recovery was attempted, but the controller explicitly closed before recovery completed. Recovery stopped with MONITOR_CONTROLLER_CLOSED and the driver terminated the brain. A later reconnect was for stop/export only. The initiating connection failure remains unknown; the evidence does not justify reopening the closed controller or changing monitor policy.",
+  "sources": {
+    "diagnostics": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/driver-diagnostics.jsonl",
+    "server_trace": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/server-bridge-trace.json",
+    "envelope": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/envelope.json",
+    "brain_summary": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/summary.json",
+    "brain_bridge_calls": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/map-05-run-1/brain/bridge-calls.jsonl",
+    "driver_summary_lifecycle_fields": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/summary.json",
+    "manifest": "artifacts/autonomous-brain/a40-followup/run-20261015T225820Z/manifest.json"
+  },
+  "timeline": [
+    {
+      "time": "2026-10-15T23:24:53.347Z",
+      "diagnostics_lines": [80],
+      "event": "First CDP WebSocket TypeError; pendingRequests is empty."
+    },
+    {
+      "time": "2026-10-15T23:24:53.405Z",
+      "diagnostics_lines": [81, 82, 83],
+      "event": "Dispatch paused with no queued/in-flight commands and 4321 requests, dispatches and terminals. Unintentional WebSocket close code1006 recorded."
+    },
+    {
+      "time": "2026-10-15T23:24:53.429Z",
+      "diagnostics_lines": [84, 85],
+      "event": "Close callback repeats the pause; counts remain 4321/4321/4321."
+    },
+    {
+      "time": "2026-10-15T23:24:53.482Z",
+      "diagnostics_lines": [86],
+      "event": "Monitor read fails; dispatch remains paused."
+    },
+    {
+      "time": "2026-10-15T23:24:53.518Z",
+      "diagnostics_lines": [87, 88],
+      "event": "Running recovery records CDP_UNAVAILABLE after driver_monitor_error pause at .517. Later terminal record confirms attempted=true, originalTargetOnly=true, timeoutMs=8000. This is a recorded recovery-start boundary, not a separate exact timestamp for every recovery statement."
+    },
+    {
+      "time": "2026-10-15T23:24:53.548Z",
+      "diagnostics_lines": [90],
+      "event": "First explicit controller close endpoint invocation during brain phase."
+    },
+    {
+      "time": "2026-10-15T23:24:53.732Z",
+      "diagnostics_lines": [91],
+      "event": "Complete 12963-event server trace saved for explicit close, ending at brain-004321/tick20109."
+    },
+    {
+      "time": "2026-10-15T23:24:53.750Z",
+      "diagnostics_lines": [92],
+      "event": "CDP connects during the bounded running recovery. A connection alone does not validate the already-closed controller."
+    },
+    {
+      "time": "2026-10-15T23:24:53.810Z",
+      "diagnostics_lines": [93, 94],
+      "event": "Running recovery terminates: attempted=true, recovered=false, status=terminal, failure=MONITOR_CONTROLLER_CLOSED. Guard remains paused. This timestamp is not a brain-exit event."
+    },
+    {
+      "time": null,
+      "event": "Driver SIGTERM and brain exit occur after recovery terminal and before stop phase. Brain handles SIGTERM during r155 observation; exact signal-send and process-exit wall timestamps are not separately logged.",
+      "source_inferred_window": {
+        "after": "2026-10-15T23:24:53.810Z",
+        "by": "2026-10-15T23:24:54.253Z",
+        "basis": "tools/autonomous_brain_driver.js:853-865 pauses, sends SIGTERM when the child is alive, awaits completion and returns before the stop phase. Driver process summary records the monitor interruption and code1; brain summary records SIGTERM."
+      }
+    },
+    {
+      "time": "2026-10-15T23:24:54.253Z",
+      "diagnostics_lines": [96, 97, 98],
+      "event": "Stop phase starts after brain completion. Trace is unchanged; original-target export reconnect starts."
+    },
+    {
+      "time": "2026-10-15T23:24:54.259Z",
+      "diagnostics_lines": [99, 100],
+      "event": "Export-only reconnect succeeds; original page reports running=true, healthy=false, errorCount=1, tick20109."
+    },
+    {
+      "time": "2026-10-15T23:24:54.263Z",
+      "diagnostics_lines": [101],
+      "event": "Second explicit controller close during page-stop/export. Its trace-save event is at .341, diagnostics line102."
+    },
+    {
+      "time": "2026-10-15T23:24:54.367Z",
+      "source": "envelope management.clientEndedAt",
+      "event": "Page stop recorded."
+    },
+    {
+      "time": "2026-10-15T23:25:48.116Z",
+      "diagnostics_lines": [103],
+      "event": "Trace saved after page export; still 12963 events through brain-004321."
+    },
+    {
+      "time": "2026-10-15T23:25:49.233Z",
+      "diagnostics_lines": [106],
+      "event": "Browser exits code0, signal=null."
+    },
+    {
+      "time": "2026-10-15T23:25:49.602Z",
+      "diagnostics_lines": [109, 110],
+      "event": "Server lifecycle cleanup closes bridge; final trace-save at .655, line111."
+    }
+  ],
+  "bridge_alignment": {
+    "complete": true,
+    "trace_stage": "after_server_bridge_close",
+    "total_events": 12963,
+    "retained_events": 12963,
+    "requests": 4321,
+    "dispatches": 4321,
+    "terminals": 4321,
+    "terminal_statuses": {"completed": 4321},
+    "client_logged_calls": 4321,
+    "client_submission_statuses": {"202": 4321},
+    "client_error_records": 0,
+    "client_requests_and_server_requests_match_in_order": true,
+    "client_and_server_terminal_results_match_in_order": true,
+    "last_request": {
+      "id": "brain-004321",
+      "method": "observe",
+      "status": "completed",
+      "tick": 20109,
+      "frame_id": 926
+    },
+    "post_pause_dispatch_growth_recorded": false,
+    "next_request_or_409_recorded": false,
+    "interpretation": "All recorded bridge operations have completed outcomes. This does not authorize reuse of an explicitly closed controller, and it does not identify the cause of the connection failure."
+  },
+  "brain_exit": {
+    "status": "aborted",
+    "reason": "SIGTERM: stopped_during_observation",
+    "completed_rounds": 154,
+    "active_round": 155,
+    "phase": "observation",
+    "active_action": null,
+    "last_observation": 926,
+    "bridge_sequence": 4321,
+    "simulation_seconds": 402.18,
+    "safe_action_boundary": false,
+    "action_outcome_unknown": false,
+    "process_code": 1,
+    "process_signal": null,
+    "process_interrupted": "driver_monitor_error:MonitorGuardError: MONITOR_CONTROLLER_CLOSED",
+    "wall_timeout_seconds": 0,
+    "interpretation": "Brain metadata reports an observation-phase abort, not an interrupted actuator action or an ordinary task completion."
+  },
+  "controller_failure": {
+    "recorded_tick": 20109,
+    "recorded_error": "TypeError: Failed to fetch",
+    "recorded_call_site": "workspaces/guangyang-platform/projects/car-python/robot-backend-runtime.js:122 controlLoop GET /next, request helper at line13",
+    "supported_source_path": "controlLoop catch at lines141-147 marks context.failed, records controllerError and POSTs /close.",
+    "initial_fetch_failure_wall_timestamp": null,
+    "causality_limit": "The envelope error, unhealthy page and first close before driver page-stop support this existing controller-failure path. They do not establish the root cause or exact wall ordering of the GET failure relative to the CDP failure."
+  },
+  "recovery_and_export": {
+    "running_recovery": {
+      "attempted": true,
+      "recovered": false,
+      "status": "terminal",
+      "failure": "MONITOR_CONTROLLER_CLOSED",
+      "original_target_only": true,
+      "timeout_ms": 8000,
+      "resume_event_recorded": false
+    },
+    "export_reconnect": {
+      "attempted": true,
+      "recovered": true,
+      "original_target_only": true,
+      "after_brain_exit": true
+    },
+    "driver_lifecycle_status": "complete",
+    "evidence_export_complete": true,
+    "evidence_export_failure_count": 0,
+    "note": "Export completeness is read from lifecycle metadata only; physical record, samples, captures and task truth were not inspected for this review."
+  },
+  "source_verification": {
+    "current_lifecycle_sources_match_this_run_manifest": true,
+    "driver": "tools/autonomous_brain_driver.js",
+    "monitor": "tools/autonomous_brain_monitor.js",
+    "diagnostics": "tools/autonomous_brain_diagnostics.js",
+    "platform_runtime": "workspaces/guangyang-platform/projects/car-python/robot-backend-runtime.js",
+    "platform_runtime_sha256": "4d5b86a5ec75da8c40bec370e6c2f9ff366b1ecfca6834f25981a399518fff50",
+    "driver_summary_sources_unchanged": true
+  },
+  "unknowns_and_nonclaims": [
+    "The initiating CDP/network failure and any common cause with GET /next failure remain unknown.",
+    "No independently timestamped GET failure, SIGTERM send or brain process-exit event is available.",
+    "Monitor pause is not established as the cause of the controller fetch failure.",
+    "This was not merely a recovered transient CDP outage: the original controller explicitly closed and the original page was unhealthy.",
+    "Unlike an unattempted-recovery case, this run has a recorded bounded running recovery attempt and terminal outcome. No old-run recovery or rejected-request values are imported.",
+    "No physical task outcome or proposed actions/v45 effectiveness is assessed here."
+  ],
+  "original_sha256": {
+    "driver-diagnostics.jsonl": "17182ab3bc28f1548815876bf0c3d0e268eefb53195a9d561adf865291dc1e1b",
+    "map-05-run-1/server-bridge-trace.json": "5c3c4150daf941e25016fda8792d51c8c548e7fc300ad499ad8b28ed2a8f3d77",
+    "map-05-run-1/envelope.json": "08201fa4e7e8ee4d97cc46995ad4e769bc71fe63255dbcbf0c47a78ec2e8f639",
+    "map-05-run-1/brain/summary.json": "b65eb9d2928d13f322735ca997ecdb4ca9b4a1e100222e0eaa760bf3644f491d",
+    "map-05-run-1/brain/bridge-calls.jsonl": "ee3200b45279bb5fc4eb61527ed736b8170fb0295dbaeea83d89a4cc7078767d",
+    "summary.json": "15ff430211855c4872a0ea33b14dfb5a79f97ff4d43be2ec7e38eea27c439c8c"
+  },
+  "mutations": "Only this final-close-review.json artifact was created. No original evidence, production code, monitor, controller, brain or process was changed."
+}

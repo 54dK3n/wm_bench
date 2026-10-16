@@ -99,7 +99,7 @@ def test_same_decision_retry_waits_without_dispatch_then_executor_runs_at_most_o
     assert [row["transport_retry_index"] for row in saved] == [0, 1]
     assert [row["transport_retry_delay_s"] for row in saved] == [0, 1]
     assert len({row["request_sha256"] for row in saved}) == 1
-    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v23" for row in saved)
+    assert all(row["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v25" for row in saved)
     assert all(row["request"]["model"] == "gpt-6.1-sol" and row["request"]["thinking"] == {"type":"low"}
                for row in saved)
     assert [row["event"] for row in records(tmp_path/"native.lifecycle.jsonl")] == ["started","finished","started","finished"]
