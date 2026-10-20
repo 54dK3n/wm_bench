@@ -6,10 +6,11 @@ import math
 import re
 
 from .bridge import SimulationLimit
-from .navigation import distance, evidence_version, heading_to, position, wrap
+from .navigation import (distance, evidence_version, heading_to,
+                         normalize_minimum_translation_cm, position, wrap)
 from .observation_quality import pixel_quality, positive_pixel_support
 
-VERSION = "autonomous-brain-actions/v45"
+VERSION = "autonomous-brain-actions/v51"
 
 RETIREMENT_EVIDENCE_FIELDS = ("reason", "archived", "confirmed_s", "first_seen_s",
                               "last_seen_s", "last_updated_s", "first_seen_frame_id",
@@ -743,6 +744,11 @@ class Actions:
                 before_odometry=copy.deepcopy(before_state.get("odometry")),
                 after_odometry=copy.deepcopy(self.s.get("odometry")))
             self.r.motion_log.write(motion)
+            prior_evidence = getattr(error, 'action_evidence', None)
+            error.action_evidence = {**(prior_evidence if isinstance(prior_evidence, dict) else {}),
+                'outcome_unknown': True,
+                'uncertain_motion': {key: copy.deepcopy(motion.get(key)) for key in
+                    ('method', 'params', 'bridge_request_id', 'before_observation', 'after_observation')}}
             self.reconcile_uncertain_holding(before_state, method, motion)
             raise
         verification = basic_motion_evidence(method, params, before_state, self.s)
@@ -1101,10 +1107,133 @@ class Actions:
                 return finish(True, "road_node_observed")
         return finish(False, "junction_stop_not_observed_after_bounded_recovery")
 
+    def _road_return_constraint(self, blocked_result, pre_motion_rejection):
+        """Bind a diagnostic return event to its retained, registered stop.
+
+        A partial legacy marker is still a blocker when this proof is absent.
+        This does not resolve the source constraint or authorize any motion.
+        """
+        from .road_evidence import RoadEvidence
+        roads = self.r.roads
+        rows, getter, view = (getattr(roads, name, None) for name in
+                              ('blocked', 'observation_records', '_passage_view'))
+        if (not isinstance(rows, list) or not callable(getter) or not callable(view)
+                or not isinstance(self.s, dict)
+                or any(not isinstance(self.s.get(k), dict) for k in ('road', 'odometry', 'observation', 'holding'))
+                or not RoadEvidence.sensor_valid(self.s)
+                or type(self.s.get('holding', {}).get('holding')) is not bool):
+            return None
+        try:
+            current = getter(self.s['observation_index'], self.s['observation_index'])
+            saved = current['observations']
+            if (current.get('invalid_observation_indices') or current['motions']
+                    or len(saved) != 1 or saved[0]['observation_index'] != self.s['observation_index']
+                    or any(saved[0].get(k) != self.s.get(k) for k in ('odometry', 'road', 'holding'))
+                    or any(saved[0].get('observation', {}).get(k) != self.s.get('observation', {}).get(k)
+                           for k in ('frameId', 'tick'))):
+                return None
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return None
+        for row in reversed(rows):
+            if (not isinstance(row, dict) or row.get('schema') != 'brain-directed-passage-failure/v1'
+                    or not row.get('passage_id') or row.get('resolved_by', True) is not None
+                    or row.get('reason') != 'front_clearance'):
+                continue
+            try:
+                entry, stop, motion = (row[k] for k in ('entry', 'stop', 'motion'))
+                if (not all(isinstance(v, dict) for v in (entry, stop, motion))
+                        or type(entry.get('observation_index')) is not int
+                        or type(stop.get('observation_index')) is not int
+                        or stop['observation_index'] != entry['observation_index'] + 1
+                        or stop.get('holding') is not self.s['holding']['holding']):
+                    continue
+                method, params = motion.get('method'), motion.get('params')
+                key = 'angleDeg' if method == 'take_exit' else 'distanceCm'
+                if (method not in {'take_exit', 'follow_road', 'forward', 'backward'}
+                        or not isinstance(params, dict) or set(params) - {key, 'speed'}
+                        or type(params.get(key)) not in (int, float) or not math.isfinite(params[key])
+                        or not (-180 <= params[key] <= 180 if method == 'take_exit' else
+                                (10 if method == 'follow_road' else .1) <= params[key] <= 500)
+                        or type(params.get('speed', 30)) not in (int, float)
+                        or not math.isfinite(params.get('speed', 30))
+                        or not 10 <= params.get('speed', 30) <= 100):
+                    continue
+                window = getter(entry['observation_index'], stop['observation_index'])
+                frames, registered = window['observations'], window['motions']
+                if (window.get('invalid_observation_indices')
+                        or [f['observation_index'] for f in frames] !=
+                           [entry['observation_index'], stop['observation_index']]
+                        or len(registered) != 1
+                        or view(frames[0]) != entry or view(frames[1]) != stop
+                        or not RoadEvidence.clearance_stop_localized(frames[0], frames[1], motion)
+                        or roads.motion_heading(frames[0], motion['method'], motion['params']) !=
+                           row['direction_heading_deg']):
+                    continue
+                # Runtime registers the packet before its verification/log annotations.
+                packet = {k: v for k, v in motion.items()
+                          if k not in {'motion_verification', 'passage_failure'}}
+                if packet != registered[0]:
+                    continue
+                if blocked_result is not None:
+                    if blocked_result != motion.get('actuator_result') or view(self.s) != stop:
+                        continue
+                else:
+                    rejected = pre_motion_rejection or {}
+                    evidence = rejected.get('evidence') or {}
+                    cited = evidence.get('passage_failure') or {}
+                    if (rejected.get('reason') != 'directed_passage_still_blocked'
+                            or evidence.get('motion_not_sent') is not True
+                            or evidence.get('outcome_unknown')
+                            or not isinstance(cited, dict)
+                            or any(cited.get(k) != row[k] for k in
+                                   ('passage_id', 'direction_heading_deg', 'reason', 'entry', 'stop'))
+                            or evidence.get('before_observation', self.s['observation_index']) !=
+                               self.s['observation_index']
+                            or self.s['observation_index'] < stop['observation_index']
+                            or self.s['odometry']['tick'] < stop['tick']
+                            or row not in roads._blocked_passages_at(position(self.s['odometry']),
+                                roads.motion_heading(self.s, 'follow_road', {}), self.s['holding']['holding'])):
+                        continue
+                return {k: copy.deepcopy(value) for k, value in {
+                    'passage_id': row['passage_id'],
+                    'before_observation': entry['observation_index'],
+                    'after_observation': stop['observation_index'],
+                    'bridge_request_id': motion['bridge_request_id']}.items()}
+            except (KeyError, TypeError, ValueError, AttributeError):
+                continue
+        return None
+
     def return_from_blocked_road(self, blocked_result, *, pre_motion_rejection=None, return_support=None):
         """Turn back and follow the observed road, including its bends."""
+        stop_reason = ((blocked_result or {}).get("stoppedBy") or
+                       (pre_motion_rejection or {}).get("reason"))
+        marker = {"position_m": position(self.s["odometry"]),
+                  "tick": self.s["odometry"]["tick"], "reason": stop_reason}
+        source = self._road_return_constraint(blocked_result, pre_motion_rejection)
+        return_event = {'schema': 'brain-road-return-event/v1', **marker,
+                        'observation_index': self.s['observation_index'],
+                        'retained_passage_constraint': source,
+                        'legacy_blocker_recorded': source is None}
+        if source is None:
+            self.r.roads.blocked.append(marker)
+        self.r.roads.mark_blocked()
+        try:
+            return self._return_from_blocked_road(blocked_result,
+                pre_motion_rejection=pre_motion_rejection, return_support=return_support,
+                return_event=return_event)
+        except ObservedMotionFailure as error:
+            error.evidence['road_return_event'] = copy.deepcopy(return_event)
+            raise
+        except Exception as error:
+            prior = getattr(error, 'action_evidence', None)
+            error.action_evidence = {**(prior if isinstance(prior, dict) else {}),
+                                     'road_return_event': copy.deepcopy(return_event)}
+            raise
+
+    def _return_from_blocked_road(self, blocked_result, *, pre_motion_rejection, return_support, return_event):
         proof = return_support
         def finish(reason, **evidence):
+            evidence['road_return_event'] = copy.deepcopy(return_event)
             if blocked_result is not None:
                 evidence["actuator_result"] = blocked_result
             if pre_motion_rejection is not None:
@@ -1118,10 +1247,6 @@ class Actions:
                     "bridge_request_id": f"brain-{sequence+1:06d}" if type(sequence) is int else None})
         stop_reason = ((blocked_result or {}).get("stoppedBy") or
                        (pre_motion_rejection or {}).get("reason"))
-        self.r.roads.blocked.append({"position_m": position(self.s["odometry"]),
-                                     "tick": self.s["odometry"]["tick"],
-                                     "reason": stop_reason})
-        self.r.roads.mark_blocked()
         if not self.s["road"]["onRoad"] or stop_reason == "off_road":
             return finish("not_on_observed_road")
         if self.s["road"].get("atNode"):
@@ -1200,6 +1325,45 @@ class Actions:
             last_observation = before_observation
         return finish("blocked_road_return_incomplete")
 
+    def return_along_observed_basic_suffix(self, rejected, proof):
+        """Dispatch once, then let the actual endpoint observation update roads."""
+        from .confirmation_sampling import _registered_basic_step_verified, observed_basic_return_support
+        from .road_evidence import RoadEvidence
+        before = copy.deepcopy(self.s)
+        permitted, clearance = road_translation_limit(before['road'], 'backward', proof['params']['distanceCm'])
+        fresh = observed_basic_return_support(self)
+        if (fresh is None or fresh['params'] != proof['params']
+                or fresh['target_position_m'] != proof['target_position_m']
+                or fresh['straight_suffix'] != proof['straight_suffix']
+                or before['observation_index'] != proof['current_observation']
+                or list(position(before['odometry'])) != proof['current_position_m']
+                or not RoadEvidence.sensor_valid(before) or before['road'].get('atNode') is not False
+                or abs(wrap(before['odometry']['headingDeg'] - proof['body_heading_deg'])) > .2
+                or permitted + 1e-9 < proof['params']['distanceCm']
+                or proof['method'] != 'backward' or proof['params']['distanceCm'] != proof['max_travel_cm']
+                or before.get('holding', {}).get('holding') is not False
+                or getattr(self.r, 'held_object_id', None) is not None
+                or getattr(self.r, 'pending_grasp', None) is not None):
+            return self.result(False, 'recorded_basic_return_current_state_changed',
+                               pre_motion_rejection=rejected, recorded_basic_return=proof)
+        proof['current_road_clearance'] = clearance
+        sequence = getattr(self.r.bridge, 'sequence', None)
+        result = self.move('backward', copy.deepcopy(proof['params']))
+        after = self.s
+        motion = {'method': 'backward', 'params': proof['params'],
+                  'before_observation': before['observation_index'],
+                  'after_observation': after['observation_index'], 'actuator_result': result,
+                  'bridge_request_id': f'brain-{sequence + 1:06d}' if type(sequence) is int else None}
+        verified = _registered_basic_step_verified(before, after, motion)
+        proof.update(actual_motion=motion, actual_position_m=list(position(after['odometry'])),
+                     actual_travel_cm=after['odometry']['distanceCm']-before['odometry']['distanceCm'],
+                     motion_verified=verified, after_observation=after['observation_index'],
+                     exact_observed_endpoint=position(after['odometry']) == tuple(proof['target_position_m']))
+        reason = ('recorded_basic_return_motion_not_verified' if not verified else
+                  'road_blocked_returned_to_observed_endpoint' if proof['exact_observed_endpoint'] else
+                  'recorded_basic_return_endpoint_not_reobserved')
+        return self.result(False, reason, pre_motion_rejection=rejected, recorded_basic_return=proof)
+
     def return_after_known_road_rejection(self, failure):
         """Recover only a known unsent forward request with recorded road support."""
         if (failure.reason != "directed_passage_still_blocked"
@@ -1213,6 +1377,20 @@ class Actions:
             and getattr(self.r, "pending_grasp", None) is None
             and ((holding and held_id is not None) or (not holding and held_id is None)) else None)
         if support is None:
+            from .confirmation_sampling import observed_basic_return_support
+            basic = observed_basic_return_support(self)
+            if basic is not None:
+                try:
+                    return self.return_along_observed_basic_suffix(rejected, basic)
+                except Exception as error:
+                    evidence = {'pre_motion_rejection': rejected, 'recorded_basic_return': basic}
+                    if isinstance(error, ObservedMotionFailure):
+                        error.evidence.update(evidence)
+                    else:
+                        prior_evidence = getattr(error, 'action_evidence', None)
+                        error.action_evidence = {
+                            **(prior_evidence if isinstance(prior_evidence, dict) else {}), **evidence}
+                    raise
             return self.result(False, failure.reason, **failure.evidence,
                 pre_motion_rejection=rejected, recorded_road_return={"reason": "no_verified_return_support"})
         try:
@@ -1259,6 +1437,32 @@ class Actions:
                     "basis": "new_unique_task_target_admitted_in_current_public_view"}
         return None
 
+    def _supported_pick_view_opportunities(self):
+        """Current views for a pending probe budget; never command authority."""
+        category = (getattr(self.r, "task_spec", None) or {}).get("target_category")
+        if category not in {"red-ball", "blue-ball"} or not self._historical_view_empty(self.s):
+            return []
+        opportunities = []
+        for object_id, bound in self._pick_probe_limits.items():
+            target = self.r.perception.get_object(object_id)
+            if (not isinstance(bound, dict) or bound.get("requires_new_view") is not True
+                    or not target or target.get("category") != category
+                    or target.get("state") != "CONFIRMED" or target.get("alias_of")):
+                continue
+            view = self.pick_probe_view_status(object_id)
+            if (view.get("requires_new_view") is not True
+                    or view.get("independent_supported_view") is not True
+                    or view.get("blocked") is not False):
+                continue
+            opportunities.append({"schema": "brain-supported-pick-view-opportunity/v1",
+                "object_id": object_id, "observation_index": self.s["observation_index"],
+                "frame_id": self.s["observation"]["frameId"], "tick": self.s["odometry"]["tick"],
+                "position_m": list(position(self.s["odometry"])),
+                "heading_deg": self.s["odometry"]["headingDeg"], "pick_probe_view": view,
+                "basis": "current_independent_supported_view_for_pending_probe_budget",
+                "requires_fresh_authorization": True})
+        return opportunities
+
     def take_observed_exit(self, angle, *, yield_for_discovery=False):
         """Face a sensed exit, then reacquire that direction before driving.
 
@@ -1268,6 +1472,8 @@ class Actions:
         odometry; no platform road identifiers enter this controller.
         """
         before = copy.deepcopy(self.s)
+        prior_pick_views = ({row["object_id"] for row in self._supported_pick_view_opportunities()}
+                            if yield_for_discovery else set())
         start_observation = self.s["observation_index"]
         wanted_heading = wrap(self.s["odometry"]["headingDeg"] + angle)
         self.turn(angle)
@@ -1275,6 +1481,14 @@ class Actions:
             opportunity = self._sampling_opportunity(before)
             if opportunity is not None:
                 return {"sampling_opportunity": opportunity}
+            for opportunity in self._supported_pick_view_opportunities():
+                if (opportunity["object_id"] not in prior_pick_views
+                        and opportunity["observation_index"] > start_observation
+                        and str(opportunity["frame_id"]) != str(before["observation"].get("frameId"))
+                        and type(before["odometry"].get("tick")) is int
+                        and opportunity["tick"] > before["odometry"]["tick"]):
+                    opportunity["before_observation"] = start_observation
+                    return {"pick_view_opportunity": opportunity}
         road, odo = self.s["road"], self.s["odometry"]
         evidence = {"before_observation": start_observation,
                     "after_observation": self.s["observation_index"],
@@ -1403,6 +1617,10 @@ class Actions:
                 if abs(wrap(chosen["angle_deg"] - exit_angle)) > 5:
                     return finish(self.result(False, "requested_exit_not_observed", available_exits=exits))
             result = self.take_observed_exit(chosen["angle_deg"], yield_for_discovery=True)
+            if result.get("pick_view_opportunity"):
+                return finish(self.result(True, "pick_view_opportunity_observed",
+                                          object_id=result["pick_view_opportunity"]["object_id"],
+                                          pick_view_opportunity=result["pick_view_opportunity"]))
             if result.get("sampling_opportunity"):
                 return finish(self.result(True, "target_sampling_opportunity_observed",
                                           sampling_opportunity=result["sampling_opportunity"]))
@@ -1607,6 +1825,79 @@ class Actions:
         remaining, _ = self.object_geometry(target)
         return bool(remaining <= 22.5 and abs(bearing) <= 3 and check(object_id, self.s)["authorized"])
 
+    def pick_approach_entry(self, object_id):
+        """Describe current pick entry conditions without granting a command.
+
+        This narrow hint exposes the existing pick approach after an independent
+        view resolves a pending probe bound. The real action still runs its
+        repeated-failure guard and fresh per-step motion/grasp checks.
+        """
+        result = {"schema": "brain-pick-approach-entry/v1", "object_id": object_id,
+            "action": "pick", "available": False, "requires_fresh_authorization": True,
+            "not_grab_authorization": True, "reason": "pending_probe_view_unavailable"}
+        bound = self._pick_probe_limits.get(object_id)
+        task = getattr(self.r, "task_spec", None)
+        category = task.get("target_category") if isinstance(task, dict) else None
+        target = self.r.perception.get_object(object_id)
+        if (not isinstance(bound, dict) or bound.get("requires_new_view") is not True
+                or category not in {"red-ball", "blue-ball"}
+                or not isinstance(target, dict) or target.get("state") != "CONFIRMED"
+                or target.get("category") != category or target.get("alias_of")):
+            return result
+        snapshot = self.s
+        if (not isinstance(snapshot, dict)
+                or any(not isinstance(snapshot.get(k), dict)
+                       for k in ("odometry", "road", "observation", "holding"))
+                or not self._historical_view_empty(snapshot)
+                or snapshot["odometry"]["tick"] < 0
+                or type(snapshot.get("observation_index")) is not int
+                or snapshot["observation_index"] <= 0):
+            result["reason"] = "current_empty_road_observation_unavailable"
+            return result
+        result.update(observation_index=snapshot["observation_index"],
+                      frame_id=snapshot["observation"]["frameId"])
+        point = target.get("position_m")
+        if (not isinstance(point, dict)
+                or not all(type(point.get(k)) in (int, float) and math.isfinite(point[k])
+                           for k in ("x", "z"))):
+            result["reason"] = "confirmed_geometry_unavailable"
+            return result
+        remaining, _ = self.object_geometry(target)
+        if not math.isfinite(remaining):
+            result["reason"] = "confirmed_geometry_unavailable"
+            return result
+        result["memory_distance_cm"] = remaining
+        if remaining > 65:
+            result["reason"] = "target_too_far_for_pick_entry"
+            return result
+        gap = self._pick_probe_gap()
+        if type(gap) not in (int, float) or not math.isfinite(gap) or gap <= 0:
+            result["reason"] = "independent_supported_view_unavailable"
+            return result
+        view = self.pick_probe_view_status(object_id)
+        if (view.get("independent_supported_view") is not True
+                or view.get("blocked") is not False):
+            result["reason"] = "independent_supported_view_unavailable"
+            return result
+        observed = self.visible(object_id)
+        sensor = snapshot["observation"]
+        box = observed.get("bbox") if isinstance(observed, dict) else None
+        values = [box.get(k) for k in ("x", "y", "w", "h")] if isinstance(box, dict) else [None] * 4
+        if (not isinstance(observed, dict) or not positive_pixel_support(observed)
+                or str(observed.get("frame_id")) != str(sensor["frameId"])
+                or not all(type(v) in (int, float) and math.isfinite(v) for v in values)
+                or not all(type(sensor.get(k)) is int and sensor[k] > 0 for k in ("width", "height"))
+                or type(observed.get("bearing_deg")) not in (int, float)
+                or not math.isfinite(observed["bearing_deg"])):
+            result["reason"] = "current_full_pixels_unavailable"
+            return result
+        x, y, w, h = values
+        if not (0 < x < x + w < sensor["width"] and 0 < y < y + h < sensor["height"]):
+            result["reason"] = "current_full_pixels_unavailable"
+            return result
+        result.update(available=True, reason="independent_view_within_existing_pick_entry_range")
+        return result
+
     def navigation_readiness(self, object_id):
         target = self.r.perception.get_object(object_id)
         observed = self.visible(object_id) if target is not None else None
@@ -1629,6 +1920,7 @@ class Actions:
                            and (identity is None or identity["authorized"])) and not (probe_view or {}).get("blocked", False)
         return {"object_id": object_id, "standoff_ready": ready,
                 "operation": operation, "operation_ready": operation_ready, "current_pick_ready": pick_ready,
+                "pick_approach_entry": self.pick_approach_entry(object_id) if operation == "pick" else None,
                 "pick_probe_view": probe_view,
                 "operation_readiness_scope": "navigation_standoff_or_current_pick_geometry; grab rechecks fresh full authorization",
                 "identity_ready": identity["authorized"] if identity is not None else None,
@@ -2157,6 +2449,7 @@ class Actions:
         execution = segment["execution"]
         method = execution["method"]
         wanted = execution["departure_body_heading_deg"]
+        remaining = normalize_minimum_translation_cm(remaining)
         if method not in {"forward", "backward"} or not .1 <= remaining <= 500:
             return None
         if not started and distance(position(self.s["odometry"]), tuple(segment["departure"]["position_m"])) * 100 > .2:
@@ -2170,7 +2463,8 @@ class Actions:
         along = (-math.sin(theta) * dx + math.cos(theta) * dz) * (1 if method == "forward" else -1)
         across = math.cos(theta) * dx + math.sin(theta) * dz
         permitted, clearance = road_translation_limit(road, method, remaining)
-        if abs(along - remaining) > .2 or abs(across) > .2 or permitted < remaining:
+        if (along <= 0 or abs(along - remaining) > .2 or abs(across) > .2
+                or normalize_minimum_translation_cm(permitted) < remaining):
             return None
         return {"method": method, "params": {"distanceCm": remaining, "speed": 30},
             "remaining_arc_cm": remaining, "evidence_segment_ids": [segment["segment_id"]],
@@ -2207,6 +2501,10 @@ class Actions:
                        if n.get("status") == "confirmed"}
         while index < len(segments) and budget[0] > 0:
             segment = segments[index]
+            failed = getattr(self.r.roads, "approach_segment_failure", lambda edge: None)(segment)
+            if failed is not None:
+                steps.append({"route_segment_failure": failed})
+                return False, "reposition_segment_failure_unchanged", steps
             departure, arrival = segment["departure"], segment["arrival"]
             p = position(self.s["odometry"])
             # Endpoint locality alone never consumes a recorded leg. The
@@ -2215,6 +2513,7 @@ class Actions:
             if road.get("onRoad") is not True:
                 return False, "reposition_not_on_observed_road", steps
             before = self.s["observation_index"]
+            before_state = copy.deepcopy(self.s)
             before_odo = copy.deepcopy(odo)
             before_sensor = copy.deepcopy(self.s.get("observation", {}))
             before_holding = self.s["holding"].get("holding")
@@ -2227,6 +2526,10 @@ class Actions:
                 or started and distance(p, tuple(departure["position_m"])) > .15))
             connection = self._approach_node_connection(segment, remaining_segment, started, known_nodes) if unexpected_node else None
             if unexpected_node and connection is None:
+                remember = getattr(self.r.roads, "remember_approach_segment_failure", None)
+                failure = remember(segment, self.s) if callable(remember) else None
+                if failure is not None:
+                    steps.append({"route_segment_failure": failure})
                 return False, "reposition_unrecorded_junction_inside_segment", steps
             if basic:
                 if not self._align_approach_body(segment["execution"]["departure_body_heading_deg"], budget, steps):
@@ -2237,6 +2540,7 @@ class Actions:
                     return False, "reposition_basic_primitive_not_safe_or_aligned", steps
                 plan["node_connection"] = connection
                 before, before_odo = self.s["observation_index"], copy.deepcopy(self.s["odometry"])
+                before_state = copy.deepcopy(self.s)
                 before_sensor = copy.deepcopy(self.s.get("observation", {}))
                 p = position(before_odo)
                 result = self.move(plan["method"], plan["params"])
@@ -2254,6 +2558,7 @@ class Actions:
                     return False, "reposition_terminal_connection_not_safe", steps
                 plan["node_connection"] = connection
                 before, before_odo = self.s["observation_index"], copy.deepcopy(self.s["odometry"])
+                before_state = copy.deepcopy(self.s)
                 before_sensor = copy.deepcopy(self.s.get("observation", {}))
                 p = position(before_odo)
                 result = self.move(plan["method"], plan["params"])
@@ -2316,6 +2621,7 @@ class Actions:
                     selected["fresh_angle_deg"] = fresh[0]["angleDeg"]
                     self.r.roads.chosen(odo, fresh[0]["angleDeg"], observation_index=self.s["observation_index"])
                     before, before_odo = self.s["observation_index"], copy.deepcopy(odo)
+                    before_state = copy.deepcopy(self.s)
                     before_sensor = copy.deepcopy(self.s.get("observation", {}))
                     p = position(before_odo)
                     short_departure = True
@@ -2393,6 +2699,7 @@ class Actions:
                             "evidence_segment_ids": [s.get("segment_id") for s in execution_segments],
                             "remaining_arc_cm": remaining, "road_clearance": clearance,
                             "basis": "recorded_straight_leg_and_fresh_local_clearance"}
+                    before_state = copy.deepcopy(self.s)
                     result = self.move("forward", command)
             budget[0] -= 1
             after_odo = self.s["odometry"]
@@ -2414,6 +2721,11 @@ class Actions:
             steps.append(entry)
             if result.get("selection_error"):
                 return False, result["selection_error"], steps
+            translation = plan is not None and plan["method"] in {"forward", "backward"}
+            verification = (basic_motion_evidence(plan["method"], plan["params"], before_state, self.s)
+                            if translation else None)
+            if verification is not None:
+                entry["motion_verification"] = verification
             sensor = self.s.get("observation", {})
             fresh_sensor = (before_sensor.get("frameId") is not None and sensor.get("frameId") is not None
                 and str(before_sensor["frameId"]) != str(sensor["frameId"])
@@ -2424,10 +2736,13 @@ class Actions:
                 and sensor.get("tick") == after_odo["tick"])
             if (self.s["observation_index"] <= before or self.s["road"].get("onRoad") is not True
                     or not fresh_sensor
+                    or result.get("error")
                     or result.get("accepted") is False
-                    or (plan is not None and plan["method"] in {"forward", "backward"}
-                        and result.get("completed") is not True)
-                    or measured < .2 or not math.isfinite(travelled) or travelled < .2
+                    or translation and (result.get("completed") is not True
+                        or not verification.get("motion_verified") or verification.get("along_cm", 0) <= 0)
+                    or normalize_minimum_translation_cm(measured) < (.1 if translation else .2)
+                    or not math.isfinite(travelled)
+                    or normalize_minimum_translation_cm(travelled) < (.1 if translation else .2)
                     or measured > travelled + .2 or before_holding is None
                     or self.s["holding"].get("holding") is not before_holding
                     or result.get("stoppedBy") in {"collision", "front_clearance", "off_road", "wrong_way"}):
@@ -4079,6 +4394,21 @@ class Actions:
             from .confirmation_sampling import corroborate_final
             outcome = corroborate_final(self, outcome)
             record_sampling(outcome)
+        if outcome.get("reason") == "pick_view_opportunity_observed":
+            opportunity = outcome["evidence"]["pick_view_opportunity"]
+            current = next((row for row in self._supported_pick_view_opportunities()
+                            if row["object_id"] == opportunity["object_id"]), None)
+            retained = bool(current
+                and current["observation_index"] > opportunity["observation_index"]
+                and str(current["frame_id"]) != str(opportunity["frame_id"])
+                and current["tick"] >= opportunity["tick"]
+                and current["position_m"] == opportunity["position_m"]
+                and wrap(current["heading_deg"] - opportunity["heading_deg"]) == 0)
+            opportunity.update(post_observation_retained=retained,
+                               post_observation=self.s["observation_index"],
+                               post_observation_view=copy.deepcopy(current) if retained else None)
+            if not retained:
+                outcome.update(success=False, reason="pick_view_opportunity_no_longer_supported")
         if outcome.get("reason") == "target_sampling_opportunity_observed":
             opportunity = outcome["evidence"]["sampling_opportunity"]
             current = self.r.perception.discovery_target(opportunity["discovery_id"])

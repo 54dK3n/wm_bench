@@ -9,7 +9,7 @@ import math
 
 from .road_evidence import RoadEvidence
 
-VERSION = "autonomous-brain-navigation/v14"
+VERSION = "autonomous-brain-navigation/v18"
 
 
 def evidence_version(value):
@@ -36,6 +36,19 @@ def heading_to(a, b):
 
 def number(value):
     return type(value) in (int, float) and math.isfinite(value)
+
+
+def normalize_minimum_translation_cm(value):
+    """Repair only binary roundoff at the public 0.1 cm command minimum.
+
+    Subtracting decimal odometer readings, or converting their positions to
+    metres and back, can put an observed 0.1 cm step just below the minimum.
+    The 1e-9 cm bound is not a sensor/endpoint tolerance: smaller
+    motion is left unchanged, and raw evidence retains its measured values.
+    """
+    if number(value) and .1 - 1e-9 <= value < .1:
+        return .1
+    return value
 
 
 def index(value):
@@ -83,6 +96,7 @@ class RoadMemory:
         self._approach_points = {}
         self._approach_edges = {}
         self._road_segments = {}
+        self._approach_segment_failures = []
         self._last_approach_query = {}
         self._semantic = RoadEvidence()
         self._unindexed_sequence = 0
@@ -184,9 +198,146 @@ class RoadMemory:
                 best = (key, path)
             for q, edge in self._approach_edges[p].items():
                 if (not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
-                        and self.edge_passage_blocked(edge) is None):
+                        and self.edge_passage_blocked(edge) is None
+                        and self.approach_segment_failure(edge) is None):
                     heapq.heappush(queue, (cost + edge["travelled_cm"], q, path + [q]))
         return best[1] if best else []
+
+    def _known_road_motion_window(self, first, last):
+        """A registered complete road primitive, with its own receipt window."""
+        window = self.observation_records(first, last)
+        frames, motions = window.get("observations", []), window.get("motions", [])
+        if (window.get("invalid_observation_indices") or len(frames) != 2 or len(motions) != 1
+                or [f.get("observation_index") for f in frames] != [first, last]
+                or last != first + 1):
+            return None
+        a, b = frames
+        motion = motions[0]
+        method, params, receipt = (motion.get(k) for k in ("method", "params", "actuator_result"))
+        primary = "distanceCm" if method == "follow_road" else "angleDeg"
+        if (method not in {"follow_road", "take_exit"} or not isinstance(params, dict)
+                or set(params) != {primary, "speed"}
+                or not all(number(params[k]) for k in params)
+                or not 10 <= params["speed"] <= 100
+                or not (10 <= params[primary] <= 500 if method == "follow_road"
+                        else -180 <= params[primary] <= 180)
+                or motion.get("outcome_unknown") or motion.get("motion_not_sent")
+                or not isinstance(motion.get("bridge_request_id"), str) or not motion["bridge_request_id"]
+                or not isinstance(receipt, dict) or receipt.get("accepted") is not True
+                or "completed" in receipt and receipt["completed"] is not True
+                or receipt.get("error") or receipt.get("stoppedBy") not in {"junction", "entered_road", "max_distance"}
+                or not number(receipt.get("distanceCm")) or receipt["distanceCm"] <= 0
+                or type(receipt.get("elapsedTicks")) is not int or receipt["elapsedTicks"] <= 0
+                or type(a.get("holding", {}).get("holding")) is not bool
+                or b.get("holding", {}).get("holding") is not a["holding"]["holding"]
+                or any(type(f["odometry"].get("tick")) is not int for f in frames)
+                or any(f["road"].get("tick") != f["odometry"].get("tick") for f in frames)
+                or not RoadEvidence.step_valid(a, b, motion)):
+            return None
+        travel = b["odometry"]["distanceCm"] - a["odometry"]["distanceCm"]
+        measured = distance(position(a["odometry"]), position(b["odometry"])) * 100
+        if (travel < .2 or measured < .2
+                or abs(travel - receipt["distanceCm"]) > .2
+                or b["odometry"]["tick"] - a["odometry"]["tick"] != receipt["elapsedTicks"]
+                or method == "follow_road" and travel > params["distanceCm"] + .2):
+            return None
+        return a, b, motion
+
+    def remember_approach_segment_failure(self, segment, frame):
+        """Retain a proved failed reverse assumption, without changing road facts.
+
+        Only a first complete follow from that exact departure to an unexpected
+        junction is covered. Curved remainders and nearby endpoints are never
+        inferred. The old forward edge and every actual measured prefix remain.
+        """
+        try:
+            current = frame["observation_index"]
+            if (current != self._latest_index or current in self._invalid_indices
+                    or not isinstance(segment, dict)):
+                return None
+            start, end = tuple(segment["departure"]["position_m"]), tuple(segment["arrival"]["position_m"])
+            edge = self._approach_edges.get(start, {}).get(end)
+            if (edge is None or any(edge.get(k) != segment.get(k) for k in
+                    ("segment_id", "segment_version", "direction"))
+                    or edge.get("direction") != "reverse_attempt"
+                    or edge.get("direction_status") != "reverse_not_yet_observed"
+                    or edge.get("execution", {}).get("kind") != "road_following"
+                    or edge["departure"].get("at_node") is not False):
+                return None
+            original = self._known_road_motion_window(edge["before_observation"], edge["after_observation"])
+            actual = self._known_road_motion_window(current - 1, current)
+            if original is None or actual is None:
+                return None
+            source_a, source_b, source_motion = original
+            a, b, motion = actual
+            prefix_id = f"road-segment-{current - 1}-{current}"
+            prefix = self._road_segments.get(prefix_id)
+            anchor = self._frame_anchors.get(current)
+            source_heading = self.motion_heading(source_a, source_motion["method"], source_motion["params"])
+            if source_heading is None or any(
+                    endpoint.get("observation_index") != source["observation_index"]
+                    or endpoint.get("position_m") != list(position(source["odometry"]))
+                    or endpoint.get("at_node") is not source["road"].get("atNode")
+                    or endpoint.get("travel_heading_deg") != expected_heading
+                    for endpoint, source, expected_heading in (
+                        (edge["departure"], source_b, wrap(source_b["odometry"]["headingDeg"] + 180)),
+                        (edge["arrival"], source_a, wrap(source_heading + 180)))):
+                return None
+            if (any(frame.get(k) != b.get(k) for k in ("observation_index", "odometry", "road", "holding"))
+                    or any(frame.get("observation", {}).get(k) != b.get("observation", {}).get(k)
+                           for k in ("frameId", "tick"))
+                    or edge.get("motion") != source_motion
+                    or prefix is None or prefix.get("motion") != motion
+                    or prefix.get("direction_status") != "observed_forward"
+                    or not isinstance(anchor, dict) or anchor.get("valid") is not True
+                    or anchor.get("observation_index") != current
+                    or anchor.get("position_m") != list(position(b["odometry"]))
+                    or not b["road"].get("exits")
+                    or a["holding"]["holding"] is not source_a["holding"]["holding"]
+                    or motion["method"] != "follow_road"
+                    or motion["actuator_result"]["stoppedBy"] != "junction"
+                    or a["road"].get("atNode") is not False or b["road"].get("atNode") is not True
+                    or position(a["odometry"]) != start
+                    or not number(a["road"].get("headingErrorDeg"))
+                    or abs(wrap(a["road"]["headingErrorDeg"])) > 10
+                    or abs(wrap(a["odometry"]["headingDeg"] - edge["departure"]["travel_heading_deg"])) > .2
+                    or distance(position(b["odometry"]), end) <= .15):
+                return None
+            travel = b["odometry"]["distanceCm"] - a["odometry"]["distanceCm"]
+            if (motion["params"]["distanceCm"] > edge["travelled_cm"]
+                    or edge["travelled_cm"] - travel <= .2):
+                return None
+            row = {"schema": "brain-approach-segment-failure/v1",
+                "reason": "reposition_unrecorded_junction_inside_segment",
+                "segment_id": edge["segment_id"], "segment_version": edge["segment_version"],
+                "direction": edge["direction"], "holding": a["holding"]["holding"],
+                "source_before_observation": edge["before_observation"],
+                "source_after_observation": edge["after_observation"],
+                "departure_position_m": list(start), "arrival_position_m": list(end),
+                "before_observation": current - 1, "after_observation": current,
+                "bridge_request_id": motion["bridge_request_id"],
+                "actual_position_m": list(position(b["odometry"])),
+                "actual_travel_cm": travel, "remaining_arc_cm": edge["travelled_cm"] - travel,
+                "new_observed_prefix_segment_id": prefix_id,
+                "scope": "same_unobserved_reverse_version_and_holding_only"}
+            if row not in self._approach_segment_failures:
+                self._approach_segment_failures.append(copy.deepcopy(row))
+            return copy.deepcopy(row)
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return None
+
+    def approach_segment_failure(self, edge):
+        """Planning exclusion only; a fresh observed forward edge can replace it."""
+        held = (self._latest_public_observation or {}).get("holding")
+        holding = held.get("holding") if isinstance(held, dict) else None
+        return next((copy.deepcopy(row) for row in reversed(self._approach_segment_failures)
+            if row["segment_version"] == edge.get("segment_version")
+            and row["direction"] == edge.get("direction")
+            and (type(holding) is not bool or row["holding"] is holding)), None)
+
+    def approach_segment_failure_records(self):
+        """Public diagnostic copies; these rows are not passage constraints."""
+        return copy.deepcopy(self._approach_segment_failures)
 
     @staticmethod
     def motion_heading(frame, method, params):
@@ -365,6 +516,65 @@ class RoadMemory:
         """
         return copy.deepcopy(list(self._road_segments.values()))
 
+    def _registered_readonly_road_gap(self, first, last):
+        """Prove stationary read-only frames between two measured road legs."""
+        if not index(first) or not index(last) or first >= last:
+            return None
+        window = self.observation_records(first, last)
+        if (not isinstance(window, dict) or not isinstance(window.get("observations"), list)
+                or not isinstance(window.get("motions"), list)
+                or not isinstance(window.get("invalid_observation_indices"), list)):
+            return None
+        rows = window["observations"]
+        if (any(not isinstance(row, dict) for row in rows)
+                or window["invalid_observation_indices"] or window["motions"]
+                or [row.get("observation_index") for row in rows] != list(range(first, last+1))):
+            return None
+        # The bounded records API excludes motions straddling its endpoints.
+        # Check the registry too: no command may touch or cross this gap.
+        for pair, motion in self._semantic.motions.items():
+            if not isinstance(pair, tuple) or len(pair) != 2 or not isinstance(motion, dict):
+                return None
+            a, b = motion.get("before_observation", pair[0]), motion.get("after_observation", pair[1])
+            if (not index(a) or not index(b) or a >= b or (a, b) != pair
+                    or "before_observation" not in motion or "after_observation" not in motion):
+                return None
+            if ((a < last and b > first)
+                    or index(a) and first <= a < last
+                    or index(b) and first < b <= last):
+                return None
+        origin, seen_frames, previous_tick = rows[0], set(), None
+        if not all(isinstance(origin.get(k), dict) for k in ("road", "odometry", "holding")):
+            return None
+        origin_road = {k: v for k, v in origin["road"].items() if k != "tick"}
+        for row in rows:
+            odo, road, sensor, holding = (row.get(k) for k in
+                ("odometry", "road", "observation", "holding"))
+            if not all(isinstance(v, dict) for v in (odo, road, sensor, holding)):
+                return None
+            if (not all(number(odo.get(k)) for k in
+                        ("rightCm", "forwardCm", "headingDeg", "distanceCm"))
+                    or type(odo.get("tick")) is not int or odo["tick"] < 0
+                    or type(road.get("tick")) is not int or type(sensor.get("tick")) is not int
+                    or road["tick"] != odo["tick"] or sensor["tick"] != odo["tick"]
+                    or sensor.get("frameId") is None or str(sensor["frameId"]) in seen_frames
+                    or previous_tick is not None and odo["tick"] < previous_tick
+                    or road.get("onRoad") is not True or road.get("atNode") is not False
+                    or type(holding.get("holding")) is not bool
+                    or holding != origin.get("holding")
+                    or {k: v for k, v in road.items() if k != "tick"} != origin_road
+                    or any(odo[k] != origin["odometry"].get(k) for k in
+                           ("rightCm", "forwardCm", "headingDeg", "distanceCm"))):
+                return None
+            seen_frames.add(str(sensor["frameId"]))
+            previous_tick = odo["tick"]
+        return {"first_observation": first, "last_observation": last,
+            "readonly_intervals": last-first,
+            "position_m": list(position(origin["odometry"])),
+            "heading_deg": origin["odometry"]["headingDeg"],
+            "odometer_cm": origin["odometry"]["distanceCm"],
+            "holding": origin["holding"]["holding"]}
+
     def observed_road_return_support(self, frame):
         """A bounded reverse road attempt from an unchanged measured endpoint.
 
@@ -387,10 +597,11 @@ class RoadMemory:
             return None
         segment = max(incoming, key=lambda s: s["after_observation"])
         # A take_exit followed by follow_road has two measured windows. Keep
-        # their exact shared frame and endpoints; never bridge a gap or infer a
-        # chord through a bend. The original road-following recovery still
+        # exact endpoints and registered continuity; read-only stationary
+        # frames can separate legs, but no command or inferred chord can.
+        # The original road-following recovery still
         # reobserves safety and stops at the first actually observed node.
-        chain = [segment]
+        chain, readonly_gaps = [segment], []
         while chain[0]["departure"]["at_node"] is not True:
             if len(chain) >= 4:
                 return None
@@ -398,6 +609,20 @@ class RoadMemory:
             predecessors = [s for s in self._road_segments.values()
                 if s["after_observation"] == first["before_observation"]
                 and s["arrival"]["position_m"] == first["departure"]["position_m"]]
+            if not predecessors:
+                supported = []
+                for previous in self._road_segments.values():
+                    if (previous["after_observation"] >= first["before_observation"]
+                            or previous["arrival"]["position_m"] != first["departure"]["position_m"]):
+                        continue
+                    gap = self._registered_readonly_road_gap(
+                        previous["after_observation"], first["before_observation"])
+                    if gap is not None:
+                        supported.append((previous, gap))
+                if len(supported) != 1:
+                    return None
+                predecessors = [supported[0][0]]
+                readonly_gaps.insert(0, supported[0][1])
             if len(predecessors) != 1:
                 return None
             chain.insert(0, predecessors[0])
@@ -420,15 +645,35 @@ class RoadMemory:
         start, end = chain[0]["before_observation"], segment["after_observation"]
         window = self.observation_records(start, frame["observation_index"])
         rows = {row["observation_index"]: row for row in window["observations"]}
-        if (window["invalid_observation_indices"] or any(i not in rows for i in range(start, frame["observation_index"]+1))
-                or any(m["after_observation"] > end for m in window["motions"])):
+        if (window["invalid_observation_indices"]
+                or [row.get("observation_index") for row in window["observations"]]
+                    != list(range(start, frame["observation_index"]+1))):
             return None
         for i, row in rows.items():
             if not synchronized(row) or row["holding"]["holding"] != frame["holding"]["holding"]:
                 return None
             if i >= end and (position(row["odometry"]) != point
-                    or any(row["odometry"][k] != odo[k] for k in ("headingDeg", "distanceCm"))
+                    or row["odometry"]["distanceCm"] != odo["distanceCm"]
                     or row["road"].get("atNode") is not False):
+                return None
+        # A completed stationary look can preserve the measured endpoint. Each
+        # turn still needs its registered command and fresh sensor result; no
+        # translation, grasp or unregistered heading change joins this tail.
+        from .confirmation_sampling import _registered_basic_step_verified
+        tail = [m for m in window["motions"] if m["after_observation"] > end]
+        tail_pairs = {(m["before_observation"], m["after_observation"]): m for m in tail}
+        expected_pairs = {(i, i+1) for i in range(end, frame["observation_index"])}
+        if (len(tail_pairs) != len(tail) or set(tail_pairs) - expected_pairs
+                or wrap(rows[end]["odometry"]["headingDeg"] - odo["headingDeg"]) != 0):
+            return None
+        for a, b in sorted(expected_pairs):
+            motion = tail_pairs.get((a, b))
+            if motion is None:
+                if not RoadEvidence.step_valid(rows[a], rows[b], None):
+                    return None
+            elif (motion.get("method") != "turn"
+                    or not _registered_basic_step_verified(rows[a], rows[b], motion)
+                    or motion["actuator_result"].get("distanceCm", 0) != 0):
                 return None
         if len(chain) > 1:
             for part in chain:
@@ -465,6 +710,9 @@ class RoadMemory:
             "return_heading_deg": wrap(odo["headingDeg"]+180),
             "max_travel_cm": total,
             "holding": frame["holding"]["holding"],
+            "stationary_readonly_gaps": copy.deepcopy(readonly_gaps),
+            "stationary_turn_tail": [{"before_observation": a, "after_observation": b,
+                "bridge_request_id": m["bridge_request_id"]} for (a, b), m in sorted(tail_pairs.items())],
             "observed_segments": [{key: copy.deepcopy(part[key]) for key in (
                 "segment_id", "segment_version", "before_observation", "after_observation", "travelled_cm", "measured_cm")}
                 for part in chain]}
@@ -518,6 +766,9 @@ class RoadMemory:
                 or current["observation_index"] != previous["observation_index"] + 1
                 or motion.get("before_observation") != previous["observation_index"]
                 or motion.get("after_observation") != current["observation_index"]
+                or motion.get("outcome_unknown")
+                or type(previous.get("holding", {}).get("holding")) is not bool
+                or current.get("holding", {}).get("holding") is not previous["holding"]["holding"]
                 or method not in {"take_exit", "follow_road", "forward", "backward"}
                 or not isinstance(result, dict) or result.get("error")
                 or result.get("accepted") is False
@@ -528,8 +779,9 @@ class RoadMemory:
             return
         a = position(old)
         measured, travelled = distance(a, p) * 100, odo["distanceCm"] - old["distanceCm"]
-        if (a not in self._approach_edges or not .1 <= measured <= 60
-                or travelled < .1 or measured > travelled + .2 or odo["tick"] <= old["tick"]):
+        if (a not in self._approach_edges or not .1 <= normalize_minimum_translation_cm(measured) <= 60
+                or normalize_minimum_translation_cm(travelled) < .1
+                or measured > travelled + .2 or odo["tick"] <= old["tick"]):
             return
         if method in {"forward", "backward"}:
             requested = travelled if localized_stop else motion.get("params", {}).get("distanceCm")
@@ -540,7 +792,8 @@ class RoadMemory:
             # Public odometry is rounded to 0.1 cm. A heading computed from a
             # tiny displacement has arbitrarily large angular error; retain the
             # existing 0.2 cm axis tolerances used for basic-motion verification.
-            if (not number(requested) or abs(measured - requested) > .2
+            if (not number(requested) or not .1 <= normalize_minimum_translation_cm(requested) <= 500
+                    or abs(measured - requested) > .2
                     or abs(travelled - measured) > .2
                     or abs(wrap(odo["headingDeg"] - old["headingDeg"])) > .2
                     or along <= 0 or abs(along - requested) > .2 or abs(across) > .2):
@@ -624,7 +877,8 @@ class RoadMemory:
             raise ValueError("unsupported approach candidate purpose")
         query = {"schema": "brain-approach-candidate-query/v1", "observation_index": self._latest_index,
             "generated_count": 0, "eligible_count": 0, "returned_count": 0,
-            "candidate_limit": max(0, min(limit, 3)), "filtered_candidates": []}
+            "candidate_limit": max(0, min(limit, 3)), "filtered_candidates": [],
+            "excluded_segment_failures": []}
         self._last_approach_query = query
         if purpose != "operation_view":
             query["purpose"] = purpose
@@ -632,8 +886,12 @@ class RoadMemory:
             query["reason"] = "current_position_has_no_valid_observed_connection"
             return []
         def available(edge):
+            failure = self.approach_segment_failure(edge)
+            if failure is not None and failure not in query["excluded_segment_failures"]:
+                query["excluded_segment_failures"].append(failure)
             return (not {edge["before_observation"], edge["after_observation"]}.intersection(self._invalid_indices)
-                    and self.edge_passage_blocked(edge) is None)
+                    and self.edge_passage_blocked(edge) is None
+                    and failure is None)
         costs, previous, queue = {start: 0}, {}, [(0, start)]
         while queue:
             cost, point = heapq.heappop(queue)
@@ -740,7 +998,7 @@ class RoadMemory:
                 a, b = (execution.get(k) for k in ("departure_body_heading_deg", "arrival_body_heading_deg"))
                 if (execution.get("method") not in {"forward", "backward"}
                         or not all(number(h) for h in (a, b))
-                        or not .1 <= segment["travelled_cm"] <= 500):
+                        or not .1 <= normalize_minimum_translation_cm(segment["travelled_cm"]) <= 500):
                     return "basic_execution_contract_unavailable"
                 delta = abs(wrap(a - heading))
                 if .2 < delta < 1:

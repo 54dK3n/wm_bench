@@ -8,12 +8,13 @@ from __future__ import annotations
 import copy
 import math
 
-from .navigation import distance, position, wrap
+from .navigation import distance, position, wrap, normalize_minimum_translation_cm
 from .perception import RANGE_CAL
 
-VERSION = "brain-confirmation-sampling/v5"
+VERSION = "brain-confirmation-sampling/v7"
 MAX_STEPS = 12
 MAX_TRAVEL_CM = 120
+SAMPLING_LENGTHS_CM = (15.5, 16., 17., 18., 20., 10.)
 
 
 def _reading(point, xy, heading):
@@ -29,8 +30,60 @@ def _reading(point, xy, heading):
     return raw, math.degrees(beta)
 
 
-def _observed_motion_window(actions, first, snapshot):
-    """Read a complete registered window; absent motion is only stationary."""
+def _registered_basic_step_verified(a, b, motion):
+    """A complete indexed basic command, including a nonzero legal translation."""
+    from .actions import basic_motion_evidence
+    from .road_evidence import RoadEvidence
+    if (not isinstance(motion, dict) or motion.get('outcome_unknown')
+            or motion.get('motion_not_sent') or not motion.get('bridge_request_id')
+            or b['observation_index'] != a['observation_index'] + 1
+            or motion.get('before_observation') != a['observation_index']
+            or motion.get('after_observation') != b['observation_index']
+            or not RoadEvidence.sensor_valid(a) or not RoadEvidence.sensor_valid(b)):
+        return False
+    method, result, params = motion.get('method'), motion.get('actuator_result'), motion.get('params', {})
+    if (method not in {'forward', 'backward', 'turn'} or not isinstance(result, dict)
+            or not isinstance(params, dict)
+            or result.get('completed') is not True or result.get('accepted') is False
+            or result.get('error') or result.get('stoppedBy') not in {None, 'completed'}):
+        return False
+    parameter = params.get('angleDeg' if method == 'turn' else 'distanceCm')
+    speed = params.get('speed', 30)
+    if (type(parameter) not in (int, float) or not math.isfinite(parameter)
+            or set(params) - ({'angleDeg', 'speed'} if method == 'turn' else {'distanceCm', 'speed'})
+            or type(speed) not in (int, float) or not math.isfinite(speed) or not 10 <= speed <= 100
+            or (not 1 <= abs(parameter) <= 180 if method == 'turn' else not .1 <= parameter <= 500)):
+        return False
+    before, after = a['odometry'], b['odometry']
+    travel = after['distanceCm'] - before['distanceCm']
+    elapsed = after['tick'] - before['tick']
+    if (any(type(frame['odometry']['tick']) is not int for frame in (a, b))
+            or 'elapsedTicks' in result and (type(result['elapsedTicks']) is not int or result['elapsedTicks'] != elapsed)
+            or 'tick' in result and (type(result['tick']) is not int or result['tick'] != after['tick'])
+            or 'distanceCm' in result and (type(result['distanceCm']) not in (int, float)
+                or not math.isfinite(result['distanceCm']) or abs(result['distanceCm'] - travel) > .2)):
+        return False
+    verified = basic_motion_evidence(method, params, a, b)
+    if (not verified['motion_verified'] or verified['holding_changed'] or verified['road_changed']
+            or a['holding']['holding'] is not b['holding']['holding']
+            or after['tick'] <= before['tick']):
+        return False
+    if method == 'turn':
+        return travel == 0 and position(before) == position(after)
+    return (normalize_minimum_translation_cm(travel) >= .1
+            and normalize_minimum_translation_cm(verified['measured_cm']) >= .1
+            and verified['along_cm'] > 0
+            and abs(travel - verified['measured_cm']) <= .2
+            and abs(travel - parameter) <= .2)
+
+
+def _observed_motion_window(actions, first, snapshot, *, allow_localized_stop=False):
+    """Read a complete registered window; absent motion is only stationary.
+
+    A navigation cue may retain a strictly localized clearance-stop prefix as
+    pose continuity. That prefix does not authorize straight backtracking,
+    view restoration, passage clearance, or completion of an exit.
+    """
     from .road_evidence import RoadEvidence
     getter = getattr(actions.r.roads, 'observation_records', None)
     last = snapshot.get('observation_index')
@@ -58,7 +111,12 @@ def _observed_motion_window(actions, first, snapshot):
         return None
     for a, b in zip(frames, frames[1:]):
         motion = by_pair.get((a['observation_index'], b['observation_index']))
-        if not RoadEvidence.step_valid(a, b, motion):
+        travel = b['odometry']['distanceCm'] - a['odometry']['distanceCm']
+        minimum_roundoff = (travel < .1 and normalize_minimum_translation_cm(travel) == .1
+                            and _registered_basic_step_verified(a, b, motion))
+        if (not RoadEvidence.step_valid(a, b, motion) and not minimum_roundoff
+                and not (allow_localized_stop
+                         and RoadEvidence.clearance_stop_localized(a, b, motion))):
             return None
         if (motion is not None and motion['method'] == 'turn'
                 and abs(b['odometry']['distanceCm'] - a['odometry']['distanceCm']) > .2):
@@ -104,7 +162,9 @@ def _recorded_translation_support(actions, length, method, snapshot=None):
         x, lateral_a = coordinates(start)
         y, lateral_b = coordinates(end)
         if (segment['after_observation'] > end_index or distance(end, cursor) > .002
-                or chord < .2 or abs(chord - segment['travelled_cm']) > .2
+                or (normalize_minimum_translation_cm(chord) < .1
+                    if segment['method'] in {'forward', 'backward'} else chord < .2)
+                or abs(chord - segment['travelled_cm']) > .2
                 or max(abs(lateral_a), abs(lateral_b)) > .2
                 or abs(wrap(a['travel_heading_deg'] - b['travel_heading_deg'])) > .2
                 or min(abs(wrap(b['travel_heading_deg'] - odo['headingDeg'])),
@@ -160,12 +220,127 @@ def _recorded_translation_support(actions, length, method, snapshot=None):
     return None
 
 
+def observed_basic_return_support(actions):
+    """One empty-gripper retreat along a complete witnessed straight suffix.
+
+    The returned endpoint was actually observed. Its predicted approach never
+    inserts a graph edge; only the dispatched command and fresh result can do
+    that. Curved roads, stopped prefixes and gripper transitions are excluded.
+    """
+    from .road_evidence import RoadEvidence
+    snapshot = actions.s
+    if (snapshot.get('holding', {}).get('holding') is not False
+            or getattr(actions.r, 'held_object_id', None) is not None
+            or getattr(actions.r, 'pending_grasp', None) is not None
+            or not RoadEvidence.sensor_valid(snapshot) or snapshot['road'].get('atNode') is not False):
+        return None
+    getter = getattr(actions.r.roads, 'road_segment_records', None)
+    if not callable(getter):
+        return None
+    here, heading = position(snapshot['odometry']), snapshot['odometry']['headingDeg']
+    theta = math.radians(heading)
+    unit = (math.sin(theta), -math.cos(theta))
+    candidates = {}
+    for segment in getter():
+        if segment.get('method') not in {'forward', 'backward'}:
+            continue
+        endpoint = tuple(segment['departure']['position_m'])
+        dx, dz = (endpoint[0] - here[0]) * 100, (endpoint[1] - here[1]) * 100
+        along, across = dx * unit[0] + dz * unit[1], dx * unit[1] - dz * unit[0]
+        if .2 <= along <= 20 and abs(across) <= .2:
+            candidates[endpoint] = along
+    for endpoint, length in sorted(candidates.items(), key=lambda row: -row[1]):
+        support = _recorded_translation_support(actions, length, 'backward')
+        if (support is None or tuple(support['segments'][0]['departure']['position_m']) != endpoint
+                or any(s['method'] not in {'forward', 'backward'} for s in support['segments'])):
+            continue
+        window = _observed_motion_window(actions, support['before_observation'], snapshot)
+        if window is None:
+            continue
+        frames, motions = window
+        if (any(f.get('holding', {}).get('holding') is not False
+                or f['road'].get('atNode') is not False for f in frames)
+                or any(not _registered_basic_step_verified(a, b, motions[(a['observation_index'], b['observation_index'])])
+                       for a, b in zip(frames, frames[1:])
+                       if (a['observation_index'], b['observation_index']) in motions)):
+            continue
+        heading_back = wrap(heading + 180)
+        if (actions.r.roads.passage_blocked(snapshot, heading_back) is not None
+                or actions.r.roads._blocked_passage_at(endpoint, heading_back, False) is not None):
+            continue
+        return {'schema': 'brain-recorded-basic-return/v1', 'method': 'backward',
+                'params': {'distanceCm': length, 'speed': 30},
+                'current_observation': snapshot['observation_index'],
+                'current_position_m': list(here), 'body_heading_deg': heading,
+                'target_position_m': list(endpoint), 'target_observation': support['before_observation'],
+                'holding': False, 'max_travel_cm': length, 'straight_suffix': support,
+                'predicted_endpoint_gap_cm': distance(support['planned_position_m'], endpoint) * 100,
+                'graph_connection_predicted': False, 'blocked_passages_resolved': False}
+    return None
+
+
 def _reverse_support(actions, length, snapshot=None):
     """Backward-compatible entry point for recorded backward translations."""
     return _recorded_translation_support(actions, length, 'backward', snapshot)
 
 
-def _translation_choices(actions, target, snapshot, remaining, rejections, *, short_probe=False):
+def _constraint_interval_lengths(target, snapshot, remaining, method):
+    """Suggest interior lengths where the existing geometric guards can change.
+
+    These are only extra candidates within the existing sampling length range.
+    Road and observed reverse-path checks still run in _translation_choices;
+    sampling retains its sensor and identity checks. Prediction earns no hit.
+    """
+    from .actions import road_translation_limit
+    low, high = min(SAMPLING_LENGTHS_CM), min(max(SAMPLING_LENGTHS_CM), remaining)
+    high, _ = road_translation_limit(snapshot['road'], method, high)
+    if high <= low:
+        return []
+    odo = snapshot['odometry']
+    here, theta = position(odo), math.radians(odo['headingDeg'])
+    sign = 1 if method == 'forward' else -1
+    unit = (-sign * math.sin(theta), sign * math.cos(theta))
+    point = target['current_detection']['position_m']
+    dx, dz = (point['x'] - here[0]) * 100, (point['z'] - here[1]) * 100
+    right = math.cos(theta) * dx + math.sin(theta) * dz
+    forward = -math.sin(theta) * dx + math.cos(theta) * dz - RANGE_CAL['L_cm']
+    boundaries = {low, high}
+
+    def boundary(length):
+        if math.isfinite(length) and low < length < high:
+            boundaries.add(length)
+
+    # Translating on the body axis leaves camera-right unchanged. In the
+    # admitted positive-range window, raw range increases monotonically with
+    # camera-forward. Bisect that projection without changing its calibration.
+    for raw in (42., 87.):
+        left, right_forward = 0., RANGE_CAL['a_cm'] + RANGE_CAL['k'] * raw
+        for _ in range(48):
+            middle = (left + right_forward) / 2
+            radius = math.hypot(right, middle)
+            predicted = (radius - RANGE_CAL['a_cm']) * middle / radius / RANGE_CAL['k']
+            if predicted < raw:
+                left = middle
+            else:
+                right_forward = middle
+        boundary(sign * (forward - (left + right_forward) / 2))
+    boundary(sign * (forward - abs(right) / math.tan(math.radians(33))))
+    boundary(16.)  # The existing far-cue probe bound changes here.
+    radius = (target['confirmation']['min_hit_pose_gap_m'] + .002) * 100
+    for pose in target['confirmation']['accepted_hit_poses']:
+        vx, vz = (here[0] - pose['x_m']) * 100, (here[1] - pose['z_m']) * 100
+        along = vx * unit[0] + vz * unit[1]
+        discriminant = along * along - (vx * vx + vz * vz - radius * radius)
+        if discriminant >= 0:
+            offset = math.sqrt(discriminant)
+            boundary(-along - offset)
+            boundary(-along + offset)
+    ordered = sorted(boundaries)
+    return [((a + b) / 2, (a, b)) for a, b in zip(ordered, ordered[1:]) if b - a > 1e-7]
+
+
+def _translation_choices(actions, target, snapshot, remaining, rejections, *, short_probe=False,
+                         constraint_intervals=False):
     """Evaluate only bounded translations; hypothetical poses never earn hits."""
     from .actions import road_translation_limit
     road,odo=snapshot['road'],snapshot['odometry']
@@ -178,7 +353,9 @@ def _translation_choices(actions, target, snapshot, remaining, rejections, *, sh
 
     choices=[]
     for method in (('forward',) if short_probe else ('forward','backward')):
-        for length in ((4.,) if short_probe else (15.5,16.,17.,18.,20.,10.)):
+        intervals = dict(_constraint_interval_lengths(target, snapshot, remaining, method)) if constraint_intervals else {}
+        lengths = intervals if constraint_intervals else ((4.,) if short_probe else SAMPLING_LENGTHS_CM)
+        for length in lengths:
             if length>remaining:
                 reject('remaining_action_travel_budget');continue
             sign=1 if method=='forward' else -1
@@ -222,7 +399,11 @@ def _translation_choices(actions, target, snapshot, remaining, rejections, *, sh
                  'independent_pose_predicted':independent,'road_clearance':clearance,
                  **({'short_sampling_probe':True,'confirmation_hit_expected':False} if short_probe else {}),
                  'reverse_path_support':support,
+                 **({'distance_constraint_interval_cm':list(intervals[length])} if constraint_intervals else {}),
                  'basis':'public_target_estimate_local_road_and_accepted_hit_poses'}))
+    if not choices and not short_probe and not constraint_intervals:
+        return _translation_choices(actions, target, snapshot, remaining, rejections,
+                                    constraint_intervals=True)
     return choices
 
 
@@ -469,7 +650,8 @@ def sample_discovery(actions, discovery_id):
         if locked is None and obj.get('id') is not None:locked=obj['id']
         cue=target.get('navigation_sampling_cue')
         if cue is not None:
-            window=_observed_motion_window(actions,cue['source_observation'],actions.s)
+            window=_observed_motion_window(actions,cue['source_observation'],actions.s,
+                                           allow_localized_stop=True)
             if window is None:
                 return finish(False,'confirmation_navigation_cue_motion_window_unverified',target)
         if target['reason']=='target_confirmed' and obj.get('state')=='CONFIRMED':

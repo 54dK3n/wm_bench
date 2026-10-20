@@ -25,7 +25,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v21"
+RUNTIME_VERSION = "autonomous-brain-runtime/v22"
 
 
 def dump(path, value):
@@ -180,6 +180,11 @@ def compact_action_result(number, action, result, after_observation):
         if isinstance(subgoal.get("current_visual"), dict):
             evidence["navigation_subgoal"]["current_visual"] = fields(
                 subgoal["current_visual"], ("distance_cm", "bearing_deg", "frame_id"))
+        if isinstance(subgoal.get("pick_approach_entry"), dict):
+            evidence["navigation_subgoal"]["pick_approach_entry"] = fields(
+                subgoal["pick_approach_entry"], ("schema", "object_id", "action", "available",
+                    "requires_fresh_authorization", "not_grab_authorization", "reason",
+                    "observation_index", "frame_id", "memory_distance_cm"))
     if isinstance(raw.get("pending_objects"), list):
         evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
     if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):

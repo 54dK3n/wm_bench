@@ -61,6 +61,7 @@ RUNTIME_EVIDENCE_CAPABILITIES = MappingProxyType({
     "autonomous-brain-runtime/v19": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
     "autonomous-brain-runtime/v20": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
     "autonomous-brain-runtime/v21": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
+    "autonomous-brain-runtime/v22": _AUTHORIZED_COMMAND_CHAIN_EVIDENCE,
 })
 
 

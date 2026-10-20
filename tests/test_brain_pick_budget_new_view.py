@@ -87,10 +87,10 @@ def test_ten_verified_small_steps_require_new_view_without_erasing_probe_or_retu
     assert len(r.records) == motion_count and not actual_grabs(r)
 
 
-def test_exhaustion_go_to_consumes_existing_independent_road_route():
-    # .375cm is naturally learned and meets the unchanged route verifier's
-    # minimum .2cm measured motion. The exact .1cm budget case is above.
-    r = reduced_initial_probe(shrinks=4, recorded_road=True)
+@pytest.mark.parametrize("shrinks", [4, 6])
+def test_exhaustion_go_to_consumes_existing_independent_road_route(shrinks):
+    # Preserve the .375cm case and also execute the smallest legal .1cm edge.
+    r = reduced_initial_probe(shrinks=shrinks, recorded_road=True)
     consume_budget(r)
     bound = copy.deepcopy(r.actions._pick_probe_limits[r.object_id])
     assert bound["requires_new_view"] is True
@@ -109,6 +109,8 @@ def test_exhaustion_go_to_consumes_existing_independent_road_route():
     assert attempts and attempts[0]["reached"]
     assert attempts[0]["steps"] and all(s["historical_arc_retraced"] for s in attempts[0]["steps"])
     moved = r.records[start:]
+    assert any(m["method"] == "backward" and m["params"]["distanceCm"] == pytest.approx(bound["limit_cm"])
+               for m in moved)
     assert sum(m["params"]["distanceCm"] for m in moved if m["method"] == "backward") >= 20
     assert all(m["motion_verification"]["motion_verified"] for m in moved)
     assert r.actions._pick_probe_limits[r.object_id] == bound
