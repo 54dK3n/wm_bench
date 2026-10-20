@@ -3,6 +3,11 @@
 The bridge applies each requested primitive to public odometry.  A new visual
 witness appears only after a full road viewpoint and a turn back to the same
 observed green position; changing a frame number alone cannot reveal it.
+
+Lifecycle marking remains a test double for these navigation tests. A54's
+pre-release public identity prerequisites are supplied explicitly; production
+identity verification is covered by release_recovery_integration and
+release_aim_separation with real Perception and vendored WM.
 """
 import copy
 import math
@@ -24,7 +29,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
         "held": {"id": "held", "category": "red-ball", "state": "HELD",
                  "position_m": {"x": 0, "z": .18}},
         "old": {"id": "old", "category": "red-ball", "state": "DELIVERED",
-                "position_m": {"x": .01, "z": .18}},
+                "position_m": {"x": .40, "z": .18}},
         "other": {"id": "other", "category": "red-ball", "state": "CONFIRMED",
                   "position_m": {"x": .04, "z": .18}},
     }
@@ -40,6 +45,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
         frame = str(snapshot["observation"]["frameId"])
         zone = {"category": "storage-zone", "track_id": "green", "distance_cm": 18.,
                 "bearing_deg": 0., "frame_id": frame,
+                "source": "storage-ground-pixels",
                 "bbox": {"x": 200., "y": 200., "w": 200., "h": 100.}}
         if green_position:
             zone["position_m"] = (copy.deepcopy(green_position) if isinstance(green_position, dict)
@@ -61,6 +67,13 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
                 "bbox": {"x": 290., "y": 215., "w": 20., "h": 35.}}
         if mode == "old":
             ball["known_delivered_object_id"] = "old"
+            ball["position_m"] = copy.deepcopy(objects["old"]["position_m"])
+            if not state["released"]:
+                ball["delivered_match_distance_m"] = 0.
+                ball["delivered_identity_evidence"] = {
+                    "method": "joint_bidirectionally_unique_candidate",
+                    "frame_id": frame, "candidate_ids": ["old"],
+                    "candidate_detection_indices": [len(zones)]}
         if mode == "preexisting":
             ball["track_id"] = "other"
         if mode == "clipped":
@@ -80,7 +93,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             result.append({**copy.deepcopy(ball), "track_id": "old",
                            "known_delivered_object_id": "old",
                            "bbox": {"x": 230., "y": 215., "w": 20., "h": 25.},
-                           "position_m": {"x": .01, "z": .18}})
+                           "position_m": copy.deepcopy(objects["old"]["position_m"])})
         return result
 
     def refresh():
@@ -93,7 +106,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             front = 0.
         if road_fault == "front_after_step" and state["forward_attempts"]:
             front = 0.
-        snapshot["road"] = {"onRoad": on_road, "atNode": False, "exits": [],
+        snapshot["road"] = {"tick": odo["tick"], "onRoad": on_road, "atNode": False, "exits": [],
                             "headingErrorDeg": wrap(30 - odo["headingDeg"]) if road_error else None,
                             "frontClearanceCm": front, "leftClearanceCm": 100.,
                             "rightClearanceCm": 100.}
@@ -106,7 +119,7 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             snapshot["road"].update(atNode=True, exits=(
                 [] if abs(wrap(odo["headingDeg"] - 30)) < 1
                 else [{"angleDeg": wrap(30 - odo["headingDeg"])}]))
-        mode = "empty" if not state["retreated"] else first
+        mode = ("old" if not state["released"] else "empty") if not state["retreated"] else first
         dx, dz = -odo["rightCm"], 18 - odo["forwardCm"]
         green_heading = math.degrees(math.atan2(-dx, dz))
         if (state["retreated"] and state["road_cm"] >= reveal_at - 1e-6
@@ -115,6 +128,9 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
             views.append({"frame": snapshot["observation"]["frameId"],
                           "mode": mode, "road_cm": state["road_cm"]})
         snapshot["perception"]["detections"] = visual(mode)
+        snapshot["observation"]["tick"] = odo["tick"]
+        snapshot["perception"].update(
+            frame_id=str(snapshot["observation"]["frameId"]), tick=odo["tick"])
         if mode in {"new", "unmatched_only", "two_balls", "repeated_ball", "two_zones", "clipped", "outside"}:
             # This identity was not known before release; a later objects()
             # query must not retroactively put it into the release boundary.
@@ -187,6 +203,9 @@ def reobservation_runtime(*, first="old", later="old", reveal_at=16,
         perception=SimpleNamespace(objects=lambda: copy.deepcopy(list(objects.values())),
             get_object=lambda oid: copy.deepcopy(objects[oid]), mark_delivered=mark_delivered,
             mark_release_unverified=mark_unverified,
+            _delivered_positions={"old": {
+                "category": "red-ball", "position_m": copy.deepcopy(objects["old"]["position_m"]),
+                "frame_id": "prior-delivery"}},
             ground_camera=SimpleNamespace(project_pixel_to_ground=lambda u, v: (0., .18))))
     refresh()
     return SimpleNamespace(runtime=runtime, motions=motions, logs=logs, marks=marks,

@@ -254,4 +254,4 @@ def test_no_grab_refinement_reaches_native_model_without_forcing_pick(tmp_path, 
     assert sent[0]["thinking"] == {"type": "low"}
     assert "没有抓取命令" in sent[0]["messages"][0]["content"]
     assert json.loads(sent[0]["messages"][1]["content"])["recent_actions"][0] == summary
-    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v26"
+    assert json.loads((tmp_path/"native.jsonl").read_text())["version"] == CHATGPT_VERSION == "autonomous-brain-llm/v27"

@@ -24,7 +24,7 @@ import urllib.request
 
 
 VERSION = "autonomous-brain-llm/v19"
-CHATGPT_VERSION = "autonomous-brain-llm/v26"
+CHATGPT_VERSION = "autonomous-brain-llm/v27"
 FORMAL_MODEL = "deepseek-flash"
 FORMAL_TEMPERATURES = {FORMAL_MODEL: 0, "kimi-k2.6": 0.6}
 
@@ -39,16 +39,16 @@ def formal_model_parameters(model, temperature, thinking, transport=None):
             and temperature == FORMAL_TEMPERATURES[model] and thinking == "disabled")
 
 
-SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 27)}
+SUPPORTED_TRANSCRIPT_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(1, 28)}
 # Transcript capabilities belong to recorded versions, independently of the
 # latest prompt version. In particular v12 already required this metadata.
-EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 27)}
+EXTENDED_RETRY_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(12, 28)}
 RETRY_METADATA_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
 DIAGNOSTICS_REQUIRED_VERSIONS = set(EXTENDED_RETRY_VERSIONS)
-NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 27)}
-DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26"}
-EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26"}
-HISTORICAL_VIEW_REVISIT_VERSIONS = {"autonomous-brain-llm/v25", "autonomous-brain-llm/v26"}
+NORMAL_FINISH_REQUIRED_VERSIONS = {f"autonomous-brain-llm/v{number}" for number in range(14, 28)}
+DISCOVERY_INTENT_VERSIONS = {"autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26", "autonomous-brain-llm/v27"}
+EXECUTABLE_DISCOVERY_VERSIONS = {"autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26", "autonomous-brain-llm/v27"}
+HISTORICAL_VIEW_REVISIT_VERSIONS = {"autonomous-brain-llm/v25", "autonomous-brain-llm/v26", "autonomous-brain-llm/v27"}
 RETRYABLE_TRANSPORT_ERRORS = {"timeout", "TimeoutError", "URLError", "RemoteDisconnected",
                               "IncompleteRead", "IncompleteStream", "ConnectionResetError"}
 RETRYABLE_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
@@ -72,6 +72,8 @@ PICK_PROBE_FEEDBACK_PROMPT += "supported_approach_probe_refined 表示本次只�
 
 
 PICK_APPROACH_ENTRY_PROMPT = """当前 navigation 中 current_subgoal.pick_approach_entry.available=true 表示该目标在独立新视角恢复后，符合原 pick 接近流程的入口条件；你可以本轮直接选择 pick(object_id)，不必再次 go_to。这个例外仅适用于本轮字段明确列出的同一 object_id；字段缺失或 available=false 时不适用，recent_actions 的旧值不能替代当前状态。operation_ready/current_pick_ready=false 仍表示未满足原就绪条件，不能当作可以立即 grab；该入口提示不表示动作已获许可、已经抓到或已经交付。执行层仍会重新检查当前物体、空夹爪、重复失败和新视角要求，逐步核验每次运动、净空和新鲜完整像素/唯一身份，满足完整抓取条件后才能发 grab；条件变化或接近失败时仍会停止并返回证据。是否选择 pick 由你依据本轮状态决定。"""
+
+RELEASE_RECOVERY_PROMPT = """release_recovery.pending 保留已发出且尚未完成观测确认的原释放义务。夹爪为空时，若本轮某项 available=true 或 current_verification_available=true，可选择 place（params={}）继续同一释放的观测确认；这是未持物不能普通放置的唯一例外，不会再次发 release，也不允许重抓已交付对象。执行层先用当前画面和原命令边界核验，证据仍不足时，最多沿当前观测道路取得一个尚未尝试的有界视角，每一步重新观测和检查净空。missing_evidence 表示实际缺少的证据；budget 和 attempted_views 跨轮保留，新帧号不能重置预算或解锁同一无效视角。available=false 且无当前新证据时，不机械重复 place；可依据本轮实际道路选择 look_around、explore 或合法 go_to 取得新观测，再检查当前恢复选项。旧球独立辨认、唯一新球、正面完整像素、区域容纳、原释放锚点和命令链仍须全部满足；两次 release、空夹爪、到达视角都不代表两颗交付。是否选择恢复动作仍由你决定；completion.ready_for_done=true 后应主动 done，由执行层用最后新观测再校验。"""
 
 HISTORICAL_VIEW_REVISIT_PROMPT = """若任务尚未完成、当前没有可处理的 CONFIRMED 任务目标，且夹爪已知为空，可考虑回看历史已确认目标：仅当该 LOST 对象的 historical_view_revisit.available=true、navigation_only=true、requires_fresh_identity=true 时，允许选择 go_to(object_id)。这只沿已测道路回到历史完整支持帧的机器人观测位姿，并重新观察；历史机器人位姿不是物体坐标，不保证物体仍在那里。执行层会逐步检查当前道路、载荷、已知阻塞和未知动作；不能照抄历史路线。回看到达不等于身份恢复、抓取就绪、持物或交付，LOST、竞争者及旧记录保留，探步限制不因此重置。只能依照后续新鲜完整像素、正常确认及原身份排他结果选择下一动作；旧 LOST ID 仍不能 pick。若能力未提供或重复回看没有新证据，则根据现有可执行发现、道路出口和新观测选择其他动作，不反复重选同一历史视角。已知数量任务已满足且 completion.ready_for_done=true 时仍应主动 done，不为额外历史目标继续回看。"""
 
@@ -156,7 +158,7 @@ def _validate_transport_diagnostics(value: Any, version: str | None = None) -> N
     if (not isinstance(value, dict) or not required <= set(value)
             or not set(value) <= required | optional
             or value["phase"] not in (("construct_request", "open", "read_stream", "read_body")
-                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26"} else ("open", "read_stream", "read_body"))
+                if version in {"autonomous-brain-llm/v17", "autonomous-brain-llm/v18", "autonomous-brain-llm/v19", "autonomous-brain-llm/v20", "autonomous-brain-llm/v21", "autonomous-brain-llm/v22", "autonomous-brain-llm/v23", "autonomous-brain-llm/v24", "autonomous-brain-llm/v25", "autonomous-brain-llm/v26", "autonomous-brain-llm/v27"} else ("open", "read_stream", "read_body"))
             or type(value["received_bytes"]) is not int or value["received_bytes"] < 0):
         raise ReplayError("Replay has invalid transport diagnostics")
     if "reason_type" in value:
@@ -405,7 +407,10 @@ class LLMClient:
             self.system_prompt = self.system_prompt.replace(
                 "先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标。",
                 "通常先 go_to(object_id)，到达并观测验证后下一轮 pick 同一目标；当前明确提供 pick_approach_entry.available=true 时适用下述直接进入接近流程的例外。")
-            self.system_prompt += "\n" + PICK_PROBE_FEEDBACK_PROMPT + "\n" + HISTORICAL_VIEW_REVISIT_PROMPT + "\n" + PICK_APPROACH_ENTRY_PROMPT
+            self.system_prompt = self.system_prompt.replace(
+                "未持物不能 place，持物不能 pick。",
+                "未持物不能普通放置；当前明确提供的未确认释放观测恢复例外见下文。持物不能 pick。")
+            self.system_prompt += "\n" + PICK_PROBE_FEEDBACK_PROMPT + "\n" + HISTORICAL_VIEW_REVISIT_PROMPT + "\n" + PICK_APPROACH_ENTRY_PROMPT + "\n" + RELEASE_RECOVERY_PROMPT
             self.model = model or os.environ.get("LLM_MODEL")
             self.temperature = None
             self.thinking = chatgpt_transport.EFFORT

@@ -1,0 +1,142 @@
+释放观测恢复：本轮改动、真实结果与未完成项
+审查基线：6a8f7143cd29e71c65da9a33ffece9ed5bacacee
+分支：codex/autonomous-brain
+结论：尚未完成原双球闭环，不能宣称 PASS。
+
+1. 原局定位与首个失败条件
+
+真正对应基线提交说明的原局是
+artifacts/autonomous-brain/a45-micro-route-followup/run-20261018T173537Z。
+原局物理2/2、脑端DELIVERED1、done0、整体FAIL的进展保留。
+本轮只读原件审查，不将其计为新比赛。
+
+第二球target_092在r130抓取，brain-003271，obs706→707，正式持物obs712。
+r139释放，brain-003593，obs774→775；夹持由true变false。
+原release_observation的command_ref正确关联同一抓取，required_delivered_ids
+为[target_017]；原释放锚点与release_aim_position_m保持不变。
+obs776两个正面像素支持红框均与017/092竞争，candidate_witnesses=0。
+首次主动补视角因“所有可见球均有known_delivered身份”不成立而跳过。
+此后80次恢复均先拒绝“旧球017未独立重观测”；原30cm锚点连续性检查
+在这些调用中尚未执行。部分帧已有新放置候选，但不能代替旧球见证。
+真实模型收到未确认对象，却没有可执行的释放恢复选项，并受到空夹爪
+不能place的旧提示限制；此后61轮中place=0。这不证明模型的主观原因。
+
+证据：artifacts/autonomous-brain/release-verification-followup/audit/
+original-release-audit.json
+
+2. 生产修改
+
+A52：把已有RELEASED_UNVERIFIED保留为可继续处理的观测义务。
+后续place先用当前新帧重查原交付链；不足时公开具体missing evidence和
+可执行的有界道路取景。跨轮保存预算和已试意图，保留原释放命令边界、
+required_delivered_ids与身份锚点。恢复不再次release；未知运动仍停止。
+模型自己选择动作，运行时公开恢复选项，修正空夹爪place的提示冲突。
+
+A53：第一新局出现已获完整支持视角但距离仍超过原65cm入口的缺口。
+增加已支持视角的有界接近：4cm单步、最多5步/20cm，逐步核验命令回执、
+新观测、位姿、道路、身份和夹持；进入原距离范围后使用原接近授权。
+该分支通过组件回归，后两局未触发，不能称为平台实测恢复成功。
+
+A54：第二新局实际第二释放锚点距旧交付锚点仅10.21619379cm，旧15cm
+身份圆完全落入新释放30cm竞争圆，原独立辨认规则无法确认旧球。
+在既有绿色区域释放选点中增加有限候选分离检查：保留第一球原分支；
+后续须有当前旧球独立见证，并对旧保存锚点和当前旧球投影保持>30cm
+分离（45cm仅为偏好），继续遵守原占用、投影和距离门限。没有合格点
+就保持持物，不释放。原Perception、WorldModel、身份门限、容纳证据、
+最后新观测done检查未放宽。
+
+Runtime v23 / LLM transcript v27；评测能力只增加v23到原v22规则的别名，
+没有改判分。最小运动、道路恢复、近场可见性和历史A/B已试记录保留。
+
+3. 实际针对性回归
+
+真实checkout的63个测试文件：2313 passed，9 failed，退出1。
+9项均为已记录基线失败，无新未分类失败；未删安全断言以刷绿。
+类别：2个refined probe反馈、1个裁切空抓恢复、4个junction阻塞恢复参数、
+1个pure-inference CUA profile、1个接近预算fallthrough。
+完整命令、失败名称、耗时129.96秒及源码哈希见：
+artifacts/autonomous-brain/release-verification-followup/a54-targeted-final.json
+同目录保留初次失败日志与修正夹具前的结果，不以最终结果覆盖原件。
+
+新增生产规则集成覆盖真实Actions/Perception/vendored WM及原审计：
+旧球缺失后跨轮道路取景、旧+新独立见证、只见旧球/不定新框/两个新框、
+像素未知/旧帧、同视角不重复、合法其他视角、无道路、未知ACK单次发送、
+原释放边界不变、无重复release/重复计数及原done检查。
+release_recovery集成56例、release_aim_separation 34例均通过。
+简化place_reobservation的30例只作导航回归，夹具补全生产新增前置证据；
+原test函数和断言AST保留。合成传感器/模型替身用例不算真实比赛，
+尤其合成done正例不能称为真实模型done成功。
+
+4. 三局独立新比赛
+
+目录统一前缀：
+artifacts/autonomous-brain/release-verification-followup/
+
+run-20261020T104225Z（A52）
+  模型启动122，完成121，有效决策121，完整动作121。
+  grab9 / release0 / HELD对象链0 / DELIVERED0 / done0。
+  原物理评测0/2，整体FAIL；driver=1，evaluator=1；497.2仿真秒。
+  r121完整动作后在第122次纯推理边界开发停止，并非自然200轮上限；
+  仍有安全道路后继，不能称全局死锁。未知运动0。
+  最早相关缺口：已支持的远处目标仍大于65cm，未获可执行接近入口。
+  冻结97文件，结束时哈希匹配。
+
+run-20261020T112801Z（A53）
+  模型启动132，完成131，有效决策131，完整动作131。
+  grab10 / release2 / HELD对象链2（010、068）/ DELIVERED1（010）/ done0。
+  原物理评测2/2，整体FAIL；driver=1，evaluator=1；663.9仿真秒。
+  第二释放r104，brain-002760，obs593→594，连接原抓取brain-002436。
+  r105、r106真实模型分别选择空夹爪place恢复；两次预算尝试共20cm，
+  一次完整取景、一次部分尝试后未对齐。不是两次完整取景。
+  原释放未重发，所需旧球仍因不可变锚点竞争无法辨认。
+  r131完整动作后在第132次纯推理边界开发停止，并非自然200轮上限。
+  物理两球不能替代脑端两份独立证据。未知运动0；末空夹爪。
+  冻结100文件，结束时哈希匹配。controlled-stop原件措辞保留，
+  其中“two bounded road views”应按上述完整/部分尝试区分。
+
+run-20261020T122129Z（A54，最终源码）
+  模型启动200，完成200，有效决策200，完整动作200。
+  grab35 / release1 / HELD对象链2（010、132）/ DELIVERED1（010）/ done0。
+  原物理评测1/2，整体FAIL；driver=1，evaluator=1；881.36仿真秒。
+  正常200轮上限，第二球132末仍持有。714条执行调用绑定、ACK和观测
+  独立检查无差异，未知执行0。104冻结文件及15项脑端manifest匹配。
+  脑结束标记13:40:29.382Z，controller清理关闭13:40:29.426Z，关闭不是终因。
+  第一球grab311→312、正式HELD318；release394→395、见证396、正式DEL397。
+  第二球grab1003→1004、正式HELD1010，最终obs1115仍held。
+  A54在r185/189缺旧球证据时拒放；没有实测分离选点或第二次释放。
+
+每局的-source/source.json及production.patch保存各自源码；-public-result.json、
+-independent-public-counts.json、-configuration-check.json、-exit-codes.json
+分别保存汇总、独审、配置比对和真实退出码。原评测为各自-evaluation/
+evaluation.json，原始运行目录保持不动。wrapper退出0不是比赛成功。
+同一固定codex-app-server/gpt-6.1-sol/low、原pixel-quality gate、
+map-05、200轮/1200仿真秒、WorldModel/Executor/平台配置均保持；
+模型未接收本机评测真值或私密配置。各局不得拼接。
+
+5. 最终持续阻塞与下一步证据要求
+
+r185/obs1038是本局最终持续的释放前置阻塞：
+release_aim_previous_delivered_not_independently_observed。
+当前完整且像素支持的红框同时匹配DELIVERED010和active137，
+known_delivered为空；未进入13点候选分离阶段。不是像素未知、
+没有绿色区、释放ACK不全或分离距离判定失败。
+
+137于obs1027生成，距旧锚点15.0113368829cm，真实超出15cm，
+不能作为浮点误差扩门。随后1028/1029形成独立跟踪，保存中心距旧锚点
+10.1253044cm，在当前中心及active状态不变时，其30cm竞争圆包含旧15cm圆。
+不能据此声称所有未来观测永久不可解；末137为STALE，仍在active候选池。
+
+原010保留帧与137的部分重访帧有同pose同框，但中间跨11次已注册grab，
+原无操作边界条件不通过；137三个来源自身的原像素互投也不全通过，
+例如1028→1029误差1.90929px超过1.53628px。现有证据不足以合法合并身份。
+r186实际模型输入收到准确缺口和合法道路提示，后续换站位仍未独立辨认；
+道路并非全部耗尽，不能把缺身份见证改写为无道路可走。
+
+因此本轮未删除137、迁移旧锚点、复活LOST、扩大身份门限、清空尝试记录，
+也未用等待记忆衰减或再跑同样200轮换取通过。仍缺跨操作边界、由公共
+新观测支撑的旧球独立身份对应；在此证据出现前，第二释放与整体PASS未解决。
+
+精确证据：audit/run-20261020T122129Z/ 下的
+independent-identity-summary.json、r185-active137-old010-overlap-audit.json、
+r185-retained-old-pixel-audit.json、input-binding-audit.json。
+历史一球PASS与旧局双球物理进展均保留，本轮不重算或替代它们。

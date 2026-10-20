@@ -33,7 +33,7 @@ def native_environment(monkeypatch):
 
 @pytest.mark.parametrize('action',[{'action':'explore','params':{}},
     {'action':'pick','params':{'object_id':OBJECT}}])
-def test_current_v26_request_carries_current_entry_but_model_keeps_action_choice(tmp_path,action):
+def test_current_native_request_carries_current_entry_but_model_keeps_action_choice(tmp_path,action):
     runtime,actions,calls=runtime_at()
     actions._navigation_record(OBJECT)
     readiness=actions.navigation_readiness(OBJECT)
@@ -61,7 +61,7 @@ def test_current_v26_request_carries_current_entry_but_model_keeps_action_choice
     assert current['operation_ready'] is False and current['current_pick_ready'] is False
     assert received['recent_actions'][0]['evidence']['navigation_subgoal']['pick_approach_entry']['object_id']==OBJECT
     record=json.loads(path.read_text())
-    assert record['version']==CHATGPT_VERSION=='autonomous-brain-llm/v26'
+    assert record['version']==CHATGPT_VERSION=='autonomous-brain-llm/v27'
     with patch.object(transport,'invoke',side_effect=AssertionError('replay cannot invoke a model')):
         with LLMClient(tmp_path/'replayed.jsonl',replay_path=path)as client:
             assert client.decide(state)==action
@@ -91,4 +91,4 @@ def test_current_runtime22_uses_the_exact_existing_delivery_contract_and_future_
     old=RUNTIME_EVIDENCE_CAPABILITIES['autonomous-brain-runtime/v21']
     assert RUNTIME_EVIDENCE_CAPABILITIES['autonomous-brain-runtime/v22'] is old
     assert runtime_evidence_capability({'runtime_version':'autonomous-brain-runtime/v22'})==(old,None)
-    assert runtime_evidence_capability({'runtime_version':'autonomous-brain-runtime/v23'})==(None,'runtime_evidence_version_unsupported')
+    assert runtime_evidence_capability({'runtime_version':'autonomous-brain-runtime/v24'})==(None,'runtime_evidence_version_unsupported')

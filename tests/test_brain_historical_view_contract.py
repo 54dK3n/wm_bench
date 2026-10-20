@@ -68,7 +68,7 @@ def test_runtime21_keeps_the_strict_delivery_contract_and_future_is_unknown():
     from tools.brain_evidence_audit import RUNTIME_EVIDENCE_CAPABILITIES, runtime_evidence_capability
     assert (RUNTIME_EVIDENCE_CAPABILITIES["autonomous-brain-runtime/v21"]
             is RUNTIME_EVIDENCE_CAPABILITIES["autonomous-brain-runtime/v20"])
-    assert runtime_evidence_capability({"runtime_version": "autonomous-brain-runtime/v23"}) == (
+    assert runtime_evidence_capability({"runtime_version": "autonomous-brain-runtime/v24"}) == (
         None, "runtime_evidence_version_unsupported")
 
 

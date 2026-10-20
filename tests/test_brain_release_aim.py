@@ -10,7 +10,8 @@ from test_brain_place_path_recovery import place_runtime
 
 
 def region(**changes):
-    return {"category": "storage-zone", "track_id": "green", "frame_id": "17",
+    return {"category": "storage-zone", "source": "storage-ground-pixels",
+            "track_id": "green", "frame_id": "17",
             "bbox": {"x": 200., "y": 200., "w": 200., "h": 100., **changes},
             "distance_cm": 18., "bearing_deg": 0.}
 
@@ -23,6 +24,54 @@ def occupied(x=238., y=235., w=24., h=24., *, category="red-ball", delivered=Tru
     return row
 
 
+def add_delivered_fixture(runtime):
+    """Synthetic public identity output for these geometry/navigation tests.
+
+    The original mark_delivered test double below still does not prove delivery.
+    Real Perception identity/containment checks are exercised in the integration
+    and separation suites. This fixture only supplies the newly required saved
+    anchor and same-frame independent observation.
+    """
+    snapshot = runtime.snapshot
+    frame = str(snapshot["observation"]["frameId"])
+    tick = snapshot["odometry"].setdefault("tick", 17)
+    snapshot["observation"]["tick"] = tick
+    snapshot.setdefault("road", {})["tick"] = tick
+    snapshot["perception"].update(frame_id=frame, tick=tick)
+    current = snapshot["perception"]["detections"]
+    for detection in current:
+        detection["frame_id"] = frame
+    delivered = [(index, detection) for index, detection in enumerate(current)
+                 if detection["category"] == "red-ball" and detection.get("known_delivered_object_id")]
+    if not delivered:
+        return
+    point = {"x": -1., "z": 0.}
+    rows = [{"id": "old", "category": "red-ball", "state": "DELIVERED", "position_m": point}]
+    original_objects = getattr(runtime.perception, "objects", lambda: [])
+    runtime.perception.objects = lambda: [*original_objects(), *copy.deepcopy(rows)]
+    runtime.perception._delivered_positions = {
+        "old": {"category": "red-ball", "frame_id": "1", "position_m": copy.deepcopy(point)}}
+    for index, detection in delivered:
+        detection.update(position_m=copy.deepcopy(point), delivered_match_distance_m=0.,
+            delivered_identity_evidence={"frame_id": frame,
+                "method": "joint_bidirectionally_unique_candidate", "candidate_ids": ["old"],
+                "candidate_detection_indices": [index]})
+
+
+def assert_projects_only_free_inner_pixels(runtime, calls):
+    from autonomous_brain.actions import ball_inside_region
+    detections = runtime.snapshot["perception"]["detections"]
+    boxes = [d["bbox"] for d in detections if d["category"] in {"red-ball", "blue-ball", "obstacle"}]
+    green = max((d["bbox"] for d in detections if d["category"] == "storage-zone"),
+                key=lambda b: b["w"] * b["h"])
+    assert 1 <= len(calls) <= 13
+    assert len(calls) == len(set(calls))
+    for u, v in calls:
+        assert ball_inside_region({"x": u - .5, "y": v - 1, "w": 1., "h": 1.}, green)
+        assert not any(b["x"] - b["w"] / 2 <= u <= b["x"] + 1.5 * b["w"]
+                       and b["y"] - b["h"] / 2 <= v <= b["y"] + 1.5 * b["h"] for b in boxes)
+
+
 def aim_runtime(detections, *, projection=(.04, .18), heading=0, right=0, forward=0):
     calls = []
 
@@ -32,44 +81,54 @@ def aim_runtime(detections, *, projection=(.04, .18), heading=0, right=0, forwar
             raise projection
         return projection
 
-    # Deliberately no WM rows, map, pose object, or platform metadata. Aiming
-    # must be computable from these three public inputs alone.
+    # Geometry feedback is synthetic. No map, scene truth or physical
+    # delivery authority is supplied by this light fixture.
     runtime = SimpleNamespace(snapshot={
         "observation_index": 17, "observation": {"frameId": 17, "width": 640, "height": 480},
         "odometry": {"rightCm": right, "forwardCm": forward, "headingDeg": heading},
         "holding": {"holding": True}, "perception": {"detections": copy.deepcopy(detections)},
     }, perception=SimpleNamespace(ground_camera=SimpleNamespace(project_pixel_to_ground=project)))
+    add_delivered_fixture(runtime)
     return runtime, calls
 
 
 @pytest.mark.parametrize("old_x,expected_u", [(238, 350), (338, 250)])
-def test_occupied_left_and_right_pixels_choose_mirrored_free_quarters(old_x, expected_u):
+def test_occupied_left_and_right_pixels_retain_free_quarter_among_finite_candidates(old_x, expected_u):
     runtime, calls = aim_runtime([region(), occupied(x=old_x)])
     result = Actions(runtime).choose_release_aim()
     assert not result.get("error")
-    assert calls == [(expected_u, 250)]
+    assert (expected_u, 250) in calls
+    assert (600 - expected_u, 250) not in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
     assert result["position_m"] == pytest.approx({"x": .04, "z": .18})
     assert str(result["source_frame"]) == "17"
     assert result["source_region"]["bbox"] == region()["bbox"]
     assert result["occupied_boxes"]
 
 
-def test_symmetric_free_quarters_choose_left_deterministically():
+def test_symmetric_finite_candidates_choose_left_deterministically():
     runtime, calls = aim_runtime([region(), occupied(x=295, y=245, w=10, h=10)])
-    assert not Actions(runtime).choose_release_aim().get("error")
-    assert calls == [(250, 250)]
+    result = Actions(runtime).choose_release_aim()
+    assert not result.get("error")
+    assert result["pixel"]["u"] < 300
+    assert (250, 250) in calls and (350, 250) in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
 
 
-def test_both_free_quarters_choose_the_one_farther_from_observed_occupancy():
+def test_equal_ground_separation_prefers_farther_observed_pixel_occupancy():
     runtime, calls = aim_runtime([region(), occupied(x=270, y=245, w=10, h=10)])
-    assert not Actions(runtime).choose_release_aim().get("error")
-    assert calls == [(350, 250)]
+    result = Actions(runtime).choose_release_aim()
+    assert not result.get("error")
+    assert result["pixel"]["u"] > 300
+    assert (350, 250) in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
 
 
 @pytest.mark.parametrize("category", ["blue-ball", "obstacle"])
 def test_other_public_occupants_can_block_the_other_quarter(category):
     runtime, calls = aim_runtime([region(), occupied(),
-                                 occupied(x=338, category=category, delivered=False)])
+                                 occupied(x=200, y=200, w=200, h=100,
+                                          category=category, delivered=False)])
     result = Actions(runtime).choose_release_aim()
     assert result.get("error")
     assert calls == []
@@ -78,8 +137,9 @@ def test_other_public_occupants_can_block_the_other_quarter(category):
 def test_half_size_expansion_blocks_candidates_on_occupied_margin_boundaries():
     runtime, calls = aim_runtime([region(), occupied(x=260, y=240, w=20, h=20),
         occupied(x=360, y=240, w=20, h=20, category="blue-ball", delivered=False)])
-    assert Actions(runtime).choose_release_aim().get("error")
-    assert calls == []
+    assert not Actions(runtime).choose_release_aim().get("error")
+    assert (250, 250) not in calls and (350, 250) not in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
 
 
 def test_only_unique_largest_complete_green_component_is_used():
@@ -87,7 +147,8 @@ def test_only_unique_largest_complete_green_component_is_used():
     runtime, calls = aim_runtime([small, occupied(), region()])
     result = Actions(runtime).choose_release_aim()
     assert not result.get("error")
-    assert calls == [(350, 250)]
+    assert (350, 250) in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
     assert result["source_region"]["bbox"] == region()["bbox"]
 
 
@@ -104,7 +165,8 @@ def test_missing_clipped_or_equal_largest_regions_cannot_choose_a_release_point(
 def test_invalid_ground_projection_is_a_failure_not_a_release_location(projection):
     runtime, calls = aim_runtime([region(), occupied()], projection=projection)
     assert Actions(runtime).choose_release_aim().get("error")
-    assert calls == [(350, 250)]
+    assert (350, 250) in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
 
 
 @pytest.mark.parametrize("heading,expected", [
@@ -116,7 +178,8 @@ def test_local_projection_uses_left_positive_heading_and_public_odometry(heading
     result = Actions(runtime).choose_release_aim()
     assert not result.get("error")
     assert result["position_m"] == pytest.approx(expected)
-    assert calls == [(350, 250)]
+    assert (350, 250) in calls
+    assert_projects_only_free_inner_pixels(runtime, calls)
 
 
 @pytest.mark.parametrize("detections", [[region()],
@@ -172,6 +235,7 @@ def aimed_place_runtime(*, projection=(.04, .30), lose_green=False, post_witness
         return projection
 
     runtime.perception.ground_camera = SimpleNamespace(project_pixel_to_ground=project)
+    add_delivered_fixture(runtime)
     original_call, original_observe = runtime.bridge.call, runtime.observe
 
     def call(method, params):
@@ -202,8 +266,13 @@ def test_frozen_ground_aim_ignores_later_bbox_drift_and_keeps_original_release_g
     f = aimed_place_runtime(with_old=with_old, later_clipped=later_clipped)
     result = Actions(f.runtime).place()
     assert result["success"] is True
-    assert len(f.projections) == 1
-    assert f.projections == [(350 if with_old else 300, 250)]
+    if with_old:
+        assert 1 <= len(f.projections) <= 13
+        assert len(f.projections) == len(set(f.projections))
+        assert (350, 250) in f.projections
+        assert all(200 < u < 400 and 200 < v < 300 for u, v in f.projections)
+    else:
+        assert f.projections == [(300, 250)]
     assert len(f.before_release) == 1
     pose = f.before_release[0]
     dx, dz = .04 - pose["rightCm"] / 100, .30 - pose["forwardCm"] / 100
@@ -246,7 +315,8 @@ def test_no_safe_initial_pixel_aim_keeps_the_ball_held_without_motion(failure):
     elif failure == "tied":
         detections.append(region(x=410))
     else:
-        detections.append(occupied(x=338, category="blue-ball", delivered=False))
+        detections.append(occupied(x=200, y=200, w=200, h=100,
+                                   category="blue-ball", delivered=False))
     result = Actions(f.runtime).place()
     assert result["success"] is False
     assert f.motions == []
@@ -283,7 +353,8 @@ def test_fixed_aim_approach_stops_at_first_unverified_translation(with_old):
     assert all(0 < params["distanceCm"] <= 7 for params in forwards)
     assert sum(params["distanceCm"] for params in forwards) <= 56
     assert f.runtime.snapshot["holding"]["holding"] is True
-    assert len(f.projections) == 1
+    assert 1 <= len(f.projections) <= (13 if with_old else 1)
+    assert len(f.projections) == len(set(f.projections))
 
 
 @pytest.mark.parametrize("with_old", [False, True])

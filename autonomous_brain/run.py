@@ -25,7 +25,7 @@ from .perception import Perception
 from .task import parse_task, completion_progress
 from .provenance import capture_world_model_provenance
 
-RUNTIME_VERSION = "autonomous-brain-runtime/v22"
+RUNTIME_VERSION = "autonomous-brain-runtime/v23"
 
 
 def dump(path, value):
@@ -69,6 +69,51 @@ def compact_junction_history(rows):
     return result
 
 
+def compact_release_recovery_options(raw):
+    """Expose a pending observation obligation, never new release permission."""
+    def fields(source, names):
+        return {key: copy.deepcopy(source[key]) for key in names
+                if isinstance(source, dict) and key in source
+                and (source[key] is None or type(source[key]) in (str, bool, int)
+                     or type(source[key]) is float and math.isfinite(source[key]))}
+
+    raw = raw if isinstance(raw, dict) else {}
+    result = fields(raw, ("schema", "requires_fresh_recheck", "not_delivery_authorization"))
+    result["pending"] = []
+    for source in raw.get("pending", []):
+        if not isinstance(source, dict):
+            continue
+        item = fields(source, ("object_id", "category", "available", "reason",
+                               "current_verification_available"))
+        for key in ("missing_evidence", "required_delivered_ids", "observed_delivered_ids",
+                    "missing_delivered_ids"):
+            item[key] = [value for value in source.get(key, []) if isinstance(value, str)]
+        boundary = source.get("release_observation") or {}
+        item["release_observation"] = fields(boundary, ("frame_id", "simulation_time_s"))
+        item["release_observation"]["command_ref"] = fields(boundary.get("command_ref"), (
+            "method", "object_id", "round", "before_observation", "after_observation",
+            "bridge_sequence", "bridge_request_id", "grasp_request_id"))
+        item["budget"] = fields(source.get("budget"), (
+            "max_viewpoints", "max_distance_cm", "attempted_viewpoints", "travelled_cm",
+            "commanded_distance_cm",
+            "remaining_viewpoints", "remaining_distance_cm"))
+        item["next_intent"] = fields(source.get("next_intent"), (
+            "view_key", "direction_heading_deg", "max_distance_cm"))
+        item["attempted_views"] = [fields(view, (
+            "view_key", "status", "reason", "before_observation", "after_observation", "travelled_cm"))
+            for view in source.get("attempted_views", []) if isinstance(view, dict)]
+        result["pending"].append(item)
+    return result
+
+
+FAR_SUPPORTED_VIEW_FIELDS = (
+    "schema", "action", "object_id", "available", "reason", "handoff_observation",
+    "handoff_frame_id", "before_observation", "after_observation", "step_cm",
+    "memory_distance_cm", "current_visual_distance_cm", "steps_used", "remaining_steps",
+    "travelled_cm", "commanded_cm", "remaining_distance_cm", "outcome_unknown",
+)
+
+
 def compact_action_result(number, action, result, after_observation):
     """Carry bounded observed evidence forward, separately from WM geometry."""
     def fields(source, names):
@@ -104,6 +149,35 @@ def compact_action_result(number, action, result, after_observation):
                             "previous_failure", "canonical_object_id", "ready_for_done",
                             "delivered_count", "required_count"))
     detection(raw, evidence)
+    if isinstance(raw.get("far_supported_view_approach"), dict):
+        evidence["far_supported_view_approach"] = fields(
+            raw["far_supported_view_approach"], FAR_SUPPORTED_VIEW_FIELDS)
+    if isinstance(raw.get("release_aim"), dict):
+        aim = raw["release_aim"]
+        compact_aim = fields(aim, ("mode", "source_frame", "error"))
+        separation = aim.get("identity_separation")
+        if isinstance(separation, dict):
+            compact_separation = fields(separation, (
+                "schema", "required_distance_cm", "preferred_distance_cm",
+                "old_delivered_gate_cm", "new_release_gate_cm", "candidate_count",
+                "eligible_candidate_count", "best_candidate_separation_cm",
+                "selected_minimum_separation_cm"))
+            for key in ("delivered_object_ids", "current_observed_delivered_ids",
+                        "missing_delivered_ids"):
+                if isinstance(separation.get(key), list):
+                    compact_separation[key] = [value[:128] for value in separation[key][:12]
+                                               if isinstance(value, str)]
+            if isinstance(separation.get("rejected_counts"), dict):
+                compact_separation["rejected_counts"] = fields(separation["rejected_counts"],
+                    ("outside_inner_region", "pixel_occupied", "projection_invalid",
+                     "too_far", "identity_gate_overlap"))
+            compact_aim["identity_separation"] = compact_separation
+            if aim.get("error"):
+                compact_aim["recovery_guidance"] = (
+                    "保留已确认的持球状态；通过已有合法道路导航或取景取得另一个完整绿色区域视角，"
+                    "再由place重新检查放置点。当前点缺少分离证据，不能release；"
+                    "新帧本身不代表已获得合格点。")
+        evidence["release_aim"] = compact_aim
     authorization = raw.get("grab_authorization")
     choices = raw.get("identity_recovery_choices")
     if isinstance(choices, dict):
@@ -185,6 +259,9 @@ def compact_action_result(number, action, result, after_observation):
                 subgoal["pick_approach_entry"], ("schema", "object_id", "action", "available",
                     "requires_fresh_authorization", "not_grab_authorization", "reason",
                     "observation_index", "frame_id", "memory_distance_cm"))
+        if isinstance(subgoal.get("far_supported_view_approach"), dict):
+            evidence["navigation_subgoal"]["far_supported_view_approach"] = fields(
+                subgoal["far_supported_view_approach"], FAR_SUPPORTED_VIEW_FIELDS)
     if isinstance(raw.get("pending_objects"), list):
         evidence["pending_objects"] = [oid for oid in raw["pending_objects"] if isinstance(oid, str)]
     if isinstance(raw.get("retired_unconfirmed_hypotheses"), list):
@@ -222,6 +299,11 @@ def compact_action_result(number, action, result, after_observation):
     if isinstance(raw.get("road_return"), dict):
         evidence["road_return"] = fields(raw["road_return"], (
             "success", "reason", "on_road", "anchor_observation", "after_observation"))
+    if isinstance(raw.get("release_recovery"), list):
+        evidence["release_recovery"] = [fields(item, ("object_id", "resolved", "reason", "state"))
+            for item in raw["release_recovery"] if isinstance(item, dict)]
+    if isinstance(raw.get("release_recovery_options"), dict):
+        evidence["release_recovery_options"] = compact_release_recovery_options(raw["release_recovery_options"])
     if isinstance(raw.get("reobservation"), dict):
         reobservation = raw["reobservation"]
         evidence["reobservation"] = fields(reobservation, ("reason", "after_observation", "old_objects_reobserved"))
@@ -407,6 +489,9 @@ class Runtime:
                 "discovery": discovery_state,
                 "navigation": (self.actions.navigation_state() if hasattr(self, "actions")
                                and hasattr(self.actions, "navigation_state") else {}),
+                "release_recovery": compact_release_recovery_options(
+                    self.actions.release_recovery_options()
+                    if hasattr(self, "actions") and hasattr(self.actions, "release_recovery_options") else {}),
                 "robot": {"pose": {"right_cm": odo["rightCm"], "forward_cm": odo["forwardCm"],
                                     "heading_deg": odo["headingDeg"]},
                           "holding": self.snapshot["holding"]["holding"],
